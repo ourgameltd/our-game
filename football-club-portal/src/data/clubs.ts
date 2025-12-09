@@ -1,11 +1,12 @@
 import { Club } from '../types';
+import { getAssetUrl } from '../utils/assetHelpers';
 
 export const sampleClubs: Club[] = [
   {
     id: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
     name: 'Vale Football Club',
     shortName: 'Vale FC',
-    logo: '/assets/vale-crest.jpg',
+    logo: getAssetUrl('/assets/vale-crest.jpg'),
     colors: {
       primary: '#1a472a',
       secondary: '#ffd700',
@@ -32,7 +33,7 @@ export const sampleClubs: Club[] = [
     id: '7d3c8b1a-0e2f-4d5e-6b7c-8d9e0f1a2b3c',
     name: 'Renton United',
     shortName: 'Renton',
-    logo: '/assets/renton-crest.jpg',
+    logo: getAssetUrl('/assets/renton-crest.jpg'),
     colors: {
       primary: '#CC0014',
       secondary: '#000000'
