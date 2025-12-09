@@ -1,4 +1,5 @@
 import { Team } from '@/types';
+import { getAgeGroupById } from '@data/ageGroups';
 
 interface TeamCardProps {
   team: Team;
@@ -6,6 +7,7 @@ interface TeamCardProps {
 }
 
 export default function TeamCard({ team, onClick }: TeamCardProps) {
+  const ageGroup = getAgeGroupById(team.ageGroupId);
   const levelColors = {
     youth: 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300',
     amateur: 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300',
@@ -21,7 +23,7 @@ export default function TeamCard({ team, onClick }: TeamCardProps) {
       <div className="flex items-start justify-between mb-3">
         <div>
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{team.name}</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">{team.teamGroupName}</p>
+          <p className="text-sm text-gray-600 dark:text-gray-400">{ageGroup?.name || 'N/A'}</p>
         </div>
         <span className={`badge ${levelColors[team.level]}`}>
           {team.level.charAt(0).toUpperCase() + team.level.slice(1)}

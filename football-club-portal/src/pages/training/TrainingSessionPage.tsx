@@ -3,6 +3,7 @@ import { sampleTrainingSessions, getDrillById } from '@/data/training';
 import { samplePlayers } from '@/data/players';
 import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
+import { getAgeGroupById } from '@/data/ageGroups';
 
 export default function TrainingSessionPage() {
   const { sessionId, clubId, teamId } = useParams();
@@ -10,6 +11,7 @@ export default function TrainingSessionPage() {
   const session = sampleTrainingSessions.find(s => s.id === sessionId);
   const team = sampleTeams.find(t => t.id === teamId);
   const club = sampleClubs.find(c => c.id === clubId);
+  const ageGroup = team ? getAgeGroupById(team.ageGroupId) : undefined;
   
   if (!session || !team || !club) {
     return (
@@ -48,7 +50,7 @@ export default function TrainingSessionPage() {
                 {isUpcoming ? 'Upcoming Training Session' : 'Training Session Report'}
               </h1>
               <p className="text-lg text-gray-600 dark:text-gray-400">
-                {team.teamGroupName} - {team.name}
+                {ageGroup?.name || 'N/A'} - {team.name}
               </p>
             </div>
             <div className="mt-4 md:mt-0">

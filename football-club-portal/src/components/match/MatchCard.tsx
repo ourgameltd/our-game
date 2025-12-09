@@ -8,11 +8,13 @@ interface MatchCardProps {
 
 export default function MatchCard({ match, onClick }: MatchCardProps) {
   const hasScore = match.score !== undefined;
-  const isWin = hasScore && match.isHome 
-    ? match.score.home > match.score.away
-    : match.score.away > match.score.home;
-  const isDraw = hasScore && match.score.home === match.score.away;
-  const isLoss = hasScore && !isWin && !isDraw;
+  const isWin = match.score
+    ? match.isHome 
+      ? match.score.home > match.score.away
+      : match.score.away > match.score.home
+    : false;
+  const isDraw = match.score ? match.score.home === match.score.away : false;
+  const isLoss = match.score && !isWin && !isDraw;
 
   const statusColor = isWin 
     ? 'bg-green-50 border-green-200'
@@ -54,7 +56,7 @@ export default function MatchCard({ match, onClick }: MatchCardProps) {
         </div>
 
         <div className="px-4">
-          {hasScore ? (
+          {match.score ? (
             <div className="text-2xl font-bold text-gray-900">
               {match.isHome ? match.score.home : match.score.away}
               {' - '}
