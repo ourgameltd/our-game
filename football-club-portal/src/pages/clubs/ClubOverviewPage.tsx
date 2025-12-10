@@ -38,6 +38,28 @@ export default function ClubOverviewPage() {
           <UpcomingMatchesCard 
             matches={stats.upcomingMatches.slice(0, 3)}
             viewAllLink={Routes.club(clubId!)}
+            showTeamInfo={true}
+            getTeamInfo={(match) => {
+              const team = getTeamById(match.teamId);
+              if (team) {
+                const ageGroup = getAgeGroupById(team.ageGroupId);
+                return {
+                  teamName: team.name,
+                  ageGroupName: ageGroup?.name || 'Unknown'
+                };
+              }
+              return null;
+            }}
+            getMatchLink={(matchId) => {
+              const match = stats.upcomingMatches.find(m => m.id === matchId);
+              if (match) {
+                const team = getTeamById(match.teamId);
+                if (team) {
+                  return Routes.matchReport(clubId!, team.ageGroupId, match.teamId, matchId);
+                }
+              }
+              return '#';
+            }}
           />
           <PreviousResultsCard 
             matches={stats.previousResults.slice(0, 3)}

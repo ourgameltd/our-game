@@ -60,6 +60,24 @@ const AgeGroupOverviewPage: React.FC = () => {
         <UpcomingMatchesCard 
           matches={stats.upcomingMatches} 
           viewAllLink={Routes.ageGroup(clubId!, ageGroupId!)}
+          showTeamInfo={true}
+          getTeamInfo={(match) => {
+            const team = getTeamById(match.teamId);
+            if (team) {
+              return {
+                teamName: team.name,
+                ageGroupName: ageGroup.name
+              };
+            }
+            return null;
+          }}
+          getMatchLink={(matchId) => {
+            const match = stats.upcomingMatches.find(m => m.id === matchId);
+            if (match) {
+              return Routes.matchReport(clubId!, ageGroupId!, match.teamId, matchId);
+            }
+            return '#';
+          }}
         />
         <PreviousResultsCard 
           matches={stats.previousResults}

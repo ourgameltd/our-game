@@ -2,29 +2,38 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Match } from '@/types';
 
+interface TeamInfo {
+  teamName: string;
+  ageGroupName: string;
+}
+
 interface UpcomingMatchesCardProps {
   matches: Match[];
   addMatchLink?: string;
   viewAllLink?: string;
   getMatchLink?: (matchId: string) => string;
+  showTeamInfo?: boolean;
+  getTeamInfo?: (match: Match) => TeamInfo | null;
 }
 
 const UpcomingMatchesCard: React.FC<UpcomingMatchesCardProps> = ({ 
   matches, 
   addMatchLink,
   viewAllLink,
-  getMatchLink
+  getMatchLink,
+  showTeamInfo = false,
+  getTeamInfo
 }) => {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Upcoming Matches</h3>
-        {(addMatchLink || viewAllLink) && (
+        {(addMatchLink) && (
           <Link
-            to={addMatchLink || viewAllLink || '#'}
+            to={addMatchLink}
             className="text-sm text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
           >
-            {addMatchLink ? '+ Add Match' : 'View All →'}
+            + Add Match
           </Link>
         )}
       </div>
@@ -32,6 +41,7 @@ const UpcomingMatchesCard: React.FC<UpcomingMatchesCardProps> = ({
         {matches.length > 0 ? (
           matches.map((match) => {
             const matchLink = getMatchLink ? getMatchLink(match.id) : '#';
+            const teamInfo = showTeamInfo && getTeamInfo ? getTeamInfo(match) : null;
             
             return (
               <Link
@@ -41,7 +51,8 @@ const UpcomingMatchesCard: React.FC<UpcomingMatchesCardProps> = ({
               >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(match.date).toLocaleDateString('en-GB', { weekday: 'short', month: 'short', day: 'numeric' })}
+                    {new Date(match.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    {teamInfo && ` - ${teamInfo.teamName} (${teamInfo.ageGroupName})`}
                   </span>
                   <span className="badge bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                     {new Date(match.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}

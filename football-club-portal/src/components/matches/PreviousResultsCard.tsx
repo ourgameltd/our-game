@@ -47,8 +47,8 @@ const PreviousResultsCard: React.FC<PreviousResultsCardProps> = ({
               <>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {new Date(match.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
-                    {teamInfo ? ` - ${teamInfo.teamName} (${teamInfo.ageGroupName})` : ''}
+                    {new Date(match.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })}
+                    {teamInfo && ` - ${teamInfo.teamName} (${teamInfo.ageGroupName})`}
                   </span>
                   <span className={`badge ${
                     isWin ? 'badge-success' : isDraw ? 'badge-warning' : 'badge-danger'
