@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { getClubById } from '@data/clubs';
 import { getAgeGroupsByClubId } from '@data/ageGroups';
 import { getClubStatistics } from '@data/statistics';
+import { getTeamById } from '@data/teams';
 import StatsGrid from '@components/stats/StatsGrid';
 import UpcomingMatchesCard from '@components/matches/UpcomingMatchesCard';
 import PreviousResultsCard from '@components/matches/PreviousResultsCard';
@@ -41,6 +42,13 @@ export default function ClubOverviewPage() {
           <PreviousResultsCard 
             matches={stats.previousResults.slice(0, 3)}
             viewAllLink={Routes.club(clubId!)}
+            getMatchLink={(matchId, match) => {
+              const team = getTeamById(match.teamId);
+              if (team) {
+                return Routes.matchReport(clubId!, team.ageGroupId, match.teamId, matchId);
+              }
+              return '#';
+            }}
           />
         </div>
       </main>

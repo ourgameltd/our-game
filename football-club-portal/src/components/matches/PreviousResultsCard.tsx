@@ -5,18 +5,20 @@ import { Match } from '@/types';
 interface PreviousResultsCardProps {
   matches: Match[];
   viewAllLink?: string;
-  getMatchLink?: (matchId: string) => string;
+  getMatchLink?: (matchId: string, match: Match) => string;
+  title?: string;
 }
 
 const PreviousResultsCard: React.FC<PreviousResultsCardProps> = ({ 
   matches, 
   viewAllLink,
-  getMatchLink
+  getMatchLink,
+  title = 'Recent Results'
 }) => {
   return (
     <div className="card">
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Recent Results</h3>
+        <h3 className="text-xl font-semibold text-gray-900 dark:text-white">{title}</h3>
         {viewAllLink && (
           <Link
             to={viewAllLink}
@@ -34,14 +36,10 @@ const PreviousResultsCard: React.FC<PreviousResultsCardProps> = ({
               : match.score && match.score.away > match.score.home;
             const isDraw = match.score && match.score.home === match.score.away;
             
-            const matchLink = getMatchLink ? getMatchLink(match.id) : '#';
+            const matchLink = getMatchLink ? getMatchLink(match.id, match) : undefined;
             
-            return (
-              <Link
-                key={match.id}
-                to={matchLink}
-                className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition-shadow"
-              >
+            const content = (
+              <>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm text-gray-600 dark:text-gray-400">
                     {new Date(match.date).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })}
@@ -60,7 +58,24 @@ const PreviousResultsCard: React.FC<PreviousResultsCardProps> = ({
                     {match.isHome ? match.score.home : match.score.away} - {match.isHome ? match.score.away : match.score.home}
                   </div>
                 )}
+              </>
+            );
+            
+            return matchLink ? (
+              <Link
+                key={match.id}
+                to={matchLink}
+                className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg hover:shadow-md transition-shadow"
+              >
+                {content}
               </Link>
+            ) : (
+              <div
+                key={match.id}
+                className="block p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+              >
+                {content}
+              </div>
             );
           })
         ) : (
