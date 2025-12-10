@@ -115,7 +115,7 @@ export function groupAttributes(attributes: PlayerAttributes): GroupedAttributes
     skills: [
       createAttribute('Ball Control', attributes.ballControl, 'Skills'),
       createAttribute('Crossing', attributes.crossing, 'Skills'),
-      createAttribute('Curve', attributes.curve, 'Skills'),
+      createAttribute('Weak Foot', attributes.weakFoot, 'Skills'),
       createAttribute('Dribbling', attributes.dribbling, 'Skills'),
       createAttribute('Finishing', attributes.finishing, 'Skills'),
       createAttribute('Free Kick', attributes.freeKick, 'Skills'),
@@ -145,6 +145,7 @@ export function groupAttributes(attributes: PlayerAttributes): GroupedAttributes
       createAttribute('Attacking Position', attributes.attackingPosition, 'Mental'),
       createAttribute('Awareness', attributes.awareness, 'Mental'),
       createAttribute('Composure', attributes.composure, 'Mental'),
+      createAttribute('Defensive Positioning', attributes.defensivePositioning, 'Mental'),
       createAttribute('Interceptions', attributes.interceptions, 'Mental'),
       createAttribute('Marking', attributes.marking, 'Mental'),
       createAttribute('Positioning', attributes.positioning, 'Mental'),
@@ -168,7 +169,7 @@ export function createDefaultAttributes(ageInYears: number): PlayerAttributes {
     // Skills
     ballControl: randomRating(),
     crossing: randomRating(),
-    curve: randomRating(),
+    weakFoot: randomRating(),
     dribbling: randomRating(),
     finishing: randomRating(),
     freeKick: randomRating(),
@@ -198,6 +199,7 @@ export function createDefaultAttributes(ageInYears: number): PlayerAttributes {
     attackingPosition: randomRating(),
     awareness: randomRating(),
     composure: randomRating(),
+    defensivePositioning: randomRating(),
     interceptions: randomRating(),
     marking: randomRating(),
     positioning: randomRating(),

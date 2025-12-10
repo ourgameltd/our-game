@@ -16,7 +16,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 45,
       crossing: 35,
-      curve: 40,
+      weakFoot: 40,
       dribbling: 40,
       finishing: 30,
       freeKick: 35,
@@ -44,6 +44,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 35,
       awareness: 65,
       composure: 60,
+      defensivePositioning: 60,
       interceptions: 42,
       marking: 40,
       positioning: 70,
@@ -83,7 +84,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 52,
       crossing: 45,
-      curve: 42,
+      weakFoot: 42,
       dribbling: 48,
       finishing: 38,
       freeKick: 40,
@@ -111,6 +112,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 40,
       awareness: 60,
       composure: 58,
+      defensivePositioning: 58,
       interceptions: 62,
       marking: 65,
       positioning: 64,
@@ -150,7 +152,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 58,
       crossing: 48,
-      curve: 45,
+      weakFoot: 45,
       dribbling: 52,
       finishing: 42,
       freeKick: 50,
@@ -178,6 +180,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 45,
       awareness: 62,
       composure: 60,
+      defensivePositioning: 60,
       interceptions: 64,
       marking: 62,
       positioning: 65,
@@ -217,7 +220,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 65,
       crossing: 55,
-      curve: 58,
+      weakFoot: 58,
       dribbling: 62,
       finishing: 52,
       freeKick: 60,
@@ -245,6 +248,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 58,
       awareness: 65,
       composure: 62,
+      defensivePositioning: 62,
       interceptions: 52,
       marking: 48,
       positioning: 60,
@@ -284,7 +288,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 68,
       crossing: 48,
-      curve: 52,
+      weakFoot: 52,
       dribbling: 66,
       finishing: 72,
       freeKick: 55,
@@ -312,6 +316,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 72,
       awareness: 66,
       composure: 65,
+      defensivePositioning: 65,
       interceptions: 35,
       marking: 32,
       positioning: 70,
@@ -351,7 +356,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 62,
       crossing: 58,
-      curve: 55,
+      weakFoot: 55,
       dribbling: 65,
       finishing: 64,
       freeKick: 52,
@@ -379,6 +384,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 66,
       awareness: 62,
       composure: 60,
+      defensivePositioning: 60,
       interceptions: 38,
       marking: 35,
       positioning: 65,
@@ -420,7 +426,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 60,
       crossing: 52,
-      curve: 50,
+      weakFoot: 50,
       dribbling: 58,
       finishing: 48,
       freeKick: 55,
@@ -448,6 +454,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 52,
       awareness: 68,
       composure: 65,
+      defensivePositioning: 65,
       interceptions: 64,
       marking: 60,
       positioning: 65,
@@ -487,7 +494,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 50,
       crossing: 42,
-      curve: 40,
+      weakFoot: 40,
       dribbling: 45,
       finishing: 35,
       freeKick: 42,
@@ -515,6 +522,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 35,
       awareness: 62,
       composure: 58,
+      defensivePositioning: 58,
       interceptions: 65,
       marking: 68,
       positioning: 66,
@@ -556,7 +564,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 66,
       crossing: 64,
-      curve: 60,
+      weakFoot: 60,
       dribbling: 70,
       finishing: 58,
       freeKick: 56,
@@ -584,6 +592,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 64,
       awareness: 60,
       composure: 58,
+      defensivePositioning: 58,
       interceptions: 35,
       marking: 32,
       positioning: 62,
@@ -623,7 +632,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 70,
       crossing: 58,
-      curve: 62,
+      weakFoot: 62,
       dribbling: 68,
       finishing: 60,
       freeKick: 65,
@@ -651,6 +660,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 65,
       awareness: 70,
       composure: 68,
+      defensivePositioning: 68,
       interceptions: 48,
       marking: 42,
       positioning: 66,
@@ -690,7 +700,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 55,
       crossing: 52,
-      curve: 48,
+      weakFoot: 48,
       dribbling: 54,
       finishing: 40,
       freeKick: 45,
@@ -718,6 +728,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 48,
       awareness: 60,
       composure: 58,
+      defensivePositioning: 58,
       interceptions: 62,
       marking: 64,
       positioning: 62,
@@ -759,7 +770,7 @@ export const samplePlayers: Player[] = [
       // Skills
       ballControl: 75,
       crossing: 58,
-      curve: 62,
+      weakFoot: 62,
       dribbling: 72,
       finishing: 80,
       freeKick: 65,
@@ -787,6 +798,7 @@ export const samplePlayers: Player[] = [
       attackingPosition: 82,
       awareness: 74,
       composure: 75,
+      defensivePositioning: 75,
       interceptions: 40,
       marking: 38,
       positioning: 80,
@@ -851,4 +863,6 @@ export const getPlayersByAgeGroupId = (ageGroupId: string): Player[] => {
     player.teamIds.some(teamId => teamIds.includes(teamId))
   );
 };
+
+
 

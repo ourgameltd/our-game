@@ -105,7 +105,7 @@ export interface PlayerAttributes {
   // Skills
   ballControl: number;
   crossing: number;
-  curve: number;
+  weakFoot: number;
   dribbling: number;
   finishing: number;
   freeKick: number;
@@ -135,6 +135,7 @@ export interface PlayerAttributes {
   attackingPosition: number;
   awareness: number;
   composure: number;
+  defensivePositioning: number;
   interceptions: number;
   marking: number;
   positioning: number;
