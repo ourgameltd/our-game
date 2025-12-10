@@ -58,7 +58,7 @@ export default function TeamOverviewPage() {
           />
           <PreviousResultsCard 
             matches={stats.previousResults.slice(0, 3)}
-            getMatchLink={(matchId, match) => Routes.matchReport(clubId!, ageGroupId!, teamId!, matchId)}
+            getMatchLink={(matchId) => Routes.matchReport(clubId!, ageGroupId!, teamId!, matchId)}
           />
         </div>
 
