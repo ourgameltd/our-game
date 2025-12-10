@@ -240,8 +240,13 @@ export const sampleMatches: Match[] = [
         { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', minute: 45 },
         { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', minute: 78 }
       ],
-      cards: [],
-      injuries: [],
+      cards: [
+        { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', type: 'yellow', minute: 32, reason: 'Persistent fouling' },
+        { playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', type: 'yellow', minute: 68, reason: 'Dissent' }
+      ],
+      injuries: [
+        { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', minute: 52, description: 'Ankle sprain', severity: 'minor' }
+      ],
       performanceRatings: [
         { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', rating: 7.0 },
         { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', rating: 7.5 },
