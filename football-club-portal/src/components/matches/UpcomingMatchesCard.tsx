@@ -19,7 +19,6 @@ interface UpcomingMatchesCardProps {
 const UpcomingMatchesCard: React.FC<UpcomingMatchesCardProps> = ({ 
   matches, 
   addMatchLink,
-  viewAllLink,
   getMatchLink,
   showTeamInfo = false,
   getTeamInfo

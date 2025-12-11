@@ -428,24 +428,34 @@ export default function AddEditMatchPage() {
                   Starting XI ({startingPlayers.length}/11)
                 </h3>
                 <div className="space-y-2 mb-4">
-                  {startingPlayers.map((player) => (
-                    <div key={player.playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <div className="flex items-center gap-3">
-                        <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
-                          {player.position}
-                        </span>
-                        <span className="text-gray-900 dark:text-white font-medium">
-                          {getPlayerName(player.playerId)}
-                        </span>
+                  {startingPlayers.map((player) => {
+                    const playerData = teamPlayers.find(p => p.id === player.playerId);
+                    return (
+                      <div key={player.playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
+                            {player.position}
+                          </span>
+                          {playerData?.photo && (
+                            <img 
+                              src={playerData.photo} 
+                              alt={getPlayerName(player.playerId)}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          )}
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {getPlayerName(player.playerId)}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveStartingPlayer(player.playerId)}
+                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                        >
+                          Remove
+                        </button>
                       </div>
-                      <button
-                        onClick={() => handleRemoveStartingPlayer(player.playerId)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {startingPlayers.length < 11 && (
@@ -459,12 +469,21 @@ export default function AddEditMatchPage() {
                             const position = player.preferredPositions[0] || 'CM';
                             handleAddStartingPlayer(player.id, position);
                           }}
-                          className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 text-gray-900 dark:text-white"
+                          className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 text-gray-900 dark:text-white flex items-center gap-2"
                         >
-                          {player.firstName} {player.lastName}
-                          <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
-                            ({player.preferredPositions.join(', ')})
-                          </span>
+                          {player.photo && (
+                            <img 
+                              src={player.photo} 
+                              alt={`${player.firstName} ${player.lastName}`}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                          )}
+                          <div className="flex-1">
+                            {player.firstName} {player.lastName}
+                            <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                              ({player.preferredPositions.join(', ')})
+                            </span>
+                          </div>
                         </button>
                       ))}
                     </div>
@@ -478,19 +497,31 @@ export default function AddEditMatchPage() {
                   Substitutes ({substitutes.length})
                 </h3>
                 <div className="space-y-2 mb-4">
-                  {substitutes.map((playerId) => (
-                    <div key={playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
-                      <span className="text-gray-900 dark:text-white font-medium">
-                        {getPlayerName(playerId)}
-                      </span>
-                      <button
-                        onClick={() => handleRemoveSubstitute(playerId)}
-                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
+                  {substitutes.map((playerId) => {
+                    const playerData = teamPlayers.find(p => p.id === playerId);
+                    return (
+                      <div key={playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        <div className="flex items-center gap-3">
+                          {playerData?.photo && (
+                            <img 
+                              src={playerData.photo} 
+                              alt={getPlayerName(playerId)}
+                              className="w-8 h-8 rounded-full object-cover"
+                            />
+                          )}
+                          <span className="text-gray-900 dark:text-white font-medium">
+                            {getPlayerName(playerId)}
+                          </span>
+                        </div>
+                        <button
+                          onClick={() => handleRemoveSubstitute(playerId)}
+                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {availablePlayers.length > 0 && (
@@ -501,8 +532,15 @@ export default function AddEditMatchPage() {
                         <button
                           key={player.id}
                           onClick={() => handleAddSubstitute(player.id)}
-                          className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 hover:border-yellow-500 dark:hover:border-yellow-500 text-gray-900 dark:text-white"
+                          className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 hover:border-yellow-500 dark:hover:border-yellow-500 text-gray-900 dark:text-white flex items-center gap-2"
                         >
+                          {player.photo && (
+                            <img 
+                              src={player.photo} 
+                              alt={`${player.firstName} ${player.lastName}`}
+                              className="w-6 h-6 rounded-full object-cover"
+                            />
+                          )}
                           {player.firstName} {player.lastName}
                         </button>
                       ))}
