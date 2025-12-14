@@ -220,8 +220,9 @@ export interface Match {
   isHome: boolean;
   competition: string;
   kit?: {
-    primary: string; // Kit color/description (e.g., 'Home Kit', 'Away Kit', 'Third Kit')
+    primary: string; // Kit ID (references Kit.id)
     secondary?: string;
+    goalkeeper?: string; // Goalkeeper kit ID (references Kit.id)
   };
   score?: {
     home: number;

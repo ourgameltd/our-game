@@ -39,7 +39,8 @@ export default function AddEditMatchPage() {
   const [location, setLocation] = useState(existingMatch?.location || '');
   const [isHome, setIsHome] = useState(existingMatch?.isHome ?? true);
   const [competition, setCompetition] = useState(existingMatch?.competition || '');
-  const [kit, setKit] = useState(existingMatch?.kit?.primary || 'Home Kit');
+  const [kit, setKit] = useState(existingMatch?.kit?.primary || (availableKits.find(k => k.type === 'home')?.id || ''));
+  const [goalkeeperKit, setGoalkeeperKit] = useState(existingMatch?.kit?.goalkeeper || (availableKits.find(k => k.type === 'goalkeeper')?.id || ''));
   const [formationId, setFormationId] = useState(existingMatch?.lineup?.formationId || '');
   const [weather, setWeather] = useState(existingMatch?.weather?.condition || '');
   const [temperature, setTemperature] = useState(existingMatch?.weather?.temperature?.toString() || '');
@@ -175,7 +176,10 @@ export default function AddEditMatchPage() {
       location,
       isHome,
       competition,
-      kit,
+      kit: {
+        primary: kit,
+        goalkeeper: goalkeeperKit || undefined
+      },
       formationId,
       weather,
       temperature,
@@ -363,32 +367,27 @@ export default function AddEditMatchPage() {
                   >
                     {availableKits.length === 0 ? (
                       <>
-                        <option value="Home Kit">Home Kit (Default)</option>
-                        <option value="Away Kit">Away Kit (Default)</option>
-                        <option value="Third Kit">Third Kit (Default)</option>
+                        <option value="home-default">Home Kit (Default)</option>
+                        <option value="away-default">Away Kit (Default)</option>
+                        <option value="third-default">Third Kit (Default)</option>
                       </>
                     ) : (
                       <>
                         <option value="">Select a kit</option>
-                        {teamKits.filter(k => k.isActive).length > 0 && (
+                        {teamKits.filter(k => k.isActive && k.type !== 'goalkeeper').length > 0 && (
                           <optgroup label="Team Kits">
-                            {teamKits.filter(k => k.isActive).map(k => (
-                              <option key={k.id} value={k.name}>{k.name}</option>
+                            {teamKits.filter(k => k.isActive && k.type !== 'goalkeeper').map(k => (
+                              <option key={k.id} value={k.id}>{k.name}</option>
                             ))}
                           </optgroup>
                         )}
-                        {clubKits.filter(k => k.isActive).length > 0 && (
+                        {clubKits.filter(k => k.isActive && k.type !== 'goalkeeper').length > 0 && (
                           <optgroup label="Club Kits">
-                            {clubKits.filter(k => k.isActive).map(k => (
-                              <option key={k.id} value={k.name}>{k.name}</option>
+                            {clubKits.filter(k => k.isActive && k.type !== 'goalkeeper').map(k => (
+                              <option key={k.id} value={k.id}>{k.name}</option>
                             ))}
                           </optgroup>
                         )}
-                        <optgroup label="Default Kits">
-                          <option value="Home Kit">Home Kit (Default)</option>
-                          <option value="Away Kit">Away Kit (Default)</option>
-                          <option value="Third Kit">Third Kit (Default)</option>
-                        </optgroup>
                       </>
                     )}
                   </select>
@@ -397,6 +396,42 @@ export default function AddEditMatchPage() {
                       No custom kits defined. Using default kits based on club colors.
                     </p>
                   )}
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Goalkeeper Kit
+                  </label>
+                  <select
+                    value={goalkeeperKit}
+                    onChange={(e) => setGoalkeeperKit(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="">Select goalkeeper kit (optional)</option>
+                    {availableKits.filter(k => k.type === 'goalkeeper').length > 0 ? (
+                      <>
+                        {teamKits.filter(k => k.isActive && k.type === 'goalkeeper').length > 0 && (
+                          <optgroup label="Team Goalkeeper Kits">
+                            {teamKits.filter(k => k.isActive && k.type === 'goalkeeper').map(k => (
+                              <option key={k.id} value={k.id}>{k.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {clubKits.filter(k => k.isActive && k.type === 'goalkeeper').length > 0 && (
+                          <optgroup label="Club Goalkeeper Kits">
+                            {clubKits.filter(k => k.isActive && k.type === 'goalkeeper').map(k => (
+                              <option key={k.id} value={k.id}>{k.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                      </>
+                    ) : (
+                      <option value="gk-default">Default Goalkeeper Kit</option>
+                    )}
+                  </select>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Select a specific kit for your goalkeeper
+                  </p>
                 </div>
 
                 <div>

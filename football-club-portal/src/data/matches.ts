@@ -13,7 +13,8 @@ export const sampleMatches: Match[] = [
     isHome: true,
     competition: 'County League Division 1',
     kit: {
-      primary: 'Home Kit'
+      primary: '9a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', // Vale Home Kit
+      goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
     status: 'scheduled',
     weather: {
@@ -32,7 +33,8 @@ export const sampleMatches: Match[] = [
     isHome: false,
     competition: 'Youth Cup - Quarter Final',
     kit: {
-      primary: 'Away Kit'
+      primary: '9b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', // Vale Away Kit
+      goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
     status: 'scheduled'
   },
@@ -47,7 +49,8 @@ export const sampleMatches: Match[] = [
     isHome: false,
     competition: 'County League Division 1',
     kit: {
-      primary: 'Away Kit'
+      primary: '9b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', // Vale Away Kit
+      goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
     status: 'scheduled'
   },
@@ -62,7 +65,8 @@ export const sampleMatches: Match[] = [
     isHome: true,
     competition: 'Youth League',
     kit: {
-      primary: 'Home Kit'
+      primary: '9a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', // Vale Home Kit
+      goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
     status: 'scheduled'
   },
@@ -122,7 +126,8 @@ export const sampleMatches: Match[] = [
     isHome: true,
     competition: 'County League Division 1',
     kit: {
-      primary: 'Home Kit'
+      primary: '9a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', // Vale Home Kit
+      goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
     status: 'completed',
     score: {

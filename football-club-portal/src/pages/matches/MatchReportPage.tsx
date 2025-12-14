@@ -30,6 +30,19 @@ export default function MatchReportPage() {
     return player ? `${player.firstName} ${player.lastName}` : 'Unknown';
   };
   
+  const getKitName = (kitId: string) => {
+    // Check team kits first
+    const teamKit = team.kits?.find(k => k.id === kitId);
+    if (teamKit) return teamKit.name;
+    
+    // Then check club kits
+    const clubKit = club.kits?.find(k => k.id === kitId);
+    if (clubKit) return clubKit.name;
+    
+    // Fallback to ID if not found
+    return kitId;
+  };
+  
   const isUpcoming = match.date > new Date();
   const homeTeam = match.isHome ? team.name : match.opposition;
   const awayTeam = match.isHome ? match.opposition : team.name;
@@ -237,8 +250,13 @@ export default function MatchReportPage() {
               <div>
                 <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kit</h3>
                 <p className="text-sm text-gray-900 dark:text-white">
-                  👕 {match.kit.primary}
+                  👕 {getKitName(match.kit.primary)}
                 </p>
+                {match.kit.goalkeeper && (
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                    🧤 GK: {getKitName(match.kit.goalkeeper)}
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -529,8 +547,13 @@ export default function MatchReportPage() {
                 <div>
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Kit</h3>
                   <p className="text-gray-900 dark:text-white">
-                    👕 {match.kit.primary}
+                    👕 {getKitName(match.kit.primary)}
                   </p>
+                  {match.kit.goalkeeper && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                      🧤 GK: {getKitName(match.kit.goalkeeper)}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
