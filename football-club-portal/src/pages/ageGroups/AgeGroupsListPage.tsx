@@ -11,7 +11,9 @@ const AgeGroupsListPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
   
   const club = sampleClubs.find(c => c.id === clubId);
-  const ageGroups = getAgeGroupsByClubId(clubId || '');
+  const ageGroups = getAgeGroupsByClubId(clubId || '').sort((a, b) => 
+    a.name.localeCompare(b.name)
+  );
   
   if (!club) {
     return (
@@ -35,7 +37,7 @@ const AgeGroupsListPage: React.FC = () => {
           </div>
           <Link
             to={Routes.ageGroupNew(clubId!)}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
           >
             <span>+</span>
             Add Age Group

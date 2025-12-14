@@ -133,7 +133,7 @@ export default function RegisterPage() {
               </label>
             </div>
 
-            <button type="submit" className="w-full btn-primary btn-md">
+            <button type="submit" className="w-full btn-success btn-md">
               Create Account
             </button>
           </form>

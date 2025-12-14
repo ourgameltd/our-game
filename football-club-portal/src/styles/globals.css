@@ -22,6 +22,10 @@
     @apply btn bg-primary-600 text-white hover:bg-primary-700 focus-visible:ring-primary-600 dark:bg-primary-700 dark:hover:bg-primary-600;
   }
 
+  .btn-success {
+    @apply btn bg-green-600 text-white hover:bg-green-700 focus-visible:ring-green-600 dark:bg-green-700 dark:hover:bg-green-600;
+  }
+
   .btn-secondary {
     @apply btn bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600 focus-visible:ring-gray-500;
   }

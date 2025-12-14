@@ -56,7 +56,7 @@ export default function SquadManagementPage() {
           {!team.isArchived && (
             <button 
               onClick={() => setShowAddModal(true)}
-              className="btn-primary btn-md"
+              className="btn-success btn-md"
             >
               + Add Player from Club
             </button>
@@ -228,7 +228,7 @@ export default function SquadManagementPage() {
             <p className="text-gray-600 mb-4">Add players from your club roster to build your squad</p>
             <button 
               onClick={() => setShowAddModal(true)}
-              className="btn-primary btn-md"
+              className="btn-success btn-md"
             >
               + Add Players from Club
             </button>

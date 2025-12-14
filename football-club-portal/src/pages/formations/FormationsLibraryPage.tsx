@@ -9,7 +9,7 @@ export default function FormationsLibraryPage() {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">All Formations ({sampleFormations.length})</h2>
             <p className="text-gray-600 dark:text-gray-400 mt-1">Browse and assign formations to your teams</p>
           </div>
-          <button className="btn-primary btn-md">
+          <button className="btn-success btn-md">
             + Create Formation
           </button>
         </div>

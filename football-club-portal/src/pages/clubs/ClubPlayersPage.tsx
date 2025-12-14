@@ -129,7 +129,7 @@ export default function ClubPlayersPage() {
                 : 'View and manage all players registered to the club'}
             </p>
           </div>
-          <button className="btn-primary btn-md">
+          <button className="btn-success btn-md">
             + Add New Player
           </button>
         </div>
@@ -270,7 +270,7 @@ export default function ClubPlayersPage() {
             <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">⚽</div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No players yet</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">Get started by adding your first player to the club</p>
-            <button className="btn-primary btn-md">
+            <button className="btn-success btn-md">
               + Add First Player
             </button>
           </div>

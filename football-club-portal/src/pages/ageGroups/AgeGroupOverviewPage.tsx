@@ -90,7 +90,7 @@ const AgeGroupOverviewPage: React.FC = () => {
             {!ageGroup.isArchived && (
               <Link
                 to={Routes.teamNew(clubId!, ageGroupId!)}
-                className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
               >
                 <span>+</span>
                 Add Team
@@ -114,7 +114,7 @@ const AgeGroupOverviewPage: React.FC = () => {
               {!ageGroup.isArchived && (
                 <Link
                   to={Routes.teamNew(clubId!, ageGroupId!)}
-                  className="inline-flex px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+                  className="inline-flex px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
                   Create First Team
                 </Link>

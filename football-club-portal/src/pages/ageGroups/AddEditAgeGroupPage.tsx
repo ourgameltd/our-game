@@ -45,7 +45,7 @@ const AddEditAgeGroupPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate(Routes.ageGroup(clubId!, ageGroupId!))}
-            className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
           >
             Back to Age Group
           </button>
@@ -227,7 +227,7 @@ const AddEditAgeGroupPage: React.FC = () => {
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
-                className="flex-1 px-6 py-3 bg-primary-600 text-white font-semibold rounded-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-colors"
+                className="flex-1 px-6 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors"
               >
                 {isEditing ? 'Update Age Group' : 'Create Age Group'}
               </button>

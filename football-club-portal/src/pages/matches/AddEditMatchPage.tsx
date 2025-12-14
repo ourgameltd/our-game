@@ -41,7 +41,7 @@ export default function AddEditMatchPage() {
             </p>
             <button
               onClick={() => navigate(Routes.matches(clubId!, ageGroupId!, teamId!))}
-              className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700"
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
             >
               Back to Matches
             </button>
@@ -248,7 +248,7 @@ export default function AddEditMatchPage() {
               onClick={() => setActiveTab('details')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === 'details'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
@@ -258,7 +258,7 @@ export default function AddEditMatchPage() {
               onClick={() => setActiveTab('lineup')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === 'lineup'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
@@ -268,7 +268,7 @@ export default function AddEditMatchPage() {
               onClick={() => setActiveTab('events')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === 'events'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
@@ -278,7 +278,7 @@ export default function AddEditMatchPage() {
               onClick={() => setActiveTab('report')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 activeTab === 'report'
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-primary-600 text-white'
                   : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
               }`}
             >
@@ -1116,7 +1116,7 @@ export default function AddEditMatchPage() {
           <div className="mt-8 flex gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
             <button
               onClick={handleSave}
-              className="btn-primary flex-1"
+              className="btn-success flex-1"
             >
               {isEditing ? 'Save Changes' : 'Create Match'}
             </button>

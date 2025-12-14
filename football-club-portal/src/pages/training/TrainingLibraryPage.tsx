@@ -13,7 +13,7 @@ export default function TrainingLibraryPage() {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
               Upcoming Sessions ({upcomingSessions.length})
             </h2>
-            <button className="btn-primary btn-md">
+            <button className="btn-success btn-md">
               + Create Session
             </button>
           </div>

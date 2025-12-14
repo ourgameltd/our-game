@@ -64,7 +64,7 @@ export default function TeamOverviewPage() {
           </div>
           <button
             onClick={() => navigate(Routes.teamSettings(clubId!, ageGroupId!, teamId!))}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-2"
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
           >
             <span>⚙️</span>
             Settings
