@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { getClubById } from '@data/clubs';
 import { getCoachesByClub } from '@data/coaches';
@@ -12,6 +12,7 @@ import { getClubNavigationTabs } from '@utils/navigationHelpers';
 
 export default function ClubCoachesPage() {
   const { clubId } = useParams();
+  const navigate = useNavigate();
   const club = getClubById(clubId!);
   const allCoaches = getCoachesByClub(clubId!);
   const teams = getTeamsByClubId(clubId!);
@@ -114,7 +115,7 @@ export default function ClubCoachesPage() {
           }
           action={{
             label: '+ Add New Coach',
-            onClick: () => {/* TODO: Add coach navigation */},
+            onClick: () => navigate(Routes.coachSettings(clubId!, 'new')),
             variant: 'success'
           }}
         />

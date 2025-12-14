@@ -10,7 +10,8 @@ import PageTitle from '@components/common/PageTitle';
 export default function CoachSettingsPage() {
   const { clubId, coachId } = useParams();
   const navigate = useNavigate();
-  const coach = getCoachById(coachId!);
+  const isNewCoach = coachId === 'new';
+  const coach = isNewCoach ? null : getCoachById(coachId!);
   const club = getClubById(clubId!);
   const allTeams = getTeamsByClubId(clubId!);
 
@@ -30,7 +31,11 @@ export default function CoachSettingsPage() {
   const [selectedTeams, setSelectedTeams] = useState<string[]>(coach?.teamIds || []);
   const [photo, setPhoto] = useState(coach?.photo || '');
 
-  if (!coach || !club) {
+  if (!club) {
+    return <div>Club not found</div>;
+  }
+
+  if (!isNewCoach && !coach) {
     return <div>Coach not found</div>;
   }
 
@@ -89,8 +94,8 @@ export default function CoachSettingsPage() {
         </button>
 
         <PageTitle
-          title="Coach Settings"
-          subtitle={`Manage details for ${coach.firstName} ${coach.lastName}`}
+          title={isNewCoach ? 'Add New Coach' : 'Coach Settings'}
+          subtitle={isNewCoach ? `Add a new coach to ${club?.name}` : `Manage details for ${coach!.firstName} ${coach!.lastName}`}
         />
 
         <div className="max-w-4xl mx-auto">
@@ -297,21 +302,23 @@ export default function CoachSettingsPage() {
             </div>
           </div>
 
-          {/* Danger Zone */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mt-6 border border-red-200 dark:border-red-800">
-            <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-              These actions are permanent and cannot be undone.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button className="btn-md px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors">
-                Archive Coach
-              </button>
-              <button className="btn-md px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">
-                Delete Coach
-              </button>
+          {/* Danger Zone - Only show for existing coaches */}
+          {!isNewCoach && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mt-6 border border-red-200 dark:border-red-800">
+              <h2 className="text-lg font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                These actions are permanent and cannot be undone.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button className="btn-md px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-md transition-colors">
+                  Archive Coach
+                </button>
+                <button className="btn-md px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md transition-colors">
+                  Delete Coach
+                </button>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
     </div>

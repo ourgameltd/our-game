@@ -29,6 +29,10 @@ export class Routes {
     return `/clubs/${clubId}/players`;
   }
 
+  static clubPlayerSettings(clubId: string, playerId: string): string {
+    return `/clubs/${clubId}/players/${playerId}/settings`;
+  }
+
   static clubCoaches(clubId: string): string {
     return `/clubs/${clubId}/coaches`;
   }

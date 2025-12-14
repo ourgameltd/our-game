@@ -9,6 +9,7 @@ import ClubsListPage from '@pages/clubs/ClubsListPage';
 import ClubOverviewPage from '@pages/clubs/ClubOverviewPage';
 import ClubEthosPage from '@pages/clubs/ClubEthosPage';
 import ClubPlayersPage from '@pages/clubs/ClubPlayersPage';
+import ClubPlayerSettingsPage from '@pages/clubs/ClubPlayerSettingsPage';
 import ClubCoachesPage from '@pages/clubs/ClubCoachesPage';
 import ClubKitsPage from '@pages/clubs/ClubKitsPage';
 import ClubSettingsPage from '@pages/clubs/ClubSettingsPage';
@@ -67,6 +68,7 @@ function AppContent() {
         <Route path="/clubs/:clubId" element={<ClubOverviewPage />} />
         <Route path="/clubs/:clubId/ethos" element={<ClubEthosPage />} />
         <Route path="/clubs/:clubId/players" element={<ClubPlayersPage />} />
+        <Route path="/clubs/:clubId/players/:playerId/settings" element={<ClubPlayerSettingsPage />} />
         <Route path="/clubs/:clubId/coaches" element={<ClubCoachesPage />} />
         <Route path="/clubs/:clubId/coaches/:coachId" element={<CoachProfilePage />} />
         <Route path="/clubs/:clubId/coaches/:coachId/settings" element={<CoachSettingsPage />} />

@@ -10,13 +10,14 @@ import { PlayerPosition } from '@/types';
 export default function PlayerSettingsPage() {
   const { clubId, ageGroupId, teamId, playerId } = useParams();
   const navigate = useNavigate();
-  const player = getPlayerById(playerId!);
+  const isNewPlayer = playerId === 'new';
+  const player = isNewPlayer ? null : getPlayerById(playerId!);
 
   const [formData, setFormData] = useState({
     firstName: player?.firstName || '',
     lastName: player?.lastName || '',
     nickname: player?.nickname || '',
-    dateOfBirth: player?.dateOfBirth.toISOString().split('T')[0] || '',
+    dateOfBirth: player?.dateOfBirth ? player.dateOfBirth.toISOString().split('T')[0] : '',
     photo: player?.photo || '',
     preferredPositions: player?.preferredPositions || [],
     // Medical Information
@@ -40,7 +41,10 @@ export default function PlayerSettingsPage() {
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string>(player?.photo || '');
 
-  if (!player) {
+  // Helper to determine if fields should be disabled (only for archived existing players)
+  const isFormDisabled = !isNewPlayer && player?.isArchived;
+
+  if (!isNewPlayer && !player) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
@@ -149,6 +153,7 @@ export default function PlayerSettingsPage() {
   };
 
   const handleArchive = () => {
+    if (!player) return;
     const isCurrentlyArchived = player.isArchived;
     const action = isCurrentlyArchived ? 'unarchived' : 'archived';
     // In a real app, this would call the backend API
@@ -175,11 +180,11 @@ export default function PlayerSettingsPage() {
       <main className="container mx-auto px-4 py-8">
         {/* Header */}
         <PageTitle
-          title="Player Settings"
-          subtitle={`Manage ${player.firstName} ${player.lastName}'s profile and information`}
-          badge={player.isArchived ? "🗄️ Archived" : undefined}
+          title={isNewPlayer ? "Add New Player" : "Player Settings"}
+          subtitle={isNewPlayer ? "Create a new player profile" : `Manage ${player!.firstName} ${player!.lastName}'s profile and information`}
+          badge={!isNewPlayer && player!.isArchived ? "🗄️ Archived" : undefined}
         />
-        {player.isArchived && (
+        {!isNewPlayer && player!.isArchived && (
           <div className="mb-6 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
             <p className="text-sm text-orange-800 dark:text-orange-300">
               ⚠️ This player is archived. You cannot modify their settings while they are archived. Unarchive them to make changes.
@@ -205,7 +210,7 @@ export default function PlayerSettingsPage() {
                   value={formData.firstName}
                   onChange={handleInputChange}
                   required
-                  disabled={player.isArchived}
+                  disabled={isFormDisabled}
                   placeholder="Enter first name"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -221,7 +226,7 @@ export default function PlayerSettingsPage() {
                   value={formData.lastName}
                   onChange={handleInputChange}
                   required
-                  disabled={player.isArchived}
+                  disabled={isFormDisabled}
                   placeholder="Enter last name"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -236,7 +241,7 @@ export default function PlayerSettingsPage() {
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleInputChange}
-                  disabled={player.isArchived}
+                  disabled={isFormDisabled}
                   placeholder="e.g., Speedy, The Wall, Magic"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -255,7 +260,7 @@ export default function PlayerSettingsPage() {
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
                   required
-                  disabled={player.isArchived}
+                  disabled={isFormDisabled}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 {formData.dateOfBirth && (
@@ -292,14 +297,14 @@ export default function PlayerSettingsPage() {
                       id="photo-upload"
                       accept="image/*"
                       onChange={handlePhotoChange}
-                      disabled={player.isArchived}
+                      disabled={isFormDisabled}
                       className="hidden"
                     />
                     <div className="flex items-center gap-3">
                       <label
                         htmlFor="photo-upload"
                         className={`inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors ${
-                          player.isArchived ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                          isFormDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                         }`}
                       >
                         <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -314,7 +319,7 @@ export default function PlayerSettingsPage() {
                             setPhotoPreview('');
                             setFormData(prev => ({ ...prev, photo: '' }));
                           }}
-                          disabled={player.isArchived}
+                          disabled={isFormDisabled}
                           className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 rounded-lg shadow-sm text-sm font-medium text-red-700 dark:text-red-300 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
                           Remove
@@ -349,7 +354,7 @@ export default function PlayerSettingsPage() {
                       key={position}
                       type="button"
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
-                      disabled={player.isArchived}
+                      disabled={isFormDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         formData.preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
@@ -371,7 +376,7 @@ export default function PlayerSettingsPage() {
                       key={position}
                       type="button"
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
-                      disabled={player.isArchived}
+                      disabled={isFormDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         formData.preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
@@ -393,7 +398,7 @@ export default function PlayerSettingsPage() {
                       key={position}
                       type="button"
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
-                      disabled={player.isArchived}
+                      disabled={isFormDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         formData.preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
@@ -415,7 +420,7 @@ export default function PlayerSettingsPage() {
                       key={position}
                       type="button"
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
-                      disabled={player.isArchived}
+                      disabled={isFormDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         formData.preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
@@ -449,7 +454,7 @@ export default function PlayerSettingsPage() {
                   name="allergies"
                   value={formData.allergies}
                   onChange={handleInputChange}
-                  disabled={player.isArchived}
+                  disabled={isFormDisabled}
                   placeholder="e.g., Peanuts, Penicillin (comma-separated)"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -464,7 +469,7 @@ export default function PlayerSettingsPage() {
                   name="conditions"
                   value={formData.conditions}
                   onChange={handleInputChange}
-                  disabled={player.isArchived}
+                  disabled={isFormDisabled}
                   placeholder="e.g., Asthma, Diabetes (comma-separated)"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -478,7 +483,7 @@ export default function PlayerSettingsPage() {
                   <button
                     type="button"
                     onClick={handleAddEmergencyContact}
-                    disabled={player.isArchived}
+                    disabled={isFormDisabled}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     + Add Contact
@@ -509,7 +514,7 @@ export default function PlayerSettingsPage() {
                               <button
                                 type="button"
                                 onClick={() => handleSetPrimaryContact(contact.id)}
-                                disabled={player.isArchived}
+                                disabled={isFormDisabled}
                                 className="text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 Set as Primary
@@ -518,7 +523,7 @@ export default function PlayerSettingsPage() {
                             <button
                               type="button"
                               onClick={() => handleRemoveEmergencyContact(contact.id)}
-                              disabled={player.isArchived}
+                              disabled={isFormDisabled}
                               className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Remove contact"
                             >
@@ -538,7 +543,7 @@ export default function PlayerSettingsPage() {
                               type="text"
                               value={contact.name}
                               onChange={(e) => handleEmergencyContactChange(contact.id, 'name', e.target.value)}
-                              disabled={player.isArchived}
+                              disabled={isFormDisabled}
                               placeholder="Enter name"
                               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             />
@@ -552,7 +557,7 @@ export default function PlayerSettingsPage() {
                               type="tel"
                               value={contact.phone}
                               onChange={(e) => handleEmergencyContactChange(contact.id, 'phone', e.target.value)}
-                              disabled={player.isArchived}
+                              disabled={isFormDisabled}
                               placeholder="+44 7XXX XXXXXX"
                               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             />
@@ -566,7 +571,7 @@ export default function PlayerSettingsPage() {
                               type="text"
                               value={contact.relationship}
                               onChange={(e) => handleEmergencyContactChange(contact.id, 'relationship', e.target.value)}
-                              disabled={player.isArchived}
+                              disabled={isFormDisabled}
                               placeholder="e.g., Parent, Guardian"
                               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             />
@@ -586,7 +591,7 @@ export default function PlayerSettingsPage() {
               <div className="flex gap-3">
                 <button
                   type="submit"
-                  disabled={player.isArchived}
+                  disabled={isFormDisabled}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Save Changes
@@ -603,15 +608,16 @@ export default function PlayerSettingsPage() {
           </div>
         </form>
 
-        {/* Archive Zone */}
-        <div className="card border-2 border-orange-200 dark:border-orange-900 mt-6">
-          <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
-            <div>
-                <h3 className="text-xl font-semibold text-orange-600 dark:text-orange-400 mb-4">
-                    {player.isArchived ? 'Unarchive Player' : 'Archive Player'}
-                </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {player.isArchived 
+        {/* Archive Zone - Only show for existing players */}
+        {!isNewPlayer && (
+          <div className="card border-2 border-orange-200 dark:border-orange-900 mt-6">
+            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+              <div>
+                  <h3 className="text-xl font-semibold text-orange-600 dark:text-orange-400 mb-4">
+                      {player!.isArchived ? 'Unarchive Player' : 'Archive Player'}
+                  </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {player!.isArchived 
                   ? 'Make this player active and allow modifications to their profile'
                   : 'Lock this player profile and prevent modifications while keeping all data'}
               </p>
@@ -620,32 +626,33 @@ export default function PlayerSettingsPage() {
               type="button"
               onClick={() => setShowArchiveConfirm(true)}
               className={`px-4 py-2 rounded-lg transition-colors font-medium ${
-                player.isArchived
+                player!.isArchived
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-orange-600 text-white hover:bg-orange-700'
               }`}
             >
-              {player.isArchived ? 'Unarchive Player' : 'Archive Player'}
+              {player!.isArchived ? 'Unarchive Player' : 'Archive Player'}
             </button>
           </div>
         </div>
+        )}
 
         {/* Archive Confirmation Modal */}
-        {showArchiveConfirm && (
+        {!isNewPlayer && showArchiveConfirm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
             <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                {player.isArchived ? 'Unarchive Player?' : 'Archive Player?'}
+                {player!.isArchived ? 'Unarchive Player?' : 'Archive Player?'}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-6">
-                {player.isArchived ? (
+                {player!.isArchived ? (
                   <>
-                    Are you sure you want to unarchive <strong>{player.firstName} {player.lastName}</strong>? 
+                    Are you sure you want to unarchive <strong>{player!.firstName} {player!.lastName}</strong>? 
                     This will make their profile active again and allow modifications.
                   </>
                 ) : (
                   <>
-                    Are you sure you want to archive <strong>{player.firstName} {player.lastName}</strong>? 
+                    Are you sure you want to archive <strong>{player!.firstName} {player!.lastName}</strong>? 
                     This will lock their profile and prevent modifications. All their data will be preserved and you can unarchive them later.
                   </>
                 )}
@@ -665,12 +672,12 @@ export default function PlayerSettingsPage() {
                     handleArchive();
                   }}
                   className={`px-4 py-2 rounded-lg transition-colors ${
-                    player.isArchived
+                    player!.isArchived
                       ? 'bg-green-600 text-white hover:bg-green-700'
                       : 'bg-orange-600 text-white hover:bg-orange-700'
                   }`}
                 >
-                  Yes, {player.isArchived ? 'Unarchive' : 'Archive'} Player
+                  Yes, {player!.isArchived ? 'Unarchive' : 'Archive'} Player
                 </button>
               </div>
             </div>
@@ -680,3 +687,5 @@ export default function PlayerSettingsPage() {
     </div>
   );
 }
+
+
