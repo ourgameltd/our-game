@@ -9,6 +9,7 @@ export const getClubNavigationTabs = (clubId: string): NavigationTab[] => [
   { label: 'All Players', path: Routes.clubPlayers(clubId) },
   { label: 'Age Groups', path: Routes.ageGroups(clubId) },
   { label: 'Ethos & Principles', path: Routes.clubEthos(clubId) },
+  { label: 'Kits', path: Routes.clubKits(clubId) },
 ];
 
 /**
@@ -26,7 +27,8 @@ export const getAgeGroupNavigationTabs = (clubId: string, ageGroupId: string): N
 export const getTeamNavigationTabs = (clubId: string, ageGroupId: string, teamId: string): NavigationTab[] => [
   { label: 'Overview', path: Routes.team(clubId, ageGroupId, teamId) },
   { label: 'All Players', path: Routes.teamSquad(clubId, ageGroupId, teamId) },
-  { label: 'Matches', path: Routes.matches(clubId, ageGroupId, teamId) }
+  { label: 'Matches', path: Routes.matches(clubId, ageGroupId, teamId) },
+  { label: 'Kits', path: Routes.teamKits(clubId, ageGroupId, teamId) },
 ];
 
 /**

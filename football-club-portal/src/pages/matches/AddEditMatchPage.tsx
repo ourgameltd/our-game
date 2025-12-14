@@ -19,13 +19,22 @@ export default function AddEditMatchPage() {
   const club = sampleClubs.find(c => c.id === clubId);
   const existingMatch = isEditing ? sampleMatches.find(m => m.id === matchId) : null;
 
+  // Get available kits (team kits take priority, then club kits)
+  const teamKits = team?.kits || [];
+  const clubKits = club?.kits || [];
+  const availableKits = [...teamKits, ...clubKits].filter(k => k.isActive);
+
   // Get players for this team
   const teamPlayers = samplePlayers.filter(p => team?.playerIds.includes(p.id));
 
   // Form state
   const [opposition, setOpposition] = useState(existingMatch?.opposition || '');
-  const [date, setDate] = useState(
+  const [kickOffTime, setKickOffTime] = useState(
+    existingMatch?.kickOffTime ? existingMatch.kickOffTime.toISOString().slice(0, 16) : 
     existingMatch?.date ? existingMatch.date.toISOString().slice(0, 16) : ''
+  );
+  const [meetTime, setMeetTime] = useState(
+    existingMatch?.meetTime ? existingMatch.meetTime.toISOString().slice(0, 16) : ''
   );
   const [location, setLocation] = useState(existingMatch?.location || '');
   const [isHome, setIsHome] = useState(existingMatch?.isHome ?? true);
@@ -151,10 +160,18 @@ export default function AddEditMatchPage() {
   };
 
   const handleSave = () => {
+    // Validate required fields
+    if (!opposition || !kickOffTime || !location || !competition || !kit) {
+      alert('Please fill in all required fields');
+      return;
+    }
+
     // In a real app, this would save to backend
     console.log('Saving match...', {
       opposition,
-      date,
+      kickOffTime,
+      meetTime,
+      date: kickOffTime, // Keep date for backward compatibility
       location,
       isHome,
       competition,
@@ -260,13 +277,26 @@ export default function AddEditMatchPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Date & Time *
+                    Kick Off Time *
                   </label>
                   <input
                     type="datetime-local"
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
+                    value={kickOffTime}
+                    onChange={(e) => setKickOffTime(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Meet Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={meetTime}
+                    onChange={(e) => setMeetTime(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="Optional: Team meeting time before kick off"
                   />
                 </div>
 
@@ -324,17 +354,49 @@ export default function AddEditMatchPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Kit
+                    Kit *
                   </label>
                   <select
                     value={kit}
                     onChange={(e) => setKit(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
-                    <option>Home Kit</option>
-                    <option>Away Kit</option>
-                    <option>Third Kit</option>
+                    {availableKits.length === 0 ? (
+                      <>
+                        <option value="Home Kit">Home Kit (Default)</option>
+                        <option value="Away Kit">Away Kit (Default)</option>
+                        <option value="Third Kit">Third Kit (Default)</option>
+                      </>
+                    ) : (
+                      <>
+                        <option value="">Select a kit</option>
+                        {teamKits.filter(k => k.isActive).length > 0 && (
+                          <optgroup label="Team Kits">
+                            {teamKits.filter(k => k.isActive).map(k => (
+                              <option key={k.id} value={k.name}>{k.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        {clubKits.filter(k => k.isActive).length > 0 && (
+                          <optgroup label="Club Kits">
+                            {clubKits.filter(k => k.isActive).map(k => (
+                              <option key={k.id} value={k.name}>{k.name}</option>
+                            ))}
+                          </optgroup>
+                        )}
+                        <optgroup label="Default Kits">
+                          <option value="Home Kit">Home Kit (Default)</option>
+                          <option value="Away Kit">Away Kit (Default)</option>
+                          <option value="Third Kit">Third Kit (Default)</option>
+                        </optgroup>
+                      </>
+                    )}
                   </select>
+                  {availableKits.length === 0 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      No custom kits defined. Using default kits based on club colors.
+                    </p>
+                  )}
                 </div>
 
                 <div>

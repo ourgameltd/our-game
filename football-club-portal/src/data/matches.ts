@@ -7,9 +7,14 @@ export const sampleMatches: Match[] = [
     teamId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     opposition: 'Riverside United',
     date: new Date('2025-12-13T15:00:00'),
+    kickOffTime: new Date('2025-12-13T15:00:00'),
+    meetTime: new Date('2025-12-13T14:15:00'),
     location: 'Community Sports Ground',
     isHome: true,
     competition: 'County League Division 1',
+    kit: {
+      primary: 'Home Kit'
+    },
     status: 'scheduled',
     weather: {
       condition: 'Partly Cloudy',
@@ -21,9 +26,14 @@ export const sampleMatches: Match[] = [
     teamId: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
     opposition: 'Hillside Youth',
     date: new Date('2025-12-14T18:30:00'),
+    kickOffTime: new Date('2025-12-14T18:30:00'),
+    meetTime: new Date('2025-12-14T17:45:00'),
     location: 'Hillside Stadium',
     isHome: false,
     competition: 'Youth Cup - Quarter Final',
+    kit: {
+      primary: 'Away Kit'
+    },
     status: 'scheduled'
   },
   {
@@ -31,9 +41,14 @@ export const sampleMatches: Match[] = [
     teamId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     opposition: 'Oakwood Athletic',
     date: new Date('2025-12-20T14:00:00'),
+    kickOffTime: new Date('2025-12-20T14:00:00'),
+    meetTime: new Date('2025-12-20T13:15:00'),
     location: 'Oakwood Stadium',
     isHome: false,
     competition: 'County League Division 1',
+    kit: {
+      primary: 'Away Kit'
+    },
     status: 'scheduled'
   },
   {
@@ -41,9 +56,14 @@ export const sampleMatches: Match[] = [
     teamId: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
     opposition: 'Greenfield Rangers',
     date: new Date('2025-12-21T11:00:00'),
+    kickOffTime: new Date('2025-12-21T11:00:00'),
+    meetTime: new Date('2025-12-21T10:15:00'),
     location: 'Community Sports Ground',
     isHome: true,
     competition: 'Youth League',
+    kit: {
+      primary: 'Home Kit'
+    },
     status: 'scheduled'
   },
   {
@@ -51,6 +71,7 @@ export const sampleMatches: Match[] = [
     teamId: 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f',
     opposition: 'Brookside United',
     date: new Date('2025-12-27T15:30:00'),
+    kickOffTime: new Date('2025-12-27T15:30:00'),
     location: 'Community Sports Ground',
     isHome: true,
     competition: 'County Cup - Round 3',
@@ -61,6 +82,7 @@ export const sampleMatches: Match[] = [
     teamId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     opposition: 'Meadowbank FC',
     date: new Date('2026-01-03T15:00:00'),
+    kickOffTime: new Date('2026-01-03T15:00:00'),
     location: 'Community Sports Ground',
     isHome: true,
     competition: 'County League Division 1',
@@ -71,6 +93,7 @@ export const sampleMatches: Match[] = [
     teamId: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
     opposition: 'Fairview Athletic',
     date: new Date('2026-01-10T13:30:00'),
+    kickOffTime: new Date('2026-01-10T13:30:00'),
     location: 'Fairview Park',
     isHome: false,
     competition: 'Youth League',
@@ -81,6 +104,7 @@ export const sampleMatches: Match[] = [
     teamId: 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f',
     opposition: 'Westside Warriors',
     date: new Date('2026-01-17T14:00:00'),
+    kickOffTime: new Date('2026-01-17T14:00:00'),
     location: 'Westside Arena',
     isHome: false,
     competition: 'County League Division 2',
@@ -93,6 +117,7 @@ export const sampleMatches: Match[] = [
     teamId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     opposition: 'Parkside Rangers',
     date: new Date('2024-12-01T15:00:00'),
+    kickOffTime: new Date('2024-12-01T15:00:00'),
     location: 'Community Sports Ground',
     isHome: true,
     competition: 'County League Division 1',
@@ -148,6 +173,7 @@ export const sampleMatches: Match[] = [
     teamId: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
     opposition: 'Hillside Athletic',
     date: new Date('2024-12-01T13:00:00'),
+    kickOffTime: new Date('2024-12-01T13:00:00'),
     location: 'Hillside Park',
     isHome: false,
     competition: 'Youth League',
@@ -189,6 +215,7 @@ export const sampleMatches: Match[] = [
     teamId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     opposition: 'Meadow United',
     date: new Date('2024-11-24T15:00:00'),
+    kickOffTime: new Date('2024-11-24T15:00:00'),
     location: 'Community Sports Ground',
     isHome: true,
     competition: 'County League Division 1',
@@ -236,6 +263,7 @@ export const sampleMatches: Match[] = [
     teamId: 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e',
     opposition: 'Brookfield Youth',
     date: new Date('2024-11-23T10:00:00'),
+    kickOffTime: new Date('2024-11-23T10:00:00'),
     location: 'Community Sports Ground',
     isHome: true,
     competition: 'Youth League',
@@ -274,6 +302,7 @@ export const sampleMatches: Match[] = [
     teamId: 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d',
     opposition: 'Oakwood Eagles',
     date: new Date('2024-11-20T09:30:00'),
+    kickOffTime: new Date('2024-11-20T09:30:00'),
     location: 'Oakwood Recreation Ground',
     isHome: false,
     competition: 'Friendly',
@@ -323,6 +352,7 @@ export const sampleMatches: Match[] = [
     teamId: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a',
     opposition: 'Riverside United',
     date: new Date('2024-12-01T15:00:00'),
+    kickOffTime: new Date('2024-12-01T15:00:00'),
     location: 'Community Sports Ground',
     isHome: true,
     competition: 'County League Division 1',
@@ -364,6 +394,7 @@ export const sampleMatches: Match[] = [
     teamId: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a',
     opposition: 'Hillside Athletic',
     date: new Date('2024-11-24T15:00:00'),
+    kickOffTime: new Date('2024-11-24T15:00:00'),
     location: 'Hillside Park',
     isHome: false,
     competition: 'County League Division 1',

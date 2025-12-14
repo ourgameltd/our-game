@@ -27,6 +27,58 @@ export const sampleClubs: Club[] = [
       'Development - Nurturing talent and personal growth at every level',
       'Respect - Treating everyone with dignity on and off the pitch',
       'Fun - Ensuring football remains enjoyable for all participants'
+    ],
+    kits: [
+      {
+        id: 'kit-vale-home',
+        name: 'Vale Home Kit',
+        type: 'home',
+        shirt: {
+          pattern: 'vertical-stripes',
+          primaryColor: '#1a472a',
+          secondaryColor: '#ffd700',
+        },
+        shorts: {
+          color: '#1a472a',
+        },
+        socks: {
+          color: '#ffd700',
+        },
+        isActive: true,
+      },
+      {
+        id: 'kit-vale-away',
+        name: 'Vale Away Kit',
+        type: 'away',
+        shirt: {
+          pattern: 'solid',
+          primaryColor: '#ffffff',
+        },
+        shorts: {
+          color: '#1a472a',
+        },
+        socks: {
+          color: '#ffffff',
+        },
+        isActive: true,
+      },
+      {
+        id: 'kit-vale-third',
+        name: 'Vale Third Kit',
+        type: 'third',
+        shirt: {
+          pattern: 'horizontal-stripes',
+          primaryColor: '#ffd700',
+          secondaryColor: '#1a472a',
+        },
+        shorts: {
+          color: '#000000',
+        },
+        socks: {
+          color: '#ffd700',
+        },
+        isActive: true,
+      },
     ]
   },
   {
@@ -45,7 +97,25 @@ export const sampleClubs: Club[] = [
     },
     founded: 1985,
     history: 'Riverside United was established in 1985 by a group of local enthusiasts.',
-    ethos: 'Excellence through teamwork and dedication.'
+    ethos: 'Excellence through teamwork and dedication.',
+    kits: [
+      {
+        id: 'kit-renton-home',
+        name: 'Renton Home Kit',
+        type: 'home',
+        shirt: {
+          pattern: 'solid',
+          primaryColor: '#CC0014',
+        },
+        shorts: {
+          color: '#000000',
+        },
+        socks: {
+          color: '#CC0014',
+        },
+        isActive: true,
+      },
+    ]
   }
 ];
 

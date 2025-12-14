@@ -1,3 +1,29 @@
+// Kit Types
+export type KitPattern = 
+  | 'solid'
+  | 'vertical-stripes'
+  | 'horizontal-stripes';
+
+export interface Kit {
+  id: string;
+  name: string; // e.g., 'Home Kit', 'Away Kit', 'Third Kit'
+  type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
+  shirt: {
+    pattern: KitPattern;
+    primaryColor: string; // Hex color
+    secondaryColor?: string; // Hex color for patterns
+    sleeveColor?: string; // Hex color for sleeve if different
+  };
+  shorts: {
+    color: string; // Hex color
+  };
+  socks: {
+    color: string; // Hex color
+  };
+  season?: string;
+  isActive: boolean;
+}
+
 // Club Types
 export interface Club {
   id: string;
@@ -19,6 +45,7 @@ export interface Club {
   history?: string;
   ethos?: string;
   principles?: string[];
+  kits?: Kit[]; // Club-level kit definitions
 }
 
 // Age Group Types
@@ -49,6 +76,7 @@ export interface Team {
     primary: string;
     secondary: string;
   };
+  kits?: Kit[]; // Team-specific kits, falls back to club kits if not defined
 }
 
 // Player Types
@@ -199,12 +227,14 @@ export interface Match {
   id: string;
   teamId: string;
   opposition: string;
-  date: Date;
+  date: Date; // Kick off date and time
+  meetTime?: Date; // Team meet time before the match
+  kickOffTime: Date; // Kick off date and time (same as date, for clarity)
   location: string;
   isHome: boolean;
   competition: string;
   kit?: {
-    primary: string; // Kit color/description
+    primary: string; // Kit color/description (e.g., 'Home Kit', 'Away Kit', 'Third Kit')
     secondary?: string;
   };
   score?: {

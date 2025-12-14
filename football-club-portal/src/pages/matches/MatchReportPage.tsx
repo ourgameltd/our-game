@@ -205,6 +205,43 @@ export default function MatchReportPage() {
               )}
             </div>
           </div>
+          
+          {/* Match Details */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <div>
+              <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Date</h3>
+              <p className="text-sm text-gray-900 dark:text-white">
+                {match.date.toLocaleDateString('en-GB', { 
+                  day: 'numeric',
+                  month: 'short',
+                  year: 'numeric'
+                })}
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kick Off</h3>
+              <p className="text-sm text-gray-900 dark:text-white">
+                {match.date.toLocaleTimeString('en-GB', { 
+                  hour: '2-digit', 
+                  minute: '2-digit' 
+                })}
+              </p>
+            </div>
+            <div>
+              <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Location</h3>
+              <p className="text-sm text-gray-900 dark:text-white">
+                📍 {match.location}
+              </p>
+            </div>
+            {match.kit && (
+              <div>
+                <h3 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Kit</h3>
+                <p className="text-sm text-gray-900 dark:text-white">
+                  👕 {match.kit.primary}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
         
         {/* Match Report Content (only for past matches) */}
@@ -445,18 +482,60 @@ export default function MatchReportPage() {
         {isUpcoming && (
           <div className="card">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Match Preview</h2>
-            <p className="text-gray-600 dark:text-gray-400">
-              This match is scheduled for {match.date.toLocaleDateString('en-GB', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-              })} at {match.date.toLocaleTimeString('en-GB', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}.
-            </p>
-            <p className="text-gray-600 dark:text-gray-400 mt-2">
+            
+            {/* Match Details Grid */}
+            <div className="grid md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Kick Off</h3>
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {match.date.toLocaleDateString('en-GB', { 
+                    weekday: 'long', 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                  })}
+                </p>
+                <p className="text-gray-900 dark:text-white font-medium">
+                  {match.date.toLocaleTimeString('en-GB', { 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                  })}
+                </p>
+              </div>
+              
+              {match.meetTime && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Meet Time</h3>
+                  <p className="text-gray-900 dark:text-white font-medium">
+                    {match.meetTime.toLocaleTimeString('en-GB', { 
+                      hour: '2-digit', 
+                      minute: '2-digit' 
+                    })}
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    Team assembles before kick off
+                  </p>
+                </div>
+              )}
+              
+              <div>
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Location</h3>
+                <p className="text-gray-900 dark:text-white">
+                  📍 {match.location}
+                </p>
+              </div>
+              
+              {match.kit && (
+                <div>
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Kit</h3>
+                  <p className="text-gray-900 dark:text-white">
+                    👕 {match.kit.primary}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <p className="text-gray-600 dark:text-gray-400 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               Match report will be available after the game.
             </p>
           </div>

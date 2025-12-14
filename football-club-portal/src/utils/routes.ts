@@ -17,12 +17,20 @@ export class Routes {
     return `/clubs/${clubId}`;
   }
 
+  static clubOverview(clubId: string): string {
+    return `/clubs/${clubId}`;
+  }
+
   static clubEthos(clubId: string): string {
     return `/clubs/${clubId}/ethos`;
   }
 
   static clubPlayers(clubId: string): string {
     return `/clubs/${clubId}/players`;
+  }
+
+  static clubKits(clubId: string): string {
+    return `/clubs/${clubId}/kits`;
   }
 
   // Age Groups
@@ -49,6 +57,10 @@ export class Routes {
 
   static teamSquad(clubId: string, ageGroupId: string, teamId: string): string {
     return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`;
+  }
+
+  static teamKits(clubId: string, ageGroupId: string, teamId: string): string {
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/kits`;
   }
 
   // Players

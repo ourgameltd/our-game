@@ -9,12 +9,14 @@ import ClubsListPage from '@pages/clubs/ClubsListPage';
 import ClubOverviewPage from '@pages/clubs/ClubOverviewPage';
 import ClubEthosPage from '@pages/clubs/ClubEthosPage';
 import ClubPlayersPage from '@pages/clubs/ClubPlayersPage';
+import ClubKitsPage from '@pages/clubs/ClubKitsPage';
 import AgeGroupsListPage from '@pages/ageGroups/AgeGroupsListPage';
 import AgeGroupOverviewPage from '@pages/ageGroups/AgeGroupOverviewPage';
 import AgeGroupPlayersPage from '@pages/ageGroups/AgeGroupPlayersPage';
 import TeamsListPage from '@pages/teams/TeamsListPage';
 import TeamOverviewPage from '@pages/teams/TeamOverviewPage';
 import SquadManagementPage from '@pages/teams/SquadManagementPage';
+import TeamKitsPage from '@pages/teams/TeamKitsPage';
 import PlayerProfilePage from '@pages/players/PlayerProfilePage';
 import PlayerAbilitiesPage from '@pages/players/PlayerAbilitiesPage';
 import MatchReportPage from '@pages/matches/MatchReportPage';
@@ -56,6 +58,7 @@ function AppContent() {
         <Route path="/clubs/:clubId" element={<ClubOverviewPage />} />
         <Route path="/clubs/:clubId/ethos" element={<ClubEthosPage />} />
         <Route path="/clubs/:clubId/players" element={<ClubPlayersPage />} />
+        <Route path="/clubs/:clubId/kits" element={<ClubKitsPage />} />
 
         {/* Age Groups */}
         <Route path="/clubs/:clubId/age-groups" element={<AgeGroupsListPage />} />
@@ -66,6 +69,7 @@ function AppContent() {
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams" element={<TeamsListPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId" element={<TeamOverviewPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/squad" element={<SquadManagementPage />} />
+        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/kits" element={<TeamKitsPage />} />
 
         {/* Players - Team Level */}
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId" element={<PlayerProfilePage />} />
