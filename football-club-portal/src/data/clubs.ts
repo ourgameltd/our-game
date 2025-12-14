@@ -33,50 +33,27 @@ export const sampleClubs: Club[] = [
         id: 'kit-vale-home',
         name: 'Vale Home Kit',
         type: 'home',
-        shirt: {
-          pattern: 'vertical-stripes',
-          primaryColor: '#1a472a',
-          secondaryColor: '#ffd700',
-        },
-        shorts: {
-          color: '#1a472a',
-        },
-        socks: {
-          color: '#ffd700',
-        },
+        shirtColor: '#1a472a',
+        shortsColor: '#1a472a',
+        socksColor: '#ffd700',
         isActive: true,
       },
       {
         id: 'kit-vale-away',
         name: 'Vale Away Kit',
         type: 'away',
-        shirt: {
-          pattern: 'solid',
-          primaryColor: '#ffffff',
-        },
-        shorts: {
-          color: '#1a472a',
-        },
-        socks: {
-          color: '#ffffff',
-        },
+        shirtColor: '#ffffff',
+        shortsColor: '#1a472a',
+        socksColor: '#ffffff',
         isActive: true,
       },
       {
         id: 'kit-vale-third',
         name: 'Vale Third Kit',
         type: 'third',
-        shirt: {
-          pattern: 'horizontal-stripes',
-          primaryColor: '#ffd700',
-          secondaryColor: '#1a472a',
-        },
-        shorts: {
-          color: '#000000',
-        },
-        socks: {
-          color: '#ffd700',
-        },
+        shirtColor: '#ffd700',
+        shortsColor: '#000000',
+        socksColor: '#ffd700',
         isActive: true,
       },
     ]
@@ -103,16 +80,9 @@ export const sampleClubs: Club[] = [
         id: 'kit-renton-home',
         name: 'Renton Home Kit',
         type: 'home',
-        shirt: {
-          pattern: 'solid',
-          primaryColor: '#CC0014',
-        },
-        shorts: {
-          color: '#000000',
-        },
-        socks: {
-          color: '#CC0014',
-        },
+        shirtColor: '#CC0014',
+        shortsColor: '#000000',
+        socksColor: '#CC0014',
         isActive: true,
       },
     ]

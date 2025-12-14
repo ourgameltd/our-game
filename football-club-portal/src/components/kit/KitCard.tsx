@@ -1,5 +1,4 @@
 import { Kit } from '@/types';
-import { KitShirtSvg, KitShortsSvg, KitSocksSvg } from './KitSvgParts';
 
 interface KitCardProps {
   kit: Kit;
@@ -10,10 +9,6 @@ interface KitCardProps {
 }
 
 export default function KitCard({ kit, onClick, onEdit, onDelete, showActions = true }: KitCardProps) {
-  const getShirtPreview = () => {
-    return <KitShirtSvg kitId={kit.id} shirt={kit.shirt} className="w-full h-auto text-gray-700 dark:text-gray-200" />;
-  };
-
   return (
     <div 
       className={`card-hover ${onClick ? 'cursor-pointer' : ''} ${!kit.isActive ? 'opacity-60' : ''}`}
@@ -33,29 +28,32 @@ export default function KitCard({ kit, onClick, onEdit, onDelete, showActions = 
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className="grid grid-cols-3 gap-3">
         {/* Shirt */}
         <div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Shirt</div>
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2">
-            {getShirtPreview()}
-          </div>
+          <div 
+            className="w-full aspect-square rounded-lg border-2 border-gray-300 dark:border-gray-600"
+            style={{ backgroundColor: kit.shirtColor }}
+          />
         </div>
 
-        {/* Shorts & Socks */}
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Shorts</div>
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2">
-              <KitShortsSvg shortsColor={kit.shorts.color} className="w-full h-auto text-gray-700 dark:text-gray-200" />
-            </div>
-          </div>
-          <div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Socks</div>
-            <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-2">
-              <KitSocksSvg socksColor={kit.socks.color} className="w-full h-auto text-gray-700 dark:text-gray-200" />
-            </div>
-          </div>
+        {/* Shorts */}
+        <div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Shorts</div>
+          <div 
+            className="w-full aspect-square rounded-lg border-2 border-gray-300 dark:border-gray-600"
+            style={{ backgroundColor: kit.shortsColor }}
+          />
+        </div>
+
+        {/* Socks */}
+        <div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Socks</div>
+          <div 
+            className="w-full aspect-square rounded-lg border-2 border-gray-300 dark:border-gray-600"
+            style={{ backgroundColor: kit.socksColor }}
+          />
         </div>
       </div>
 

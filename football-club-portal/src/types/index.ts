@@ -1,25 +1,11 @@
 // Kit Types
-export type KitPattern = 
-  | 'solid'
-  | 'vertical-stripes'
-  | 'horizontal-stripes';
-
 export interface Kit {
   id: string;
   name: string; // e.g., 'Home Kit', 'Away Kit', 'Third Kit'
   type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
-  shirt: {
-    pattern: KitPattern;
-    primaryColor: string; // Hex color
-    secondaryColor?: string; // Hex color for patterns
-    sleeveColor?: string; // Hex color for sleeve if different
-  };
-  shorts: {
-    color: string; // Hex color
-  };
-  socks: {
-    color: string; // Hex color
-  };
+  shirtColor: string; // Hex color
+  shortsColor: string; // Hex color
+  socksColor: string; // Hex color
   season?: string;
   isActive: boolean;
 }

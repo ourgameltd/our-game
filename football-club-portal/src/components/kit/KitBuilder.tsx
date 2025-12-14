@@ -1,6 +1,5 @@
 import { useState } from 'react';
-import { Kit, KitPattern } from '@/types';
-import { KitShirtSvg, KitShortsSvg, KitSocksSvg } from './KitSvgParts';
+import { Kit } from '@/types';
 
 interface KitBuilderProps {
   kit?: Kit;
@@ -8,25 +7,13 @@ interface KitBuilderProps {
   onCancel: () => void;
 }
 
-const patternOptions: { value: KitPattern; label: string }[] = [
-  { value: 'solid', label: 'Solid' },
-  { value: 'vertical-stripes', label: 'Vertical Stripes' },
-  { value: 'horizontal-stripes', label: 'Horizontal Stripes' },
-];
-
 export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
   const [name, setName] = useState(kit?.name || '');
   const [type, setType] = useState<Kit['type']>(kit?.type || 'home');
-  const [pattern, setPattern] = useState<KitPattern>(kit?.shirt.pattern || 'solid');
-  const [primaryColor, setPrimaryColor] = useState(kit?.shirt.primaryColor || '#FF0000');
-  const [secondaryColor, setSecondaryColor] = useState(kit?.shirt.secondaryColor || '#FFFFFF');
-  const [sleeveColor, setSleeveColor] = useState(kit?.shirt.sleeveColor || '');
-  const [shortsColor, setShortsColor] = useState(kit?.shorts.color || '#000000');
-  const [socksColor, setSocksColor] = useState(kit?.socks.color || '#FFFFFF');
+  const [shirtColor, setShirtColor] = useState(kit?.shirtColor || '#FF0000');
+  const [shortsColor, setShortsColor] = useState(kit?.shortsColor || '#000000');
+  const [socksColor, setSocksColor] = useState(kit?.socksColor || '#FFFFFF');
   const [isActive, setIsActive] = useState(kit?.isActive ?? true);
-
-  const needsSecondaryColor = pattern !== 'solid';
-  const canHaveSleeveColor = pattern === 'solid';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,62 +26,13 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
     const kitData: Omit<Kit, 'id'> = {
       name: name.trim(),
       type,
-      shirt: {
-        pattern,
-        primaryColor,
-        ...(needsSecondaryColor && { secondaryColor }),
-        ...(sleeveColor && canHaveSleeveColor && { sleeveColor }),
-      },
-      shorts: {
-        color: shortsColor,
-      },
-      socks: {
-        color: socksColor,
-      },
+      shirtColor,
+      shortsColor,
+      socksColor,
       isActive,
     };
 
     onSave(kitData);
-  };
-
-  // Generate preview of the kit
-  const getShirtPreview = () => {
-    const previewKitId = `builder-${kit?.id ?? 'new'}`;
-
-    const shirt = {
-      pattern,
-      primaryColor,
-      secondaryColor: pattern === 'solid' ? undefined : secondaryColor,
-      sleeveColor: sleeveColor || undefined,
-    };
-
-    return (
-      <div className="space-y-4">
-        {/* Shirt Preview */}
-        <div>
-          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Shirt</h4>
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 flex justify-center">
-            <KitShirtSvg kitId={previewKitId} shirt={shirt} className="w-48 h-auto text-gray-700 dark:text-gray-200" />
-          </div>
-        </div>
-        
-        {/* Shorts Preview */}
-        <div>
-          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Shorts</h4>
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 flex justify-center">
-            <KitShortsSvg shortsColor={shortsColor} className="w-48 h-auto text-gray-700 dark:text-gray-200" />
-          </div>
-        </div>
-        
-        {/* Socks Preview */}
-        <div>
-          <h4 className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Socks</h4>
-          <div className="bg-gray-100 dark:bg-gray-800 rounded-lg p-4 flex justify-center">
-            <KitSocksSvg socksColor={socksColor} className="h-28 w-auto text-gray-700 dark:text-gray-200" />
-          </div>
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -139,90 +77,43 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Shirt Pattern *
+              <label className="flex items-center">
+                <input
+                  type="checkbox"
+                  checked={isActive}
+                  onChange={(e) => setIsActive(e.target.checked)}
+                  className="mr-2"
+                />
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Active Kit (available for selection)
+                </span>
               </label>
-              <select
-                value={pattern}
-                onChange={(e) => setPattern(e.target.value as KitPattern)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                {patternOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
             </div>
+          </div>
 
+          <div>
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Primary Shirt Color *
+                Shirt Color *
               </label>
               <div className="flex gap-3 items-center">
                 <input
                   type="color"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  value={shirtColor}
+                  onChange={(e) => setShirtColor(e.target.value)}
                   className="h-10 w-20 rounded border border-gray-300 dark:border-gray-600"
                 />
                 <input
                   type="text"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
+                  value={shirtColor}
+                  onChange={(e) => setShirtColor(e.target.value)}
                   className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="#FF0000"
                 />
               </div>
             </div>
-
-            {needsSecondaryColor && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Secondary Shirt Color *
-                </label>
-                <div className="flex gap-3 items-center">
-                  <input
-                    type="color"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    className="h-10 w-20 rounded border border-gray-300 dark:border-gray-600"
-                  />
-                  <input
-                    type="text"
-                    value={secondaryColor}
-                    onChange={(e) => setSecondaryColor(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="#FFFFFF"
-                  />
-                </div>
-              </div>
-            )}
-
-            {canHaveSleeveColor && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Sleeve Color (Optional)
-                </label>
-                <div className="flex gap-3 items-center">
-                  <input
-                    type="color"
-                    value={sleeveColor || primaryColor}
-                    onChange={(e) => setSleeveColor(e.target.value)}
-                    className="h-10 w-20 rounded border border-gray-300 dark:border-gray-600"
-                  />
-                  <input
-                    type="text"
-                    value={sleeveColor}
-                    onChange={(e) => setSleeveColor(e.target.value)}
-                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="Leave empty for same as primary"
-                  />
-                </div>
-              </div>
-            )}
-
-            <div>
+            
+             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Shorts Color *
               </label>
@@ -264,25 +155,6 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
               </div>
             </div>
 
-            <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  className="mr-2"
-                />
-                <span className="text-sm text-gray-700 dark:text-gray-300">
-                  Active Kit (available for selection)
-                </span>
-              </label>
-            </div>
-          </div>
-
-          {/* Right Column - Preview */}
-          <div>
-            <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-4">Preview</h4>
-            {getShirtPreview()}
           </div>
         </div>
 
