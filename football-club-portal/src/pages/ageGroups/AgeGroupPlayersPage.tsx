@@ -66,15 +66,14 @@ export default function AgeGroupPlayersPage() {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {goalkeepers.map((player) => (
                 <div key={player.id} className="relative">
-                  {/* We'll link to first team for now - could be improved to show team selection */}
                   <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.teamIds[0], player.id)}
+                    to={Routes.player(clubId!, ageGroupId!, player.id)}
                   >
                     <PlayerCard player={player} />
                   </Link>
-                  {player.teamIds.length > 1 && (
+                  {player.ageGroupIds.length > 1 && (
                     <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
+                      {player.ageGroupIds.length} age groups
                     </div>
                   )}
                 </div>
@@ -93,13 +92,13 @@ export default function AgeGroupPlayersPage() {
               {defenders.map((player) => (
                 <div key={player.id} className="relative">
                   <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.teamIds[0], player.id)}
+                    to={Routes.player(clubId!, ageGroupId!, player.id)}
                   >
                     <PlayerCard player={player} />
                   </Link>
-                  {player.teamIds.length > 1 && (
+                  {player.ageGroupIds.length > 1 && (
                     <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
+                      {player.ageGroupIds.length} age groups
                     </div>
                   )}
                 </div>
@@ -118,13 +117,13 @@ export default function AgeGroupPlayersPage() {
               {midfielders.map((player) => (
                 <div key={player.id} className="relative">
                   <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.teamIds[0], player.id)}
+                    to={Routes.player(clubId!, ageGroupId!, player.id)}
                   >
                     <PlayerCard player={player} />
                   </Link>
-                  {player.teamIds.length > 1 && (
+                  {player.ageGroupIds.length > 1 && (
                     <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
+                      {player.ageGroupIds.length} age groups
                     </div>
                   )}
                 </div>
@@ -143,13 +142,13 @@ export default function AgeGroupPlayersPage() {
               {forwards.map((player) => (
                 <div key={player.id} className="relative">
                   <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.teamIds[0], player.id)}
+                    to={Routes.player(clubId!, ageGroupId!, player.id)}
                   >
                     <PlayerCard player={player} />
                   </Link>
-                  {player.teamIds.length > 1 && (
+                  {player.ageGroupIds.length > 1 && (
                     <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
+                      {player.ageGroupIds.length} age groups
                     </div>
                   )}
                 </div>
@@ -177,3 +176,4 @@ export default function AgeGroupPlayersPage() {
     </div>
   );
 }
+

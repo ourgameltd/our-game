@@ -107,46 +107,41 @@ export class Routes {
   static player(
     clubId: string,
     ageGroupId: string,
-    teamId: string,
     playerId: string
   ): string {
-    return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}`;
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}`;
   }
 
   static playerAbilities(
     clubId: string,
     ageGroupId: string,
-    teamId: string,
     playerId: string
   ): string {
-    return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`;
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`;
   }
 
   static playerReportCard(
     clubId: string,
     ageGroupId: string,
-    teamId: string,
     playerId: string
   ): string {
-    return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`;
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`;
   }
 
   static playerDevelopmentPlans(
     clubId: string,
     ageGroupId: string,
-    teamId: string,
     playerId: string
   ): string {
-    return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`;
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans`;
   }
 
   static playerSettings(
     clubId: string,
     ageGroupId: string,
-    teamId: string,
     playerId: string
   ): string {
-    return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/settings`;
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/settings`;
   }
 
   // Coaches

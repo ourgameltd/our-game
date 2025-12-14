@@ -26,7 +26,7 @@ export default function ClubPlayerSettingsPage() {
     preferredPositions: player?.preferredPositions || [],
   });
 
-  const [selectedTeams, setSelectedTeams] = useState<string[]>(player?.teamIds || []);
+  const [selectedAgeGroups, setselectedAgeGroups] = useState<string[]>(player?.ageGroupIds || []);
   const [photoPreview, setPhotoPreview] = useState<string>(player?.photo || '');
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
@@ -72,7 +72,7 @@ export default function ClubPlayerSettingsPage() {
   };
 
   const handleTeamToggle = (teamId: string) => {
-    setSelectedTeams(prev =>
+    setselectedAgeGroups(prev =>
       prev.includes(teamId)
         ? prev.filter(id => id !== teamId)
         : [...prev, teamId]
@@ -81,7 +81,7 @@ export default function ClubPlayerSettingsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Saving player:', { ...formData, teamIds: selectedTeams });
+    console.log('Saving player:', { ...formData, ageGroupIds: selectedAgeGroups });
     alert(`Player ${isNewPlayer ? 'created' : 'updated'} successfully! (Demo - not saved to backend)`);
     navigate(Routes.clubPlayers(clubId!));
   };
@@ -286,7 +286,7 @@ export default function ClubPlayerSettingsPage() {
                   >
                     <input
                       type="checkbox"
-                      checked={selectedTeams.includes(team.id)}
+                      checked={selectedAgeGroups.includes(team.id)}
                       onChange={() => handleTeamToggle(team.id)}
                       disabled={isFormDisabled}
                       className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
@@ -406,3 +406,4 @@ export default function ClubPlayerSettingsPage() {
     </div>
   );
 }
+

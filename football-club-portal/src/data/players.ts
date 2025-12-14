@@ -1,12 +1,10 @@
 import { Player } from '../types/index';
-import { getTeamsByAgeGroupId } from './teams';
 
 export const samplePlayers: Player[] = [
-  // Reds Team Players (2014 Age Group)
   {
     id: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     firstName: 'Oliver',
     lastName: 'Thompson',
@@ -98,7 +96,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e'],
     firstName: 'James',
     lastName: 'Wilson',
@@ -180,7 +178,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f'],
     firstName: 'Lucas',
     lastName: 'Martinez',
@@ -253,7 +251,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['4d5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a'],
     firstName: 'Ethan',
     lastName: 'Davies',
@@ -324,7 +322,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b'],
     firstName: 'Noah',
     lastName: 'Anderson',
@@ -397,7 +395,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c'],
     firstName: 'Charlie',
     lastName: 'Roberts',
@@ -471,7 +469,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['7a8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d'],
     firstName: 'William',
     lastName: 'Brown',
@@ -543,7 +541,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p31b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['8b9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e'],
     firstName: 'Harry',
     lastName: 'Taylor',
@@ -616,7 +614,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p32c9d0e-1f2a-3b4c-5d6e-7f8a9b0c1d2e',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['9c0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f'],
     firstName: 'Mason',
     lastName: 'Evans',
@@ -688,7 +686,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p33d0e1f-2a3b-4c5d-6e7f-8a9b0c1d2e3f',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['0d1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a'],
     firstName: 'Alexander',
     lastName: 'White',
@@ -758,7 +756,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p34e1f2a-3b4c-5d6e-7f8a-9b0c1d2e3f4a',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f'],
+    ageGroupIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     parentIds: ['1e2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b'],
     firstName: 'George',
     lastName: 'Harris',
@@ -832,7 +830,7 @@ export const samplePlayers: Player[] = [
   {
     id: 'p21a3b4c-5d6e-7f8a-9b0c-1d2e3f4a5b6c',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
-    teamIds: ['d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a'],
+    ageGroupIds: ['2b3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e'],
     parentIds: ['2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c'],
     firstName: 'Carlos',
     lastName: 'Rodriguez',
@@ -924,21 +922,24 @@ export const getPlayerById = (id: string): Player | undefined => {
   return samplePlayers.find(player => player.id === id);
 };
 
-export const getPlayersByTeamId = (teamId: string): Player[] => {
-  return samplePlayers.filter(player => player.teamIds.includes(teamId));
-};
-
 export const getPlayersByClubId = (clubId: string): Player[] => {
   return samplePlayers.filter(player => player.clubId === clubId);
 };
 
 export const getPlayersByAgeGroupId = (ageGroupId: string): Player[] => {
-  const teams = getTeamsByAgeGroupId(ageGroupId);
-  const teamIds = teams.map(team => team.id);
   return samplePlayers.filter(player => 
-    player.teamIds.some(teamId => teamIds.includes(teamId))
+    player.ageGroupIds.includes(ageGroupId)
   );
 };
+
+// Kept for backward compatibility - returns players in an age group
+export const getPlayersByTeamId = (teamId: string): Player[] => {
+  // Since players are no longer assigned to specific teams, this is deprecated
+  // For now, we'll return an empty array or you could map teamId to ageGroupId
+  return [];
+};
+
+
 
 
 

@@ -8,7 +8,7 @@ import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
 
 export default function PlayerSettingsPage() {
-  const { clubId, ageGroupId, teamId, playerId } = useParams();
+  const { clubId, ageGroupId, playerId } = useParams();
   const navigate = useNavigate();
   const isNewPlayer = playerId === 'new';
   const player = isNewPlayer ? null : getPlayerById(playerId!);
@@ -48,7 +48,7 @@ export default function PlayerSettingsPage() {
   if (!isNewPlayer && !player) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
         <main className="container mx-auto px-4 py-8">
           <div className="card">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Player not found</h2>
@@ -146,11 +146,11 @@ export default function PlayerSettingsPage() {
     // In a real app, this would save to the backend
     console.log('Saving player settings:', { ...formData, emergencyContacts });
     alert('Player settings updated successfully! (Demo - not saved to backend)');
-    navigate(Routes.player(clubId!, ageGroupId!, teamId!, playerId!));
+    navigate(Routes.player(clubId!, ageGroupId!, playerId!));
   };
 
   const handleCancel = () => {
-    navigate(Routes.player(clubId!, ageGroupId!, teamId!, playerId!));
+    navigate(Routes.player(clubId!, ageGroupId!, playerId!));
   };
 
   const handleArchive = () => {
@@ -159,7 +159,7 @@ export default function PlayerSettingsPage() {
     const action = isCurrentlyArchived ? 'unarchived' : 'archived';
     // In a real app, this would call the backend API
     alert(`Player ${action} successfully! (Demo - not saved to backend)`);
-    navigate(Routes.player(clubId!, ageGroupId!, teamId!, playerId!));
+    navigate(Routes.player(clubId!, ageGroupId!, playerId!));
   };
 
   // Calculate age
@@ -176,7 +176,7 @@ export default function PlayerSettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
 
       <main className="container mx-auto px-4 py-8">
         {/* Header */}

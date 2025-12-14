@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Routes } from '@utils/routes';
+import { getMatchById } from '@data/matches';
+import { getTeamById } from '@data/teams';
 
 interface PerformanceData {
   matchId: string;
@@ -13,14 +15,12 @@ interface RecentPerformanceCardProps {
   performances: PerformanceData[];
   clubId: string;
   ageGroupId: string;
-  teamId: string;
 }
 
 export default function RecentPerformanceCard({ 
   performances, 
   clubId, 
-  ageGroupId, 
-  teamId 
+  ageGroupId
 }: RecentPerformanceCardProps) {
   const getRatingColor = (rating: number) => {
     if (rating >= 8.5) return 'green';
@@ -60,10 +60,16 @@ export default function RecentPerformanceCard({
         ) : (
           performances.map((performance) => {
             const classes = getRatingClasses(performance.rating);
+            const match = getMatchById(performance.matchId);
+            const team = match ? getTeamById(match.teamId) : null;
+            const matchLink = match && team 
+              ? Routes.matchReport(clubId, team.ageGroupId, team.id, performance.matchId)
+              : '#';
+            
             return (
               <Link
                 key={performance.matchId}
-                to={Routes.matchReport(clubId, ageGroupId, teamId, performance.matchId)}
+                to={matchLink}
                 className={`flex items-center justify-between p-3 rounded-lg border ${classes.bg} ${classes.border} hover:shadow-md transition-shadow`}
               >
                 <div>

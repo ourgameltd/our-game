@@ -173,10 +173,10 @@ const AgeGroupOverviewPage: React.FC = () => {
           }))}
           getPlayerLink={(playerId) => {
             const player = samplePlayers.find(p => p.id === playerId);
-            if (player && player.teamIds.length > 0) {
-              const team = teams.find(t => player.teamIds.includes(t.id));
+            if (player && player.ageGroupIds.length > 0) {
+              const team = teams.find(t => player.ageGroupIds.includes(t.id));
               if (team) {
-                return Routes.player(clubId!, team.ageGroupId, team.id, playerId);
+                return Routes.player(clubId!, ageGroupId!, playerId);
               }
             }
             return '#';
@@ -192,10 +192,10 @@ const AgeGroupOverviewPage: React.FC = () => {
           }))}
           getPlayerLink={(playerId) => {
             const player = samplePlayers.find(p => p.id === playerId);
-            if (player && player.teamIds.length > 0) {
-              const team = teams.find(t => player.teamIds.includes(t.id));
+            if (player && player.ageGroupIds.length > 0) {
+              const team = teams.find(t => player.ageGroupIds.includes(t.id));
               if (team) {
-                return Routes.player(clubId!, team.ageGroupId, team.id, playerId);
+                return Routes.player(clubId!, ageGroupId!, playerId);
               }
             }
             return '#';
@@ -208,3 +208,4 @@ const AgeGroupOverviewPage: React.FC = () => {
 };
 
 export default AgeGroupOverviewPage;
+

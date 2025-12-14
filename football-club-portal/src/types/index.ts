@@ -180,7 +180,7 @@ export interface Player {
   attributes: PlayerAttributes;
   overallRating: number; // Calculated from attributes
   evaluations: AttributeEvaluation[]; // Historical tracking
-  teamIds: string[]; // Can be assigned to multiple teams
+  ageGroupIds: string[]; // Can be assigned to multiple age groups
   parentIds?: string[];
   medicalInfo?: {
     allergies?: string[];

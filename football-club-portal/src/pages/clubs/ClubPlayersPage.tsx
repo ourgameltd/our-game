@@ -90,7 +90,7 @@ export default function ClubPlayersPage() {
 
       // Team filter
       if (filterTeam) {
-        if (!player.teamIds.includes(filterTeam)) {
+        if (!player.ageGroupIds.includes(filterTeam)) {
           return false;
         }
       }
@@ -268,7 +268,7 @@ export default function ClubPlayersPage() {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {playersByAgeGroup[ageGroup].map((player) => {
-                const playerTeam = teams.find(t => player.teamIds.includes(t.id));
+                const playerTeam = teams.find(t => player.ageGroupIds.includes(t.id));
                 return (
                   <div key={player.id} className="relative">
                     <Link to={Routes.clubPlayerSettings(clubId!, player.id)}>
@@ -279,9 +279,9 @@ export default function ClubPlayersPage() {
                         🗄️ Archived
                       </div>
                     )}
-                    {player.teamIds.length > 1 && (
+                    {player.ageGroupIds.length > 1 && (
                       <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                        {player.teamIds.length} teams
+                        {player.ageGroupIds.length} teams
                       </div>
                     )}
                   </div>
@@ -324,3 +324,4 @@ export default function ClubPlayersPage() {
     </div>
   );
 }
+

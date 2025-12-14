@@ -440,6 +440,10 @@ export const sampleMatches: Match[] = [
   }
 ];
 
+export const getMatchById = (id: string): Match | undefined => {
+  return sampleMatches.find(match => match.id === id);
+};
+
 export const getMatchesByTeamId = (teamId: string): Match[] => {
   return sampleMatches.filter(match => match.teamId === teamId);
 };

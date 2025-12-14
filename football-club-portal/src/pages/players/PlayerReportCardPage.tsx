@@ -7,7 +7,7 @@ import { getPlayerNavigationTabs } from '@utils/navigationHelpers';
 import PlayerDetailsHeader from '@components/player/PlayerDetailsHeader';
 
 export default function PlayerReportCardPage() {
-  const { clubId, ageGroupId, teamId, playerId } = useParams();
+  const { clubId, ageGroupId, playerId } = useParams();
   
   const player = samplePlayers.find(p => p.id === playerId);
   const reports = playerId ? getReportsByPlayerId(playerId) : [];
@@ -19,7 +19,7 @@ export default function PlayerReportCardPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Navigation Tabs */}
-        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
 
         <main className="container mx-auto px-4 py-8">
           <div className="card">
@@ -34,7 +34,7 @@ export default function PlayerReportCardPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Navigation Tabs */}
-      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
 
         <main className="container mx-auto px-4 py-8">
           <div className="card">
@@ -51,7 +51,7 @@ export default function PlayerReportCardPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Navigation Tabs */}
-      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
       
       <main className="container mx-auto px-4 py-8">
         {/* Player Header with Report Selector */}

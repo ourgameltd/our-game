@@ -7,7 +7,7 @@ import { getPlayerNavigationTabs } from '@utils/navigationHelpers';
 import PlayerDetailsHeader from '@components/player/PlayerDetailsHeader';
 
 export default function PlayerDevelopmentPlansPage() {
-  const { clubId, ageGroupId, teamId, playerId } = useParams();
+  const { clubId, ageGroupId, playerId } = useParams();
   
   const player = samplePlayers.find(p => p.id === playerId);
   const plans = playerId ? getDevelopmentPlansByPlayerId(playerId) : [];
@@ -19,7 +19,7 @@ export default function PlayerDevelopmentPlansPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Navigation Tabs */}
-        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
 
         <main className="container mx-auto px-4 py-8">
           <div className="card">
@@ -34,7 +34,7 @@ export default function PlayerDevelopmentPlansPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Navigation Tabs */}
-        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
 
         <main className="container mx-auto px-4 py-8">
           <div className="card">
@@ -66,7 +66,7 @@ export default function PlayerDevelopmentPlansPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Navigation Tabs */}
-      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
       
       <main className="container mx-auto px-4 py-8">
         {/* Player Header with Plan Selector */}

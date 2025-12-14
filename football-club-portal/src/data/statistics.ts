@@ -1,7 +1,7 @@
 import { GroupStatistics, Team } from '../types';
 import { sampleMatches } from './matches';
 import { samplePlayers } from './players';
-import { getTeamsByAgeGroupId, getTeamsByClubId } from './teams';
+import { getTeamsByAgeGroupId, getTeamsByClubId, sampleTeams } from './teams';
 
 /**
  * Calculate statistics for a group of teams (Age Group or single Team)
@@ -82,11 +82,14 @@ export const calculateGroupStatistics = (
     .filter(p => p.averageRating < 6.0) // Below 6.0 average
     .slice(0, limit);
   
-  // Count unique players across teams
+  // Count unique players across teams (now using age groups)
   const playerIds = new Set<string>();
   teamIds.forEach(teamId => {
-    const teamPlayers = samplePlayers.filter(p => p.teamIds.includes(teamId));
-    teamPlayers.forEach(p => playerIds.add(p.id));
+    const team = sampleTeams.find(t => t.id === teamId);
+    if (team) {
+      const teamPlayers = samplePlayers.filter(p => p.ageGroupIds.includes(team.ageGroupId));
+      teamPlayers.forEach(p => playerIds.add(p.id));
+    }
   });
   
   return {

@@ -11,16 +11,16 @@ import RecentPerformanceCard from '@components/player/RecentPerformanceCard';
 import UpcomingMatchesCard from '@components/matches/UpcomingMatchesCard';
 
 export default function PlayerProfilePage() {
-  const { clubId, ageGroupId, teamId, playerId } = useParams();
+  const { clubId, ageGroupId, playerId } = useParams();
   const player = getPlayerById(playerId!);
   const recentPerformances = getPlayerRecentPerformances(playerId!, 5);
-  const upcomingMatches = getUpcomingMatchesByTeamIds(player?.teamIds || [], 3);
+  const upcomingMatches = getUpcomingMatchesByTeamIds(player?.ageGroupIds || [], 3);
 
   if (!player) {
       return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Navigation Tabs */}
-        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
 
         <main className="container mx-auto px-4 py-8">
           <div className="card">
@@ -34,7 +34,7 @@ export default function PlayerProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Navigation Tabs */}
-      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
 
       <main className="container mx-auto px-4 py-8">
         {/* Player Header */}
@@ -87,8 +87,8 @@ export default function PlayerProfilePage() {
                 </div>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Teams</span>
-                <span className="font-medium text-gray-900 dark:text-white">{player.teamIds.length}</span>
+                <span className="text-gray-600 dark:text-gray-400">Age Groups</span>
+                <span className="font-medium text-gray-900 dark:text-white">{player.ageGroupIds.length}</span>
               </div>
             </div>
           </div>
@@ -98,15 +98,15 @@ export default function PlayerProfilePage() {
             performances={recentPerformances}
             clubId={clubId!}
             ageGroupId={ageGroupId!}
-            teamId={teamId!}
           />
         </div>
 
         {/* Upcoming Matches */}
+        {/* Upcoming Matches */}
         <div className="mt-6">
           <UpcomingMatchesCard 
             matches={upcomingMatches}
-            showTeamInfo={player.teamIds.length > 1}
+            showTeamInfo={player.ageGroupIds.length > 1}
             getTeamInfo={(match) => {
               const team = getTeamById(match.teamId);
               if (team) {

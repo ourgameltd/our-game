@@ -21,7 +21,7 @@ export default function SquadManagementPage() {
 
   // Get players not in this team
   const availablePlayers = allClubPlayers.filter(
-    player => !player.teamIds.includes(teamId!)
+    player => !false
   );
 
   // Group team players by position
@@ -98,7 +98,7 @@ export default function SquadManagementPage() {
               {goalkeepers.map((player) => (
                 <div key={player.id} className="relative group">
                   <Link
-                    to={Routes.player(clubId!, ageGroupId!, teamId!, player.id)}
+                    to={Routes.player(clubId!, ageGroupId!, player.id)}
                   >
                     <PlayerCard player={player} />
                   </Link>
@@ -110,9 +110,9 @@ export default function SquadManagementPage() {
                       ✕
                     </button>
                   )}
-                  {player.teamIds.length > 1 && (
+                  {player.ageGroupIds.length > 1 && (
                     <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
+                      {player.ageGroupIds.length} teams
                     </div>
                   )}
                 </div>
@@ -131,7 +131,7 @@ export default function SquadManagementPage() {
               {defenders.map((player) => (
                 <div key={player.id} className="relative group">
                   <Link
-                    to={Routes.player(clubId!, ageGroupId!, teamId!, player.id)}
+                    to={Routes.player(clubId!, ageGroupId!, player.id)}
                   >
                     <PlayerCard player={player} />
                   </Link>
@@ -143,9 +143,9 @@ export default function SquadManagementPage() {
                       ✕
                     </button>
                   )}
-                  {player.teamIds.length > 1 && (
+                  {player.ageGroupIds.length > 1 && (
                     <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
+                      {player.ageGroupIds.length} teams
                     </div>
                   )}
                 </div>
@@ -164,7 +164,7 @@ export default function SquadManagementPage() {
               {midfielders.map((player) => (
                 <div key={player.id} className="relative group">
                   <Link
-                    to={Routes.player(clubId!, ageGroupId!, teamId!, player.id)}
+                    to={Routes.player(clubId!, ageGroupId!, player.id)}
                   >
                     <PlayerCard player={player} />
                   </Link>
@@ -176,9 +176,9 @@ export default function SquadManagementPage() {
                       ✕
                     </button>
                   )}
-                  {player.teamIds.length > 1 && (
+                  {player.ageGroupIds.length > 1 && (
                     <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
+                      {player.ageGroupIds.length} teams
                     </div>
                   )}
                 </div>
@@ -197,7 +197,7 @@ export default function SquadManagementPage() {
               {forwards.map((player) => (
                 <div key={player.id} className="relative group">
                   <Link
-                    to={Routes.player(clubId!, ageGroupId!, teamId!, player.id)}
+                    to={Routes.player(clubId!, ageGroupId!, player.id)}
                   >
                     <PlayerCard player={player} />
                   </Link>
@@ -209,9 +209,9 @@ export default function SquadManagementPage() {
                       ✕
                     </button>
                   )}
-                  {player.teamIds.length > 1 && (
+                  {player.ageGroupIds.length > 1 && (
                     <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
+                      {player.ageGroupIds.length} teams
                     </div>
                   )}
                 </div>
@@ -283,3 +283,4 @@ export default function SquadManagementPage() {
     </div>
   );
 }
+

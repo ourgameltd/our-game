@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useState } from 'react';
 import { getPlayerById } from '@data/players';
-import { getTeamById } from '@data/teams';
 import PageNavigation from '@components/navigation/PageNavigation';
 import { getPlayerNavigationTabs } from '@utils/navigationHelpers';
 import { groupAttributes, getQualityColor, calculateOverallRating } from '@utils/attributeHelpers';
@@ -9,9 +8,8 @@ import { PlayerAttributes, AttributeEvaluation } from '@/types';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 export default function PlayerAbilitiesPage() {
-  const { clubId, ageGroupId, teamId, playerId } = useParams();
+  const { clubId, ageGroupId, playerId } = useParams();
   const player = getPlayerById(playerId!);
-  const team = getTeamById(teamId!);
   
   // Mock current coach ID - in a real app this would come from auth context
   const currentCoachId = 'c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f';
@@ -26,7 +24,7 @@ export default function PlayerAbilitiesPage() {
   if (!player) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+        <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
         <main className="container mx-auto px-4 py-8">
           <div className="card">
             <h2 className="text-xl font-semibold mb-4">Player not found</h2>
@@ -199,7 +197,7 @@ export default function PlayerAbilitiesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
+      <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, playerId!)} />
 
       <main className="container mx-auto px-4 py-8">
         {/* Header with Action Button */}
@@ -217,24 +215,13 @@ export default function PlayerAbilitiesPage() {
               )}
             </p>
           </div>
-          {!team?.isArchived && (
-            <button
-              onClick={initializeForm}
-              className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
-            >
-              + Add New Evaluation
-            </button>
-          )}
+          <button
+            onClick={initializeForm}
+            className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+          >
+            + Add New Evaluation
+          </button>
         </div>
-
-        {/* Archived Notice */}
-        {team?.isArchived && (
-          <div className="mb-6 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-            <p className="text-sm text-orange-800 dark:text-orange-300">
-              ⚠️ This team is archived. Player evaluations cannot be added or modified while the team is archived.
-            </p>
-          </div>
-        )}
 
         {/* Progress Summary */}
         <div className="grid md:grid-cols-3 gap-6 mb-8">

@@ -36,11 +36,11 @@ export const getTeamNavigationTabs = (clubId: string, ageGroupId: string, teamId
 /**
  * Generate navigation tabs for Player pages
  */
-export const getPlayerNavigationTabs = (clubId: string, ageGroupId: string, teamId: string, playerId: string): NavigationTab[] => [
-  { label: 'Overview', path: Routes.player(clubId, ageGroupId, teamId, playerId) },
-  { label: 'Abilities', path: Routes.playerAbilities(clubId, ageGroupId, teamId, playerId) },
-  { label: 'Report Cards', path: Routes.playerReportCard(clubId, ageGroupId, teamId, playerId) },
-  { label: 'Development Plans', path: Routes.playerDevelopmentPlans(clubId, ageGroupId, teamId, playerId) }
+export const getPlayerNavigationTabs = (clubId: string, ageGroupId: string, playerId: string): NavigationTab[] => [
+  { label: 'Overview', path: Routes.player(clubId, ageGroupId, playerId) },
+  { label: 'Abilities', path: Routes.playerAbilities(clubId, ageGroupId, playerId) },
+  { label: 'Report Cards', path: Routes.playerReportCard(clubId, ageGroupId, playerId) },
+  { label: 'Development Plans', path: Routes.playerDevelopmentPlans(clubId, ageGroupId, playerId) }
 ];
 
 /**

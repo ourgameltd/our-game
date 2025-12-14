@@ -141,14 +141,15 @@ export default function TeamOverviewPage() {
         <div className="grid md:grid-cols-2 gap-6">
           <TopPerformersCard 
             performers={topPerformersData}
-            getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, teamId!, playerId)}
+            getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
           />
           <NeedsSupportCard 
             performers={needsAttentionData}
-            getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, teamId!, playerId)}
+            getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
           />
         </div>
       </main>
     </div>
   );
 }
+
