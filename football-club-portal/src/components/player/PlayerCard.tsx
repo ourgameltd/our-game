@@ -43,6 +43,9 @@ export default function PlayerCard({ player, onClick }: PlayerCardProps) {
         <div className="flex-1 min-w-0">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
             {player.firstName} {player.lastName}
+            {player.nickname && (
+              <span className="text-sm font-normal text-primary-600 dark:text-primary-400 ml-2">"{player.nickname}"</span>
+            )}
           </h3>
           <p className="text-sm text-gray-600 dark:text-gray-400">Age {age}</p>
           

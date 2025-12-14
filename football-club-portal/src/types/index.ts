@@ -172,6 +172,7 @@ export interface Player {
   clubId: string; // Players belong to a club
   firstName: string;
   lastName: string;
+  nickname?: string;
   dateOfBirth: Date;
   photo?: string;
   preferredPositions: PlayerPosition[];

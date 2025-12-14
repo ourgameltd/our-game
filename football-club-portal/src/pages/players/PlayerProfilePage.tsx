@@ -83,7 +83,7 @@ export default function PlayerProfilePage() {
             <h3 className="text-xl font-semibold mb-4">Player Details</h3>
             <div className="space-y-3">
               <div className="flex justify-between">
-                <span className="text-gray-600">Date of Birth</span>
+                <span className="text-gray-600 dark:text-gray-400">Date of Birth</span>
                 <span className="font-medium text-gray-900 dark:text-white">
                   {player.dateOfBirth.toLocaleDateString('en-GB')}
                 </span>

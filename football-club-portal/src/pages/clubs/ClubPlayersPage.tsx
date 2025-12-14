@@ -20,6 +20,7 @@ export default function ClubPlayersPage() {
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
   const [filterPosition, setFilterPosition] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
 
   if (!club) {
     return <div>Club not found</div>;
@@ -93,6 +94,11 @@ export default function ClubPlayersPage() {
         }
       }
 
+      // Archived filter
+      if (!showArchived && player.isArchived) {
+        return false;
+      }
+
       return true;
     });
   }, [allPlayers, searchName, filterAgeGroup, filterPosition, filterTeam]);
@@ -123,10 +129,12 @@ export default function ClubPlayersPage() {
       <main className="container mx-auto px-4 py-8">
         <PageTitle
           title="All Club Players"
-          badge={allPlayers.length}
-          subtitle={filteredPlayers.length !== allPlayers.length 
-            ? `Showing ${filteredPlayers.length} of ${allPlayers.length} players`
-            : 'View and manage all players registered to the club'}
+          badge={allPlayers.filter(p => !p.isArchived).length}
+          subtitle={
+            filteredPlayers.length !== allPlayers.length 
+              ? `Showing ${filteredPlayers.length} of ${allPlayers.length} players${allPlayers.filter(p => p.isArchived).length > 0 ? ` (${allPlayers.filter(p => p.isArchived).length} archived)` : ''}`
+              : `View and manage all players registered to the club${allPlayers.filter(p => p.isArchived).length > 0 ? ` (${allPlayers.filter(p => p.isArchived).length} archived)` : ''}`
+          }
           action={{
             label: '+ Add New Player',
             onClick: () => {/* TODO: Add player navigation */},
@@ -136,6 +144,21 @@ export default function ClubPlayersPage() {
 
         {/* Search and Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
+          {/* Show Archived Toggle */}
+          <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Show archived players ({allPlayers.filter(p => p.isArchived).length})
+              </span>
+            </label>
+          </div>
+          
           <div className="grid md:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search Name</label>
@@ -252,6 +275,11 @@ export default function ClubPlayersPage() {
                   >
                     <div className="relative">
                       <PlayerCard player={player} />
+                      {player.isArchived && (
+                        <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                          🗄️ Archived
+                        </div>
+                      )}
                       {player.teamIds.length > 1 && (
                         <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
                           {player.teamIds.length} teams

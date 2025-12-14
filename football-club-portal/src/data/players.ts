@@ -10,6 +10,7 @@ export const samplePlayers: Player[] = [
     parentIds: ['1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d'],
     firstName: 'Oliver',
     lastName: 'Thompson',
+    nickname: 'The Wall',
     dateOfBirth: new Date('2014-03-15'),
     photo: 'https://placehold.co/150/4A90E2/FFFFFF?text=OT',
     preferredPositions: ['GK'],
@@ -182,7 +183,8 @@ export const samplePlayers: Player[] = [
     parentIds: ['3c4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f'],
     firstName: 'Lucas',
     lastName: 'Martinez',
-    dateOfBirth: new Date('2014-01-10'),
+    nickname: 'Lucky',
+    dateOfBirth: new Date('2014-04-20'),
     photo: 'https://placehold.co/150/E94B3C/FFFFFF?text=LM',
     preferredPositions: ['CB', 'LB'],
     attributes: {
@@ -323,7 +325,8 @@ export const samplePlayers: Player[] = [
     parentIds: ['5e6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b'],
     firstName: 'Noah',
     lastName: 'Anderson',
-    dateOfBirth: new Date('2014-09-25'),
+    nickname: 'Rocket',
+    dateOfBirth: new Date('2014-06-10'),
     photo: 'https://placehold.co/150/6FCF97/FFFFFF?text=NA',
     preferredPositions: ['ST', 'CF'],
     attributes: {
@@ -394,8 +397,10 @@ export const samplePlayers: Player[] = [
     parentIds: ['6f7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c'],
     firstName: 'Charlie',
     lastName: 'Roberts',
+    nickname: 'Flash',
     dateOfBirth: new Date('2014-11-03'),
     preferredPositions: ['ST', 'RW'],
+    isArchived: true,
     attributes: {
       // Skills
       ballControl: 62,
@@ -539,6 +544,7 @@ export const samplePlayers: Player[] = [
     lastName: 'Taylor',
     dateOfBirth: new Date('2014-08-07'),
     preferredPositions: ['CB', 'CDM'],
+    isArchived: true,
     attributes: {
       // Skills
       ballControl: 50,
@@ -823,6 +829,7 @@ export const samplePlayers: Player[] = [
     parentIds: ['2f3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c'],
     firstName: 'Carlos',
     lastName: 'Rodriguez',
+    nickname: 'El Matador',
     dateOfBirth: new Date('2012-04-15'),
     preferredPositions: ['ST', 'CF'],
     attributes: {

@@ -37,6 +37,9 @@ export default function PlayerDetailsHeader({
       <div className="flex-1">
         <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">
           {player.firstName} {player.lastName}
+          {player.nickname && (
+            <span className="text-xl font-normal text-primary-600 dark:text-primary-400 ml-3">"{player.nickname}"</span>
+          )}
         </h1>
         <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
           <span>Age: {age} years old</span>
