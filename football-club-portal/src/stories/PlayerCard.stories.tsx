@@ -29,7 +29,7 @@ export const Youth: Story = {
         acceleration: 75, agility: 78, balance: 76, jumping: 65, pace: 76,
         reactions: 72, sprintSpeed: 75, stamina: 70, strength: 55,
         aggression: 50, attackingPosition: 80, awareness: 70, composure: 68,
-        interceptions: 45, marking: 48, positioning: 78, vision: 72
+        interceptions: 45, marking: 48, positioning: 78, vision: 72, positivity: 85, communication: 80
       },
       overallRating: 70,
       evaluations: [],
@@ -54,7 +54,7 @@ export const Adult: Story = {
         acceleration: 82, agility: 84, balance: 83, jumping: 78, pace: 82,
         reactions: 88, sprintSpeed: 81, stamina: 85, strength: 75,
         aggression: 70, attackingPosition: 92, awareness: 88, composure: 86,
-        interceptions: 65, marking: 68, positioning: 90, vision: 88
+        interceptions: 65, marking: 68, positioning: 90, vision: 88, positivity: 90, communication: 85
       },
       overallRating: 85,
       evaluations: [],
@@ -79,7 +79,7 @@ export const Goalkeeper: Story = {
         acceleration: 65, agility: 75, balance: 70, jumping: 72, pace: 64,
         reactions: 82, sprintSpeed: 63, stamina: 70, strength: 58,
         aggression: 55, attackingPosition: 40, awareness: 78, composure: 75,
-        interceptions: 52, marking: 50, positioning: 85, vision: 65
+        interceptions: 52, marking: 50, positioning: 85, vision: 65, positivity: 80, communication: 78
       },
       overallRating: 68,
       evaluations: [],
