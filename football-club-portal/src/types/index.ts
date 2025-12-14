@@ -216,6 +216,24 @@ export interface Certification {
   certificateUrl?: string;
 }
 
+// Coach Types
+export interface Coach {
+  id: string;
+  clubId: string; // Coaches belong to a club
+  firstName: string;
+  lastName: string;
+  dateOfBirth: Date;
+  photo?: string;
+  email: string;
+  phone: string;
+  associationId?: string; // FA, UEFA, or other football association registration ID
+  teamIds: string[]; // Can be assigned to multiple teams
+  role: 'head-coach' | 'assistant-coach' | 'goalkeeper-coach' | 'fitness-coach' | 'technical-coach';
+  biography?: string;
+  specializations?: string[]; // e.g., ['Youth Development', 'Tactical Analysis', 'Goalkeeping']
+  isArchived?: boolean; // Whether the coach is archived
+}
+
 // Match Types
 export interface Match {
   id: string;
@@ -244,6 +262,7 @@ export interface Match {
   };
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   isLocked?: boolean; // Whether the match is locked from editing
+  coachIds?: string[]; // Coaches assigned to this match
 }
 
 export interface MatchLineup {

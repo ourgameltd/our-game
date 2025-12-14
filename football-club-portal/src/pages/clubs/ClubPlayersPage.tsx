@@ -269,24 +269,34 @@ export default function ClubPlayersPage() {
               {playersByAgeGroup[ageGroup].map((player) => {
                 const playerTeam = teams.find(t => player.teamIds.includes(t.id));
                 return (
-                  <Link
-                    key={player.id}
-                    to={playerTeam ? Routes.player(clubId!, playerTeam.ageGroupId, playerTeam.id, player.id) : '#'}
-                  >
-                    <div className="relative">
+                  <div key={player.id} className="relative group">
+                    <Link to={playerTeam ? Routes.player(clubId!, playerTeam.ageGroupId, playerTeam.id, player.id) : '#'}>
                       <PlayerCard player={player} />
-                      {player.isArchived && (
-                        <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                          🗄️ Archived
-                        </div>
-                      )}
-                      {player.teamIds.length > 1 && (
-                        <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                          {player.teamIds.length} teams
-                        </div>
-                      )}
-                    </div>
-                  </Link>
+                    </Link>
+                    {player.isArchived && (
+                      <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                        🗄️ Archived
+                      </div>
+                    )}
+                    {player.teamIds.length > 1 && (
+                      <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                        {player.teamIds.length} teams
+                      </div>
+                    )}
+                    {playerTeam && (
+                      <Link
+                        to={Routes.playerSettings(clubId!, playerTeam.ageGroupId, playerTeam.id, player.id)}
+                        className="absolute bottom-2 right-2 p-2 bg-white dark:bg-gray-700 rounded-full shadow-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-gray-50 dark:hover:bg-gray-600"
+                        title="Settings"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <svg className="w-4 h-4 text-gray-700 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                      </Link>
+                    )}
+                  </div>
                 );
               })}
             </div>

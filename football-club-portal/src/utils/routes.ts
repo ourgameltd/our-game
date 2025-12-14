@@ -29,6 +29,10 @@ export class Routes {
     return `/clubs/${clubId}/players`;
   }
 
+  static clubCoaches(clubId: string): string {
+    return `/clubs/${clubId}/coaches`;
+  }
+
   static clubKits(clubId: string): string {
     return `/clubs/${clubId}/kits`;
   }
@@ -48,6 +52,10 @@ export class Routes {
 
   static ageGroupPlayers(clubId: string, ageGroupId: string): string {
     return `/clubs/${clubId}/age-groups/${ageGroupId}/players`;
+  }
+
+  static ageGroupCoaches(clubId: string, ageGroupId: string): string {
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/coaches`;
   }
 
   static ageGroupSettings(clubId: string, ageGroupId: string): string {
@@ -135,6 +143,15 @@ export class Routes {
     playerId: string
   ): string {
     return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/settings`;
+  }
+
+  // Coaches
+  static coach(clubId: string, coachId: string): string {
+    return `/clubs/${clubId}/coaches/${coachId}`;
+  }
+
+  static coachSettings(clubId: string, coachId: string): string {
+    return `/clubs/${clubId}/coaches/${coachId}/settings`;
   }
 
   // Matches

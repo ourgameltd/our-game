@@ -9,11 +9,13 @@ import ClubsListPage from '@pages/clubs/ClubsListPage';
 import ClubOverviewPage from '@pages/clubs/ClubOverviewPage';
 import ClubEthosPage from '@pages/clubs/ClubEthosPage';
 import ClubPlayersPage from '@pages/clubs/ClubPlayersPage';
+import ClubCoachesPage from '@pages/clubs/ClubCoachesPage';
 import ClubKitsPage from '@pages/clubs/ClubKitsPage';
 import ClubSettingsPage from '@pages/clubs/ClubSettingsPage';
 import AgeGroupsListPage from '@pages/ageGroups/AgeGroupsListPage';
 import AgeGroupOverviewPage from '@pages/ageGroups/AgeGroupOverviewPage';
 import AgeGroupPlayersPage from '@pages/ageGroups/AgeGroupPlayersPage';
+import AgeGroupCoachesPage from '@pages/ageGroups/AgeGroupCoachesPage';
 import AgeGroupSettingsPage from '@pages/ageGroups/AgeGroupSettingsPage';
 import AddEditAgeGroupPage from '@pages/ageGroups/AddEditAgeGroupPage';
 import TeamsListPage from '@pages/teams/TeamsListPage';
@@ -33,6 +35,8 @@ import TrainingLibraryPage from '@pages/training/TrainingLibraryPage';
 import PlayerReportCardPage from '@pages/players/PlayerReportCardPage';
 import PlayerDevelopmentPlansPage from '@pages/players/PlayerDevelopmentPlansPage';
 import PlayerSettingsPage from '@pages/players/PlayerSettingsPage';
+import CoachProfilePage from '@pages/coaches/CoachProfilePage';
+import CoachSettingsPage from '@pages/coaches/CoachSettingsPage';
 import Header from '@components/layout/Header';
 import ScrollToTop from '@components/common/ScrollToTop';
 
@@ -58,12 +62,14 @@ function AppContent() {
 
         {/* Profile */}
         <Route path="/profile" element={<ProfilePage />} />
-
         {/* Clubs */}
         <Route path="/clubs" element={<ClubsListPage />} />
         <Route path="/clubs/:clubId" element={<ClubOverviewPage />} />
         <Route path="/clubs/:clubId/ethos" element={<ClubEthosPage />} />
         <Route path="/clubs/:clubId/players" element={<ClubPlayersPage />} />
+        <Route path="/clubs/:clubId/coaches" element={<ClubCoachesPage />} />
+        <Route path="/clubs/:clubId/coaches/:coachId" element={<CoachProfilePage />} />
+        <Route path="/clubs/:clubId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
         <Route path="/clubs/:clubId/kits" element={<ClubKitsPage />} />
         <Route path="/clubs/:clubId/settings" element={<ClubSettingsPage />} />
 
@@ -73,6 +79,8 @@ function AppContent() {
         <Route path="/clubs/:clubId/age-groups/:ageGroupId" element={<AgeGroupOverviewPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/edit" element={<AddEditAgeGroupPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/players" element={<AgeGroupPlayersPage />} />
+        <Route path="/clubs/:clubId/age-groups/:ageGroupId/coaches" element={<AgeGroupCoachesPage />} />
+        <Route path="/clubs/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
 
         {/* Teams */}

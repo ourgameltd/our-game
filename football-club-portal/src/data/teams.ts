@@ -110,3 +110,8 @@ export const getTeamsByAgeGroupId = (ageGroupId: string): Team[] => {
 export const getTeamById = (id: string): Team | undefined => {
   return sampleTeams.find(team => team.id === id);
 };
+
+export const getTeamsByIds = (ids: string[]): Team[] => {
+  return sampleTeams.filter(team => ids.includes(team.id));
+};
+

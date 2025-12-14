@@ -7,6 +7,7 @@ import { NavigationTab } from '@components/navigation/PageNavigation';
 export const getClubNavigationTabs = (clubId: string): NavigationTab[] => [
   { label: 'Overview', path: Routes.club(clubId) },
   { label: 'All Players', path: Routes.clubPlayers(clubId) },
+  { label: 'All Coaches', path: Routes.clubCoaches(clubId) },
   { label: 'Age Groups', path: Routes.ageGroups(clubId) },
   { label: 'Ethos & Principles', path: Routes.clubEthos(clubId) },
   { label: 'Kits', path: Routes.clubKits(clubId) },
@@ -18,6 +19,7 @@ export const getClubNavigationTabs = (clubId: string): NavigationTab[] => [
 export const getAgeGroupNavigationTabs = (clubId: string, ageGroupId: string): NavigationTab[] => [
   { label: 'Overview', path: Routes.ageGroup(clubId, ageGroupId) },
   { label: 'All Players', path: Routes.ageGroupPlayers(clubId, ageGroupId) },
+  { label: 'All Coaches', path: Routes.ageGroupCoaches(clubId, ageGroupId) },
   { label: 'Teams', path: Routes.teams(clubId, ageGroupId) },
 ];
 

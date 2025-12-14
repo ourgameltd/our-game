@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { sampleMatches } from '@/data/matches';
 import { samplePlayers } from '@/data/players';
+import { sampleCoaches } from '@/data/coaches';
 import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
 import { getTeamNavigationTabs } from '@/utils/navigationHelpers';
@@ -106,6 +107,19 @@ export default function MatchReportPage() {
   const getInjuriesForPlayer = (playerId: string) => {
     return playerInjuries[playerId] || [];
   };
+
+  // Get coaches for this match
+  const matchCoaches = match.coachIds 
+    ? sampleCoaches.filter(c => match.coachIds?.includes(c.id))
+    : [];
+
+  const roleDisplay: Record<string, string> = {
+    'head-coach': 'Head Coach',
+    'assistant-coach': 'Assistant Coach',
+    'goalkeeper-coach': 'Goalkeeper Coach',
+    'fitness-coach': 'Fitness Coach',
+    'technical-coach': 'Technical Coach',
+  };
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -122,6 +136,40 @@ export default function MatchReportPage() {
           getPlayerName={getPlayerName}
           showFullDetails={false}
         />
+
+        {/* Coaching Staff */}
+        {matchCoaches.length > 0 && (
+          <div className="card mt-6">
+            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
+              <span>👨‍🏫</span> Coaching Staff
+            </h2>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {matchCoaches.map((coach) => (
+                <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                  {coach.photo ? (
+                    <img 
+                      src={coach.photo} 
+                      alt={`${coach.firstName} ${coach.lastName}`}
+                      className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                    />
+                  ) : (
+                    <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+                      {coach.firstName[0]}{coach.lastName[0]}
+                    </div>
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-gray-900 dark:text-white truncate">
+                      {coach.firstName} {coach.lastName}
+                    </p>
+                    <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                      {roleDisplay[coach.role]}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
         
         {/* Match Report Content (only for past matches) */}
         {!isUpcoming && match.report && (

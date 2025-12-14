@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { getPlayerById } from '@data/players';
 import { getPlayerRecentPerformances, getUpcomingMatchesByTeamIds } from '@data/matches';
 import { getTeamById } from '@data/teams';
@@ -12,7 +12,6 @@ import UpcomingMatchesCard from '@components/matches/UpcomingMatchesCard';
 
 export default function PlayerProfilePage() {
   const { clubId, ageGroupId, teamId, playerId } = useParams();
-  const navigate = useNavigate();
   const player = getPlayerById(playerId!);
   const recentPerformances = getPlayerRecentPerformances(playerId!, 5);
   const upcomingMatches = getUpcomingMatchesByTeamIds(player?.teamIds || [], 3);
@@ -38,21 +37,6 @@ export default function PlayerProfilePage() {
       <PageNavigation tabs={getPlayerNavigationTabs(clubId!, ageGroupId!, teamId!, playerId!)} />
 
       <main className="container mx-auto px-4 py-8">
-        {/* Header with Settings Button */}
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white">{player.firstName} {player.lastName}</h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">Player Overview</p>
-          </div>
-          <button
-            onClick={() => navigate(Routes.playerSettings(clubId!, ageGroupId!, teamId!, playerId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 flex items-center gap-2"
-          >
-            <span>⚙️</span>
-            Settings
-          </button>
-        </div>
-
         {/* Player Header */}
         <div className="card mb-6">
           <PlayerDetailsHeader player={player} />

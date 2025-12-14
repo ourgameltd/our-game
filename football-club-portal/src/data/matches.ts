@@ -20,7 +20,8 @@ export const sampleMatches: Match[] = [
     weather: {
       condition: 'Partly Cloudy',
       temperature: 12
-    }
+    },
+    coachIds: ['c1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', 'c2a3b4c5-d6e7-f8a9-b0c1-d2e3f4a5b6c7', 'c3a4b5c6-d7e8-f9a0-b1c2-d3e4f5a6b7c8']
   },
   {
     id: 'm2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7',
@@ -36,7 +37,8 @@ export const sampleMatches: Match[] = [
       primary: '9b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', // Vale Away Kit
       goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
-    status: 'scheduled'
+    status: 'scheduled',
+    coachIds: ['c4a5b6c7-d8e9-f0a1-b2c3-d4e5f6a7b8c9', 'c3a4b5c6-d7e8-f9a0-b1c2-d3e4f5a6b7c8']
   },
   {
     id: 'm15u1p2c3-o4m5-i6n7-g8m9-a0t1c2h3e4s5',
