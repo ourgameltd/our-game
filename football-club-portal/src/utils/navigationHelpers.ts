@@ -6,8 +6,8 @@ import { NavigationTab } from '@components/navigation/PageNavigation';
  */
 export const getClubNavigationTabs = (clubId: string): NavigationTab[] => [
   { label: 'Overview', path: Routes.club(clubId) },
-  { label: 'All Players', path: Routes.clubPlayers(clubId) },
-  { label: 'All Coaches', path: Routes.clubCoaches(clubId) },
+  { label: 'Players', path: Routes.clubPlayers(clubId) },
+  { label: 'Coaches', path: Routes.clubCoaches(clubId) },
   { label: 'Age Groups', path: Routes.ageGroups(clubId) },
   { label: 'Ethos & Principles', path: Routes.clubEthos(clubId) },
   { label: 'Kits', path: Routes.clubKits(clubId) },
@@ -18,8 +18,8 @@ export const getClubNavigationTabs = (clubId: string): NavigationTab[] => [
  */
 export const getAgeGroupNavigationTabs = (clubId: string, ageGroupId: string): NavigationTab[] => [
   { label: 'Overview', path: Routes.ageGroup(clubId, ageGroupId) },
-  { label: 'All Players', path: Routes.ageGroupPlayers(clubId, ageGroupId) },
-  { label: 'All Coaches', path: Routes.ageGroupCoaches(clubId, ageGroupId) },
+  { label: 'Players', path: Routes.ageGroupPlayers(clubId, ageGroupId) },
+  { label: 'Coaches', path: Routes.ageGroupCoaches(clubId, ageGroupId) },
   { label: 'Teams', path: Routes.teams(clubId, ageGroupId) },
 ];
 
@@ -28,7 +28,7 @@ export const getAgeGroupNavigationTabs = (clubId: string, ageGroupId: string): N
  */
 export const getTeamNavigationTabs = (clubId: string, ageGroupId: string, teamId: string): NavigationTab[] => [
   { label: 'Overview', path: Routes.team(clubId, ageGroupId, teamId) },
-  { label: 'All Players', path: Routes.teamSquad(clubId, ageGroupId, teamId) },
+  { label: 'Players', path: Routes.teamSquad(clubId, ageGroupId, teamId) },
   { label: 'Matches', path: Routes.matches(clubId, ageGroupId, teamId) },
   { label: 'Kits', path: Routes.teamKits(clubId, ageGroupId, teamId) },
 ];
@@ -41,4 +41,11 @@ export const getPlayerNavigationTabs = (clubId: string, ageGroupId: string, team
   { label: 'Abilities', path: Routes.playerAbilities(clubId, ageGroupId, teamId, playerId) },
   { label: 'Report Cards', path: Routes.playerReportCard(clubId, ageGroupId, teamId, playerId) },
   { label: 'Development Plans', path: Routes.playerDevelopmentPlans(clubId, ageGroupId, teamId, playerId) }
+];
+
+/**
+ * Generate navigation tabs for Coach pages
+ */
+export const getCoachNavigationTabs = (clubId: string, coachId: string): NavigationTab[] => [
+  { label: 'Settings', path: Routes.coachSettings(clubId, coachId) }
 ];

@@ -19,6 +19,7 @@ export default function PlayerSettingsPage() {
     nickname: player?.nickname || '',
     dateOfBirth: player?.dateOfBirth ? player.dateOfBirth.toISOString().split('T')[0] : '',
     photo: player?.photo || '',
+    associationId: player?.associationId || '',
     preferredPositions: player?.preferredPositions || [],
     // Medical Information
     allergies: player?.medicalInfo?.allergies?.join(', ') || '',
@@ -268,6 +269,24 @@ export default function PlayerSettingsPage() {
                     Age: {calculateAge(new Date(formData.dateOfBirth))} years
                   </p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Association ID
+                </label>
+                <input
+                  type="text"
+                  name="associationId"
+                  value={formData.associationId}
+                  onChange={handleInputChange}
+                  disabled={isFormDisabled}
+                  placeholder="e.g., SFA-Y-40123"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                  FA, UEFA, or other football association registration ID
+                </p>
               </div>
 
               <div className="md:col-span-2">

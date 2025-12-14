@@ -13,6 +13,7 @@ export const samplePlayers: Player[] = [
     nickname: 'The Wall',
     dateOfBirth: new Date('2014-03-15'),
     photo: 'https://placehold.co/150/4A90E2/FFFFFF?text=OT',
+    associationId: 'SFA-Y-40123',
     preferredPositions: ['GK'],
     attributes: {
       // Skills
@@ -186,6 +187,7 @@ export const samplePlayers: Player[] = [
     nickname: 'Lucky',
     dateOfBirth: new Date('2014-04-20'),
     photo: 'https://placehold.co/150/E94B3C/FFFFFF?text=LM',
+    associationId: 'SFA-Y-40156',
     preferredPositions: ['CB', 'LB'],
     attributes: {
       // Skills
@@ -256,6 +258,7 @@ export const samplePlayers: Player[] = [
     firstName: 'Ethan',
     lastName: 'Davies',
     dateOfBirth: new Date('2014-05-18'),
+    associationId: 'SFA-Y-40189',
     preferredPositions: ['CM', 'CAM'],
     attributes: {
       // Skills
@@ -328,6 +331,7 @@ export const samplePlayers: Player[] = [
     nickname: 'Rocket',
     dateOfBirth: new Date('2014-06-10'),
     photo: 'https://placehold.co/150/6FCF97/FFFFFF?text=NA',
+    associationId: 'SFA-Y-40201',
     preferredPositions: ['ST', 'CF'],
     attributes: {
       // Skills
@@ -473,6 +477,7 @@ export const samplePlayers: Player[] = [
     lastName: 'Brown',
     dateOfBirth: new Date('2014-04-12'),
     photo: 'https://placehold.co/150/F5A623/FFFFFF?text=WB',
+    associationId: 'SFA-Y-40234',
     preferredPositions: ['CM', 'CDM'],
     attributes: {
       // Skills
@@ -617,6 +622,7 @@ export const samplePlayers: Player[] = [
     lastName: 'Evans',
     dateOfBirth: new Date('2014-02-20'),
     photo: 'https://placehold.co/150/9013FE/FFFFFF?text=ME',
+    associationId: 'SFA-Y-40278',
     preferredPositions: ['RW', 'LW'],
     attributes: {
       // Skills
@@ -758,6 +764,7 @@ export const samplePlayers: Player[] = [
     lastName: 'Harris',
     dateOfBirth: new Date('2014-10-28'),
     photo: 'https://placehold.co/150/50E3C2/FFFFFF?text=GH',
+    associationId: 'SFA-Y-40312',
     preferredPositions: ['LB', 'CB'],
     attributes: {
       // Skills
@@ -831,6 +838,7 @@ export const samplePlayers: Player[] = [
     lastName: 'Rodriguez',
     nickname: 'El Matador',
     dateOfBirth: new Date('2012-04-15'),
+    associationId: 'SFA-Y-38456',
     preferredPositions: ['ST', 'CF'],
     attributes: {
       // Skills

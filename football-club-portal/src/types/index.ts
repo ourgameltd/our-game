@@ -175,6 +175,7 @@ export interface Player {
   nickname?: string;
   dateOfBirth: Date;
   photo?: string;
+  associationId?: string; // FA, UEFA, or other football association registration ID
   preferredPositions: PlayerPosition[];
   attributes: PlayerAttributes;
   overallRating: number; // Calculated from attributes
@@ -227,6 +228,7 @@ export interface Coach {
   email: string;
   phone: string;
   associationId?: string; // FA, UEFA, or other football association registration ID
+  hasAccount?: boolean; // Whether the coach has been associated with an account in the backend IDP
   teamIds: string[]; // Can be assigned to multiple teams
   role: 'head-coach' | 'assistant-coach' | 'goalkeeper-coach' | 'fitness-coach' | 'technical-coach';
   biography?: string;

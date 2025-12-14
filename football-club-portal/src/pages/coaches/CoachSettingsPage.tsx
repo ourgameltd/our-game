@@ -6,6 +6,8 @@ import { getTeamsByClubId } from '@data/teams';
 import { getAgeGroupById } from '@data/ageGroups';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
+import PageNavigation from '@components/navigation/PageNavigation';
+import { getCoachNavigationTabs } from '@utils/navigationHelpers';
 
 export default function CoachSettingsPage() {
   const { clubId, coachId } = useParams();
@@ -30,6 +32,7 @@ export default function CoachSettingsPage() {
   );
   const [selectedTeams, setSelectedTeams] = useState<string[]>(coach?.teamIds || []);
   const [photo, setPhoto] = useState(coach?.photo || '');
+  const [photoPreview, setPhotoPreview] = useState<string>(coach?.photo || '');
 
   if (!club) {
     return <div>Club not found</div>;
@@ -55,12 +58,12 @@ export default function CoachSettingsPage() {
       photo,
     });
     
-    // Navigate back to coach profile
-    navigate(Routes.coach(clubId!, coachId!));
+    // Navigate back to club coaches page
+    navigate(Routes.clubCoaches(clubId!));
   };
 
   const handleCancel = () => {
-    navigate(Routes.coach(clubId!, coachId!));
+    navigate(Routes.clubCoaches(clubId!));
   };
 
   const handleTeamToggle = (teamId: string) => {
@@ -69,6 +72,36 @@ export default function CoachSettingsPage() {
         ? prev.filter(id => id !== teamId)
         : [...prev, teamId]
     );
+  };
+
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        alert('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Image size should be less than 5MB');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const result = reader.result as string;
+        setPhotoPreview(result);
+        setPhoto(result);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSendInvite = () => {
+    // In a real app, this would send an invite email via the backend
+    alert(`Invite sent to ${coach?.email}! (Demo - not actually sent)`);
   };
 
   const roleOptions = [
@@ -81,6 +114,8 @@ export default function CoachSettingsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <PageNavigation tabs={getCoachNavigationTabs(clubId!, coachId!)} />
+      
       <main className="container mx-auto px-4 py-8">
         <PageTitle
           title={isNewCoach ? 'Add New Coach' : 'Coach Settings'}
@@ -132,17 +167,64 @@ export default function CoachSettingsPage() {
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                 />
               </div>
-              <div>
+
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Photo URL
+                  Coach Photo
                 </label>
-                <input
-                  type="text"
-                  value={photo}
-                  onChange={(e) => setPhoto(e.target.value)}
-                  placeholder="https://example.com/photo.jpg"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                />
+                <div className="flex items-start gap-4">
+                  {/* Photo Preview */}
+                  <div className="flex-shrink-0">
+                    {photoPreview ? (
+                      <img
+                        src={photoPreview}
+                        alt="Coach preview"
+                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-300 dark:border-gray-600"
+                      />
+                    ) : (
+                      <div className="w-24 h-24 rounded-full bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 flex items-center justify-center text-white text-2xl font-bold border-2 border-gray-300 dark:border-gray-600">
+                        {firstName[0] || '?'}{lastName[0] || '?'}
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* File Upload */}
+                  <div className="flex-1">
+                    <input
+                      type="file"
+                      id="photo-upload"
+                      accept="image/*"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                    <div className="flex items-center gap-3">
+                      <label
+                        htmlFor="photo-upload"
+                        className="inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg shadow-sm text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors cursor-pointer"
+                      >
+                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Choose Photo
+                      </label>
+                      {photoPreview && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPhotoPreview('');
+                            setPhoto('');
+                          }}
+                          className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 rounded-lg shadow-sm text-sm font-medium text-red-700 dark:text-red-300 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
+                      Upload a photo (JPG, PNG, GIF - Max 5MB)
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -154,17 +236,47 @@ export default function CoachSettingsPage() {
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Email *
-                </label>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Email *
+                  </label>
+                  {!isNewCoach && coach && (
+                    coach.hasAccount ? (
+                      <span className="flex items-center text-green-600 dark:text-green-400 text-xs font-medium">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Account Active
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleSendInvite}
+                        className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                      >
+                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        Send Invite
+                      </button>
+                    )
+                  )}
+                </div>
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  readOnly={!isNewCoach}
+                  disabled={!isNewCoach}
                   placeholder="coach@example.com"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
+                {!isNewCoach && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Email cannot be changed once the coach is created
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

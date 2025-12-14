@@ -47,7 +47,7 @@ const NeedsSupportCard: React.FC<NeedsSupportCardProps> = ({
           ))}
         </div>
       ) : (
-        <p className="text-gray-500 dark:text-gray-400">All players performing well!</p>
+        <p className="text-gray-500 dark:text-gray-400">Players performing well!</p>
       )}
     </div>
   );

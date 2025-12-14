@@ -3,6 +3,7 @@ import { getClubById } from '@data/clubs';
 import { getTeamById } from '@data/teams';
 import { getPlayerById } from '@data/players';
 import { getAgeGroupById } from '@data/ageGroups';
+import { getCoachById } from '@data/coaches';
 import { ChevronRight, Home, User, Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -28,11 +29,13 @@ export default function Header() {
   const playerMatchAgeGroup = matchPath('/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/*', location.pathname);
   const playerMatchLegacy = matchPath('/clubs/:clubId/teams/:teamId/players/:playerId/*', location.pathname);
   const playerMatchDirect = matchPath('/clubs/:clubId/players/:playerId/*', location.pathname);
+  const coachMatch = matchPath('/clubs/:clubId/coaches/:coachId/*', location.pathname);
   
   const clubId = clubMatch?.params.clubId;
   const ageGroupId = ageGroupMatch?.params.ageGroupId || ageGroupTeamMatch?.params.ageGroupId || playerMatchAgeGroup?.params.ageGroupId;
   const teamId = ageGroupTeamMatch?.params.teamId || teamMatch?.params.teamId || playerMatchAgeGroup?.params.teamId || playerMatchLegacy?.params.teamId;
   const playerId = playerMatchAgeGroup?.params.playerId || playerMatchLegacy?.params.playerId || playerMatchDirect?.params.playerId;
+  const coachId = coachMatch?.params.coachId;
 
   const club = clubId ? getClubById(clubId) : null;
   const team = teamId ? getTeamById(teamId) : null;
@@ -40,6 +43,7 @@ export default function Header() {
   const resolvedAgeGroupId = ageGroupId || team?.ageGroupId;
   const ageGroup = resolvedAgeGroupId ? getAgeGroupById(resolvedAgeGroupId) : null;
   const player = playerId ? getPlayerById(playerId) : null;
+  const coach = coachId ? getCoachById(coachId) : null;
 
   // Build breadcrumbs based on current route
   const breadcrumbs: Array<{ label: string; path: string; icon?: any }> = [];
@@ -132,6 +136,18 @@ export default function Header() {
       breadcrumbs.push({
         label: `${player.firstName} ${player.lastName}`,
         path: playerBasePath
+      });
+    }
+
+    if (coachId && coach) {
+      breadcrumbs.push({
+        label: 'Coaches',
+        path: `/clubs/${clubId}/coaches`
+      });
+      
+      breadcrumbs.push({
+        label: `${coach.firstName} ${coach.lastName}`,
+        path: `/clubs/${clubId}/coaches/${coachId}`
       });
     }
   }

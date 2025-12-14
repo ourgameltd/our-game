@@ -32,9 +32,9 @@ export default function AgeGroupCoachesPage() {
 
       <main className="container mx-auto px-4 py-8">
         <PageTitle
-          title={`${ageGroup.name} - All Coaches`}
+          title={`${ageGroup.name} - Coaches`}
           badge={ageGroupCoaches.length}
-          subtitle={`All coaches assigned to teams in the ${ageGroup.name} age group`}
+          subtitle={`Coaches assigned to teams in the ${ageGroup.name} age group`}
         />
 
         {/* Info Banner */}
@@ -44,7 +44,7 @@ export default function AgeGroupCoachesPage() {
             <div>
               <h4 className="font-medium text-gray-900 dark:text-white mb-1">Age Group Coach Overview</h4>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                This page shows all coaches working across all teams in the {ageGroup.name} age group. 
+                This page shows coaches working across all teams in the {ageGroup.name} age group. 
                 Coaches may work with multiple teams within this age group.{' '}
                 <Link to={Routes.teams(clubId!, ageGroupId!)} className="font-medium underline text-secondary-600 dark:text-secondary-400 hover:text-secondary-700 dark:hover:text-secondary-300">
                   View teams

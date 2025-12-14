@@ -35,9 +35,9 @@ export default function AgeGroupPlayersPage() {
 
       <main className="container mx-auto px-4 py-8">
         <PageTitle
-          title={`${ageGroup.name} - All Players`}
+          title={`${ageGroup.name} - Players`}
           badge={ageGroupPlayers.length}
-          subtitle={`All players registered to teams in the ${ageGroup.name} age group`}
+          subtitle={`Players registered to teams in the ${ageGroup.name} age group`}
         />
 
         {/* Info Banner */}
@@ -47,7 +47,7 @@ export default function AgeGroupPlayersPage() {
             <div>
               <h4 className="font-medium text-gray-900 dark:text-white mb-1">Age Group Player Overview</h4>
               <p className="text-sm text-gray-700 dark:text-gray-300">
-                This page shows all players across all teams in the {ageGroup.name} age group. 
+                This page shows players across all teams in the {ageGroup.name} age group. 
                 Players may be assigned to multiple teams within this age group.{' '}
                 <Link to={Routes.teams(clubId!, ageGroupId!)} className="font-medium underline text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300">
                   View teams
