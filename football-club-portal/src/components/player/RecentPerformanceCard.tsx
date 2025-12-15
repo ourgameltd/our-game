@@ -14,13 +14,11 @@ interface PerformanceData {
 interface RecentPerformanceCardProps {
   performances: PerformanceData[];
   clubId: string;
-  ageGroupId: string;
 }
 
 export default function RecentPerformanceCard({ 
   performances, 
-  clubId, 
-  ageGroupId
+  clubId
 }: RecentPerformanceCardProps) {
   const getRatingColor = (rating: number) => {
     if (rating >= 8.5) return 'green';

@@ -26,7 +26,8 @@ export default function ClubPlayerSettingsPage() {
     preferredPositions: player?.preferredPositions || [],
   });
 
-  const [selectedAgeGroups, setselectedAgeGroups] = useState<string[]>(player?.ageGroupIds || []);
+  const [selectedAgeGroups] = useState<string[]>(player?.ageGroupIds || []);
+  const [selectedTeams, setSelectedTeams] = useState<string[]>(player?.teamIds || []);
   const [photoPreview, setPhotoPreview] = useState<string>(player?.photo || '');
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
@@ -72,7 +73,7 @@ export default function ClubPlayerSettingsPage() {
   };
 
   const handleTeamToggle = (teamId: string) => {
-    setselectedAgeGroups(prev =>
+    setSelectedTeams(prev =>
       prev.includes(teamId)
         ? prev.filter(id => id !== teamId)
         : [...prev, teamId]
@@ -81,7 +82,7 @@ export default function ClubPlayerSettingsPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Saving player:', { ...formData, ageGroupIds: selectedAgeGroups });
+    console.log('Saving player:', { ...formData, ageGroupIds: selectedAgeGroups, teamIds: selectedTeams });
     alert(`Player ${isNewPlayer ? 'created' : 'updated'} successfully! (Demo - not saved to backend)`);
     navigate(Routes.clubPlayers(clubId!));
   };
@@ -276,26 +277,46 @@ export default function ClubPlayerSettingsPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Select which teams this player is assigned to
             </p>
-            <div className="space-y-2 max-h-60 overflow-y-auto">
-              {allTeams.map((team) => {
-                const ageGroup = getAgeGroupById(team.ageGroupId);
+            <div className="space-y-4 max-h-96 overflow-y-auto">
+              {/* Group teams by age group */}
+              {Array.from(new Set(allTeams.map(t => t.ageGroupId)))
+                .sort((a, b) => {
+                  const ageGroupA = getAgeGroupById(a);
+                  const ageGroupB = getAgeGroupById(b);
+                  return (ageGroupA?.name || '').localeCompare(ageGroupB?.name || '');
+                })
+                .map(ageGroupId => {
+                const ageGroup = getAgeGroupById(ageGroupId);
+                const ageGroupTeams = allTeams
+                  .filter(t => t.ageGroupId === ageGroupId)
+                  .sort((a, b) => a.name.localeCompare(b.name));
+                
                 return (
-                  <label
-                    key={team.id}
-                    className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={selectedAgeGroups.includes(team.id)}
-                      onChange={() => handleTeamToggle(team.id)}
-                      disabled={isFormDisabled}
-                      className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                    />
-                    <div>
-                      <div className="font-medium text-gray-900 dark:text-white">{team.name}</div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">{ageGroup?.name || 'Unknown'}</div>
+                  <div key={ageGroupId} className="border-l-4 border-primary-500 pl-4">
+                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                      {ageGroup?.name || 'Unknown Age Group'}
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                      {ageGroupTeams.map((team) => (
+                        <label
+                          key={team.id}
+                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer border border-gray-200 dark:border-gray-700"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={selectedTeams.includes(team.id)}
+                            onChange={() => handleTeamToggle(team.id)}
+                            disabled={isFormDisabled}
+                            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                          />
+                          <div>
+                            <div className="font-medium text-gray-900 dark:text-white">{team.name}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{team.level}</div>
+                          </div>
+                        </label>
+                      ))}
                     </div>
-                  </label>
+                  </div>
                 );
               })}
             </div>

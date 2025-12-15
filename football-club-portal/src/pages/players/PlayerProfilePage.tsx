@@ -90,6 +90,10 @@ export default function PlayerProfilePage() {
                 <span className="text-gray-600 dark:text-gray-400">Age Groups</span>
                 <span className="font-medium text-gray-900 dark:text-white">{player.ageGroupIds.length}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Teams</span>
+                <span className="font-medium text-gray-900 dark:text-white">{player.teamIds.length}</span>
+              </div>
             </div>
           </div>
 
@@ -97,7 +101,6 @@ export default function PlayerProfilePage() {
           <RecentPerformanceCard 
             performances={recentPerformances}
             clubId={clubId!}
-            ageGroupId={ageGroupId!}
           />
         </div>
 

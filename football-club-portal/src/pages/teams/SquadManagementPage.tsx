@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState } from 'react';
 import { getTeamById } from '@data/teams';
-import { getPlayersByTeamId, getPlayersByClubId } from '@data/players';
+import { getPlayersByTeamId, getPlayersByAgeGroupId } from '@data/players';
 import PlayerCard from '@components/player/PlayerCard';
 import PageNavigation from '@components/navigation/PageNavigation';
 import PageTitle from '@components/common/PageTitle';
@@ -12,16 +12,16 @@ export default function SquadManagementPage() {
   const { clubId, ageGroupId, teamId } = useParams();
   const team = getTeamById(teamId!);
   const teamPlayers = getPlayersByTeamId(teamId!);
-  const allClubPlayers = getPlayersByClubId(clubId!);
+  const ageGroupPlayers = team ? getPlayersByAgeGroupId(team.ageGroupId) : [];
   const [showAddModal, setShowAddModal] = useState(false);
 
   if (!team) {
     return <div>Team not found</div>;
   }
 
-  // Get players not in this team
-  const availablePlayers = allClubPlayers.filter(
-    player => !false
+  // Get players from age group who aren't already in this team
+  const availablePlayers = ageGroupPlayers.filter(
+    player => !player.teamIds.includes(teamId!)
   );
 
   // Group team players by position
@@ -110,9 +110,9 @@ export default function SquadManagementPage() {
                       ✕
                     </button>
                   )}
-                  {player.ageGroupIds.length > 1 && (
+                  {player.teamIds.length > 1 && (
                     <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.ageGroupIds.length} teams
+                      {player.teamIds.length} teams
                     </div>
                   )}
                 </div>

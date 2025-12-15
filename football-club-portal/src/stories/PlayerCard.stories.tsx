@@ -33,6 +33,7 @@ export const Youth: Story = {
       },
       overallRating: 70,
       evaluations: [],
+      ageGroupIds: ['age-group-1'],
       teamIds: ['team-1'],
     },
   },
@@ -53,12 +54,13 @@ export const Adult: Story = {
         shortPassing: 90, shotPower: 86, slidingTackle: 65, standingTackle: 68, volleys: 84,
         acceleration: 82, agility: 84, balance: 83, jumping: 78, pace: 82,
         reactions: 88, sprintSpeed: 81, stamina: 85, strength: 75,
-        aggression: 70, attackingPosition: 92, awareness: 88, composure: 86,
-        interceptions: 65, marking: 68, positioning: 90, vision: 88, positivity: 90, communication: 85
+        aggression: 55, attackingPosition: 40, awareness: 78, composure: 75,
+        interceptions: 52, marking: 50, positioning: 85, vision: 65, positivity: 80, communication: 78
       },
-      overallRating: 85,
+      overallRating: 68,
       evaluations: [],
-      teamIds: ['team-5'],
+      ageGroupIds: ['age-group-1'],
+      teamIds: ['team-1'],
     },
   },
 };
@@ -78,12 +80,13 @@ export const Goalkeeper: Story = {
         shortPassing: 72, shotPower: 50, slidingTackle: 48, standingTackle: 50, volleys: 45,
         acceleration: 65, agility: 75, balance: 70, jumping: 72, pace: 64,
         reactions: 82, sprintSpeed: 63, stamina: 70, strength: 58,
-        aggression: 55, attackingPosition: 40, awareness: 78, composure: 75,
-        interceptions: 52, marking: 50, positioning: 85, vision: 65, positivity: 80, communication: 78
+        aggression: 30, attackingPosition: 35, awareness: 55, composure: 50,
+        interceptions: 68, marking: 70, positioning: 60, vision: 55, positivity: 75, communication: 72
       },
-      overallRating: 68,
+      overallRating: 62,
       evaluations: [],
-      teamIds: ['team-1'],
+      ageGroupIds: ['age-group-5'],
+      teamIds: ['team-5'],
     },
   },
 };

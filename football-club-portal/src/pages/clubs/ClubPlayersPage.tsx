@@ -268,7 +268,6 @@ export default function ClubPlayersPage() {
             </h3>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {playersByAgeGroup[ageGroup].map((player) => {
-                const playerTeam = teams.find(t => player.ageGroupIds.includes(t.id));
                 return (
                   <div key={player.id} className="relative">
                     <Link to={Routes.clubPlayerSettings(clubId!, player.id)}>
