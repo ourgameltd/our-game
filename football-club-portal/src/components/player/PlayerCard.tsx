@@ -24,7 +24,7 @@ export default function PlayerCard({ player, onClick }: PlayerCardProps) {
 
   return (
     <div 
-      className={`card-hover ${onClick ? 'cursor-pointer' : ''}`}
+      className={`card-hover h-full flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <div className="flex items-start gap-4">
@@ -40,7 +40,7 @@ export default function PlayerCard({ player, onClick }: PlayerCardProps) {
           </div>
         )}
         
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 mb-4">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
             {player.firstName} {player.lastName}
             {player.nickname && (
@@ -60,12 +60,12 @@ export default function PlayerCard({ player, onClick }: PlayerCardProps) {
       </div>
 
       {topAttributes.length > 0 && (
-        <div className="mt-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+        <div className="mt-auto pt-4 border-t border-gray-100 dark:border-gray-700">
           <div className="grid grid-cols-2 gap-2">
             {topAttributes.map(attribute => (
-              <div key={attribute.name} className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">{attribute.name}</span>
-                <span className="font-medium text-gray-900 dark:text-white">{attribute.rating}</span>
+              <div key={attribute.name} className="flex justify-between text-sm gap-2">
+                <span className="text-gray-600 dark:text-gray-400 truncate">{attribute.name}</span>
+                <span className="font-medium text-gray-900 dark:text-white flex-shrink-0">{attribute.rating}</span>
               </div>
             ))}
           </div>

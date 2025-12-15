@@ -71,16 +71,6 @@ export default function AgeGroupPlayersPage() {
                   >
                     <PlayerCard player={player} />
                   </Link>
-                  {player.ageGroupIds.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.ageGroupIds.length} age groups
-                    </div>
-                  )}
-                  {player.teamIds.length > 0 && (
-                    <div className="absolute bottom-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} team{player.teamIds.length !== 1 ? 's' : ''}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -101,16 +91,6 @@ export default function AgeGroupPlayersPage() {
                   >
                     <PlayerCard player={player} />
                   </Link>
-                  {player.ageGroupIds.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.ageGroupIds.length} age groups
-                    </div>
-                  )}
-                  {player.teamIds.length > 0 && (
-                    <div className="absolute bottom-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} team{player.teamIds.length !== 1 ? 's' : ''}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -131,16 +111,6 @@ export default function AgeGroupPlayersPage() {
                   >
                     <PlayerCard player={player} />
                   </Link>
-                  {player.ageGroupIds.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.ageGroupIds.length} age groups
-                    </div>
-                  )}
-                  {player.teamIds.length > 0 && (
-                    <div className="absolute bottom-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} team{player.teamIds.length !== 1 ? 's' : ''}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -161,16 +131,6 @@ export default function AgeGroupPlayersPage() {
                   >
                     <PlayerCard player={player} />
                   </Link>
-                  {player.ageGroupIds.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.ageGroupIds.length} age groups
-                    </div>
-                  )}
-                  {player.teamIds.length > 0 && (
-                    <div className="absolute bottom-2 right-2 bg-green-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} team{player.teamIds.length !== 1 ? 's' : ''}
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

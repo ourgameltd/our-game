@@ -66,11 +66,6 @@ export default function AgeGroupCoachesPage() {
                   <Link to={Routes.coach(clubId!, coach.id)}>
                     <CoachCard coach={coach} />
                   </Link>
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-secondary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -89,11 +84,6 @@ export default function AgeGroupCoachesPage() {
                   <Link to={Routes.coach(clubId!, coach.id)}>
                     <CoachCard coach={coach} />
                   </Link>
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-secondary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
                 </div>
               ))}
             </div>
@@ -112,11 +102,6 @@ export default function AgeGroupCoachesPage() {
                   <Link to={Routes.coach(clubId!, coach.id)}>
                     <CoachCard coach={coach} />
                   </Link>
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-secondary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

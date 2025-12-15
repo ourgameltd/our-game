@@ -24,7 +24,7 @@ export default function CoachCard({ coach, onClick }: CoachCardProps) {
 
   return (
     <div 
-      className={`card-hover ${onClick ? 'cursor-pointer' : ''}`}
+      className={`card-hover h-full flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
       <div className="flex items-start gap-4">
@@ -63,7 +63,7 @@ export default function CoachCard({ coach, onClick }: CoachCardProps) {
         </div>
       )}
 
-      <div className="mt-3 flex items-center justify-between">
+      <div className="mt-auto pt-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
           {coach.associationId && (
             <p className="text-xs text-gray-500 dark:text-gray-500">
