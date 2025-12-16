@@ -174,6 +174,15 @@ export class Routes {
     return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches/new`;
   }
 
+  static matchEdit(
+    clubId: string,
+    ageGroupId: string,
+    teamId: string,
+    matchId: string
+  ): string {
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches/${matchId}/edit`;
+  }
+
   static matchReport(
     clubId: string,
     ageGroupId: string,

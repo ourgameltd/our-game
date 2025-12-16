@@ -1,16 +1,18 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { sampleMatches } from '@/data/matches';
 import { samplePlayers } from '@/data/players';
 import { sampleCoaches } from '@/data/coaches';
 import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
 import { getTeamNavigationTabs } from '@/utils/navigationHelpers';
+import { Routes } from '@/utils/routes';
 import PageNavigation from '@/components/navigation/PageNavigation';
 import MatchPreviewCard from '@/components/match/MatchPreviewCard';
 import { Kit } from '@/types';
 
 export default function MatchReportPage() {
   const { matchId, clubId, ageGroupId, teamId } = useParams();
+  const navigate = useNavigate();
   
   const match = sampleMatches.find(m => m.id === matchId);
   const team = sampleTeams.find(t => t.id === teamId);
@@ -127,6 +129,17 @@ export default function MatchReportPage() {
       <PageNavigation tabs={getTeamNavigationTabs(clubId!, ageGroupId!, teamId!)} />
 
       <main className="container mx-auto px-4 py-8">     
+        {/* Action Button */}
+        <div className="flex justify-end gap-3 mb-4">
+          <button
+            onClick={() => navigate(Routes.matchEdit(clubId!, ageGroupId!, teamId!, matchId!))}
+            className="btn-md btn-primary"
+          >
+            <span>⚙️ Settings</span>
+            {isLocked && <span> 🔒</span>}
+          </button>
+        </div>
+
         {/* Match Header - Using unified component */}
         <MatchPreviewCard 
           match={match}

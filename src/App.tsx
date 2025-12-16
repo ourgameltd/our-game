@@ -111,6 +111,7 @@ function AppContent() {
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches" element={<MatchesListPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/new" element={<AddEditMatchPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/:matchId" element={<MatchReportPage />} />
+        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/:matchId/edit" element={<AddEditMatchPage />} />
 
         {/* Training */}
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/training/:sessionId" element={<TrainingSessionPage />} />

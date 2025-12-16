@@ -1,9 +1,8 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { sampleMatches } from '@/data/matches';
 import { sampleClubs } from '@/data/clubs';
 import { sampleTeams } from '@/data/teams';
 import { getAgeGroupById } from '@/data/ageGroups';
-import { Routes } from '@utils/routes';
 import { getAgeGroupNavigationTabs } from '@/utils/navigationHelpers';
 import PageNavigation from '@/components/navigation/PageNavigation';
 import PageTitle from '@components/common/PageTitle';
@@ -11,7 +10,6 @@ import MatchesListContent from '@/components/matches/MatchesListContent';
 
 export default function AgeGroupMatchesPage() {
   const { clubId, ageGroupId } = useParams();
-  const navigate = useNavigate();
   
   const club = sampleClubs.find(c => c.id === clubId);
   const ageGroup = getAgeGroupById(ageGroupId!);
