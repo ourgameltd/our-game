@@ -16,7 +16,11 @@ export const sampleMatches: Match[] = [
       primary: '9a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', // Vale Home Kit
       goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
-    status: 'scheduled',
+    status: 'completed',
+    score: {
+      home: 2,
+      away: 1
+    },
     weather: {
       condition: 'Partly Cloudy',
       temperature: 12
@@ -37,7 +41,11 @@ export const sampleMatches: Match[] = [
       primary: '9b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', // Vale Away Kit
       goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
-    status: 'scheduled',
+    status: 'completed',
+    score: {
+      home: 1,
+      away: 3
+    },
     coachIds: ['c4a5b6c7-d8e9-f0a1-b2c3-d4e5f6a7b8c9', 'c3a4b5c6-d7e8-f9a0-b1c2-d3e4f5a6b7c8']
   },
   {

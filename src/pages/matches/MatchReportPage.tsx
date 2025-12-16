@@ -305,7 +305,7 @@ export default function MatchReportPage() {
                   {match.lineup.substitutes.length > 0 && (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Substitutes</h3>
-                      <div className="grid grid-cols-1gap-3">
+                      <div className="grid grid-cols-1 gap-3">
                         {match.lineup.substitutes.map((playerId, index) => {
                           const playerData = getPlayerById(playerId);
                           const rating = getRatingForPlayer(playerId);

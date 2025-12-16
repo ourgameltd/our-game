@@ -13,11 +13,13 @@ import ClubPlayerSettingsPage from '@pages/clubs/ClubPlayerSettingsPage';
 import ClubCoachesPage from '@pages/clubs/ClubCoachesPage';
 import ClubKitsPage from '@pages/clubs/ClubKitsPage';
 import ClubSettingsPage from '@pages/clubs/ClubSettingsPage';
+import ClubMatchesPage from '@pages/clubs/ClubMatchesPage';
 import AgeGroupsListPage from '@pages/ageGroups/AgeGroupsListPage';
 import AgeGroupOverviewPage from '@pages/ageGroups/AgeGroupOverviewPage';
 import AgeGroupPlayersPage from '@pages/ageGroups/AgeGroupPlayersPage';
 import AgeGroupCoachesPage from '@pages/ageGroups/AgeGroupCoachesPage';
 import AgeGroupSettingsPage from '@pages/ageGroups/AgeGroupSettingsPage';
+import AgeGroupMatchesPage from '@pages/ageGroups/AgeGroupMatchesPage';
 import AddEditAgeGroupPage from '@pages/ageGroups/AddEditAgeGroupPage';
 import TeamsListPage from '@pages/teams/TeamsListPage';
 import TeamOverviewPage from '@pages/teams/TeamOverviewPage';
@@ -73,6 +75,7 @@ function AppContent() {
         <Route path="/clubs/:clubId/coaches" element={<ClubCoachesPage />} />
         <Route path="/clubs/:clubId/coaches/:coachId" element={<CoachProfilePage />} />
         <Route path="/clubs/:clubId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
+        <Route path="/clubs/:clubId/matches" element={<ClubMatchesPage />} />
         <Route path="/clubs/:clubId/kits" element={<ClubKitsPage />} />
         <Route path="/clubs/:clubId/settings" element={<ClubSettingsPage />} />
 
@@ -83,6 +86,7 @@ function AppContent() {
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/edit" element={<AddEditAgeGroupPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/players" element={<AgeGroupPlayersPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/coaches" element={<AgeGroupCoachesPage />} />
+        <Route path="/clubs/:clubId/age-groups/:ageGroupId/matches" element={<AgeGroupMatchesPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
 

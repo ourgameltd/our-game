@@ -69,120 +69,135 @@ export default function MatchPreviewCard({
       </div>
       
       {/* Teams Display */}
-      <div className="flex items-center justify-between mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-        <div className="text-center flex-1">
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-            {homeTeamName}
+      <div className="mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
+        {/* Team Names and Score - Always Aligned */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-center flex-1">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+              {homeTeamName}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Home
+            </div>
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Home
+
+          <div className="px-6">
+            {match.score ? (
+              <div className="text-4xl font-bold text-gray-900 dark:text-white">
+                {match.isHome ? match.score.home : match.score.away}
+                {' - '}
+                {match.isHome ? match.score.away : match.score.home}
+              </div>
+            ) : (
+              <div className="text-3xl font-bold text-gray-400 dark:text-gray-500">
+                vs
+              </div>
+            )}
           </div>
-          
-          {/* Goal Scorers and Cards for Home Team (when it's our team) */}
-          {!isUpcoming && match.report && match.isHome && (
-            <div className="space-y-1 mt-3">
-              {/* Goal Scorers */}
-              {Object.keys(ourTeamGoalScorers).length > 0 && Object.entries(ourTeamGoalScorers).map(([playerName, goals]) => (
-                <div key={playerName} className="flex items-center justify-center gap-1 text-sm">
-                  <span className="text-gray-700 dark:text-gray-300">{playerName}</span>
-                  <span className="flex gap-0.5">
-                    {Array.from({ length: goals as number }).map((_, i) => (
-                      <span key={i} className="text-base">⚽</span>
-                    ))}
-                  </span>
-                </div>
-              ))}
-              {/* Cards */}
-              {match.report.cards && match.report.cards.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {match.report.cards.map((card, index) => (
-                    <div key={index} className="flex items-center justify-center gap-1 text-sm">
-                      <span className="text-gray-700 dark:text-gray-300">{getPlayerName(card.playerId)}</span>
-                      <span className={card.type === 'yellow' ? 'text-yellow-500' : 'text-red-500'}>
-                        {card.type === 'yellow' ? '🟨' : '🟥'}
+
+          <div className="text-center flex-1">
+            <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+              {displayAwayTeam}
+            </div>
+            <div className="text-sm text-gray-500 dark:text-gray-400">
+              Away
+            </div>
+          </div>
+        </div>
+
+        {/* Goal Scorers, Cards, and Injuries - Below Team Names */}
+        {!isUpcoming && match.report && (
+          <div className="flex justify-between">
+            {/* Home Team Stats (when it's our team) */}
+            <div className="text-center flex-1">
+              {match.isHome && (
+                <div className="space-y-1">
+                  {/* Goal Scorers */}
+                  {Object.keys(ourTeamGoalScorers).length > 0 && Object.entries(ourTeamGoalScorers).map(([playerName, goals]) => (
+                    <div key={playerName} className="flex items-center justify-center gap-1 text-sm">
+                      <span className="text-gray-700 dark:text-gray-300">{playerName}</span>
+                      <span className="flex gap-0.5">
+                        {Array.from({ length: goals as number }).map((_, i) => (
+                          <span key={i} className="text-base">⚽</span>
+                        ))}
                       </span>
                     </div>
                   ))}
+                  {/* Cards */}
+                  {match.report.cards && match.report.cards.length > 0 && (
+                    <>
+                      {match.report.cards.map((card, index) => (
+                        <div key={index} className="flex items-center justify-center gap-1 text-sm">
+                          <span className="text-gray-700 dark:text-gray-300">{getPlayerName(card.playerId)}</span>
+                          <span className={card.type === 'yellow' ? 'text-yellow-500' : 'text-red-500'}>
+                            {card.type === 'yellow' ? '🟨' : '🟥'}
+                          </span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {/* Injuries */}
+                  {match.report.injuries && match.report.injuries.length > 0 && (
+                    <>
+                      {match.report.injuries.map((injury, index) => (
+                        <div key={index} className="flex items-center justify-center gap-1 text-sm">
+                          <span className="text-gray-700 dark:text-gray-300">{getPlayerName(injury.playerId)}</span>
+                          <span className="text-red-600" title={injury.description}>🏥</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
               )}
-              {/* Injuries */}
-              {match.report.injuries && match.report.injuries.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {match.report.injuries.map((injury, index) => (
-                    <div key={index} className="flex items-center justify-center gap-1 text-sm">
-                      <span className="text-gray-700 dark:text-gray-300">{getPlayerName(injury.playerId)}</span>
-                      <span className="text-red-600" title={injury.description}>🏥</span>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
-          )}
-        </div>
 
-        <div className="px-6">
-          {match.score ? (
-            <div className="text-4xl font-bold text-gray-900 dark:text-white">
-              {match.isHome ? match.score.home : match.score.away}
-              {' - '}
-              {match.isHome ? match.score.away : match.score.home}
-            </div>
-          ) : (
-            <div className="text-3xl font-bold text-gray-400 dark:text-gray-500">
-              vs
-            </div>
-          )}
-        </div>
+            {/* Spacer for score */}
+            <div className="px-6"></div>
 
-        <div className="text-center flex-1">
-          <div className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-            {displayAwayTeam}
-          </div>
-          <div className="text-sm text-gray-500 dark:text-gray-400 mb-2">
-            Away
-          </div>
-          
-          {/* Goal Scorers and Cards for Away Team (when it's our team) */}
-          {!isUpcoming && match.report && !match.isHome && (
-            <div className="space-y-1 mt-3">
-              {/* Goal Scorers */}
-              {Object.keys(ourTeamGoalScorers).length > 0 && Object.entries(ourTeamGoalScorers).map(([playerName, goals]) => (
-                <div key={playerName} className="flex items-center justify-center gap-1 text-sm">
-                  <span className="text-gray-700 dark:text-gray-300">{playerName}</span>
-                  <span className="flex gap-0.5">
-                    {Array.from({ length: goals as number }).map((_, i) => (
-                      <span key={i} className="text-base">⚽</span>
-                    ))}
-                  </span>
-                </div>
-              ))}
-              {/* Cards */}
-              {match.report.cards && match.report.cards.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {match.report.cards.map((card, index) => (
-                    <div key={index} className="flex items-center justify-center gap-1 text-sm">
-                      <span className="text-gray-700 dark:text-gray-300">{getPlayerName(card.playerId)}</span>
-                      <span className={card.type === 'yellow' ? 'text-yellow-500' : 'text-red-500'}>
-                        {card.type === 'yellow' ? '🟨' : '🟥'}
+            {/* Away Team Stats (when it's our team) */}
+            <div className="text-center flex-1">
+              {!match.isHome && (
+                <div className="space-y-1">
+                  {/* Goal Scorers */}
+                  {Object.keys(ourTeamGoalScorers).length > 0 && Object.entries(ourTeamGoalScorers).map(([playerName, goals]) => (
+                    <div key={playerName} className="flex items-center justify-center gap-1 text-sm">
+                      <span className="text-gray-700 dark:text-gray-300">{playerName}</span>
+                      <span className="flex gap-0.5">
+                        {Array.from({ length: goals as number }).map((_, i) => (
+                          <span key={i} className="text-base">⚽</span>
+                        ))}
                       </span>
                     </div>
                   ))}
-                </div>
-              )}
-              {/* Injuries */}
-              {match.report.injuries && match.report.injuries.length > 0 && (
-                <div className="mt-2 space-y-1">
-                  {match.report.injuries.map((injury, index) => (
-                    <div key={index} className="flex items-center justify-center gap-1 text-sm">
-                      <span className="text-gray-700 dark:text-gray-300">{getPlayerName(injury.playerId)}</span>
-                      <span className="text-red-600" title={injury.description}>🏥</span>
-                    </div>
-                  ))}
+                  {/* Cards */}
+                  {match.report.cards && match.report.cards.length > 0 && (
+                    <>
+                      {match.report.cards.map((card, index) => (
+                        <div key={index} className="flex items-center justify-center gap-1 text-sm">
+                          <span className="text-gray-700 dark:text-gray-300">{getPlayerName(card.playerId)}</span>
+                          <span className={card.type === 'yellow' ? 'text-yellow-500' : 'text-red-500'}>
+                            {card.type === 'yellow' ? '🟨' : '🟥'}
+                          </span>
+                        </div>
+                      ))}
+                    </>
+                  )}
+                  {/* Injuries */}
+                  {match.report.injuries && match.report.injuries.length > 0 && (
+                    <>
+                      {match.report.injuries.map((injury, index) => (
+                        <div key={index} className="flex items-center justify-center gap-1 text-sm">
+                          <span className="text-gray-700 dark:text-gray-300">{getPlayerName(injury.playerId)}</span>
+                          <span className="text-red-600" title={injury.description}>🏥</span>
+                        </div>
+                      ))}
+                    </>
+                  )}
                 </div>
               )}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Kit Display */}

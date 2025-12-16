@@ -158,6 +158,14 @@ export class Routes {
   }
 
   // Matches
+  static clubMatches(clubId: string): string {
+    return `/clubs/${clubId}/matches`;
+  }
+
+  static ageGroupMatches(clubId: string, ageGroupId: string): string {
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/matches`;
+  }
+
   static matches(clubId: string, ageGroupId: string, teamId: string): string {
     return `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`;
   }
