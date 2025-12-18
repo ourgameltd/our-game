@@ -121,30 +121,57 @@ export default function MobileNavigation() {
         {/* Center Logo Display - Club or Team */}
         <div className="mobile-nav-center-logo">
           {team ? (
-            <Link 
-              to={`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
-              className="flex items-center gap-2"
-            >
-              <div 
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold border-2 border-gray-300 dark:border-gray-600"
-                style={{ 
-                  backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
-                  color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
-                }}
-              >
-                {team.shortName || team.name.substring(0, 3).toUpperCase()}
-              </div>
-              <div className="flex flex-col text-left">
-                <span className="text-xs font-semibold text-gray-900 dark:text-white leading-tight">
-                  {team.name}
-                </span>
-                {ageGroup && (
-                  <span className="text-[10px] text-gray-600 dark:text-gray-400 leading-tight">
+            <div className="flex items-center gap-2">
+              {/* Club Logo */}
+              <Link to={`/clubs/${clubId}`} className="flex items-center">
+                {club?.logo ? (
+                  <img 
+                    src={club.logo} 
+                    alt={`${club.name} logo`}
+                    className="w-8 h-8 rounded-lg object-cover border border-gray-300 dark:border-gray-600"
+                  />
+                ) : club ? (
+                  <div 
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold text-white border border-gray-300 dark:border-gray-600"
+                    style={{ backgroundColor: club.colors.primary }}
+                  >
+                    {club.shortName}
+                  </div>
+                ) : null}
+              </Link>
+              
+              {/* Separator */}
+              <span className="text-gray-400 dark:text-gray-500">&gt;</span>
+              
+              {/* Age Group Link */}
+              {ageGroup && (
+                <>
+                  <Link 
+                    to={`/clubs/${clubId}/age-groups/${ageGroupId}`}
+                    className="text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                  >
                     {ageGroup.name}
-                  </span>
-                )}
-              </div>
-            </Link>
+                  </Link>
+                  <span className="text-gray-400 dark:text-gray-500">&gt;</span>
+                </>
+              )}
+              
+              {/* Team Badge */}
+              <Link 
+                to={`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
+                className="flex items-center gap-2"
+              >
+                <div 
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border-2 border-gray-300 dark:border-gray-600"
+                  style={{ 
+                    backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
+                    color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
+                  }}
+                >
+                  {team.shortName || team.name.substring(0, 3).toUpperCase()}
+                </div>
+              </Link>
+            </div>
           ) : club ? (
             <Link to={`/clubs/${clubId}`} className="flex items-center gap-2">
               {club.logo ? (
@@ -333,29 +360,84 @@ export default function MobileNavigation() {
 
       {/* Desktop Navigation - Horizontal Layout */}
       <div className="mobile-nav-desktop hidden lg:flex">
-        <Link to="/clubs" className="mobile-nav-desktop-logo">
-          {club && club.logo ? (
-            <>
-              <img src={club.logo} alt={club.shortName} />
-              <span className="mobile-nav-desktop-logo-text">{club.shortName}</span>
-            </>
-          ) : club ? (
-            <>
+        {team ? (
+          <div className="flex items-center gap-2 px-4">
+            {/* Club Logo */}
+            <Link to={`/clubs/${clubId}`} className="flex items-center">
+              {club?.logo ? (
+                <img 
+                  src={club.logo} 
+                  alt={`${club.name} logo`}
+                  className="w-10 h-10 rounded-lg object-cover border border-gray-300 dark:border-gray-600"
+                />
+              ) : club ? (
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white border border-gray-300 dark:border-gray-600"
+                  style={{ backgroundColor: club.colors.primary }}
+                >
+                  {club.shortName}
+                </div>
+              ) : null}
+            </Link>
+            
+            {/* Separator */}
+            <span className="text-gray-400 dark:text-gray-500 text-lg">&gt;</span>
+            
+            {/* Age Group Link */}
+            {ageGroup && (
+              <>
+                <Link 
+                  to={`/clubs/${clubId}/age-groups/${ageGroupId}`}
+                  className="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                >
+                  {ageGroup.name}
+                </Link>
+                
+                <span className="text-gray-400 dark:text-gray-500 text-lg">&gt;</span>
+              </>
+            )}
+            
+            {/* Team Badge */}
+            <Link 
+              to={`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
+              className="flex items-center gap-2"
+            >
               <div 
-                className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white"
-                style={{ backgroundColor: club.colors.primary }}
+                className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold border-2 border-gray-300 dark:border-gray-600"
+                style={{ 
+                  backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
+                  color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
+                }}
               >
-                {club.shortName}
+                {team.shortName || team.name.substring(0, 3).toUpperCase()}
               </div>
-              <span className="mobile-nav-desktop-logo-text">{club.name}</span>
-            </>
-          ) : (
-            <>
-              <Trophy className="w-6 h-6" />
-              <span className="mobile-nav-desktop-logo-text">My Clubs</span>
-            </>
-          )}
-        </Link>
+            </Link>
+          </div>
+        ) : (
+          <Link to="/clubs" className="mobile-nav-desktop-logo">
+            {club && club.logo ? (
+              <>
+                <img src={club.logo} alt={club.shortName} />
+                <span className="mobile-nav-desktop-logo-text">{club.shortName}</span>
+              </>
+            ) : club ? (
+              <>
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white"
+                  style={{ backgroundColor: club.colors.primary }}
+                >
+                  {club.shortName}
+                </div>
+                <span className="mobile-nav-desktop-logo-text">{club.name}</span>
+              </>
+            ) : (
+              <>
+                <Trophy className="w-6 h-6" />
+                <span className="mobile-nav-desktop-logo-text">My Clubs</span>
+              </>
+            )}
+          </Link>
+        )}
 
         {/* Context Navigation Items */}
         {contextNavItems.length > 0 && (
