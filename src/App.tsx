@@ -41,6 +41,7 @@ import PlayerSettingsPage from '@pages/players/PlayerSettingsPage';
 import CoachProfilePage from '@pages/coaches/CoachProfilePage';
 import CoachSettingsPage from '@pages/coaches/CoachSettingsPage';
 import HelpSupportPage from '@pages/HelpSupportPage';
+import NotificationsPage from '@pages/NotificationsPage';
 import Header from '@components/layout/Header';
 import ScrollToTop from '@components/common/ScrollToTop';
 
@@ -67,6 +68,9 @@ function AppContent() {
 
         {/* Profile */}
         <Route path="/profile" element={<ProfilePage />} />
+        
+        {/* Notifications */}
+        <Route path="/notifications" element={<NotificationsPage />} />
         
         {/* Help & Support */}
         <Route path="/help" element={<HelpSupportPage />} />

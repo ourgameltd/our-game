@@ -240,6 +240,11 @@ export class Routes {
     return '/profile';
   }
 
+  // Notifications
+  static notifications(): string {
+    return '/notifications';
+  }
+
   // Help & Support
   static help(): string {
     return '/help';

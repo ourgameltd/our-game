@@ -152,25 +152,9 @@ export default function MobileNavigation() {
                   >
                     {ageGroup.name}
                   </Link>
-                  <span className="text-gray-400 dark:text-gray-500">&gt;</span>
                 </>
               )}
               
-              {/* Team Badge */}
-              <Link 
-                to={`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
-                className="flex items-center gap-2"
-              >
-                <div 
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold border-2 border-gray-300 dark:border-gray-600"
-                  style={{ 
-                    backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
-                    color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
-                  }}
-                >
-                  {team.shortName || team.name.substring(0, 3).toUpperCase()}
-                </div>
-              </Link>
             </div>
           ) : club ? (
             <Link to={`/clubs/${clubId}`} className="flex items-center gap-2">
@@ -211,10 +195,10 @@ export default function MobileNavigation() {
               <Sun className="w-5 h-5" />
             )}
           </button>
-          <button className="mobile-nav-notification-btn" aria-label="Notifications">
+          <Link to="/notifications" className="mobile-nav-notification-btn" aria-label="Notifications">
             <Bell className="w-5 h-5" />
             <span className="mobile-nav-notification-badge">3</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -467,10 +451,10 @@ export default function MobileNavigation() {
               <Sun className="w-5 h-5" />
             )}
           </button>
-          <button className="mobile-nav-notification-btn" aria-label="Notifications">
+          <Link to="/notifications" className="mobile-nav-notification-btn" aria-label="Notifications">
             <Bell className="w-5 h-5" />
             <span className="mobile-nav-notification-badge">3</span>
-          </button>
+          </Link>
           <Link to="/profile" className="mobile-nav-desktop-user" title="Profile">
             <div className="mobile-nav-user-avatar-wrapper">
               <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
