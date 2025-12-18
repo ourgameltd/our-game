@@ -239,4 +239,9 @@ export class Routes {
   static profile(): string {
     return '/profile';
   }
+
+  // Help & Support
+  static help(): string {
+    return '/help';
+  }
 }

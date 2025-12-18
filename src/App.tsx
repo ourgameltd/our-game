@@ -34,15 +34,13 @@ import PlayerAbilitiesPage from '@pages/players/PlayerAbilitiesPage';
 import MatchReportPage from '@pages/matches/MatchReportPage';
 import MatchesListPage from '@pages/matches/MatchesListPage';
 import AddEditMatchPage from '@pages/matches/AddEditMatchPage';
-import TrainingSessionPage from '@pages/training/TrainingSessionPage';
-import FormationsLibraryPage from '@pages/formations/FormationsLibraryPage';
-import TrainingLibraryPage from '@pages/training/TrainingLibraryPage';
 import PlayerReportCardPage from '@pages/players/PlayerReportCardPage';
 import PlayerDevelopmentPlansPage from '@pages/players/PlayerDevelopmentPlansPage';
 import PlayerAlbumPage from '@pages/players/PlayerAlbumPage';
 import PlayerSettingsPage from '@pages/players/PlayerSettingsPage';
 import CoachProfilePage from '@pages/coaches/CoachProfilePage';
 import CoachSettingsPage from '@pages/coaches/CoachSettingsPage';
+import HelpSupportPage from '@pages/HelpSupportPage';
 import Header from '@components/layout/Header';
 import ScrollToTop from '@components/common/ScrollToTop';
 
@@ -69,6 +67,10 @@ function AppContent() {
 
         {/* Profile */}
         <Route path="/profile" element={<ProfilePage />} />
+        
+        {/* Help & Support */}
+        <Route path="/help" element={<HelpSupportPage />} />
+        
         {/* Clubs */}
         <Route path="/clubs" element={<ClubsListPage />} />
         <Route path="/clubs/:clubId" element={<ClubOverviewPage />} />
@@ -118,12 +120,6 @@ function AppContent() {
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/:matchId" element={<MatchReportPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/:matchId/edit" element={<AddEditMatchPage />} />
 
-        {/* Training */}
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/training/:sessionId" element={<TrainingSessionPage />} />
-
-        {/* Global Resources */}
-        <Route path="/formations" element={<FormationsLibraryPage />} />
-        <Route path="/training-sessions" element={<TrainingLibraryPage />} />
         </Routes>
       </div>
     </>
