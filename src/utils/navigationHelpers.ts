@@ -37,13 +37,22 @@ export const getTeamNavigationTabs = (clubId: string, ageGroupId: string, teamId
 ];
 
 /**
- * Generate navigation tabs for Player pages
+ * Generate navigation tabs for Player pages (age group context)
  */
 export const getPlayerNavigationTabs = (clubId: string, ageGroupId: string, playerId: string): NavigationTab[] => [
   { label: 'Overview', path: Routes.player(clubId, ageGroupId, playerId) },
   { label: 'Abilities', path: Routes.playerAbilities(clubId, ageGroupId, playerId) },
   { label: 'Report Cards', path: Routes.playerReportCard(clubId, ageGroupId, playerId) },
-  { label: 'Development Plans', path: Routes.playerDevelopmentPlans(clubId, ageGroupId, playerId) }
+  { label: 'Development Plans', path: Routes.playerDevelopmentPlans(clubId, ageGroupId, playerId) },
+  { label: 'Album', path: Routes.playerAlbum(clubId, ageGroupId, playerId) }
+];
+
+/**
+ * Generate navigation tabs for Player pages (club context - no age group)
+ */
+export const getClubPlayerNavigationTabs = (clubId: string, playerId: string): NavigationTab[] => [
+  { label: 'Album', path: Routes.clubPlayerAlbum(clubId, playerId) },
+  { label: 'Settings', path: Routes.clubPlayerSettings(clubId, playerId) }
 ];
 
 /**

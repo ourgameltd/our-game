@@ -73,6 +73,36 @@ export const samplePlayers: Player[] = [
         }
       }
     ],
+    album: [
+      {
+        id: 'img-1-p9',
+        url: 'https://placehold.co/800x600/4A90E2/FFFFFF?text=Training+Day',
+        caption: 'Training session - working on reflexes',
+        date: new Date('2024-10-15'),
+        tags: ['training', 'goalkeeper']
+      },
+      {
+        id: 'img-2-p9',
+        url: 'https://placehold.co/800x600/4A90E2/FFFFFF?text=Match+Save',
+        caption: 'Incredible save against Blues',
+        date: new Date('2024-10-22'),
+        tags: ['match', 'highlight']
+      },
+      {
+        id: 'img-3-p9',
+        url: 'https://placehold.co/800x600/4A90E2/FFFFFF?text=Team+Photo',
+        caption: 'Team photo after cup victory',
+        date: new Date('2024-11-05'),
+        tags: ['team', 'award']
+      },
+      {
+        id: 'img-4-p9',
+        url: 'https://placehold.co/800x600/4A90E2/FFFFFF?text=Award+Ceremony',
+        caption: 'Player of the Month - November 2024',
+        date: new Date('2024-11-30'),
+        tags: ['award', 'achievement']
+      }
+    ],
     medicalInfo: {
       allergies: ['Pollen'],
       emergencyContacts: [

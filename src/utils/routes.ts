@@ -33,6 +33,10 @@ export class Routes {
     return `/clubs/${clubId}/players/${playerId}/settings`;
   }
 
+  static clubPlayerAlbum(clubId: string, playerId: string): string {
+    return `/clubs/${clubId}/players/${playerId}/album`;
+  }
+
   static clubCoaches(clubId: string): string {
     return `/clubs/${clubId}/coaches`;
   }
@@ -138,6 +142,14 @@ export class Routes {
     playerId: string
   ): string {
     return `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans`;
+  }
+
+  static playerAlbum(
+    clubId: string,
+    ageGroupId: string,
+    playerId: string
+  ): string {
+    return `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`;
   }
 
   static playerSettings(

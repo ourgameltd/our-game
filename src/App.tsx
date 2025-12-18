@@ -38,6 +38,7 @@ import FormationsLibraryPage from '@pages/formations/FormationsLibraryPage';
 import TrainingLibraryPage from '@pages/training/TrainingLibraryPage';
 import PlayerReportCardPage from '@pages/players/PlayerReportCardPage';
 import PlayerDevelopmentPlansPage from '@pages/players/PlayerDevelopmentPlansPage';
+import PlayerAlbumPage from '@pages/players/PlayerAlbumPage';
 import PlayerSettingsPage from '@pages/players/PlayerSettingsPage';
 import CoachProfilePage from '@pages/coaches/CoachProfilePage';
 import CoachSettingsPage from '@pages/coaches/CoachSettingsPage';
@@ -72,6 +73,7 @@ function AppContent() {
         <Route path="/clubs/:clubId/ethos" element={<ClubEthosPage />} />
         <Route path="/clubs/:clubId/players" element={<ClubPlayersPage />} />
         <Route path="/clubs/:clubId/players/:playerId/settings" element={<ClubPlayerSettingsPage />} />
+        <Route path="/clubs/:clubId/players/:playerId/album" element={<PlayerAlbumPage />} />
         <Route path="/clubs/:clubId/coaches" element={<ClubCoachesPage />} />
         <Route path="/clubs/:clubId/coaches/:coachId" element={<CoachProfilePage />} />
         <Route path="/clubs/:clubId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
@@ -95,6 +97,7 @@ function AppContent() {
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
+        <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/album" element={<PlayerAlbumPage />} />
         <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/settings" element={<PlayerSettingsPage />} />
 
         {/* Teams */}

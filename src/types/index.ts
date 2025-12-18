@@ -173,6 +173,16 @@ export interface GroupedAttributes {
   mental: PlayerAttribute[];
 }
 
+// Player Image Types
+export interface PlayerImage {
+  id: string;
+  url: string;
+  caption?: string;
+  date: Date;
+  uploadedBy?: string; // User ID who uploaded
+  tags?: string[]; // e.g., 'training', 'match', 'award', 'team'
+}
+
 export interface Player {
   id: string;
   clubId: string; // Players belong to a club
@@ -189,6 +199,7 @@ export interface Player {
   ageGroupIds: string[]; // Primary age group(s) the player belongs to
   teamIds: string[]; // Specific teams the player is assigned to
   parentIds?: string[];
+  album?: PlayerImage[]; // Player's image album
   medicalInfo?: {
     allergies?: string[];
     conditions?: string[];
