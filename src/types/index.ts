@@ -379,6 +379,7 @@ export interface User {
   preferences?: {
     notifications: boolean;
     theme?: 'light' | 'dark';
+    navigationStyle?: 'classic' | 'modern'; // Feature flag for navigation
   };
 }
 

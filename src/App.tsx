@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { UserPreferencesProvider } from '@/contexts/UserPreferencesContext';
 import HomePage from '@pages/HomePage';
 import LoginPage from '@pages/auth/LoginPage';
 import RegisterPage from '@pages/auth/RegisterPage';
@@ -58,7 +59,8 @@ function AppContent() {
     <>
       <ScrollToTop />
       {!hideHeader && <Header />}
-      <Routes>
+      <div className={hideHeader ? '' : 'pt-16'}>
+        <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
@@ -122,7 +124,8 @@ function AppContent() {
         {/* Global Resources */}
         <Route path="/formations" element={<FormationsLibraryPage />} />
         <Route path="/training-sessions" element={<TrainingLibraryPage />} />
-      </Routes>
+        </Routes>
+      </div>
     </>
   );
 }
@@ -130,9 +133,11 @@ function AppContent() {
 function App() {
   return (
     <ThemeProvider>
-      <Router basename={import.meta.env.BASE_URL}>
-        <AppContent />
-      </Router>
+      <UserPreferencesProvider>
+        <Router basename={import.meta.env.BASE_URL}>
+          <AppContent />
+        </Router>
+      </UserPreferencesProvider>
     </ThemeProvider>
   );
 }

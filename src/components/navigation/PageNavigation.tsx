@@ -18,7 +18,7 @@ const PageNavigation: React.FC<PageNavigationProps> = ({ tabs }) => {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky z-30" style={{ top: '92px' }}>
+    <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky z-30" style={{ top: '64px' }}>
       <div className="container mx-auto px-4">
         <nav className="flex gap-6 overflow-x-auto">
           {tabs.map((tab) => (
