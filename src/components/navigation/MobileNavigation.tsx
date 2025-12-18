@@ -210,7 +210,7 @@ export default function MobileNavigation() {
       {/* Slide-out Navigation Drawer */}
       <div className={`mobile-nav-drawer ${isOpen ? 'open' : ''}`}>
         <div className="mobile-nav-drawer-header">
-          <Link to="/profile" className="mobile-nav-user-profile">
+          <div className="mobile-nav-user-profile">
             <div className="mobile-nav-user-avatar-wrapper">
               <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
@@ -218,7 +218,7 @@ export default function MobileNavigation() {
               <span className="mobile-nav-user-name">John Doe</span>
               <span className="mobile-nav-user-role">Coach</span>
             </div>
-          </Link>
+          </div>
           <button 
             className="mobile-nav-close"
             onClick={toggleMenu}
@@ -334,7 +334,7 @@ export default function MobileNavigation() {
 
             <li className="mobile-nav-item">
               <Link 
-                to="/logout" 
+                to="/login" 
                 className="mobile-nav-link text-red-600 dark:text-red-400"
               >
                 <LogOut className="mobile-nav-icon" />

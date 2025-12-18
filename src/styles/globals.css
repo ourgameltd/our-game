@@ -246,7 +246,8 @@
   }
 
   .mobile-nav-desktop {
-    @apply items-center justify-between px-8 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700;
+    @apply fixed top-0 left-0 right-0 items-center justify-between px-8 py-4 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-700;
+    z-index: 1000;
   }
 
   .mobile-nav-desktop-logo {
