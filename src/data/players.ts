@@ -926,14 +926,14 @@ export const getPlayersByClubId = (clubId: string): Player[] => {
   return samplePlayers.filter(player => player.clubId === clubId);
 };
 
-export const getPlayersByAgeGroupId = (ageGroupId: string): Player[] => {
+export const getPlayersByAgeGroupId = (ageGroupId: string, includeArchived: boolean = false): Player[] => {
   return samplePlayers.filter(player => 
-    player.ageGroupIds.includes(ageGroupId)
+    player.ageGroupIds.includes(ageGroupId) && (includeArchived || !player.isArchived)
   );
 };
 
-export const getPlayersByTeamId = (teamId: string): Player[] => {
-  return samplePlayers.filter(player => player.teamIds.includes(teamId));
+export const getPlayersByTeamId = (teamId: string, includeArchived: boolean = false): Player[] => {
+  return samplePlayers.filter(player => player.teamIds.includes(teamId) && (includeArchived || !player.isArchived));
 };
 
 

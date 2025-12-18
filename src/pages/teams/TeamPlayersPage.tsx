@@ -10,10 +10,11 @@ import { Routes } from '@utils/routes';
 
 export default function TeamPlayersPage() {
   const { clubId, ageGroupId, teamId } = useParams();
-  const team = getTeamById(teamId!);
-  const teamPlayers = getPlayersByTeamId(teamId!);
-  const ageGroupPlayers = team ? getPlayersByAgeGroupId(team.ageGroupId) : [];
+  const [showArchived, setShowArchived] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const team = getTeamById(teamId!);
+  const teamPlayers = getPlayersByTeamId(teamId!, showArchived);
+  const ageGroupPlayers = team ? getPlayersByAgeGroupId(team.ageGroupId) : [];
 
   if (!team) {
     return <div>Team not found</div>;
@@ -70,6 +71,21 @@ export default function TeamPlayersPage() {
             </p>
           </div>
         )}
+
+        {/* Archived Toggle */}
+        <div className="mb-6 flex items-center gap-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+              className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+            />
+            <span className="text-sm text-gray-700 dark:text-gray-300">
+              Show archived players
+            </span>
+          </label>
+        </div>
 
         {/* Info Banner */}
         <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-6">

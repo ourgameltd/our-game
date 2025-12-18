@@ -27,21 +27,6 @@ export default function ClubPlayersPage() {
     return <div>Club not found</div>;
   }
 
-  // Group players by age group based on date of birth
-  const getAgeGroup = (dateOfBirth: Date): string => {
-    const birthYear = dateOfBirth.getFullYear();
-    const currentYear = new Date().getFullYear();
-    const age = currentYear - birthYear;
-    
-    if (age <= 8) return 'U8s';
-    if (age <= 10) return 'U10s';
-    if (age <= 12) return 'U12s';
-    if (age <= 14) return 'U14s';
-    if (age <= 16) return 'U16s';
-    if (age <= 18) return 'U18s';
-    return 'Senior';
-  };
-
   // Get unique positions from all players
   const allPositions = useMemo(() => {
     const positions = new Set<string>();
@@ -105,24 +90,33 @@ export default function ClubPlayersPage() {
 
       return true;
     });
-  }, [allPlayers, searchName, filterAgeGroup, filterPosition, filterTeam]);
+  }, [allPlayers, searchName, filterAgeGroup, filterPosition, filterTeam, showArchived]);
 
-  // Group filtered players by age group
-  const playersByAgeGroup = useMemo(() => {
-    return filteredPlayers.reduce((acc, player) => {
-      const ageGroup = getAgeGroup(player.dateOfBirth);
-      if (!acc[ageGroup]) {
-        acc[ageGroup] = [];
-      }
-      acc[ageGroup].push(player);
-      return acc;
-    }, {} as Record<string, typeof filteredPlayers>);
-  }, [filteredPlayers]);
-
-  // Sort age groups
-  const ageGroupOrder = ['U8s', 'U10s', 'U12s', 'U14s', 'U16s', 'U18s', 'Senior'];
-  const sortedAgeGroups = Object.keys(playersByAgeGroup).sort(
-    (a, b) => ageGroupOrder.indexOf(a) - ageGroupOrder.indexOf(b)
+  // Group players by position
+  const goalkeepers = useMemo(() => 
+    filteredPlayers.filter(p => p.preferredPositions.includes('GK')),
+    [filteredPlayers]
+  );
+  
+  const defenders = useMemo(() =>
+    filteredPlayers.filter(p => 
+      p.preferredPositions.some(pos => ['LB', 'CB', 'RB', 'LWB', 'RWB'].includes(pos))
+    ),
+    [filteredPlayers]
+  );
+  
+  const midfielders = useMemo(() =>
+    filteredPlayers.filter(p => 
+      p.preferredPositions.some(pos => ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(pos))
+    ),
+    [filteredPlayers]
+  );
+  
+  const forwards = useMemo(() =>
+    filteredPlayers.filter(p => 
+      p.preferredPositions.some(pos => ['LW', 'RW', 'CF', 'ST'].includes(pos))
+    ),
+    [filteredPlayers]
   );
 
   return (
@@ -263,35 +257,97 @@ export default function ClubPlayersPage() {
           )}
         </div>
 
-        {/* Players grouped by age */}
-        {sortedAgeGroups.map((ageGroup) => (
-          <div key={ageGroup} className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {ageGroup} ({playersByAgeGroup[ageGroup].length} players)
+        {/* Goalkeepers */}
+        {goalkeepers.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>🥅</span> Goalkeepers ({goalkeepers.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4">
-              {playersByAgeGroup[ageGroup].map((player) => {
-                return (
-                  <div key={player.id} className="relative">
-                    <Link to={Routes.clubPlayerSettings(clubId!, player.id)}>
-                      <PlayerCard player={player} />
-                    </Link>
-                    {player.isArchived && (
-                      <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                        🗄️ Archived
-                      </div>
-                    )}
-                    {player.ageGroupIds.length > 1 && (
-                      <div className="absolute top-2 right-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                        {player.ageGroupIds.length} teams
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {goalkeepers.map((player) => (
+                <div key={player.id} className="relative">
+                  <Link to={Routes.clubPlayerSettings(clubId!, player.id)}>
+                    <PlayerCard player={player} />
+                  </Link>
+                  {player.isArchived && (
+                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                      🗄️ Archived
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
-        ))}
+        )}
+
+        {/* Defenders */}
+        {defenders.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>🛡️</span> Defenders ({defenders.length})
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {defenders.map((player) => (
+                <div key={player.id} className="relative">
+                  <Link to={Routes.clubPlayerSettings(clubId!, player.id)}>
+                    <PlayerCard player={player} />
+                  </Link>
+                  {player.isArchived && (
+                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                      🗄️ Archived
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Midfielders */}
+        {midfielders.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>⚙️</span> Midfielders ({midfielders.length})
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {midfielders.map((player) => (
+                <div key={player.id} className="relative">
+                  <Link to={Routes.clubPlayerSettings(clubId!, player.id)}>
+                    <PlayerCard player={player} />
+                  </Link>
+                  {player.isArchived && (
+                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                      🗄️ Archived
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Forwards */}
+        {forwards.length > 0 && (
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>⚡</span> Forwards ({forwards.length})
+            </h3>
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {forwards.map((player) => (
+                <div key={player.id} className="relative">
+                  <Link to={Routes.clubPlayerSettings(clubId!, player.id)}>
+                    <PlayerCard player={player} />
+                  </Link>
+                  {player.isArchived && (
+                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                      🗄️ Archived
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {filteredPlayers.length === 0 && allPlayers.length === 0 && (
           <div className="text-center py-12">
