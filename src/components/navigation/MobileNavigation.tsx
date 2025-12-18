@@ -74,7 +74,6 @@ export default function MobileNavigation() {
     if (teamId && team && ageGroup) {
       // Team-level navigation
       items.push(
-        { label: 'Overview', path: `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`, icon: Home },
         { label: 'Squad', path: `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`, icon: Users },
         { label: 'Matches', path: `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`, icon: Trophy },
         { label: 'Coaches', path: `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches`, icon: Shield },
@@ -84,7 +83,6 @@ export default function MobileNavigation() {
     } else if (ageGroupId && ageGroup) {
       // Age group-level navigation
       items.push(
-        { label: 'Overview', path: `/clubs/${clubId}/age-groups/${ageGroupId}`, icon: Home },
         { label: 'Teams', path: `/clubs/${clubId}/age-groups/${ageGroupId}/teams`, icon: Users },
         { label: 'Players', path: `/clubs/${clubId}/age-groups/${ageGroupId}/players`, icon: UserCircle },
         { label: 'Coaches', path: `/clubs/${clubId}/age-groups/${ageGroupId}/coaches`, icon: Shield },
@@ -94,7 +92,6 @@ export default function MobileNavigation() {
     } else if (clubId) {
       // Club-level navigation
       items.push(
-        { label: 'Overview', path: `/clubs/${clubId}`, icon: Home },
         { label: 'Age Groups', path: `/clubs/${clubId}/age-groups`, icon: Users },
         { label: 'Players', path: `/clubs/${clubId}/players`, icon: UserCircle },
         { label: 'Coaches', path: `/clubs/${clubId}/coaches`, icon: Shield },
@@ -350,8 +347,8 @@ export default function MobileNavigation() {
         <Link to="/clubs" className="mobile-nav-desktop-logo">
           {club && club.logo ? (
             <>
-              <img src={club.logo} alt={club.name} />
-              <span className="mobile-nav-desktop-logo-text">{club.name}</span>
+              <img src={club.logo} alt={club.shortName} />
+              <span className="mobile-nav-desktop-logo-text">{club.shortName}</span>
             </>
           ) : club ? (
             <>

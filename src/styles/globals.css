@@ -281,11 +281,11 @@
   }
 
   .mobile-nav-desktop-actions {
-    @apply flex items-center gap-4;
+    @apply flex items-center gap-2;
   }
 
   .mobile-nav-desktop-quick-link {
-    @apply p-2 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-400 transition-colors;
+    @apply p-1 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-400 transition-colors;
   }
 
   .mobile-nav-desktop-user img {
