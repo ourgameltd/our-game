@@ -4,6 +4,7 @@ import { getPlayerById } from '@/data/players';
 import PageTitle from '@/components/common/PageTitle';
 import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
+import { Plus } from 'lucide-react';
 
 export default function PlayerSettingsPage() {
   const { clubId, ageGroupId, playerId } = useParams();
@@ -602,23 +603,21 @@ export default function PlayerSettingsPage() {
 
           {/* Action Buttons */}
           <div className="card">
-            <div className="flex flex-col sm:flex-row gap-4 justify-between">
-              <div className="flex gap-3">
-                <button
-                  type="submit"
-                  disabled={isFormDisabled}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Save Changes
-                </button>
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button
+                type="submit"
+                disabled={isFormDisabled}
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save Changes
+              </button>
+              <button
+                type="button"
+                onClick={handleCancel}
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </form>
@@ -626,9 +625,9 @@ export default function PlayerSettingsPage() {
         {/* Archive Zone - Only show for existing players */}
         {!isNewPlayer && (
           <div className="card border-2 border-orange-200 dark:border-orange-900 mt-6">
-            <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
               <div>
-                  <h3 className="text-xl font-semibold text-orange-600 dark:text-orange-400 mb-4">
+                  <h3 className="text-lg sm:text-xl font-semibold text-orange-600 dark:text-orange-400 mb-2">
                       {player!.isArchived ? 'Unarchive Player' : 'Archive Player'}
                   </h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -640,16 +639,16 @@ export default function PlayerSettingsPage() {
             <button
               type="button"
               onClick={() => setShowArchiveConfirm(true)}
-              className={`px-4 py-2 rounded-lg transition-colors font-medium ${
+              className={`px-4 py-2 text-sm sm:text-base rounded-lg transition-colors font-medium whitespace-nowrap flex-shrink-0 ${
                 player!.isArchived
                   ? 'bg-green-600 text-white hover:bg-green-700'
                   : 'bg-orange-600 text-white hover:bg-orange-700'
               }`}
             >
-              {player!.isArchived ? 'Unarchive Player' : 'Archive Player'}
+              {player!.isArchived ? 'Unarchive' : 'Archive'}
             </button>
           </div>
-        </div>
+          </div>
         )}
 
         {/* Archive Confirmation Modal */}
@@ -672,11 +671,11 @@ export default function PlayerSettingsPage() {
                   </>
                 )}
               </p>
-              <div className="flex gap-3 justify-end">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 justify-end">
                 <button
                   type="button"
                   onClick={() => setShowArchiveConfirm(false)}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="px-4 py-2 text-sm sm:text-base bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                 >
                   Cancel
                 </button>
@@ -686,13 +685,13 @@ export default function PlayerSettingsPage() {
                     setShowArchiveConfirm(false);
                     handleArchive();
                   }}
-                  className={`px-4 py-2 rounded-lg transition-colors ${
+                  className={`px-4 py-2 text-sm sm:text-base rounded-lg transition-colors ${
                     player!.isArchived
                       ? 'bg-green-600 text-white hover:bg-green-700'
                       : 'bg-orange-600 text-white hover:bg-orange-700'
                   }`}
                 >
-                  Yes, {player!.isArchived ? 'Unarchive' : 'Archive'} Player
+                  Yes, {player!.isArchived ? 'Unarchive' : 'Archive'}
                 </button>
               </div>
             </div>

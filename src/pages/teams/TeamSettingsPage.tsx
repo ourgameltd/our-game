@@ -252,40 +252,40 @@ export default function TeamSettingsPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between">
-            <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <button
                 type="button"
                 onClick={handleArchive}
-                className={`px-6 py-2 ${
+                className={`px-4 sm:px-6 py-2 text-sm sm:text-base ${
                   team.isArchived
                     ? 'bg-green-600 hover:bg-green-700'
                     : 'bg-orange-600 hover:bg-orange-700'
-                } text-white rounded-lg transition-colors`}
+                } text-white rounded-lg transition-colors whitespace-nowrap`}
               >
-                {team.isArchived ? '📂 Unarchive Team' : '🗄️ Archive Team'}
+                {team.isArchived ? '📂 Unarchive' : '🗄️ Archive'}
               </button>
               <button
                 type="button"
                 onClick={handleDelete}
-                className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors whitespace-nowrap"
               >
-                Delete Team
+                Delete
               </button>
             </div>
             
-            <div className="flex gap-4">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-6 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={team.isArchived}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
               >
                 Save Changes
               </button>

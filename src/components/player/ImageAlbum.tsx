@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { PlayerImage } from '@/types';
+import { Plus } from 'lucide-react';
 
 interface ImageAlbumProps {
   images: PlayerImage[];

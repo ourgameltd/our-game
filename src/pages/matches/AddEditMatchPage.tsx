@@ -1445,17 +1445,17 @@ export default function AddEditMatchPage() {
 
           {/* Action Buttons */}
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3">
               <button
                 onClick={handleSave}
                 disabled={isLocked}
-                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Save
               </button>
               <Link
                 to={Routes.matches(clubId!, ageGroupId!, teamId!)}
-                className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium text-center"
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium text-center"
               >
                 Cancel
               </Link>
@@ -1466,14 +1466,14 @@ export default function AddEditMatchPage() {
                   {!isLocked && existingMatch?.status !== 'completed' && (
                     <button
                       onClick={handleCompleteMatch}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+                      className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                     >
                       Complete Match
                     </button>
                   )}
                   <button
                     onClick={handleToggleLock}
-                    className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium ${
+                    className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium ${
                       isLocked
                         ? 'bg-amber-600 hover:bg-amber-700 text-white'
                         : 'bg-gray-600 hover:bg-gray-700 text-white'

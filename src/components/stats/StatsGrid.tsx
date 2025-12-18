@@ -1,5 +1,4 @@
 import React from 'react';
-import { getPerformanceColorClass } from '@utils/colorHelpers';
 import StatCard from './StatCard';
 
 interface StatsGridProps {

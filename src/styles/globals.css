@@ -89,7 +89,7 @@
   }
 
   .mobile-nav-hamburger {
-    @apply p-2 -ml-2 bg-transparent border-none cursor-pointer flex flex-col gap-1 w-10;
+    @apply p-2 -ml-2 bg-transparent border-none cursor-pointer flex flex-col gap-1 w-10 flex-shrink-0;
   }
 
   .hamburger-line {
@@ -113,7 +113,7 @@
   }
 
   .mobile-nav-center-logo {
-    @apply flex-1 flex items-center justify-center;
+    @apply flex-1 flex items-center justify-center min-w-0 px-2;
   }
 
   .mobile-nav-logo-img {
@@ -121,7 +121,7 @@
   }
 
   .mobile-nav-actions {
-    @apply flex items-center gap-2;
+    @apply flex items-center gap-1 flex-shrink-0;
   }
 
   .mobile-nav-notification-btn {

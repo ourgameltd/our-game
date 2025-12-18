@@ -432,17 +432,17 @@ export default function CoachSettingsPage() {
 
           {/* Action Buttons */}
           <div className="card">
-            <div className="flex flex-col sm:flex-row gap-3 justify-end">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end">
               <button
                 type="submit"
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
               >
                 {isNewCoach ? 'Create Coach' : 'Save Changes'}
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
+                className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors font-medium"
               >
                 Cancel
               </button>
@@ -453,15 +453,15 @@ export default function CoachSettingsPage() {
         {/* Danger Zone - Only show for existing coaches */}
         {!isNewCoach && (
           <div className="card border-2 border-red-200 dark:border-red-900 mt-6">
-            <h3 className="text-xl font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h3>
+            <h3 className="text-lg sm:text-xl font-semibold text-red-600 dark:text-red-400 mb-2">Danger Zone</h3>
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               These actions are permanent and cannot be undone.
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <button className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
+              <button className="px-4 py-2 text-sm sm:text-base bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors font-medium whitespace-nowrap">
                 Archive Coach
               </button>
-              <button className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium">
+              <button className="px-4 py-2 text-sm sm:text-base bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium whitespace-nowrap">
                 Delete Coach
               </button>
             </div>

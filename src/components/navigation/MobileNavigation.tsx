@@ -2,8 +2,6 @@ import { useState, useEffect } from 'react';
 import { Link, useLocation, matchPath } from 'react-router-dom';
 import { 
   Users, 
-  ClipboardList, 
-  Dumbbell, 
   Trophy,
   Settings,
   HelpCircle,
@@ -121,9 +119,9 @@ export default function MobileNavigation() {
         {/* Center Logo Display - Club or Team */}
         <div className="mobile-nav-center-logo">
           {team ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 max-w-full overflow-hidden">
               {/* Club Logo */}
-              <Link to={`/clubs/${clubId}`} className="flex items-center">
+              <Link to={`/clubs/${clubId}`} className="flex items-center flex-shrink-0">
                 {club?.logo ? (
                   <img 
                     src={club.logo} 
@@ -141,14 +139,14 @@ export default function MobileNavigation() {
               </Link>
               
               {/* Separator */}
-              <span className="text-gray-400 dark:text-gray-500">&gt;</span>
+              <span className="text-gray-400 dark:text-gray-500 flex-shrink-0">&gt;</span>
               
               {/* Age Group Link */}
               {ageGroup && (
                 <>
                   <Link 
                     to={`/clubs/${clubId}/age-groups/${ageGroupId}`}
-                    className="text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+                    className="text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 truncate"
                   >
                     {ageGroup.name}
                   </Link>
@@ -157,27 +155,27 @@ export default function MobileNavigation() {
               
             </div>
           ) : club ? (
-            <Link to={`/clubs/${clubId}`} className="flex items-center gap-2">
+            <Link to={`/clubs/${clubId}`} className="flex items-center gap-2 max-w-full overflow-hidden">
               {club.logo ? (
                 <img 
                   src={club.logo} 
                   alt={`${club.name} logo`}
-                  className="w-10 h-10 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600"
+                  className="w-10 h-10 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600 flex-shrink-0"
                 />
               ) : (
                 <div 
-                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white border-2 border-gray-300 dark:border-gray-600"
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white border-2 border-gray-300 dark:border-gray-600 flex-shrink-0"
                   style={{ backgroundColor: club.colors.primary }}
                 >
                   {club.shortName}
                 </div>
               )}
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+              <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
                 {club.shortName}
               </span>
             </Link>
           ) : (
-            <Link to="/clubs" className="text-sm font-semibold text-gray-900 dark:text-white">
+            <Link to="/clubs" className="text-sm font-semibold text-gray-900 dark:text-white truncate">
               My Clubs
             </Link>
           )}
@@ -274,6 +272,27 @@ export default function MobileNavigation() {
                 <span className="mobile-nav-text">My Clubs</span>
               </Link>
             </li>
+
+            {clubId && club && (
+              <li className="mobile-nav-item">
+                <Link 
+                  to={`/clubs/${clubId}`}
+                  className="mobile-nav-link"
+                >
+                  {club.logo ? (
+                    <img 
+                      src={club.logo} 
+                      alt={`${club.name} logo`}
+                      className="w-5 h-5 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600 flex-shrink-0"
+                    />
+                  ) : (
+                    <Trophy className="mobile-nav-icon" />
+                  )}
+
+                  <span className="mobile-nav-text">{club?.shortName}</span>
+                </Link>
+              </li>
+            )}
 
             {team && ageGroup && clubId && ageGroupId && (
               <li className="mobile-nav-item">
