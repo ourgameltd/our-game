@@ -10,6 +10,7 @@ import { PlayerPosition, SquadSize } from '@/types';
 import { Routes } from '@utils/routes';
 import { getTeamNavigationTabs } from '@/utils/navigationHelpers';
 import PageNavigation from '@/components/navigation/PageNavigation';
+import FormationDisplay from '@/components/formation/FormationDisplay';
 
 export default function AddEditMatchPage() {
   const { clubId, ageGroupId, teamId, matchId } = useParams();
@@ -712,11 +713,15 @@ export default function AddEditMatchPage() {
                 </p>
               </div>
 
-              {/* Starting XI */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Starting {squadSize} ({startingPlayers.length}/{squadSize})
-                </h3>
+              {/* Two Column Layout: Players List + Formation Display */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Left Column: Starting XI and Substitutes */}
+                <div className="space-y-6">
+                  {/* Starting XI */}
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                      Starting {squadSize} ({startingPlayers.length}/{squadSize})
+                    </h3>
                 <div className="space-y-2 mb-4">
                   {startingPlayers.map((player) => {
                     const playerData = teamPlayers.find(p => p.id === player.playerId);
@@ -839,6 +844,33 @@ export default function AddEditMatchPage() {
                     </div>
                   </div>
                 )}
+              </div>
+                </div>
+
+                {/* Right Column: Formation Display */}
+                <div className="lg:sticky lg:top-6 lg:self-start">
+                  {formationId ? (
+                    <FormationDisplay
+                      formation={sampleFormations.find(f => f.id === formationId)!}
+                      selectedPlayers={startingPlayers}
+                      getPlayerName={getPlayerName}
+                      showPlayerNames={true}
+                      interactive={false}
+                    />
+                  ) : (
+                    <div className="bg-gray-50 dark:bg-gray-800 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 text-center">
+                      <div className="text-gray-400 dark:text-gray-500 mb-2">
+                        <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                      </div>
+                      <p className="text-gray-600 dark:text-gray-400 font-medium">No Formation Selected</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
+                        Select a formation above to see the tactical setup
+                      </p>
+                    </div>
+                  )}
+                </div>
               </div>
 
               {/* Substitutions */}
