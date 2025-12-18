@@ -147,7 +147,7 @@ export default function AddEditMatchPage() {
   }
 
   const getPlayerName = (playerId: string) => {
-    const player = teamPlayers.find(p => p.id === playerId);
+    const player = allClubPlayers.find(p => p.id === playerId);
     return player ? `${player.firstName} ${player.lastName}` : 'Unknown';
   };
 
@@ -781,7 +781,7 @@ export default function AddEditMatchPage() {
                     });
                     
                     return sortedPlayers.map((player) => {
-                      const playerData = teamPlayers.find(p => p.id === player.playerId);
+                      const playerData = allClubPlayers.find(p => p.id === player.playerId);
                       return (
                         <div key={player.playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                           <div className="flex items-center gap-3">
@@ -872,7 +872,7 @@ export default function AddEditMatchPage() {
                 </h3>
                 <div className="space-y-2 mb-4">
                   {substitutes.map((playerId) => {
-                    const playerData = teamPlayers.find(p => p.id === playerId);
+                    const playerData = allClubPlayers.find(p => p.id === playerId);
                     return (
                       <div key={playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         <div className="flex items-center gap-3">
