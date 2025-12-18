@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ClipboardList, Users, Activity, FileText } from 'lucide-react';
+import { ClipboardList, Users, Activity, FileText, Lock, Unlock } from 'lucide-react';
 import { sampleMatches } from '@/data/matches';
 import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
@@ -974,90 +974,6 @@ export default function AddEditMatchPage() {
                   )}
                 </div>
               </div>
-
-              {/* Substitutions */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Substitutions Made
-                </h3>
-                <div className="space-y-3 mb-4">
-                  {substitutions.map((sub, index) => (
-                    <div key={index} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Minute</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="120"
-                            value={sub.minute}
-                            onChange={(e) => {
-                              const newSubs = [...substitutions];
-                              newSubs[index].minute = parseInt(e.target.value) || 0;
-                              setSubstitutions(newSubs);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Player Off</label>
-                          <select
-                            value={sub.playerOut}
-                            onChange={(e) => {
-                              const newSubs = [...substitutions];
-                              newSubs[index].playerOut = e.target.value;
-                              setSubstitutions(newSubs);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            <option value="">Select player</option>
-                            {startingPlayers.map(p => (
-                              <option key={p.playerId} value={p.playerId}>
-                                {getPlayerName(p.playerId)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Player On</label>
-                          <select
-                            value={sub.playerIn}
-                            onChange={(e) => {
-                              const newSubs = [...substitutions];
-                              newSubs[index].playerIn = e.target.value;
-                              setSubstitutions(newSubs);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            <option value="">Select player</option>
-                            {substitutes.map(pId => (
-                              <option key={pId} value={pId}>
-                                {getPlayerName(pId)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            onClick={() => handleRemoveSubstitution(index)}
-                            disabled={isLocked}
-                            className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  onClick={handleAddSubstitution}
-                  disabled={isLocked}
-                  className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  + Add Substitution
-                </button>
-              </div>
             </div>
           )}
 
@@ -1336,6 +1252,93 @@ export default function AddEditMatchPage() {
                   + Add Injury
                 </button>
               </div>
+
+              {/* Substitutions */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Substitutions 🔄
+                </h3>
+                <div className="space-y-3 mb-4">
+                  {substitutions.map((sub, index) => (
+                    <div key={index} className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <div>
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Minute</label>
+                          <input
+                            type="number"
+                            min="0"
+                            max="120"
+                            value={sub.minute}
+                            onChange={(e) => {
+                              const newSubs = [...substitutions];
+                              newSubs[index].minute = parseInt(e.target.value) || 0;
+                              setSubstitutions(newSubs);
+                            }}
+                            disabled={isLocked}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Player Off</label>
+                          <select
+                            value={sub.playerOut}
+                            onChange={(e) => {
+                              const newSubs = [...substitutions];
+                              newSubs[index].playerOut = e.target.value;
+                              setSubstitutions(newSubs);
+                            }}
+                            disabled={isLocked}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <option value="">Select player</option>
+                            {startingPlayers.map(p => (
+                              <option key={p.playerId} value={p.playerId}>
+                                {getPlayerName(p.playerId)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div>
+                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Player On</label>
+                          <select
+                            value={sub.playerIn}
+                            onChange={(e) => {
+                              const newSubs = [...substitutions];
+                              newSubs[index].playerIn = e.target.value;
+                              setSubstitutions(newSubs);
+                            }}
+                            disabled={isLocked}
+                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <option value="">Select player</option>
+                            {substitutes.map(pId => (
+                              <option key={pId} value={pId}>
+                                {getPlayerName(pId)}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="flex items-end">
+                          <button
+                            onClick={() => handleRemoveSubstitution(index)}
+                            disabled={isLocked}
+                            className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <button
+                  onClick={handleAddSubstitution}
+                  disabled={isLocked}
+                  className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  + Add Substitution
+                </button>
+              </div>
             </div>
           )}
 
@@ -1438,46 +1441,53 @@ export default function AddEditMatchPage() {
 
           {/* Action Buttons */}
           <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <div className="flex flex-col sm:flex-row gap-4">
-              {/* Primary actions */}
-              <div className="flex-1 flex gap-4">
-                <button
-                  onClick={handleSave}
-                  disabled={isLocked}
-                  className="btn-success flex-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isEditing ? 'Save Changes' : 'Create Match'}
-                </button>
-                <Link
-                  to={Routes.matches(clubId!, ageGroupId!, teamId!)}
-                  className="btn-secondary flex-1 text-center"
-                >
-                  Cancel
-                </Link>
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={handleSave}
+                disabled={isLocked}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Save
+              </button>
+              <Link
+                to={Routes.matches(clubId!, ageGroupId!, teamId!)}
+                className="px-6 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 font-medium text-center"
+              >
+                Cancel
+              </Link>
               
               {/* Match completion and lock controls */}
               {isEditing && (
-                <div className="flex gap-4">
+                <>
                   {!isLocked && existingMatch?.status !== 'completed' && (
                     <button
                       onClick={handleCompleteMatch}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 font-medium whitespace-nowrap"
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
                     >
-                      ✓ Complete Match
+                      Complete Match
                     </button>
                   )}
                   <button
                     onClick={handleToggleLock}
-                    className={`px-4 py-2 rounded-lg font-medium whitespace-nowrap ${
+                    className={`flex items-center gap-2 px-6 py-2 rounded-lg font-medium ${
                       isLocked
                         ? 'bg-amber-600 hover:bg-amber-700 text-white'
                         : 'bg-gray-600 hover:bg-gray-700 text-white'
                     }`}
                   >
-                    {isLocked ? '🔓 Unlock Match' : '🔒 Lock Match'}
+                    {isLocked ? (
+                      <>
+                        <Unlock className="w-4 h-4" />
+                        Unlock
+                      </>
+                    ) : (
+                      <>
+                        <Lock className="w-4 h-4" />
+                        Lock
+                      </>
+                    )}
                   </button>
-                </div>
+                </>
               )}
             </div>
           </div>
