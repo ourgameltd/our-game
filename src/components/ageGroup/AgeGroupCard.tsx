@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { AgeGroup } from '../../types';
 
 interface AgeGroupCardProps {
@@ -11,9 +10,10 @@ interface AgeGroupCardProps {
     playerCount: number;
     winRate: number;
   };
+  onClick?: () => void;
 }
 
-const AgeGroupCard: React.FC<AgeGroupCardProps> = ({ ageGroup, clubId, clubName, stats }) => {
+const AgeGroupCard: React.FC<AgeGroupCardProps> = ({ ageGroup, clubId, clubName, stats, onClick }) => {
   const getLevelColor = (level: string) => {
     switch (level) {
       case 'senior':
@@ -28,11 +28,13 @@ const AgeGroupCard: React.FC<AgeGroupCardProps> = ({ ageGroup, clubId, clubName,
   };
 
   return (
-    <Link
-      to={`/clubs/${clubId}/${clubName}/age-groups/${ageGroup.id}`}
-      className={`block bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all overflow-hidden ${
-        ageGroup.isArchived ? 'opacity-75' : ''
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-md hover:shadow-xl transition-all overflow-hidden ${
+        onClick ? 'cursor-pointer' : ''
+      } ${
+        ageGroup.isArchived ? 'opacity-75 border-2 border-orange-200 dark:border-orange-800' : ''
       }`}
+      onClick={onClick}
     >
       <div className={`p-6 text-white bg-gradient-to-br ${getLevelColor(ageGroup.level)} relative`}>
         {ageGroup.isArchived && (
@@ -64,7 +66,7 @@ const AgeGroupCard: React.FC<AgeGroupCardProps> = ({ ageGroup, clubId, clubName,
           </div>
         </div>
       )}
-    </Link>
+    </div>
   );
 };
 

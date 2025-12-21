@@ -150,9 +150,59 @@ export default function MobileNavigation() {
                   >
                     {ageGroup.name}
                   </Link>
+                  
+                  {/* Separator */}
+                  <span className="text-gray-400 dark:text-gray-500 flex-shrink-0">&gt;</span>
+                  
+                  {/* Team Badge */}
+                  <Link 
+                    to={`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
+                    className="flex items-center flex-shrink-0"
+                  >
+                    <div 
+                      className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold border border-gray-300 dark:border-gray-600"
+                      style={{ 
+                        backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
+                        color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
+                      }}
+                    >
+                      {team.shortName || team.name.substring(0, 3).toUpperCase()}
+                    </div>
+                  </Link>
                 </>
               )}
               
+            </div>
+          ) : ageGroup ? (
+            <div className="flex items-center gap-2 max-w-full overflow-hidden">
+              {/* Club Logo */}
+              <Link to={`/clubs/${clubId}`} className="flex items-center flex-shrink-0">
+                {club?.logo ? (
+                  <img 
+                    src={club.logo} 
+                    alt={`${club.name} logo`}
+                    className="w-8 h-8 rounded-lg object-cover border border-gray-300 dark:border-gray-600"
+                  />
+                ) : club ? (
+                  <div 
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-[10px] font-bold text-white border border-gray-300 dark:border-gray-600"
+                    style={{ backgroundColor: club.colors.primary }}
+                  >
+                    {club.shortName}
+                  </div>
+                ) : null}
+              </Link>
+              
+              {/* Separator */}
+              <span className="text-gray-400 dark:text-gray-500 flex-shrink-0">&gt;</span>
+              
+              {/* Age Group Link */}
+              <Link 
+                to={`/clubs/${clubId}/age-groups/${ageGroupId}`}
+                className="text-xs font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 truncate"
+              >
+                {ageGroup.name}
+              </Link>
             </div>
           ) : club ? (
             <Link to={`/clubs/${clubId}`} className="flex items-center gap-2 max-w-full overflow-hidden">
@@ -414,6 +464,37 @@ export default function MobileNavigation() {
               >
                 {team.shortName || team.name.substring(0, 3).toUpperCase()}
               </div>
+            </Link>
+          </div>
+        ) : ageGroup ? (
+          <div className="flex items-center gap-2 px-4">
+            {/* Club Logo */}
+            <Link to={`/clubs/${clubId}`} className="flex items-center">
+              {club?.logo ? (
+                <img 
+                  src={club.logo} 
+                  alt={`${club.name} logo`}
+                  className="w-10 h-10 rounded-lg object-cover border border-gray-300 dark:border-gray-600"
+                />
+              ) : club ? (
+                <div 
+                  className="w-10 h-10 rounded-lg flex items-center justify-center text-xs font-bold text-white border border-gray-300 dark:border-gray-600"
+                  style={{ backgroundColor: club.colors.primary }}
+                >
+                  {club.shortName}
+                </div>
+              ) : null}
+            </Link>
+            
+            {/* Separator */}
+            <span className="text-gray-400 dark:text-gray-500 text-lg">&gt;</span>
+            
+            {/* Age Group Link */}
+            <Link 
+              to={`/clubs/${clubId}/age-groups/${ageGroupId}`}
+              className="text-sm font-semibold text-gray-700 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400"
+            >
+              {ageGroup.name}
             </Link>
           </div>
         ) : (
