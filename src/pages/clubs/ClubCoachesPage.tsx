@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { getClubById } from '@data/clubs';
 import { getCoachesByClub } from '@data/coaches';
@@ -21,6 +21,7 @@ export default function ClubCoachesPage() {
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [showArchived, setShowArchived] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   if (!club) {
     return <div>Club not found</div>;
@@ -156,7 +157,7 @@ export default function ClubCoachesPage() {
         {/* Search and Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-6">
           {/* Show Archived Toggle */}
-          <div className="flex items-center gap-2 mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+          <div className="flex items-center justify-between gap-4 mb-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -168,9 +169,29 @@ export default function ClubCoachesPage() {
                 Show archived coaches ({allCoaches.filter(c => c.isArchived).length})
               </span>
             </label>
+            
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
+            >
+              {showFilters ? (
+                <>
+                  <ChevronUp className="w-4 h-4" />
+                  Hide Filters
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4" />
+                  Show Filters
+                </>
+              )}
+            </button>
           </div>
           
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {showFilters && (
+            <>
+              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search Name</label>
               <input
@@ -270,6 +291,9 @@ export default function ClubCoachesPage() {
                 Clear all
               </button>
             </div>
+          )}
+              </div>
+            </>
           )}
         </div>
 
