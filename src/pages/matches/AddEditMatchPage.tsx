@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin } from 'lucide-react';
+import { ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin, X } from 'lucide-react';
 import { sampleMatches } from '@/data/matches';
 import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
 import { samplePlayers } from '@/data/players';
 import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
 import { getAgeGroupById, sampleAgeGroups } from '@/data/ageGroups';
+import { sampleCoaches, getCoachesByTeam, getCoachesByAgeGroup } from '@/data/coaches';
 import { PlayerPosition, SquadSize } from '@/types';
 import { Routes } from '@utils/routes';
 import FormationDisplay from '@/components/formation/FormationDisplay';
@@ -118,6 +119,10 @@ export default function AddEditMatchPage() {
   );
   const [playerOfTheMatch, setPlayerOfTheMatch] = useState(existingMatch?.report?.playerOfTheMatch || '');
   const [isLocked, setIsLocked] = useState(existingMatch?.isLocked || false);
+  
+  // Coach assignment state
+  const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>(existingMatch?.coachIds || []);
+  const [showCoachModal, setShowCoachModal] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report'>('details');
   
@@ -127,6 +132,25 @@ export default function AddEditMatchPage() {
   // Cross-team player selection modal
   const [showCrossTeamModal, setShowCrossTeamModal] = useState(false);
   const [crossTeamModalType, setCrossTeamModalType] = useState<'starting' | 'substitute'>('starting');
+  
+  // Get coaches for this team and age group
+  const teamCoaches = team ? getCoachesByTeam(team.id) : [];
+  const ageGroupCoaches = ageGroup ? getCoachesByAgeGroup(ageGroup.id, sampleTeams) : [];
+  
+  // Get coaches that can be added (in age group but not yet assigned)
+  const availableCoachesForMatch = ageGroupCoaches.filter(
+    coach => !assignedCoachIds.includes(coach.id)
+  );
+  
+  // Get assigned coach details
+  const assignedCoaches = sampleCoaches.filter(coach => assignedCoachIds.includes(coach.id));
+  
+  // Auto-assign team coaches for new matches
+  useEffect(() => {
+    if (!isEditing && teamCoaches.length > 0 && assignedCoachIds.length === 0) {
+      setAssignedCoachIds(teamCoaches.map(c => c.id));
+    }
+  }, [isEditing, teamCoaches.length]);
   
   // Modal filters
   const [modalSearchTerm, setModalSearchTerm] = useState('');
@@ -340,7 +364,8 @@ export default function AddEditMatchPage() {
         injuries,
         performanceRatings: ratings,
         playerOfTheMatch
-      }
+      },
+      coachIds: assignedCoachIds
     });
     
     navigate(Routes.matches(clubId!, ageGroupId!, teamId!));
@@ -811,6 +836,98 @@ export default function AddEditMatchPage() {
                     placeholder="0"
                   />
                 </div>
+              </div>
+
+              {/* Coaching Staff Assignment */}
+              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <span>👨‍🏫</span> Coaching Staff
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Coaches assigned to this match. Team coaches are automatically assigned.
+                    </p>
+                  </div>
+                  {!isLocked && availableCoachesForMatch.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCoachModal(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                      title="Add Coach"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+                
+                {assignedCoaches.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {assignedCoaches.map((coach) => {
+                      const isTeamCoach = teamCoaches.some(tc => tc.id === coach.id);
+                      const roleDisplay: Record<string, string> = {
+                        'head-coach': 'Head Coach',
+                        'assistant-coach': 'Assistant Coach',
+                        'goalkeeper-coach': 'Goalkeeper Coach',
+                        'fitness-coach': 'Fitness Coach',
+                        'technical-coach': 'Technical Coach',
+                      };
+                      return (
+                        <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          {coach.photo ? (
+                            <img 
+                              src={coach.photo} 
+                              alt={`${coach.firstName} ${coach.lastName}`}
+                              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+                              {coach.firstName[0]}{coach.lastName[0]}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 dark:text-white truncate">
+                              {coach.firstName} {coach.lastName}
+                            </p>
+                            <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                              {roleDisplay[coach.role]}
+                            </p>
+                            {isTeamCoach && (
+                              <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                                Team Coach
+                              </span>
+                            )}
+                          </div>
+                          {!isLocked && (
+                            <button
+                              type="button"
+                              onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coach.id))}
+                              className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                              title="Remove coach"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <span className="text-4xl mb-2 block">👨‍🏫</span>
+                    <p>No coaches assigned to this match.</p>
+                    {!isLocked && availableCoachesForMatch.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowCoachModal(true)}
+                        className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 mx-auto"
+                        title="Add Coach"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -1594,6 +1711,85 @@ export default function AddEditMatchPage() {
           </div>
         </form>
       </main>
+
+      {/* Coach Selection Modal */}
+      {showCoachModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full max-h-[80vh] overflow-hidden">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add Coach from Age Group</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">{availableCoachesForMatch.length} coaches available</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCoachModal(false)}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[60vh]">
+              {availableCoachesForMatch.length > 0 ? (
+                <div className="space-y-2">
+                  {availableCoachesForMatch.map((coach) => {
+                    const roleDisplay: Record<string, string> = {
+                      'head-coach': 'Head Coach',
+                      'assistant-coach': 'Assistant Coach',
+                      'goalkeeper-coach': 'Goalkeeper Coach',
+                      'fitness-coach': 'Fitness Coach',
+                      'technical-coach': 'Technical Coach',
+                    };
+                    // Get the teams this coach is assigned to
+                    const coachTeams = sampleTeams.filter(t => coach.teamIds.includes(t.id) && t.ageGroupId === ageGroup?.id);
+                    return (
+                      <button
+                        key={coach.id}
+                        type="button"
+                        onClick={() => {
+                          setAssignedCoachIds([...assignedCoachIds, coach.id]);
+                          setShowCoachModal(false);
+                        }}
+                        className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
+                      >
+                        {coach.photo ? (
+                          <img 
+                            src={coach.photo} 
+                            alt={`${coach.firstName} ${coach.lastName}`}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                            {coach.firstName[0]}{coach.lastName[0]}
+                          </div>
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium text-gray-900 dark:text-white truncate">
+                            {coach.firstName} {coach.lastName}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {roleDisplay[coach.role]}
+                            {coachTeams.length > 0 && (
+                              <span className="ml-2 text-xs">
+                                ({coachTeams.map(t => t.name).join(', ')})
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <Plus className="w-5 h-5 text-green-600 dark:text-green-400" />
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <p className="text-center py-8 text-gray-500 dark:text-gray-400">
+                  All coaches from this age group have been assigned.
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Cross-Team Player Selection Modal */}
       {showCrossTeamModal && (
