@@ -23,13 +23,6 @@ export default function TeamCoachesPage() {
     coach => !coach.teamIds.includes(teamId!)
   );
 
-  // Group coaches by role
-  const headCoaches = teamCoaches.filter(c => c.role === 'head-coach');
-  const assistantCoaches = teamCoaches.filter(c => c.role === 'assistant-coach');
-  const goalkeepingCoaches = teamCoaches.filter(c => c.role === 'goalkeeper-coach');
-  const fitnessCoaches = teamCoaches.filter(c => c.role === 'fitness-coach');
-  const otherCoaches = teamCoaches.filter(c => !['head-coach', 'assistant-coach', 'goalkeeper-coach', 'fitness-coach'].includes(c.role));
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="container mx-auto px-4 py-4">
@@ -63,138 +56,11 @@ export default function TeamCoachesPage() {
           </div>
         )}
 
-        {/* Head Coaches */}
-        {headCoaches.length > 0 && (
+        {/* All Coaches */}
+        {teamCoaches.length > 0 && (
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>👨‍🏫</span> Head Coach{headCoaches.length > 1 ? 'es' : ''} ({headCoaches.length})
-            </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {headCoaches.map((coach) => (
-                <div key={coach.id} className="relative group">
-                  <Link to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Assistant Coaches */}
-        {assistantCoaches.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>🤝</span> Assistant Coach{assistantCoaches.length > 1 ? 'es' : ''} ({assistantCoaches.length})
-            </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {assistantCoaches.map((coach) => (
-                <div key={coach.id} className="relative group">
-                  <Link to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Goalkeeper Coaches */}
-        {goalkeepingCoaches.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>🧤</span> Goalkeeper Coach{goalkeepingCoaches.length > 1 ? 'es' : ''} ({goalkeepingCoaches.length})
-            </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {goalkeepingCoaches.map((coach) => (
-                <div key={coach.id} className="relative group">
-                  <Link to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Fitness Coaches */}
-        {fitnessCoaches.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>💪</span> Fitness Coach{fitnessCoaches.length > 1 ? 'es' : ''} ({fitnessCoaches.length})
-            </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {fitnessCoaches.map((coach) => (
-                <div key={coach.id} className="relative group">
-                  <Link to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Other Coaches */}
-        {otherCoaches.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>👔</span> Other Staff ({otherCoaches.length})
-            </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {otherCoaches.map((coach) => (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {teamCoaches.map((coach) => (
                 <div key={coach.id} className="relative group">
                   <Link to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
                     <CoachCard coach={coach} />

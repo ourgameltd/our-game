@@ -27,23 +27,24 @@ export default function CoachCard({ coach, onClick }: CoachCardProps) {
       className={`card-hover h-full flex flex-col ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
-      <div className="flex items-start gap-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate mb-3">
+        {coach.firstName} {coach.lastName}
+      </h3>
+      
+      <div className="flex items-center gap-3 mb-3">
         {coach.photo ? (
           <img 
             src={coach.photo} 
             alt={`${coach.firstName} ${coach.lastName}`}
-            className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
           />
         ) : (
-          <div className="w-16 h-16 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+          <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
             {coach.firstName[0]}{coach.lastName[0]}
           </div>
         )}
         
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-            {coach.firstName} {coach.lastName}
-          </h3>
           <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">
             {roleDisplay[coach.role]}
           </p>

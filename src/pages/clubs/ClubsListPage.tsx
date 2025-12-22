@@ -40,7 +40,7 @@ export default function ClubsListPage() {
                   My Teams
                 </h2>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myTeams.map((team) => {
                     const club = sampleClubs.find(c => c.id === team.clubId);
                     
@@ -87,7 +87,7 @@ export default function ClubsListPage() {
                   My Profile
                 </h2>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myProfile.map((player) => {
                     const club = sampleClubs.find(c => c.id === player.clubId);
                     
@@ -131,7 +131,7 @@ export default function ClubsListPage() {
                   My Children
                 </h2>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myChildren.map((player) => {
                     const club = sampleClubs.find(c => c.id === player.clubId);
                     
@@ -175,7 +175,7 @@ export default function ClubsListPage() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             All Clubs
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {sampleClubs.map((club) => (
               <Link
                 key={club.id}

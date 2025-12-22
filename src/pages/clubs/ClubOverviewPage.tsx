@@ -59,7 +59,7 @@ export default function ClubOverviewPage() {
           </div>
           
           {ageGroups.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {ageGroups.map(ageGroup => {
                 const ageGroupStats = getAgeGroupStatistics(ageGroup.id);
                 const ageGroupTeams = getTeamsByAgeGroupId(ageGroup.id);

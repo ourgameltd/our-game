@@ -53,7 +53,7 @@ const AgeGroupsListPage: React.FC = () => {
         </div>
 
         {/* Age Groups Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {ageGroups.map(ageGroup => {
             const stats = getAgeGroupStatistics(ageGroup.id);
             const { primaryColor, secondaryColor } = getGradientColors(club);

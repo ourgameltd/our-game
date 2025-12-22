@@ -91,7 +91,7 @@ export default function TeamPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🥅</span> Goalkeepers ({goalkeepers.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {goalkeepers.map((player) => (
                 <div key={player.id} className="relative group">
                   <Link
@@ -124,7 +124,7 @@ export default function TeamPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🛡️</span> Defenders ({defenders.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {defenders.map((player) => (
                 <div key={player.id} className="relative group">
                   <Link
@@ -157,7 +157,7 @@ export default function TeamPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚙️</span> Midfielders ({midfielders.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {midfielders.map((player) => (
                 <div key={player.id} className="relative group">
                   <Link
@@ -190,7 +190,7 @@ export default function TeamPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚡</span> Forwards ({forwards.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {forwards.map((player) => (
                 <div key={player.id} className="relative group">
                   <Link

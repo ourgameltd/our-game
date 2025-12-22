@@ -153,7 +153,7 @@ export default function MatchReportPage() {
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
               <span>👨‍🏫</span> Coaching Staff
             </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {matchCoaches.map((coach) => (
                 <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   {coach.photo ? (

@@ -38,7 +38,7 @@ export default function AgeGroupCoachesPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>👨‍🏫</span> Head Coaches ({headCoaches.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {headCoaches.map((coach) => (
                 <div key={coach.id} className="relative">
                   <Link to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
@@ -56,7 +56,7 @@ export default function AgeGroupCoachesPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🤝</span> Assistant Coaches ({assistantCoaches.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {assistantCoaches.map((coach) => (
                 <div key={coach.id} className="relative">
                   <Link to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
@@ -74,7 +74,7 @@ export default function AgeGroupCoachesPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚙️</span> Specialist Coaches ({specialistCoaches.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {specialistCoaches.map((coach) => (
                 <div key={coach.id} className="relative">
                   <Link to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>

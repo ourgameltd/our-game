@@ -43,7 +43,7 @@ export default function CoachProfilePage() {
           />
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {/* Contact Information */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
             <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Contact Information</h2>

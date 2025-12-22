@@ -227,50 +227,6 @@ export default function ProfilePage() {
             </button>
           </div>
         </div>
-
-        {/* Club Affiliations */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 transition-colors mb-6">
-          <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Club Affiliations</h3>
-          <div className="space-y-2">
-            {userData.clubAffiliations.map((club, index) => (
-              <div
-                key={index}
-                className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-              >
-                <span className="text-gray-900 dark:text-white font-medium">{club}</span>
-                <span className="text-sm text-gray-500 dark:text-gray-400">{userData.role}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Upcoming Matches */}
-          <UpcomingMatchesCard 
-            matches={upcomingMatches}
-            showTeamInfo={true}
-            getTeamInfo={(match) => {
-              const team = getTeamById(match.teamId);
-              if (team) {
-                const ageGroup = getAgeGroupById(team.ageGroupId);
-                return {
-                  teamName: team.name,
-                  ageGroupName: ageGroup?.name || 'Unknown'
-                };
-              }
-              return null;
-            }}
-            getMatchLink={(matchId) => {
-              const match = upcomingMatches.find(m => m.id === matchId);
-              if (match) {
-                const team = getTeamById(match.teamId);
-                if (team) {
-                  // In a real app, we would have the full clubId from user's teams
-                  return Routes.matchReport(team.clubId, team.ageGroupId, match.teamId, matchId);
-                }
-              }
-              return '#';
-            }}
-          />
       </div>
     </div>
   );

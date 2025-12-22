@@ -30,29 +30,30 @@ export default function PlayerCard({ player, onClick, isSelected = false }: Play
       }`}
       onClick={onClick}
     >
-      <div className="flex items-start gap-4">
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate mb-3">
+        {player.firstName} {player.lastName}
+        {player.nickname && (
+          <span className="text-sm font-normal text-primary-600 dark:text-primary-400 ml-2">"{player.nickname}"</span>
+        )}
+      </h3>
+      
+      <div className="flex items-center gap-3 mb-3">
         {player.photo ? (
           <img 
             src={player.photo} 
             alt={`${player.firstName} ${player.lastName}`}
-            className="w-16 h-16 rounded-full object-cover flex-shrink-0"
+            className="w-12 h-12 rounded-full object-cover flex-shrink-0"
           />
         ) : (
-          <div className="w-16 h-16 bg-gradient-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white text-2xl font-bold flex-shrink-0">
+          <div className="w-12 h-12 bg-gradient-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
             {player.firstName[0]}{player.lastName[0]}
           </div>
         )}
         
-        <div className="flex-1 min-w-0 mb-4">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
-            {player.firstName} {player.lastName}
-            {player.nickname && (
-              <span className="text-sm font-normal text-primary-600 dark:text-primary-400 ml-2">"{player.nickname}"</span>
-            )}
-          </h3>
+        <div className="flex-1 min-w-0">
           <p className="text-sm text-gray-600 dark:text-gray-400">Age {age}</p>
           
-          <div className="flex flex-wrap gap-2 mt-2">
+          <div className="flex flex-wrap gap-2 mt-1">
             {player.preferredPositions.map(position => (
               <span key={position} className="badge-primary">
                 {position}

@@ -191,7 +191,7 @@ export default function ClubCoachesPage() {
           {showFilters && (
             <>
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search Name</label>
               <input

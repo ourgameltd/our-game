@@ -52,7 +52,7 @@ export default function TeamCard({ team, onClick }: TeamCardProps) {
 
       {/* Card Content */}
       <div className="bg-white dark:bg-gray-800 p-4">
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-2 gap-4">
           <div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white">{team.playerIds.length}</div>
             <div className="text-xs text-gray-500 dark:text-gray-500">Players</div>
@@ -60,10 +60,6 @@ export default function TeamCard({ team, onClick }: TeamCardProps) {
           <div>
             <div className="text-2xl font-bold text-gray-900 dark:text-white">{team.coachIds.length}</div>
             <div className="text-xs text-gray-500 dark:text-gray-500">Coaches</div>
-          </div>
-          <div>
-            <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">{team.season}</div>
-            <div className="text-xs text-gray-500 dark:text-gray-500">Season</div>
           </div>
         </div>
       </div>
