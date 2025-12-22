@@ -26,8 +26,8 @@ export default function ClubsListPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="container mx-auto px-4 py-4">
         <PageTitle
-          title="Clubs You Have Access To"
-          subtitle="Select a club to view details and manage teams"
+          title="Welcome!"
+          subtitle="You can find things here quickly. Select a club or information relevant to you to get started."
         />
 
         {/* Quick Access Section */}

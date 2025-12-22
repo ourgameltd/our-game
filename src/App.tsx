@@ -99,70 +99,70 @@ function AppContent() {
         {/* Help & Support */}
         <Route path="/help" element={<HelpSupportPage />} />
         
-        {/* Clubs */}
-        <Route path="/clubs" element={<ClubsListPage />} />
-        <Route path="/clubs/:clubId" element={<ClubOverviewPage />} />
-        <Route path="/clubs/:clubId/ethos" element={<ClubEthosPage />} />
-        <Route path="/clubs/:clubId/players" element={<ClubPlayersPage />} />
-        <Route path="/clubs/:clubId/players/:playerId/settings" element={<ClubPlayerSettingsPage />} />
-        <Route path="/clubs/:clubId/players/:playerId/album" element={<PlayerAlbumPage />} />
-        <Route path="/clubs/:clubId/coaches" element={<ClubCoachesPage />} />
-        <Route path="/clubs/:clubId/coaches/:coachId" element={<CoachProfilePage />} />
-        <Route path="/clubs/:clubId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
-        <Route path="/clubs/:clubId/matches" element={<ClubMatchesPage />} />
-        <Route path="/clubs/:clubId/kits" element={<ClubKitsPage />} />
-        <Route path="/clubs/:clubId/settings" element={<ClubSettingsPage />} />
+        {/* Dashboard (Clubs) */}
+        <Route path="/dashboard" element={<ClubsListPage />} />
+        <Route path="/dashboard/:clubId" element={<ClubOverviewPage />} />
+        <Route path="/dashboard/:clubId/ethos" element={<ClubEthosPage />} />
+        <Route path="/dashboard/:clubId/players" element={<ClubPlayersPage />} />
+        <Route path="/dashboard/:clubId/players/:playerId/settings" element={<ClubPlayerSettingsPage />} />
+        <Route path="/dashboard/:clubId/players/:playerId/album" element={<PlayerAlbumPage />} />
+        <Route path="/dashboard/:clubId/coaches" element={<ClubCoachesPage />} />
+        <Route path="/dashboard/:clubId/coaches/:coachId" element={<CoachProfilePage />} />
+        <Route path="/dashboard/:clubId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
+        <Route path="/dashboard/:clubId/matches" element={<ClubMatchesPage />} />
+        <Route path="/dashboard/:clubId/kits" element={<ClubKitsPage />} />
+        <Route path="/dashboard/:clubId/settings" element={<ClubSettingsPage />} />
 
         {/* Age Groups */}
-        <Route path="/clubs/:clubId/age-groups" element={<AgeGroupsListPage />} />
-        <Route path="/clubs/:clubId/age-groups/new" element={<AddEditAgeGroupPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId" element={<AgeGroupOverviewPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/edit" element={<AddEditAgeGroupPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/players" element={<AgeGroupPlayersPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/coaches" element={<AgeGroupCoachesPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/matches" element={<AgeGroupMatchesPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
+        <Route path="/dashboard/:clubId/age-groups" element={<AgeGroupsListPage />} />
+        <Route path="/dashboard/:clubId/age-groups/new" element={<AddEditAgeGroupPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId" element={<AgeGroupOverviewPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/edit" element={<AddEditAgeGroupPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players" element={<AgeGroupPlayersPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/coaches" element={<AgeGroupCoachesPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/matches" element={<AgeGroupMatchesPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
 
         {/* Coaches - Age Group Context */}
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/coaches/:coachId" element={<CoachProfilePage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/coaches/:coachId" element={<CoachProfilePage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
 
         {/* Players - Age Group Level */}
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId" element={<PlayerProfilePage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/album" element={<PlayerAlbumPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/settings" element={<PlayerSettingsPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId" element={<PlayerProfilePage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/album" element={<PlayerAlbumPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/settings" element={<PlayerSettingsPage />} />
 
         {/* Teams */}
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams" element={<TeamsListPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/new" element={<AddEditTeamPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId" element={<TeamOverviewPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/edit" element={<AddEditTeamPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/squad" element={<TeamPlayersPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches" element={<TeamCoachesPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/kits" element={<TeamKitsPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/settings" element={<TeamSettingsPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams" element={<TeamsListPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/new" element={<AddEditTeamPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId" element={<TeamOverviewPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/edit" element={<AddEditTeamPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/squad" element={<TeamPlayersPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches" element={<TeamCoachesPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/kits" element={<TeamKitsPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/settings" element={<TeamSettingsPage />} />
 
         {/* Coaches - Team Context */}
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches/:coachId" element={<CoachProfilePage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches/:coachId" element={<CoachProfilePage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches/:coachId/settings" element={<CoachSettingsPage />} />
 
         {/* Players - Team Context */}
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId" element={<PlayerProfilePage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/album" element={<PlayerAlbumPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/settings" element={<PlayerSettingsPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId" element={<PlayerProfilePage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/album" element={<PlayerAlbumPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/settings" element={<PlayerSettingsPage />} />
 
         {/* Matches */}
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches" element={<MatchesListPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/new" element={<AddEditMatchPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/:matchId" element={<MatchReportPage />} />
-        <Route path="/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/:matchId/edit" element={<AddEditMatchPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/matches" element={<MatchesListPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/new" element={<AddEditMatchPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/:matchId" element={<MatchReportPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/:matchId/edit" element={<AddEditMatchPage />} />
 
         </Routes>
         </div>

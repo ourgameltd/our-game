@@ -1,12 +1,7 @@
 import { useState } from 'react';
 import { User, Mail, Phone, MapPin, Calendar, Shield, Save, Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import UpcomingMatchesCard from '@components/matches/UpcomingMatchesCard';
 import PageTitle from '@components/common/PageTitle';
-import { getUpcomingMatches } from '@data/matches';
-import { getTeamById } from '@data/teams';
-import { getAgeGroupById } from '@data/ageGroups';
-import { Routes } from '@utils/routes';
 
 export default function ProfilePage() {
   const { theme, setTheme } = useTheme();
@@ -24,9 +19,6 @@ export default function ProfilePage() {
 
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState(userData);
-  
-  // Get upcoming matches for demo - in real app would filter by user's teams
-  const upcomingMatches = getUpcomingMatches(undefined, 3);
 
   const handleSave = () => {
     setUserData(formData);
