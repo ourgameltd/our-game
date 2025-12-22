@@ -93,7 +93,7 @@ export default function FormationDisplay({
               key={formationIndex}
               className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
                 interactive ? 'cursor-pointer hover:scale-110' : ''
-              } transition-transform duration-200`}
+              } transition-all duration-200 group hover:z-50`}
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
@@ -124,12 +124,12 @@ export default function FormationDisplay({
                 </div>
 
                 {/* Position label below */}
-                <div className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 whitespace-nowrap">
-                  <div className="bg-black/70 text-white text-xs px-2 py-0.5 rounded">
+                <div className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 flex flex-col items-center">
+                  <div className="bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded text-center">
                     {pos.position}
                   </div>
                   {hasPlayer && showPlayerNames && (
-                    <div className="bg-blue-600/90 dark:bg-blue-700/90 text-white text-xs px-2 py-0.5 rounded mt-0.5 max-w-[120px] truncate">
+                    <div className="bg-blue-600/90 dark:bg-blue-700/90 text-white text-[10px] px-1.5 py-0.5 rounded mt-0.5 max-w-[60px] group-hover:max-w-none truncate group-hover:whitespace-nowrap transition-all duration-200 text-center">
                       {playerName}
                     </div>
                   )}
