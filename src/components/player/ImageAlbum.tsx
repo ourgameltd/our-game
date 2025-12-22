@@ -146,12 +146,10 @@ export default function ImageAlbum({ images, onAddImage, onDeleteImage, editable
         {editable && (
           <button
             onClick={() => setShowAddForm(!showAddForm)}
-            className="btn-primary btn-md flex items-center gap-2"
+            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+            title="Add Image"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Image
+            <Plus className="w-5 h-5" />
           </button>
         )}
       </div>

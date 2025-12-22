@@ -1,4 +1,5 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { getClubById } from '@data/clubs';
 import { getAgeGroupsByClubId, getAgeGroupById } from '@data/ageGroups';
 import { getClubStatistics, getAgeGroupStatistics } from '@data/statistics';
@@ -53,7 +54,7 @@ export default function ClubOverviewPage() {
               to={Routes.ageGroupNew(clubId!)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
             >
-              <span>+</span>
+              <Plus className="w-5 h-5" />
             </Link>
           </div>
           

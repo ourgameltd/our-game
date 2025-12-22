@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useState } from 'react';
+import { Plus } from 'lucide-react';
 import { getTeamById } from '@data/teams';
 import { getCoachesByTeamId, getCoachesByClubId } from '@data/coaches';
 import CoachCard from '@components/coach/CoachCard';
@@ -39,9 +40,10 @@ export default function TeamCoachesPage() {
               badge={teamCoaches.length}
               subtitle="Assign coaches from the club to manage this team"
               action={!team.isArchived ? {
-                label: '+ Assign Coach',
+                label: 'Assign Coach',
                 onClick: () => setShowAddModal(true),
-                variant: 'success'
+                variant: 'success',
+                icon: 'plus'
               } : undefined}
             />
           </div>
@@ -223,9 +225,10 @@ export default function TeamCoachesPage() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">Assign coaches from your club to manage this team</p>
             <button 
               onClick={() => setShowAddModal(true)}
-              className="btn-success btn-md"
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 mx-auto"
+              title="Assign Coaches"
             >
-              + Assign Coaches
+              <Plus className="w-5 h-5" />
             </button>
           </div>
         )}
@@ -253,9 +256,10 @@ export default function TeamCoachesPage() {
                       <div key={coach.id} className="relative">
                         <CoachCard coach={coach} />
                         <button
-                          className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 shadow-lg"
+                          className="absolute top-2 right-2 bg-green-500 text-white p-2 rounded-full hover:bg-green-600 shadow-lg flex items-center justify-center"
+                          title="Assign Coach"
                         >
-                          + Assign
+                          <Plus className="w-5 h-5" />
                         </button>
                       </div>
                     ))}

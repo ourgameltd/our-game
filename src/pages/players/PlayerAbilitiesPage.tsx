@@ -213,7 +213,7 @@ export default function PlayerAbilitiesPage() {
           </div>
           <button
             onClick={initializeForm}
-            className="bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors flex items-center gap-2"
+            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
             title="Add New Evaluation"
           >
             <Plus className="w-5 h-5" />

@@ -1,3 +1,4 @@
+import { Plus } from 'lucide-react';
 import { Formation, PlayerPosition } from '@/types';
 
 interface FormationDisplayProps {
@@ -138,7 +139,7 @@ export default function FormationDisplay({
                 {!hasPlayer && interactive && (
                   <div className="absolute -top-1 -right-1">
                     <div className="w-4 h-4 bg-yellow-400 dark:bg-yellow-500 rounded-full flex items-center justify-center border border-yellow-600">
-                      <span className="text-yellow-900 text-xs font-bold">+</span>
+                      <Plus className="w-3 h-3 text-yellow-900" />
                     </div>
                   </div>
                 )}

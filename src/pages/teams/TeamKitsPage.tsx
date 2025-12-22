@@ -82,9 +82,10 @@ export default function TeamKitsPage() {
               title={`${team.name} - Kit Management`}
               subtitle="Manage team-specific kits"
               action={!showBuilder && !team.isArchived ? {
-                label: '+ Create Kit',
+                label: 'Create Kit',
                 onClick: () => setShowBuilder(true),
-                variant: 'success'
+                variant: 'success',
+                icon: 'plus'
               } : undefined}
             />
           </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { Plus } from 'lucide-react';
 import { getAgeGroupById } from '../../data/ageGroups';
 import { getTeamsByAgeGroupId, getTeamById } from '../../data/teams';
 import { getAgeGroupStatistics } from '../../data/statistics';
@@ -86,7 +87,7 @@ const AgeGroupOverviewPage: React.FC = () => {
                 to={Routes.teamNew(clubId!, ageGroupId!)}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
               >
-                <span>+</span>
+                <Plus className="w-5 h-5" />
               </Link>
             )}
           </div>

@@ -68,9 +68,10 @@ export default function ClubKitsPage() {
           title={`${club.name} - Kit Management`}
           subtitle="Manage club kits that can be used by all teams"
           action={!showBuilder ? {
-            label: '+ Create Kit',
+            label: 'Create Kit',
             onClick: () => setShowBuilder(true),
-            variant: 'success'
+            variant: 'success',
+            icon: 'plus'
           } : undefined}
         />
 
