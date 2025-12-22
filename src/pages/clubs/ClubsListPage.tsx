@@ -2,7 +2,6 @@ import { Link } from 'react-router-dom';
 import { sampleClubs } from '@data/clubs';
 import { sampleTeams } from '@data/teams';
 import { samplePlayers } from '@data/players';
-import { sampleCoaches } from '@data/coaches';
 import { currentUser } from '@data/currentUser';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
@@ -36,11 +35,12 @@ export default function ClubsListPage() {
           <div className="mb-8 space-y-6">
             {/* My Teams */}
             {myTeams.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   My Teams
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {myTeams.map((team) => {
                     const club = sampleClubs.find(c => c.id === team.clubId);
                     
@@ -77,22 +77,24 @@ export default function ClubsListPage() {
                   })}
                 </div>
               </div>
+              </>
             )}
 
             {/* My Profile */}
             {myProfile.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   My Profile
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {myProfile.map((player) => {
                     const club = sampleClubs.find(c => c.id === player.clubId);
                     
                     return (
                       <Link
                         key={player.id}
-                        to={Routes.player(player.clubId, player.ageGroupIds[0], player.teamIds[0], player.id)}
+                        to={Routes.player(player.clubId, player.ageGroupIds[0], player.id)}
                         className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
                       >
                         {player.photo ? (
@@ -119,22 +121,24 @@ export default function ClubsListPage() {
                   })}
                 </div>
               </div>
+              </>
             )}
 
             {/* My Children */}
             {myChildren.length > 0 && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+              <>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   My Children
                 </h2>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
                   {myChildren.map((player) => {
                     const club = sampleClubs.find(c => c.id === player.clubId);
                     
                     return (
                       <Link
                         key={player.id}
-                        to={Routes.player(player.clubId, player.ageGroupIds[0], player.teamIds[0], player.id)}
+                        to={Routes.player(player.clubId, player.ageGroupIds[0], player.id)}
                         className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
                       >
                         {player.photo ? (
@@ -161,6 +165,7 @@ export default function ClubsListPage() {
                   })}
                 </div>
               </div>
+              </>
             )}
           </div>
         )}

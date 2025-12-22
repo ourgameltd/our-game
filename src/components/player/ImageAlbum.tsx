@@ -410,7 +410,7 @@ export default function ImageAlbum({ images, onAddImage, onDeleteImage, editable
       {/* Lightbox Modal */}
       {selectedImage && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          className="fixed inset-0 bg-black bg-opacity-90 z-[1000] flex items-center justify-center p-4"
           onClick={() => setSelectedImage(null)}
         >
           <button

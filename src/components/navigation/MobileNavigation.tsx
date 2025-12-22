@@ -40,10 +40,13 @@ export default function MobileNavigation() {
   const teamPlayerMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/*', location.pathname);
   const ageGroupCoachMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/coaches/:coachId/*', location.pathname);
   const teamCoachMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches/:coachId/*', location.pathname);
+  const teamMatchesMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/*', location.pathname);
+  const ageGroupMatchesMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/matches/*', location.pathname);
+  const clubMatchesMatch = matchPath('/clubs/:clubId/matches/*', location.pathname);
 
   const clubId = clubMatch?.params.clubId;
-  const ageGroupId = ageGroupMatch?.params.ageGroupId || teamMatch?.params.ageGroupId || playerMatch?.params.ageGroupId || teamPlayerMatch?.params.ageGroupId || ageGroupCoachMatch?.params.ageGroupId || teamCoachMatch?.params.ageGroupId;
-  const teamId = teamMatch?.params.teamId || teamPlayerMatch?.params.teamId || teamCoachMatch?.params.teamId;
+  const ageGroupId = ageGroupMatch?.params.ageGroupId || teamMatch?.params.ageGroupId || playerMatch?.params.ageGroupId || teamPlayerMatch?.params.ageGroupId || ageGroupCoachMatch?.params.ageGroupId || teamCoachMatch?.params.ageGroupId || teamMatchesMatch?.params.ageGroupId || ageGroupMatchesMatch?.params.ageGroupId;
+  const teamId = teamMatch?.params.teamId || teamPlayerMatch?.params.teamId || teamCoachMatch?.params.teamId || teamMatchesMatch?.params.teamId;
   const playerId = playerMatch?.params.playerId || teamPlayerMatch?.params.playerId;
   const coachId = ageGroupCoachMatch?.params.coachId || teamCoachMatch?.params.coachId;
 
@@ -678,18 +681,18 @@ export default function MobileNavigation() {
                     </Link>
                   </li>
                 )}
-                {ageGroupId && currentLevel !== 'ageGroup' && currentLevel !== 'clubs' && (
+                {ageGroup && ageGroupId && currentLevel !== 'ageGroup' && currentLevel !== 'clubs' && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/clubs/${clubId}/age-groups/${ageGroupId}`}
                       className="mobile-nav-link"
                     >
                       <Users className="mobile-nav-icon" />
-                      <span className="mobile-nav-text">{ageGroup?.name}</span>
+                      <span className="mobile-nav-text">{ageGroup.name}</span>
                     </Link>
                   </li>
                 )}
-                {teamId && currentLevel !== 'clubs' && (
+                {team && teamId && currentLevel !== 'clubs' && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
@@ -698,13 +701,13 @@ export default function MobileNavigation() {
                       <div 
                         className="w-5 h-5 rounded flex items-center justify-center text-[8px] font-bold flex-shrink-0"
                         style={{ 
-                          backgroundColor: team?.colors?.primary || club?.colors.primary || '#6366F1',
-                          color: team?.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
+                          backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
+                          color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
                         }}
                       >
-                        {team?.shortName || team?.name.substring(0, 2).toUpperCase()}
+                        {team.shortName || team.name.substring(0, 2).toUpperCase()}
                       </div>
-                      <span className="mobile-nav-text">{team?.name}</span>
+                      <span className="mobile-nav-text">{team.name}</span>
                     </Link>
                   </li>
                 )}

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Match } from '@/types';
 import { Routes } from '@utils/routes';
+import { sampleTeams } from '@/data/teams';
 
 interface MatchesListContentProps {
   matches: Match[];
@@ -42,9 +43,11 @@ export default function MatchesListContent({
   };
 
   const getMatchLink = (match: Match) => {
-    // Use the match's teamId to construct the link
-    // This allows club and age group level pages to link to individual match reports
-    return Routes.matchReport(clubId, match.teamId.split('-')[0] || ageGroupId || '', match.teamId, match.id);
+    // Get the team to find its age group ID
+    const team = sampleTeams.find(t => t.id === match.teamId);
+    const matchAgeGroupId = team?.ageGroupId || ageGroupId || '';
+    
+    return Routes.matchReport(clubId, matchAgeGroupId, match.teamId, match.id);
   };
 
   const MatchRow = ({ match }: { match: Match }) => {
