@@ -299,9 +299,17 @@ export default function MatchPreviewCard({
         
         <div>
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">Venue</h3>
-          <p className="text-gray-900 dark:text-white">
-            📍 {match.location}
-          </p>
+          <a 
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(match.location)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors inline-flex items-center gap-1 group"
+          >
+            <span>📍</span>
+            <span className="underline decoration-transparent group-hover:decoration-current transition-all">
+              {match.location}
+            </span>
+          </a>
           {showFullDetails && (
             <p className="text-sm text-gray-600 dark:text-gray-400">
               {match.isHome ? 'Home' : 'Away'}
