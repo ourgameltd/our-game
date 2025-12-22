@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus } from 'lucide-react';
+import { ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin } from 'lucide-react';
 import { sampleMatches } from '@/data/matches';
 import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
@@ -524,14 +524,32 @@ export default function AddEditMatchPage() {
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     Location *
                   </label>
-                  <input
-                    type="text"
-                    value={location}
-                    onChange={(e) => setLocation(e.target.value)}
-                    disabled={isLocked}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="Enter match location"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      disabled={isLocked}
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Enter match location or pick from map"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const searchQuery = location || 'football pitch near me';
+                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`, '_blank');
+                      }}
+                      disabled={isLocked}
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      title="Open Google Maps to find location"
+                    >
+                      <MapPin className="w-4 h-4" />
+                      <span className="hidden sm:inline">Map</span>
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Type the location or click Map to search on Google Maps. Copy the address and paste it here.
+                  </p>
                 </div>
 
                 <div>
