@@ -20,6 +20,7 @@ import { getClubById } from '@data/clubs';
 import { getTeamById } from '@data/teams';
 import { getAgeGroupById } from '@data/ageGroups';
 import { getPlayerById } from '@data/players';
+import { getCoachById } from '@data/coaches';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 
@@ -34,19 +35,24 @@ export default function MobileNavigation() {
   const ageGroupMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/*', location.pathname);
   const teamMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/*', location.pathname);
   const playerMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/players/:playerId/*', location.pathname);
+  const teamPlayerMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/*', location.pathname);
+  const ageGroupCoachMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/coaches/:coachId/*', location.pathname);
+  const teamCoachMatch = matchPath('/clubs/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches/:coachId/*', location.pathname);
 
   const clubId = clubMatch?.params.clubId;
-  const ageGroupId = ageGroupMatch?.params.ageGroupId || teamMatch?.params.ageGroupId || playerMatch?.params.ageGroupId;
-  const teamId = teamMatch?.params.teamId;
-  const playerId = playerMatch?.params.playerId;
+  const ageGroupId = ageGroupMatch?.params.ageGroupId || teamMatch?.params.ageGroupId || playerMatch?.params.ageGroupId || teamPlayerMatch?.params.ageGroupId || ageGroupCoachMatch?.params.ageGroupId || teamCoachMatch?.params.ageGroupId;
+  const teamId = teamMatch?.params.teamId || teamPlayerMatch?.params.teamId || teamCoachMatch?.params.teamId;
+  const playerId = playerMatch?.params.playerId || teamPlayerMatch?.params.playerId;
+  const coachId = ageGroupCoachMatch?.params.coachId || teamCoachMatch?.params.coachId;
 
   const club = clubId ? getClubById(clubId) : null;
   const team = teamId ? getTeamById(teamId) : null;
   const ageGroup = ageGroupId ? getAgeGroupById(ageGroupId) : null;
   const player = playerId ? getPlayerById(playerId) : null;
+  const coach = coachId ? getCoachById(coachId) : undefined;
 
   // Determine which level we're currently at
-  const currentLevel = playerId ? 'player' : teamId ? 'team' : ageGroupId ? 'ageGroup' : clubId ? 'club' : 'clubs';
+  const currentLevel = playerId ? 'player' : coachId ? 'coach' : teamId ? 'team' : ageGroupId ? 'ageGroup' : clubId ? 'club' : 'clubs';
 
   // Close menu when route changes (mobile only)
   useEffect(() => {
@@ -443,8 +449,15 @@ export default function MobileNavigation() {
                   <ul>
                     <li className="mobile-nav-item">
                       <Link 
-                        to={`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}`}
-                        className={`mobile-nav-link ${isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}`) ? 'active' : ''}`}
+                        to={teamId 
+                          ? `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}`
+                          : `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}`
+                        }
+                        className={`mobile-nav-link ${
+                          teamId 
+                            ? isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}`)
+                            : isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}`)
+                        } ? 'active' : ''}`}
                       >
                         <UserCircle className="mobile-nav-icon" />
                         <span className="mobile-nav-text">Overview</span>
@@ -452,8 +465,15 @@ export default function MobileNavigation() {
                     </li>
                     <li className="mobile-nav-item">
                       <Link 
-                        to={`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`}
-                        className={`mobile-nav-link ${isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`) ? 'active' : ''}`}
+                        to={teamId 
+                          ? `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`
+                          : `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`
+                        }
+                        className={`mobile-nav-link ${
+                          teamId 
+                            ? isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`)
+                            : isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`)
+                        } ? 'active' : ''}`}
                       >
                         <Trophy className="mobile-nav-icon" />
                         <span className="mobile-nav-text">Abilities</span>
@@ -461,8 +481,15 @@ export default function MobileNavigation() {
                     </li>
                     <li className="mobile-nav-item">
                       <Link 
-                        to={`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development`}
-                        className={`mobile-nav-link ${isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development`) ? 'active' : ''}`}
+                        to={teamId 
+                          ? `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`
+                          : `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development`
+                        }
+                        className={`mobile-nav-link ${
+                          teamId 
+                            ? isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`)
+                            : isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development`)
+                        } ? 'active' : ''}`}
                       >
                         <Trophy className="mobile-nav-icon" />
                         <span className="mobile-nav-text">Development</span>
@@ -470,8 +497,15 @@ export default function MobileNavigation() {
                     </li>
                     <li className="mobile-nav-item">
                       <Link 
-                        to={`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`}
-                        className={`mobile-nav-link ${isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`) ? 'active' : ''}`}
+                        to={teamId 
+                          ? `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`
+                          : `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`
+                        }
+                        className={`mobile-nav-link ${
+                          teamId 
+                            ? isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`)
+                            : isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`)
+                        } ? 'active' : ''}`}
                       >
                         <FileText className="mobile-nav-icon" />
                         <span className="mobile-nav-text">Report Card</span>
@@ -479,11 +513,50 @@ export default function MobileNavigation() {
                     </li>
                     <li className="mobile-nav-item">
                       <Link 
-                        to={`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`}
-                        className={`mobile-nav-link ${isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`) ? 'active' : ''}`}
+                        to={teamId 
+                          ? `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`
+                          : `/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`
+                        }
+                        className={`mobile-nav-link ${
+                          teamId 
+                            ? isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`)
+                            : isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`)
+                        } ? 'active' : ''}`}
                       >
                         <FileText className="mobile-nav-icon" />
                         <span className="mobile-nav-text">Album</span>
+                      </Link>
+                    </li>
+                  </ul>
+                </div>
+              </li>
+            )}
+
+            {/* Coach Level - Show full options only if we're at coach level */}
+            {coach && currentLevel === 'coach' && (
+              <li className="mobile-nav-item">
+                <div>
+                  <div className="px-6 py-2">
+                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
+                      <Shield className="w-4 h-4" />
+                      {coach.firstName} {coach.lastName}
+                    </h3>
+                  </div>
+                  <ul>
+                    <li className="mobile-nav-item">
+                      <Link 
+                        to={teamId 
+                          ? `/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches/${coachId}`
+                          : `/clubs/${clubId}/age-groups/${ageGroupId}/coaches/${coachId}`
+                        }
+                        className={`mobile-nav-link ${
+                          teamId 
+                            ? isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches/${coachId}`)
+                            : isActive(`/clubs/${clubId}/age-groups/${ageGroupId}/coaches/${coachId}`)
+                        } ? 'active' : ''}`}
+                      >
+                        <Shield className="mobile-nav-icon" />
+                        <span className="mobile-nav-text">Overview</span>
                       </Link>
                     </li>
                   </ul>
@@ -580,7 +653,7 @@ export default function MobileNavigation() {
                     <span className="mobile-nav-text">All Clubs</span>
                   </Link>
                 </li>
-                {clubId && currentLevel !== 'club' && (
+                {clubId && currentLevel !== 'club' && currentLevel !== 'clubs' && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/clubs/${clubId}`}
@@ -610,7 +683,7 @@ export default function MobileNavigation() {
                     </Link>
                   </li>
                 )}
-                {teamId && currentLevel !== 'team' && (
+                {teamId && currentLevel !== 'clubs' && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
