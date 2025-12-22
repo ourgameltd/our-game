@@ -27,6 +27,7 @@ export const teamLevels = [
 ] as const;
 
 export type TeamLevel = typeof teamLevels[number]['value'];
+export type AgeGroupLevel = TeamLevel;
 
 // Squad sizes for different game formats
 export const squadSizes = [

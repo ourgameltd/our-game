@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getAgeGroupById } from '../../data/ageGroups';
 import { sampleClubs } from '../../data/clubs';
-import { teamLevels, squadSizes, TeamLevel } from '@/data/referenceData';
+import { teamLevels, squadSizes, type AgeGroupLevel } from '@/data/referenceData';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@utils/routes';
