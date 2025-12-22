@@ -37,8 +37,8 @@ export default function PlayerDetailsHeader({
           {player.firstName[0]}{player.lastName[0]}
         </div>
       )}
-      <div className="flex-1">
-        <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white">
+      <div className="flex-1 min-w-0">
+        <h1 className="text-3xl font-bold mb-2 text-gray-900 dark:text-white break-words">
           {player.firstName} {player.lastName}
           {player.nickname && (
             <span className="text-xl font-normal text-primary-600 dark:text-primary-400 ml-3">"{player.nickname}"</span>
@@ -53,7 +53,7 @@ export default function PlayerDetailsHeader({
       {settingsLink && (
         <Link
           to={settingsLink}
-          className="p-2 bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 rounded-lg transition-colors"
+          className="p-2 bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 rounded-lg transition-colors flex-shrink-0"
           title="Settings"
         >
           <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
