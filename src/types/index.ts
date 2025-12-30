@@ -367,6 +367,73 @@ export interface Formation {
   tactics?: string[];
 }
 
+// Tactical Direction Types
+export type TacticalDirection = 'attacking' | 'defensive' | 'balanced';
+
+// Tactical Position Override Types
+export interface TacticalPositionOverride {
+  x?: number; // 0-100 (percentage of field width) - override from base formation
+  y?: number; // 0-100 (percentage of field length) - override from base formation
+  attackingDirection?: TacticalDirection; // How this position behaves when attacking
+  defensiveDirection?: TacticalDirection; // How this position behaves when defending
+  focusAreas?: string[]; // Specific tactical instructions for this position
+}
+
+// Tactical Relationship (e.g., passing lanes, combination plays)
+export interface TacticalRelationship {
+  fromPositionIndex: number; // Index in positions array
+  toPositionIndex: number; // Index in positions array
+  type: 'passing-lane' | 'combination' | 'support' | 'cover';
+  description?: string;
+  priority?: 'primary' | 'secondary' | 'tertiary';
+}
+
+// Tactic Scope
+export interface TacticScope {
+  level: 'global' | 'club' | 'age-group' | 'team'; // Scope level
+  clubId?: string; // Required for club, age-group, and team scopes
+  ageGroupId?: string; // Required for age-group and team scopes
+  teamId?: string; // Required for team scope
+}
+
+// Tactic (inherits from Formation with overrides)
+export interface Tactic {
+  id: string;
+  name: string;
+  baseFormationId: string; // Reference to base Formation
+  parentTacticId?: string; // Optional reference to parent Tactic for inheritance
+  scope: TacticScope; // Where this tactic is accessible
+  positionOverrides?: TacticalPositionOverride[]; // Overrides for each position (indexed to match formation positions)
+  relationships?: TacticalRelationship[]; // Tactical relationships between positions
+  summary?: string; // Markdown description of tactical philosophy
+  createdBy?: string; // User/Coach ID who created this tactic
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// Resolved Position (Formation position + all inherited overrides applied)
+export interface ResolvedPosition {
+  position: PlayerPosition;
+  x: number; // Final x coordinate after all inheritance
+  y: number; // Final y coordinate after all inheritance
+  attackingDirection?: TacticalDirection;
+  defensiveDirection?: TacticalDirection;
+  focusAreas?: string[];
+  sourceFormationId: string; // Track where base position came from
+  overriddenBy?: string[]; // Track which tactic(s) modified this position
+}
+
+// Override Information (for UI display and reset functionality)
+export interface OverrideInfo {
+  positionIndex: number;
+  position: PlayerPosition;
+  field: keyof TacticalPositionOverride;
+  originalValue: any;
+  overriddenValue: any;
+  tacticId: string; // Which tactic applied this override
+  tacticName: string;
+}
+
 // User Types
 export type UserRole = 'admin' | 'coach' | 'player' | 'parent' | 'fan';
 
