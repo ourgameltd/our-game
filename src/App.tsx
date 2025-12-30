@@ -173,6 +173,24 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training/new" element={<AddEditTrainingSessionPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training/:sessionId/edit" element={<AddEditTrainingSessionPage />} />
 
+        {/* Tactics - Club Level */}
+        <Route path="/dashboard/:clubId/tactics" element={<div>Club Tactics List</div>} />
+        <Route path="/dashboard/:clubId/tactics/new" element={<div>New Club Tactic</div>} />
+        <Route path="/dashboard/:clubId/tactics/:tacticId" element={<div>Club Tactic Detail</div>} />
+        <Route path="/dashboard/:clubId/tactics/:tacticId/edit" element={<div>Edit Club Tactic</div>} />
+
+        {/* Tactics - Age Group Level */}
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/tactics" element={<div>Age Group Tactics List</div>} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/tactics/new" element={<div>New Age Group Tactic</div>} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/tactics/:tacticId" element={<div>Age Group Tactic Detail</div>} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/tactics/:tacticId/edit" element={<div>Edit Age Group Tactic</div>} />
+
+        {/* Tactics - Team Level */}
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/tactics" element={<div>Team Tactics List</div>} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/tactics/new" element={<div>New Team Tactic</div>} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/tactics/:tacticId" element={<div>Team Tactic Detail</div>} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/tactics/:tacticId/edit" element={<div>Edit Team Tactic</div>} />
+
         </Routes>
         </div>
       </div>
