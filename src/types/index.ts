@@ -367,6 +367,50 @@ export interface Formation {
   tactics?: string[];
 }
 
+// Tactic Types
+export type TacticStyle = 'attacking' | 'balanced' | 'defensive' | 'possession' | 'counter-attack' | 'high-press';
+export type TacticScope = 'club' | 'ageGroup' | 'team';
+
+export interface PositionRole {
+  position: PlayerPosition;
+  role: string; // e.g., 'Ball-Playing Defender', 'Box-to-Box Midfielder', 'Target Man'
+  duties: string[]; // Key responsibilities for this position
+  instructions?: string; // Specific tactical instructions
+}
+
+export interface PlayerRelationship {
+  id: string;
+  fromPosition: PlayerPosition;
+  toPosition: PlayerPosition;
+  type: 'passing-lane' | 'overlap' | 'press-trigger' | 'support' | 'cover';
+  description: string;
+}
+
+export interface Tactic {
+  id: string;
+  name: string;
+  style: TacticStyle;
+  scope: TacticScope;
+  clubId?: string; // Present if scope is 'club', 'ageGroup', or 'team'
+  ageGroupId?: string; // Present if scope is 'ageGroup' or 'team'
+  teamId?: string; // Present if scope is 'team'
+  parentFormationId: string; // Base formation this tactic is built on
+  parentTacticId?: string; // Optional parent tactic for inheritance
+  squadSize: SquadSize;
+  summary?: string; // Markdown-formatted tactical summary
+  positionRoles?: PositionRole[]; // Role definitions for positions
+  positionOverrides?: { // Position adjustments from base formation
+    position: PlayerPosition;
+    x: number;
+    y: number;
+  }[];
+  relationships?: PlayerRelationship[]; // Tactical relationships between positions
+  tags?: string[]; // e.g., ['High Line', 'Wing Play', 'Counter']
+  createdBy?: string; // User/Coach ID
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
 // User Types
 export type UserRole = 'admin' | 'coach' | 'player' | 'parent' | 'fan';
 
