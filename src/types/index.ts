@@ -367,6 +367,108 @@ export interface Formation {
   tactics?: string[];
 }
 
+// Tactics Types
+
+/**
+ * Player directional tendency for tactical positioning
+ * - defensive: Player positioned more defensively
+ * - neutral: Balanced positioning
+ * - attacking: Player positioned more offensively
+ */
+export type PlayerDirection = 'defensive' | 'neutral' | 'attacking';
+
+/**
+ * Override specific position attributes in a tactic
+ * All fields are optional to support partial overrides from parent formation
+ */
+export interface TacticalPositionOverride {
+  /** Override x position (0-100 percentage of field width) */
+  x?: number;
+  /** Override y position (0-100 percentage of field length) */
+  y?: number;
+  /** Override player directional tendency */
+  direction?: PlayerDirection;
+  /** Tactical role description for this position */
+  roleDescription?: string;
+  /** Key responsibilities for this position in the tactic */
+  keyResponsibilities?: string[];
+}
+
+/**
+ * Type of relationship between two players on the field
+ * - passing-lane: Indicates preferred passing connection
+ * - cover: Defensive coverage relationship
+ * - overlap: Overlapping run relationship
+ * - combination: Combination play relationship
+ */
+export type RelationshipType = 'passing-lane' | 'cover' | 'overlap' | 'combination';
+
+/**
+ * Defines a tactical relationship between two player positions
+ * Used to visualize and understand tactical connections on the field
+ */
+export interface PlayerRelationship {
+  /** Index of the starting position in the formation's positions array */
+  fromPositionIndex: number;
+  /** Index of the target position in the formation's positions array */
+  toPositionIndex: number;
+  /** Type of tactical relationship */
+  type: RelationshipType;
+  /** Optional description of the relationship */
+  description?: string;
+}
+
+/**
+ * Defines the scope/hierarchy level where a tactic applies
+ * - club: Available to all teams in the club
+ * - ageGroup: Available to all teams in a specific age group
+ * - team: Available only to a specific team
+ */
+export type TacticScope = 
+  | { type: 'club'; clubId: string }
+  | { type: 'ageGroup'; clubId: string; ageGroupId: string }
+  | { type: 'team'; clubId: string; ageGroupId: string; teamId: string };
+
+/**
+ * Tactic extends a base Formation with specific tactical instructions
+ * Supports inheritance chain: Formation -> Tactic -> Tactic (optional)
+ * Only stores overrides/changes from parent, enabling efficient inheritance
+ */
+export interface Tactic {
+  /** Unique identifier for the tactic */
+  id: string;
+  /** Display name of the tactic */
+  name: string;
+  /** Reference to the base Formation this tactic extends */
+  parentFormationId: string;
+  /** Optional parent tactic for multi-level inheritance */
+  parentTacticId?: string;
+  /** Number of players per side (must match parent formation) */
+  squadSize: SquadSize;
+  
+  /** Position-specific overrides (only changed values stored) */
+  positionOverrides: Record<number, TacticalPositionOverride>;
+  /** Tactical relationships between player positions */
+  relationships: PlayerRelationship[];
+  
+  /** Summary description of the tactic in Markdown format */
+  summary: string;
+  /** Playing style descriptor (e.g., "High Press", "Counter Attack", "Possession") */
+  style?: string;
+  
+  /** Scope defining where this tactic is available */
+  scope: TacticScope;
+  /** User ID of the creator */
+  createdBy: string;
+  /** ISO 8601 timestamp of creation */
+  createdAt: string;
+  /** ISO 8601 timestamp of last update */
+  updatedAt: string;
+  
+  /** Optional tags for categorization and search */
+  tags?: string[];
+}
+
 // User Types
 export type UserRole = 'admin' | 'coach' | 'player' | 'parent' | 'fan';
 
