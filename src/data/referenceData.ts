@@ -268,3 +268,64 @@ export const kitTypeDisplay: Record<string, string> = Object.fromEntries(
 export function getKitTypeLabel(type: string): string {
   return kitTypeDisplay[type] ?? type;
 }
+
+// Player directions for tactics
+export const playerDirections = [
+  { value: 'defensive', label: 'Defensive', icon: '↓' },
+  { value: 'neutral', label: 'Neutral', icon: '●' },
+  { value: 'attacking', label: 'Attacking', icon: '↑' },
+] as const;
+
+export type PlayerDirectionValue = typeof playerDirections[number]['value'];
+
+// Relationship types for tactics
+export const relationshipTypes = [
+  { value: 'passing-lane', label: 'Passing Lane', description: 'Primary passing connection' },
+  { value: 'cover', label: 'Cover', description: 'Defensive cover responsibility' },
+  { value: 'overlap', label: 'Overlap', description: 'Overlapping run pattern' },
+  { value: 'combination', label: 'Combination', description: 'Quick combination play' },
+] as const;
+
+export type RelationshipTypeValue = typeof relationshipTypes[number]['value'];
+
+// Tactic styles
+export const tacticStyles = [
+  { value: 'high-press', label: 'High Press' },
+  { value: 'counter-attack', label: 'Counter Attack' },
+  { value: 'possession', label: 'Possession' },
+  { value: 'balanced', label: 'Balanced' },
+  { value: 'defensive', label: 'Defensive' },
+  { value: 'direct', label: 'Direct Play' },
+] as const;
+
+export type TacticStyleValue = typeof tacticStyles[number]['value'];
+
+// Player direction display mapping
+export const playerDirectionDisplay: Record<string, string> = Object.fromEntries(
+  playerDirections.map(d => [d.value, d.label])
+);
+
+// Get player direction label
+export function getPlayerDirectionLabel(direction: string): string {
+  return playerDirectionDisplay[direction] ?? direction;
+}
+
+// Relationship type display mapping
+export const relationshipTypeDisplay: Record<string, string> = Object.fromEntries(
+  relationshipTypes.map(r => [r.value, r.label])
+);
+
+// Get relationship type label
+export function getRelationshipTypeLabel(type: string): string {
+  return relationshipTypeDisplay[type] ?? type;
+}
+
+// Tactic style display mapping
+export const tacticStyleDisplay: Record<string, string> = Object.fromEntries(
+  tacticStyles.map(s => [s.value, s.label])
+);
+
+// Get tactic style label
+export function getTacticStyleLabel(style: string): string {
+  return tacticStyleDisplay[style] ?? style;
+}
