@@ -345,57 +345,6 @@ export class Routes {
     return `/formations/${formationId}`;
   }
 
-  // Tactics - Club Level
-  static clubTactics(clubId: string): string {
-    return `/dashboard/${clubId}/tactics`;
-  }
-
-  static clubTacticDetail(clubId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/tactics/${tacticId}`;
-  }
-
-  static clubTacticNew(clubId: string): string {
-    return `/dashboard/${clubId}/tactics/new`;
-  }
-
-  static clubTacticEdit(clubId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/tactics/${tacticId}/edit`;
-  }
-
-  // Tactics - Age Group Level
-  static ageGroupTactics(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`;
-  }
-
-  static ageGroupTacticDetail(clubId: string, ageGroupId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/${tacticId}`;
-  }
-
-  static ageGroupTacticNew(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/new`;
-  }
-
-  static ageGroupTacticEdit(clubId: string, ageGroupId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/${tacticId}/edit`;
-  }
-
-  // Tactics - Team Level
-  static teamTactics(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`;
-  }
-
-  static teamTacticDetail(clubId: string, ageGroupId: string, teamId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/${tacticId}`;
-  }
-
-  static teamTacticNew(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/new`;
-  }
-
-  static teamTacticEdit(clubId: string, ageGroupId: string, teamId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/${tacticId}/edit`;
-  }
-
   // Training
   static trainingSessions(): string {
     return '/training';
