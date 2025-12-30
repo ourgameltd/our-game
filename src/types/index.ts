@@ -367,6 +367,43 @@ export interface Formation {
   tactics?: string[];
 }
 
+// Tactic Types
+export type PlayerDirection = 'attacking' | 'defensive' | 'neutral';
+
+export type RelationshipType = 'passing-lane' | 'cover' | 'overlap' | 'combination';
+
+export interface PositionRelationship {
+  fromIndex: number; // Index of the position in the tactic's positions array
+  toIndex: number; // Index of the related position
+  type: RelationshipType;
+  label?: string; // Optional label to display on the line
+}
+
+export interface TacticPosition {
+  position: PlayerPosition;
+  x: number; // 0-100 (percentage of field width)
+  y: number; // 0-100 (percentage of field length)
+  direction?: PlayerDirection; // Direction arrow indicator
+}
+
+export interface Tactic {
+  id: string;
+  name: string;
+  system: string; // e.g., "4-4-2", "4-3-3", "2-1-1" (5-a-side), "2-3-1" (7-a-side)
+  squadSize: SquadSize; // Number of players per side (4, 5, 7, 9, or 11)
+  positions: TacticPosition[];
+  relationships?: PositionRelationship[]; // Player relationship lines
+  description?: string;
+  parentTacticId?: string; // For inheritance - references another Tactic
+  overriddenPositionIndices?: number[]; // Indices of positions that override parent
+}
+
+export interface ResolvedPosition extends TacticPosition {
+  isInherited: boolean; // True if this position comes from a parent tactic
+  isOverridden: boolean; // True if this position overrides a parent position
+  parentTacticName?: string; // Name of the parent tactic if inherited
+}
+
 // User Types
 export type UserRole = 'admin' | 'coach' | 'player' | 'parent' | 'fan';
 
