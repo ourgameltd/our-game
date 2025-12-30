@@ -21,6 +21,9 @@ export default function TacticDisplay({
   selectedPositionIndex,
   className = '',
 }: TacticDisplayProps) {
+  // Constants
+  const MINIMUM_DISTANCE_THRESHOLD = 0.01;
+
   // Get direction arrow symbol
   const getDirectionSymbol = (direction?: PlayerDirection) => {
     switch (direction) {
@@ -104,7 +107,7 @@ export default function TacticDisplay({
               const dist = Math.sqrt(dx * dx + dy * dy);
               
               // Avoid division by zero - use straight line if positions are too close
-              if (dist < 0.01) {
+              if (dist < MINIMUM_DISTANCE_THRESHOLD) {
                 return (
                   <line
                     key={`rel-${idx}`}
