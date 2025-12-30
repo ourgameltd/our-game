@@ -242,7 +242,7 @@ export const Interactive: Story = {
                   position={sampleFormation.positions[selectedPosition].position}
                   override={selectedOverride}
                   parentData={parentData}
-                  onUpdate={handlePositionChange}
+                  onUpdate={(override) => handlePositionChange(selectedPosition, override)}
                   onResetField={handleResetField}
                 />
               )}
