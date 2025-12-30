@@ -113,6 +113,7 @@ export default function MobileNavigation() {
       if (path.includes('/matches')) return { title: 'Matches', image: null };
       if (path.includes('/training')) return { title: 'Training', image: null };
       if (path.includes('/kit')) return { title: 'Kit Orders', image: null };
+      if (path.includes('/tactics')) return { title: 'Tactics', image: null };
       if (path.includes('/formations')) return { title: 'Formations', image: null };
       if (path.includes('/settings')) return { title: 'Team Settings', image: null };
       if (path.includes('/coaches')) return { title: 'Coaches', image: null };
@@ -126,6 +127,7 @@ export default function MobileNavigation() {
       if (path.includes('/coaches')) return { title: 'Coaches', image: null };
       if (path.includes('/matches')) return { title: 'Matches', image: null };
       if (path.includes('/training')) return { title: 'Training', image: null };
+      if (path.includes('/tactics')) return { title: 'Tactics', image: null };
       if (path.includes('/settings')) return { title: 'Age Group Settings', image: null };
       return { title: ageGroup.name, image: null };
     }
@@ -137,6 +139,7 @@ export default function MobileNavigation() {
       if (path.includes('/coaches')) return { title: 'Coaches', image: club.logo };
       if (path.includes('/ethos')) return { title: 'Club Ethos', image: club.logo };
       if (path.includes('/kit')) return { title: 'Kit Management', image: club.logo };
+      if (path.includes('/tactics')) return { title: 'Tactics', image: club.logo };
       if (path.includes('/settings')) return { title: 'Club Settings', image: club.logo };
       return { title: club.name, image: club.logo };
     }
@@ -327,6 +330,15 @@ export default function MobileNavigation() {
                         <span className="mobile-nav-text">Training</span>
                       </Link>
                     </li>
+                    <li className="mobile-nav-item">
+                      <Link 
+                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`}
+                        className={`mobile-nav-link ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`) ? 'active' : ''}`}
+                      >
+                        <FileText className="mobile-nav-icon" />
+                        <span className="mobile-nav-text">Tactics</span>
+                      </Link>
+                    </li>
                   </ul>
                 </div>
               </li>
@@ -412,6 +424,15 @@ export default function MobileNavigation() {
                       >
                         <Shirt className="mobile-nav-icon" />
                         <span className="mobile-nav-text">Kits</span>
+                      </Link>
+                    </li>
+                    <li className="mobile-nav-item">
+                      <Link 
+                        to={`/dashboard/${clubId}/tactics`}
+                        className={`mobile-nav-link ${location.pathname.includes(`/dashboard/${clubId}/tactics`) ? 'active' : ''}`}
+                      >
+                        <FileText className="mobile-nav-icon" />
+                        <span className="mobile-nav-text">Tactics</span>
                       </Link>
                     </li>
                   </ul>
@@ -618,6 +639,15 @@ export default function MobileNavigation() {
                       >
                         <Shirt className="mobile-nav-icon" />
                         <span className="mobile-nav-text">Kits</span>
+                      </Link>
+                    </li>
+                    <li className="mobile-nav-item">
+                      <Link 
+                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`}
+                        className={`mobile-nav-link ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`) ? 'active' : ''}`}
+                      >
+                        <FileText className="mobile-nav-icon" />
+                        <span className="mobile-nav-text">Tactics</span>
                       </Link>
                     </li>
                   </ul>
