@@ -443,7 +443,7 @@ export interface Tactic {
   parentFormationId: string;
   /** Optional parent tactic for multi-level inheritance */
   parentTacticId?: string;
-  /** Number of players per side (must match parent formation) */
+  /** Number of players per side (4, 5, 7, 9, or 11) - must match parent formation */
   squadSize: SquadSize;
   
   /** Position-specific overrides (only changed values stored) */
