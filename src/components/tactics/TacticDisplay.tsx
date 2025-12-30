@@ -1,4 +1,4 @@
-import { Tactic, ResolvedPosition } from '@/types';
+import { Tactic, ResolvedPosition, PlayerDirection, RelationshipType } from '@/types';
 
 interface TacticDisplayProps {
   tactic: Tactic;
@@ -22,7 +22,7 @@ export default function TacticDisplay({
   className = '',
 }: TacticDisplayProps) {
   // Get direction arrow symbol
-  const getDirectionSymbol = (direction?: string) => {
+  const getDirectionSymbol = (direction?: PlayerDirection) => {
     switch (direction) {
       case 'attacking':
         return '↑';
@@ -35,7 +35,7 @@ export default function TacticDisplay({
   };
 
   // Get line style for relationship type
-  const getLineStyle = (type: string) => {
+  const getLineStyle = (type: RelationshipType) => {
     switch (type) {
       case 'passing-lane':
         return { strokeDasharray: 'none', stroke: 'white', opacity: 0.6 };
