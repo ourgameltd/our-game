@@ -319,15 +319,6 @@ export default function MobileNavigation() {
                   </div>
                   {isNavExpanded && (
                     <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                      <li className="mobile-nav-item">
-                        <Link 
-                          to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`}
-                          className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`) ? 'active' : ''}`}
-                        >
-                          <Users className="mobile-nav-icon" />
-                          <span className="mobile-nav-text">Teams</span>
-                        </Link>
-                      </li>
                       {/* Staff Section */}
                       <li className="mobile-nav-item">
                         <button
@@ -414,6 +405,15 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`) ? 'active' : ''}`}
+                              >
+                                <Users className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Teams</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
                                 to={`/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`}
                                 className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`) ? 'active' : ''}`}
                               >
@@ -462,15 +462,6 @@ export default function MobileNavigation() {
                   </div>
                   {isNavExpanded && (
                     <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                      <li className="mobile-nav-item">
-                        <Link 
-                          to={`/dashboard/${clubId}/age-groups`}
-                          className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups`) ? 'active' : ''}`}
-                        >
-                          <Users className="mobile-nav-icon" />
-                          <span className="mobile-nav-text">Age Groups</span>
-                        </Link>
-                      </li>
                       {/* Staff Section */}
                       <li className="mobile-nav-item">
                         <button
@@ -546,6 +537,15 @@ export default function MobileNavigation() {
                         </button>
                         {isManagementExpanded && (
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups`) ? 'active' : ''}`}
+                              >
+                                <Users className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Age Groups</span>
+                              </Link>
+                            </li>
                             <li className="mobile-nav-item">
                               <Link 
                                 to={`/dashboard/${clubId}/ethos`}
