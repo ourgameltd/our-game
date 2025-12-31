@@ -230,7 +230,14 @@ export default function MobileNavigation() {
         </button>
 
         <div className="mobile-nav-drawer-header">
-          <Link to="/profile" className="mobile-nav-user-profile hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+          <Link 
+            to="/dashboard" 
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            aria-label="Go to Dashboard"
+          >
+            <Home className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </Link>
+          <Link to="/profile" className="mobile-nav-user-profile hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ml-auto">
             <div className="mobile-nav-user-avatar-wrapper">
               <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
@@ -251,19 +258,6 @@ export default function MobileNavigation() {
         <div className="mobile-nav-drawer-content">
           {/* Hierarchical Navigation */}
           <ul className="mobile-nav-menu">
-            {/* Show "Dashboard" only if not in a club, or as a back link */}
-            {!clubId && (
-              <li className="mobile-nav-item">
-                <Link 
-                  to="/dashboard" 
-                  className={`mobile-nav-link ${isActive('/dashboard') ? 'active' : ''}`}
-                >
-                  <Home className="mobile-nav-icon" />
-                  <span className="mobile-nav-text">Dashboard</span>
-                </Link>
-              </li>
-            )}
-
             {/* Age Group Level - Show full options only if we're at age group level */}
             {ageGroup && currentLevel === 'ageGroup' && (
               <li className="mobile-nav-item">
@@ -655,8 +649,8 @@ export default function MobileNavigation() {
             )}
           </ul>
 
-          {/* Breadcrumb navigation to parent levels */}
-          {(clubId || ageGroupId || teamId) && (
+          {/* Breadcrumb navigation to parent levels - only show if there are parent links */}
+          {(currentLevel === 'player' || currentLevel === 'coach' || currentLevel === 'team' || currentLevel === 'ageGroup') && (
             <>
               <div className="mobile-nav-divider"></div>
               <div className="px-6 py-2">
@@ -665,16 +659,7 @@ export default function MobileNavigation() {
                 </h3>
               </div>
               <ul className="mobile-nav-menu">
-                <li className="mobile-nav-item">
-                  <Link 
-                    to="/dashboard" 
-                    className="mobile-nav-link"
-                  >
-                    <Home className="mobile-nav-icon" />
-                    <span className="mobile-nav-text">Dashboard</span>
-                  </Link>
-                </li>
-                {clubId && currentLevel !== 'club' && currentLevel !== 'clubs' && (
+                {clubId && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/dashboard/${clubId}`}
@@ -693,7 +678,7 @@ export default function MobileNavigation() {
                     </Link>
                   </li>
                 )}
-                {ageGroup && ageGroupId && currentLevel !== 'ageGroup' && currentLevel !== 'clubs' && (
+                {ageGroup && ageGroupId && currentLevel !== 'ageGroup' && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/dashboard/${clubId}/age-groups/${ageGroupId}`}
@@ -704,7 +689,7 @@ export default function MobileNavigation() {
                     </Link>
                   </li>
                 )}
-                {team && teamId && currentLevel !== 'clubs' && (
+                {team && teamId && currentLevel !== 'team' && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
