@@ -285,6 +285,57 @@ export class Routes {
     return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches/${matchId}`;
   }
 
+  // Tactics - Club Level
+  static clubTactics(clubId: string): string {
+    return `/dashboard/${clubId}/tactics`;
+  }
+
+  static clubTacticNew(clubId: string): string {
+    return `/dashboard/${clubId}/tactics/new`;
+  }
+
+  static clubTacticDetail(clubId: string, tacticId: string): string {
+    return `/dashboard/${clubId}/tactics/${tacticId}`;
+  }
+
+  static clubTacticEdit(clubId: string, tacticId: string): string {
+    return `/dashboard/${clubId}/tactics/${tacticId}/edit`;
+  }
+
+  // Tactics - Age Group Level
+  static ageGroupTactics(clubId: string, ageGroupId: string): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`;
+  }
+
+  static ageGroupTacticNew(clubId: string, ageGroupId: string): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/new`;
+  }
+
+  static ageGroupTacticDetail(clubId: string, ageGroupId: string, tacticId: string): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/${tacticId}`;
+  }
+
+  static ageGroupTacticEdit(clubId: string, ageGroupId: string, tacticId: string): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/${tacticId}/edit`;
+  }
+
+  // Tactics - Team Level
+  static teamTactics(clubId: string, ageGroupId: string, teamId: string): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`;
+  }
+
+  static teamTacticNew(clubId: string, ageGroupId: string, teamId: string): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/new`;
+  }
+
+  static teamTacticDetail(clubId: string, ageGroupId: string, teamId: string, tacticId: string): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/${tacticId}`;
+  }
+
+  static teamTacticEdit(clubId: string, ageGroupId: string, teamId: string, tacticId: string): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/${tacticId}/edit`;
+  }
+
   // Formations
   static formations(): string {
     return '/formations';

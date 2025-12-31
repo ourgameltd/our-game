@@ -290,6 +290,7 @@ export interface Match {
 
 export interface MatchLineup {
   formationId: string;
+  tacticId?: string; // Optional tactic to apply on top of formation
   starting: { playerId: string; position: PlayerPosition }[];
   substitutes: string[];
   substitutions?: {
@@ -352,20 +353,143 @@ export interface Drill {
   variations?: string[];
 }
 
-// Formation Types
-export interface Formation {
-  id: string;
-  name: string;
-  system: string; // e.g., "4-4-2", "4-3-3", "2-1-1" (5-a-side), "2-3-1" (7-a-side)
-  squadSize: SquadSize; // Number of players per side (5, 7, 9, or 11)
-  positions: {
-    position: PlayerPosition;
-    x: number; // 0-100 (percentage of field width)
-    y: number; // 0-100 (percentage of field length)
-  }[];
-  description?: string;
-  tactics?: string[];
+// Formation/Tactic Types (Unified)
+
+/**
+ * Player directional tendency for tactical positioning using compass directions
+ * Primary directions: N (North/Up), S (South/Down), E (East/Right), W (West/Left)
+ * Diagonal directions: NE, NW, SE, SW
+ * Bent directions (for runs): WN, WS, EN, ES (start direction then curve)
+ */
+export type PlayerDirection = 
+  | 'N' | 'S' | 'E' | 'W'           // Primary compass directions
+  | 'NE' | 'NW' | 'SE' | 'SW'       // Diagonal directions
+  | 'WN' | 'WS' | 'EN' | 'ES';     // Bent/curved run directions
+
+/**
+ * Position definition with optional direction
+ */
+export interface FormationPosition {
+  position: PlayerPosition;
+  x: number; // 0-100 (percentage of field width)
+  y: number; // 0-100 (percentage of field length)
+  direction?: PlayerDirection;
 }
+
+/**
+ * Override specific position attributes in a tactic
+ * Only position and direction can be customized
+ */
+export interface TacticalPositionOverride {
+  /** Override x position (0-100 percentage of field width) */
+  x?: number;
+  /** Override y position (0-100 percentage of field length) */
+  y?: number;
+  /** Override player directional tendency */
+  direction?: PlayerDirection;
+}
+
+/**
+ * A tactical principle that can be associated with players
+ * Principles define team objectives and responsibilities
+ */
+export interface TacticPrinciple {
+  /** Unique identifier for the principle */
+  id: string;
+  /** Short title for the principle (e.g., "Press High", "Hold Line") */
+  title: string;
+  /** Detailed description of what this principle means */
+  description: string;
+  /** Position indices that this principle applies to (empty = all players) */
+  positionIndices: number[];
+}
+
+/**
+ * Defines the scope/hierarchy level where a formation/tactic applies
+ * - system: Built-in base formation template (readonly)
+ * - club: Available to all teams in the club
+ * - ageGroup: Available to all teams in a specific age group
+ * - team: Available only to a specific team
+ */
+export type FormationScope = 
+  | { type: 'system' }
+  | { type: 'club'; clubId: string }
+  | { type: 'ageGroup'; clubId: string; ageGroupId: string }
+  | { type: 'team'; clubId: string; ageGroupId: string; teamId: string };
+
+/**
+ * Unified Formation type that represents both base formations and tactics
+ * 
+ * Base Formations (isSystemFormation: true):
+ * - Built-in templates like "4-4-2 Classic", "4-3-3 Attack"
+ * - Cannot be edited or deleted
+ * - Have positions array with base positions
+ * - No parent, no overrides, no principles
+ * 
+ * User Tactics (isSystemFormation: false or undefined):
+ * - Created by users, inherit from a parent formation or tactic
+ * - Can have position overrides and tactical principles
+ * - Scoped to club, age group, or team
+ */
+export interface Formation {
+  /** Unique identifier */
+  id: string;
+  /** Display name (e.g., "4-4-2 Classic" or "High Press 4-4-2") */
+  name: string;
+  /** System notation (e.g., "4-4-2", "4-3-3", "2-1-1") - required for system formations, inherited for tactics */
+  system?: string;
+  /** Number of players per side (4, 5, 7, 9, or 11) */
+  squadSize: SquadSize;
+  
+  /** Base positions - required for system formations, can be empty for tactics that inherit */
+  positions?: FormationPosition[];
+  
+  /** Whether this is a built-in system formation (readonly) */
+  isSystemFormation?: boolean;
+  
+  /** Parent formation ID for inheritance (tactics only) */
+  parentFormationId?: string;
+  /** Parent tactic ID for multi-level inheritance */
+  parentTacticId?: string;
+  
+  /** Position-specific overrides from parent (tactics only) */
+  positionOverrides?: Record<number, TacticalPositionOverride>;
+  
+  /** Tactical principles with associated players (tactics only) */
+  principles?: TacticPrinciple[];
+  
+  /** Summary/description of the formation or tactic */
+  summary?: string;
+  /** Description alias for backward compatibility */
+  description?: string;
+  
+  /** Style classification (e.g., "High Press", "Defensive", "Counter-Attack") */
+  style?: string;
+  
+  /** Scope defining where this is available */
+  scope: FormationScope;
+  
+  /** User ID of the creator (tactics only) */
+  createdBy?: string;
+  /** ISO 8601 timestamp of creation */
+  createdAt?: string;
+  /** ISO 8601 timestamp of last update */
+  updatedAt?: string;
+  
+  /** Optional tags for categorization and search */
+  tags?: string[];
+}
+
+/**
+ * @deprecated Use Formation instead - Tactic is now unified with Formation
+ * Kept for backward compatibility during migration
+ */
+export type Tactic = Formation;
+
+/**
+ * @deprecated Use FormationScope instead
+ */
+export type TacticScope = FormationScope;
 
 // User Types
 export type UserRole = 'admin' | 'coach' | 'player' | 'parent' | 'fan';

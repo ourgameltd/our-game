@@ -3,7 +3,6 @@ import { Link, useLocation, matchPath } from 'react-router-dom';
 import { 
   Users, 
   Home,
-  Settings,
   HelpCircle,
   LogOut,
   X,
@@ -16,7 +15,10 @@ import {
   Shirt,
   UserCircle,
   ChevronsRight,
-  ChevronsLeft
+  ChevronsLeft,
+  ChevronDown,
+  ChevronUp,
+  Settings
 } from 'lucide-react';
 import { getClubById } from '@data/clubs';
 import { getTeamById } from '@data/teams';
@@ -28,6 +30,10 @@ import { useNavigation } from '@/contexts/NavigationContext';
 
 export default function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isNavExpanded, setIsNavExpanded] = useState(true);
+  const [isStaffExpanded, setIsStaffExpanded] = useState(false);
+  const [isSchedulingExpanded, setIsSchedulingExpanded] = useState(false);
+  const [isManagementExpanded, setIsManagementExpanded] = useState(false);
   const { isDesktopOpen, toggleDesktopNav } = useNavigation();
   const location = useLocation();
   const { theme, setTheme, actualTheme } = useTheme();
@@ -59,6 +65,36 @@ export default function MobileNavigation() {
 
   // Determine which level we're currently at
   const currentLevel = playerId ? 'player' : coachId ? 'coach' : teamId ? 'team' : ageGroupId ? 'ageGroup' : clubId ? 'club' : 'clubs';
+
+  // Check if we're viewing a staff-related page (players or coaches)
+  const isStaffPage = location.pathname.includes('/players') || location.pathname.includes('/coaches');
+
+  // Check if we're viewing a scheduling-related page (matches or training)
+  const isSchedulingPage = location.pathname.includes('/matches') || location.pathname.includes('/training');
+
+  // Check if we're viewing a management-related page (ethos, kits, tactics)
+  const isManagementPage = location.pathname.includes('/ethos') || location.pathname.includes('/kits') || location.pathname.includes('/tactics');
+
+  // Auto-expand staff section when viewing staff pages
+  useEffect(() => {
+    if (isStaffPage) {
+      setIsStaffExpanded(true);
+    }
+  }, [isStaffPage]);
+
+  // Auto-expand scheduling section when viewing scheduling pages
+  useEffect(() => {
+    if (isSchedulingPage) {
+      setIsSchedulingExpanded(true);
+    }
+  }, [isSchedulingPage]);
+
+  // Auto-expand management section when viewing management pages
+  useEffect(() => {
+    if (isManagementPage) {
+      setIsManagementExpanded(true);
+    }
+  }, [isManagementPage]);
 
   // Close menu when route changes (mobile only)
   useEffect(() => {
@@ -113,6 +149,7 @@ export default function MobileNavigation() {
       if (path.includes('/matches')) return { title: 'Matches', image: null };
       if (path.includes('/training')) return { title: 'Training', image: null };
       if (path.includes('/kit')) return { title: 'Kit Orders', image: null };
+      if (path.includes('/tactics')) return { title: 'Tactics', image: null };
       if (path.includes('/formations')) return { title: 'Formations', image: null };
       if (path.includes('/settings')) return { title: 'Team Settings', image: null };
       if (path.includes('/coaches')) return { title: 'Coaches', image: null };
@@ -126,6 +163,7 @@ export default function MobileNavigation() {
       if (path.includes('/coaches')) return { title: 'Coaches', image: null };
       if (path.includes('/matches')) return { title: 'Matches', image: null };
       if (path.includes('/training')) return { title: 'Training', image: null };
+      if (path.includes('/tactics')) return { title: 'Tactics', image: null };
       if (path.includes('/settings')) return { title: 'Age Group Settings', image: null };
       return { title: ageGroup.name, image: null };
     }
@@ -137,6 +175,7 @@ export default function MobileNavigation() {
       if (path.includes('/coaches')) return { title: 'Coaches', image: club.logo };
       if (path.includes('/ethos')) return { title: 'Club Ethos', image: club.logo };
       if (path.includes('/kit')) return { title: 'Kit Management', image: club.logo };
+      if (path.includes('/tactics')) return { title: 'Tactics', image: club.logo };
       if (path.includes('/settings')) return { title: 'Club Settings', image: club.logo };
       return { title: club.name, image: club.logo };
     }
@@ -228,7 +267,14 @@ export default function MobileNavigation() {
         </button>
 
         <div className="mobile-nav-drawer-header">
-          <div className="mobile-nav-user-profile">
+          <Link 
+            to="/dashboard" 
+            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+            aria-label="Go to Dashboard"
+          >
+            <Home className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+          </Link>
+          <Link to="/profile" className="mobile-nav-user-profile hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ml-auto">
             <div className="mobile-nav-user-avatar-wrapper">
               <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
@@ -236,7 +282,7 @@ export default function MobileNavigation() {
               <span className="mobile-nav-user-name">John Doe</span>
               <span className="mobile-nav-user-role">Coach</span>
             </div>
-          </div>
+          </Link>
           <button 
             className="mobile-nav-close lg:hidden"
             onClick={toggleMenu}
@@ -249,85 +295,137 @@ export default function MobileNavigation() {
         <div className="mobile-nav-drawer-content">
           {/* Hierarchical Navigation */}
           <ul className="mobile-nav-menu">
-            {/* Show "Dashboard" only if not in a club, or as a back link */}
-            {!clubId && (
-              <li className="mobile-nav-item">
-                <Link 
-                  to="/dashboard" 
-                  className={`mobile-nav-link ${isActive('/dashboard') ? 'active' : ''}`}
-                >
-                  <Home className="mobile-nav-icon" />
-                  <span className="mobile-nav-text">Dashboard</span>
-                </Link>
-              </li>
-            )}
-
             {/* Age Group Level - Show full options only if we're at age group level */}
             {ageGroup && currentLevel === 'ageGroup' && (
               <li className="mobile-nav-item">
                 <div>
-                  <div className="px-6 py-2">
-                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                      <Users className="w-4 h-4" />
-                      {ageGroup.name}
-                    </h3>
+                  <div className="flex items-center">
+                    <Link 
+                      to={`/dashboard/${clubId}/age-groups/${ageGroupId}`}
+                      className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <Users className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        {ageGroup.name}
+                      </h3>
+                    </Link>
+                    <button
+                      onClick={() => setIsNavExpanded(!isNavExpanded)}
+                      className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+                      aria-label={isNavExpanded ? "Collapse menu" : "Expand menu"}
+                    >
+                      {isNavExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </button>
                   </div>
-                  <ul>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}`) ? 'active' : ''}`}
-                      >
-                        <Users className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Overview</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`) ? 'active' : ''}`}
-                      >
-                        <Users className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Teams</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/players`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players`) ? 'active' : ''}`}
-                      >
-                        <UserCircle className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Players</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/coaches`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/coaches`) ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Coaches</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/matches`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/matches`) ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Matches</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/training`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/training`) ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Training</span>
-                      </Link>
-                    </li>
-                  </ul>
+                  {isNavExpanded && (
+                    <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                      {/* Staff Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsStaffExpanded(!isStaffExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isStaffPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <Users className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Staff</span>
+                          </span>
+                          {isStaffExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isStaffExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/players`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players`) ? 'active' : ''}`}
+                              >
+                                <UserCircle className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Players</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/coaches`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/coaches`) ? 'active' : ''}`}
+                              >
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Coaches</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                      {/* Scheduling Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsSchedulingExpanded(!isSchedulingExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isSchedulingPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <FileText className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Scheduling</span>
+                          </span>
+                          {isSchedulingExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isSchedulingExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/matches`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/matches`) ? 'active' : ''}`}
+                              >
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Matches</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/training`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/training`) ? 'active' : ''}`}
+                              >
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Training</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                      {/* Management Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsManagementExpanded(!isManagementExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isManagementPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <Settings className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Management</span>
+                          </span>
+                          {isManagementExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isManagementExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`) ? 'active' : ''}`}
+                              >
+                                <Users className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Teams</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`) ? 'active' : ''}`}
+                              >
+                                <FileText className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Tactics</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                    </ul>
+                  )}
                 </div>
               </li>
             )}
@@ -336,85 +434,150 @@ export default function MobileNavigation() {
             {club && currentLevel === 'club' && (
               <li className="mobile-nav-item">
                 <div>
-                  <div className="px-6 py-2">
-                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                      {club.logo ? (
-                        <img 
-                          src={club.logo} 
-                          alt={`${club.name} logo`}
-                          className="w-4 h-4 rounded object-cover"
-                        />
-                      ) : (
-                        <Shield className="w-4 h-4" />
-                      )}
-                      {club.shortName}
-                    </h3>
+                  <div className="flex items-center">
+                    <Link 
+                      to={`/dashboard/${clubId}`}
+                      className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        {club.logo ? (
+                          <img 
+                            src={club.logo} 
+                            alt={`${club.name} logo`}
+                            className="w-5 h-5 rounded object-cover"
+                          />
+                        ) : (
+                          <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        )}
+                        {club.shortName}
+                      </h3>
+                    </Link>
+                    <button
+                      onClick={() => setIsNavExpanded(!isNavExpanded)}
+                      className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+                      aria-label={isNavExpanded ? "Collapse menu" : "Expand menu"}
+                    >
+                      {isNavExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </button>
                   </div>
-                  <ul>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}`) ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Overview</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups`) ? 'active' : ''}`}
-                      >
-                        <Users className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Age Groups</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/players`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/players`) ? 'active' : ''}`}
-                      >
-                        <UserCircle className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Players</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/coaches`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/coaches`) ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Coaches</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/matches`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/matches`) ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Matches</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/ethos`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/ethos`) ? 'active' : ''}`}
-                      >
-                        <FileText className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Ethos</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/kits`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/kits`) ? 'active' : ''}`}
-                      >
-                        <Shirt className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Kits</span>
-                      </Link>
-                    </li>
-                  </ul>
+                  {isNavExpanded && (
+                    <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                      {/* Staff Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsStaffExpanded(!isStaffExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isStaffPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <Users className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Staff</span>
+                          </span>
+                          {isStaffExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isStaffExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/players`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/players`) ? 'active' : ''}`}
+                              >
+                                <UserCircle className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Players</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/coaches`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/coaches`) ? 'active' : ''}`}
+                              >
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Coaches</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                      {/* Scheduling Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsSchedulingExpanded(!isSchedulingExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isSchedulingPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <FileText className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Scheduling</span>
+                          </span>
+                          {isSchedulingExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isSchedulingExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/matches`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/matches`) ? 'active' : ''}`}
+                              >
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Matches</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                      {/* Management Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsManagementExpanded(!isManagementExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isManagementPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <Settings className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Management</span>
+                          </span>
+                          {isManagementExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isManagementExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups`) ? 'active' : ''}`}
+                              >
+                                <Users className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Age Groups</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/ethos`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/ethos`) ? 'active' : ''}`}
+                              >
+                                <FileText className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Ethos</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/kits`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/kits`) ? 'active' : ''}`}
+                              >
+                                <Shirt className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Kits</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/tactics`}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/tactics`) ? 'active' : ''}`}
+                              >
+                                <FileText className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Tactics</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                    </ul>
+                  )}
                 </div>
               </li>
             )}
@@ -423,94 +586,95 @@ export default function MobileNavigation() {
             {player && currentLevel === 'player' && (
               <li className="mobile-nav-item">
                 <div>
-                  <div className="px-6 py-2">
-                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                      <UserCircle className="w-4 h-4" />
-                      {player.firstName} {player.lastName}
-                    </h3>
+                  <div className="flex items-center">
+                    <Link 
+                      to={teamId 
+                        ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}`
+                        : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}`
+                      }
+                      className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <UserCircle className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                        {player.firstName} {player.lastName}
+                      </h3>
+                    </Link>
+                    <button
+                      onClick={() => setIsNavExpanded(!isNavExpanded)}
+                      className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+                      aria-label={isNavExpanded ? "Collapse menu" : "Expand menu"}
+                    >
+                      {isNavExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </button>
                   </div>
-                  <ul>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={teamId 
-                          ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}`
-                          : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}`
-                        }
-                        className={`mobile-nav-link ${
-                          teamId 
-                            ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}`)
-                            : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}`)
-                        } ? 'active' : ''}`}
-                      >
-                        <UserCircle className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Overview</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={teamId 
-                          ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`
-                          : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`
-                        }
-                        className={`mobile-nav-link ${
-                          teamId 
-                            ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`)
-                            : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`)
-                        } ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Abilities</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={teamId 
-                          ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`
-                          : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development`
-                        }
-                        className={`mobile-nav-link ${
-                          teamId 
-                            ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`)
-                            : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development`)
-                        } ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Development</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={teamId 
-                          ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`
-                          : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`
-                        }
-                        className={`mobile-nav-link ${
-                          teamId 
-                            ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`)
-                            : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`)
-                        } ? 'active' : ''}`}
-                      >
-                        <FileText className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Report Card</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={teamId 
-                          ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`
-                          : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`
-                        }
-                        className={`mobile-nav-link ${
-                          teamId 
-                            ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`)
-                            : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`)
-                        } ? 'active' : ''}`}
-                      >
-                        <FileText className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Album</span>
-                      </Link>
-                    </li>
-                  </ul>
+                  {isNavExpanded && (
+                    <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                      <li className="mobile-nav-item">
+                        <Link 
+                          to={teamId 
+                            ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`
+                            : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`
+                          }
+                          className={`mobile-nav-link pl-8 ${
+                            teamId 
+                              ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`)
+                              : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`)
+                          } ? 'active' : ''}`}
+                        >
+                          <Shield className="mobile-nav-icon" />
+                          <span className="mobile-nav-text">Abilities</span>
+                        </Link>
+                      </li>
+                      <li className="mobile-nav-item">
+                        <Link 
+                          to={teamId 
+                            ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`
+                            : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development`
+                          }
+                          className={`mobile-nav-link pl-8 ${
+                            teamId 
+                              ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`)
+                              : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development`)
+                          } ? 'active' : ''}`}
+                        >
+                          <Shield className="mobile-nav-icon" />
+                          <span className="mobile-nav-text">Development</span>
+                        </Link>
+                      </li>
+                      <li className="mobile-nav-item">
+                        <Link 
+                          to={teamId 
+                            ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`
+                            : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`
+                          }
+                          className={`mobile-nav-link pl-8 ${
+                            teamId 
+                              ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`)
+                              : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`)
+                          } ? 'active' : ''}`}
+                        >
+                          <FileText className="mobile-nav-icon" />
+                          <span className="mobile-nav-text">Report Card</span>
+                        </Link>
+                      </li>
+                      <li className="mobile-nav-item">
+                        <Link 
+                          to={teamId 
+                            ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`
+                            : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`
+                          }
+                          className={`mobile-nav-link pl-8 ${
+                            teamId 
+                              ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`)
+                              : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`)
+                          } ? 'active' : ''}`}
+                        >
+                          <FileText className="mobile-nav-icon" />
+                          <span className="mobile-nav-text">Album</span>
+                        </Link>
+                      </li>
+                    </ul>
+                  )}
                 </div>
               </li>
             )}
@@ -519,30 +683,18 @@ export default function MobileNavigation() {
             {coach && currentLevel === 'coach' && (
               <li className="mobile-nav-item">
                 <div>
-                  <div className="px-6 py-2">
-                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                      <Shield className="w-4 h-4" />
+                  <Link 
+                    to={teamId 
+                      ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches/${coachId}`
+                      : `/dashboard/${clubId}/age-groups/${ageGroupId}/coaches/${coachId}`
+                    }
+                    className="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                       {coach.firstName} {coach.lastName}
                     </h3>
-                  </div>
-                  <ul>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={teamId 
-                          ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches/${coachId}`
-                          : `/dashboard/${clubId}/age-groups/${ageGroupId}/coaches/${coachId}`
-                        }
-                        className={`mobile-nav-link ${
-                          teamId 
-                            ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches/${coachId}`)
-                            : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/coaches/${coachId}`)
-                        } ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Overview</span>
-                      </Link>
-                    </li>
-                  </ul>
+                  </Link>
                 </div>
               </li>
             )}
@@ -551,83 +703,148 @@ export default function MobileNavigation() {
             {team && currentLevel === 'team' && (
               <li className="mobile-nav-item">
                 <div>
-                  <div className="px-6 py-2">
-                    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider flex items-center gap-2">
-                      <div 
-                        className="w-4 h-4 rounded flex items-center justify-center text-[6px] font-bold"
-                        style={{ 
-                          backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
-                          color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
-                        }}
-                      >
-                        {team.shortName || team.name.substring(0, 2).toUpperCase()}
-                      </div>
-                      {team.name}
-                    </h3>
+                  <div className="flex items-center">
+                    <Link 
+                      to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
+                      className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                    >
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                        <div 
+                          className="w-5 h-5 rounded flex items-center justify-center text-[8px] font-bold"
+                          style={{ 
+                            backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
+                            color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
+                          }}
+                        >
+                          {team.shortName || team.name.substring(0, 2).toUpperCase()}
+                        </div>
+                        {team.name}
+                      </h3>
+                    </Link>
+                    <button
+                      onClick={() => setIsNavExpanded(!isNavExpanded)}
+                      className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
+                      aria-label={isNavExpanded ? "Collapse menu" : "Expand menu"}
+                    >
+                      {isNavExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                    </button>
                   </div>
-                  <ul>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`) ? 'active' : ''}`}
-                      >
-                        <Users className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Overview</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`) ? 'active' : ''}`}
-                      >
-                        <Users className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Players</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches`) ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Coaches</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`) ? 'active' : ''}`}
-                      >
-                        <Shield className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Matches</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training`}
-                        className={`mobile-nav-link ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training`) ? 'active' : ''}`}
-                      >
-                        <FileText className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Training</span>
-                      </Link>
-                    </li>
-                    <li className="mobile-nav-item">
-                      <Link 
-                        to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/kits`}
-                        className={`mobile-nav-link ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/kits`) ? 'active' : ''}`}
-                      >
-                        <Shirt className="mobile-nav-icon" />
-                        <span className="mobile-nav-text">Kits</span>
-                      </Link>
-                    </li>
-                  </ul>
+                  {isNavExpanded && (
+                    <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                      {/* Staff Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsStaffExpanded(!isStaffExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isStaffPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <Users className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Staff</span>
+                          </span>
+                          {isStaffExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isStaffExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`) ? 'active' : ''}`}
+                              >
+                                <UserCircle className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Players</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches`) ? 'active' : ''}`}
+                              >
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Coaches</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                      {/* Scheduling Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsSchedulingExpanded(!isSchedulingExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isSchedulingPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <FileText className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Scheduling</span>
+                          </span>
+                          {isSchedulingExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isSchedulingExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`) ? 'active' : ''}`}
+                              >
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Matches</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training`}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training`) ? 'active' : ''}`}
+                              >
+                                <FileText className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Training</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                      {/* Management Section */}
+                      <li className="mobile-nav-item">
+                        <button
+                          onClick={() => setIsManagementExpanded(!isManagementExpanded)}
+                          className={`mobile-nav-link pl-8 w-full justify-between ${isManagementPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                        >
+                          <span className="flex items-center gap-4">
+                            <Settings className="mobile-nav-icon" />
+                            <span className="mobile-nav-text">Management</span>
+                          </span>
+                          {isManagementExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                        </button>
+                        {isManagementExpanded && (
+                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/kits`}
+                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/kits`) ? 'active' : ''}`}
+                              >
+                                <Shirt className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Kits</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`) ? 'active' : ''}`}
+                              >
+                                <FileText className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Tactics</span>
+                              </Link>
+                            </li>
+                          </ul>
+                        )}
+                      </li>
+                    </ul>
+                  )}
                 </div>
               </li>
             )}
           </ul>
 
-          {/* Breadcrumb navigation to parent levels */}
-          {(clubId || ageGroupId || teamId) && (
+          {/* Breadcrumb navigation to parent levels - only show if there are parent links */}
+          {(currentLevel === 'player' || currentLevel === 'coach' || currentLevel === 'team' || currentLevel === 'ageGroup') && (
             <>
               <div className="mobile-nav-divider"></div>
               <div className="px-6 py-2">
@@ -636,16 +853,7 @@ export default function MobileNavigation() {
                 </h3>
               </div>
               <ul className="mobile-nav-menu">
-                <li className="mobile-nav-item">
-                  <Link 
-                    to="/dashboard" 
-                    className="mobile-nav-link"
-                  >
-                    <Home className="mobile-nav-icon" />
-                    <span className="mobile-nav-text">Dashboard</span>
-                  </Link>
-                </li>
-                {clubId && currentLevel !== 'club' && currentLevel !== 'clubs' && (
+                {clubId && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/dashboard/${clubId}`}
@@ -664,7 +872,7 @@ export default function MobileNavigation() {
                     </Link>
                   </li>
                 )}
-                {ageGroup && ageGroupId && currentLevel !== 'ageGroup' && currentLevel !== 'clubs' && (
+                {ageGroup && ageGroupId && currentLevel !== 'ageGroup' && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/dashboard/${clubId}/age-groups/${ageGroupId}`}
@@ -675,7 +883,7 @@ export default function MobileNavigation() {
                     </Link>
                   </li>
                 )}
-                {team && teamId && currentLevel !== 'clubs' && (
+                {team && teamId && currentLevel !== 'team' && (
                   <li className="mobile-nav-item">
                     <Link 
                       to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
@@ -702,16 +910,6 @@ export default function MobileNavigation() {
 
           {/* Secondary Navigation */}
           <ul className="mobile-nav-menu mobile-nav-menu-secondary">
-            <li className="mobile-nav-item">
-              <Link 
-                to="/profile" 
-                className={`mobile-nav-link ${isActive('/profile') ? 'active' : ''}`}
-              >
-                <Settings className="mobile-nav-icon" />
-                <span className="mobile-nav-text">Profile & Settings</span>
-              </Link>
-            </li>
-
             <li className="mobile-nav-item">
               <button
                 onClick={toggleTheme}

@@ -47,6 +47,9 @@ import CoachProfilePage from '@pages/coaches/CoachProfilePage';
 import CoachSettingsPage from '@pages/coaches/CoachSettingsPage';
 import HelpSupportPage from '@pages/HelpSupportPage';
 import NotificationsPage from '@pages/NotificationsPage';
+import TacticsListPage from '@pages/tactics/TacticsListPage';
+import TacticDetailPage from '@pages/tactics/TacticDetailPage';
+import AddEditTacticPage from '@pages/tactics/AddEditTacticPage';
 import Header from '@components/layout/Header';
 import ScrollToTop from '@components/common/ScrollToTop';
 
@@ -172,6 +175,24 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training" element={<TrainingSessionsListPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training/new" element={<AddEditTrainingSessionPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training/:sessionId/edit" element={<AddEditTrainingSessionPage />} />
+
+        {/* Tactics - Club Level */}
+        <Route path="/dashboard/:clubId/tactics" element={<TacticsListPage />} />
+        <Route path="/dashboard/:clubId/tactics/new" element={<AddEditTacticPage />} />
+        <Route path="/dashboard/:clubId/tactics/:tacticId" element={<TacticDetailPage />} />
+        <Route path="/dashboard/:clubId/tactics/:tacticId/edit" element={<AddEditTacticPage />} />
+
+        {/* Tactics - Age Group Level */}
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/tactics" element={<TacticsListPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/tactics/new" element={<AddEditTacticPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/tactics/:tacticId" element={<TacticDetailPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/tactics/:tacticId/edit" element={<AddEditTacticPage />} />
+
+        {/* Tactics - Team Level */}
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/tactics" element={<TacticsListPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/tactics/new" element={<AddEditTacticPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/tactics/:tacticId" element={<TacticDetailPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/tactics/:tacticId/edit" element={<AddEditTacticPage />} />
 
         </Routes>
         </div>

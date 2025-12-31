@@ -268,3 +268,56 @@ export const kitTypeDisplay: Record<string, string> = Object.fromEntries(
 export function getKitTypeLabel(type: string): string {
   return kitTypeDisplay[type] ?? type;
 }
+
+// Player directions for tactics - compass-based directions
+export const playerDirections = [
+  // Primary compass directions
+  { value: 'N', label: 'North (Forward)', icon: '↑' },
+  { value: 'S', label: 'South (Back)', icon: '↓' },
+  { value: 'E', label: 'East (Right)', icon: '→' },
+  { value: 'W', label: 'West (Left)', icon: '←' },
+  // Diagonal directions
+  { value: 'NE', label: 'North-East', icon: '↗' },
+  { value: 'NW', label: 'North-West', icon: '↖' },
+  { value: 'SE', label: 'South-East', icon: '↘' },
+  { value: 'SW', label: 'South-West', icon: '↙' },
+  // Bent/curved run directions
+  { value: 'WN', label: 'West then North', icon: '↰' },
+  { value: 'WS', label: 'West then South', icon: '↲' },
+  { value: 'EN', label: 'East then North', icon: '↱' },
+  { value: 'ES', label: 'East then South', icon: '↳' },
+] as const;
+
+export type PlayerDirectionValue = typeof playerDirections[number]['value'];
+
+// Tactic styles
+export const tacticStyles = [
+  { value: 'high-press', label: 'High Press' },
+  { value: 'counter-attack', label: 'Counter Attack' },
+  { value: 'possession', label: 'Possession' },
+  { value: 'balanced', label: 'Balanced' },
+  { value: 'defensive', label: 'Defensive' },
+  { value: 'direct', label: 'Direct Play' },
+] as const;
+
+export type TacticStyleValue = typeof tacticStyles[number]['value'];
+
+// Player direction display mapping
+export const playerDirectionDisplay: Record<string, string> = Object.fromEntries(
+  playerDirections.map(d => [d.value, d.label])
+);
+
+// Get player direction label
+export function getPlayerDirectionLabel(direction: string): string {
+  return playerDirectionDisplay[direction] ?? direction;
+}
+
+// Tactic style display mapping
+export const tacticStyleDisplay: Record<string, string> = Object.fromEntries(
+  tacticStyles.map(s => [s.value, s.label])
+);
+
+// Get tactic style label
+export function getTacticStyleLabel(style: string): string {
+  return tacticStyleDisplay[style] ?? style;
+}

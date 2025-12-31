@@ -376,7 +376,7 @@ export const sampleMatches: Match[] = [
       playerOfTheMatch: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e'
     }
   },
-  // Seniors Team matches - Carlos Rodriguez
+  // 2013s Reds Team matches (9-a-side)
   {
     id: 'm8b9c0d1-e2f3-a4b5-c6d7-e8f9a0b1c2d3',
     teamId: 'd4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a',
@@ -395,7 +395,7 @@ export const sampleMatches: Match[] = [
       away: 1
     },
     lineup: {
-      formationId: 'f1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
+      formationId: '', // No formation selected - 9-a-side team
       starting: [
         { playerId: 'p21a3b4c-5d6e-7f8a-9b0c-1d2e3f4a5b6c', position: 'ST' }
       ],
@@ -437,7 +437,7 @@ export const sampleMatches: Match[] = [
       away: 2
     },
     lineup: {
-      formationId: 'f1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
+      formationId: '', // No formation selected - 9-a-side team
       starting: [
         { playerId: 'p21a3b4c-5d6e-7f8a-9b0c-1d2e3f4a5b6c', position: 'ST' }
       ],
@@ -457,6 +457,68 @@ export const sampleMatches: Match[] = [
     },
     weather: {
       condition: 'Rainy',
+      temperature: 8
+    }
+  },
+  // Senior First Team match (11-a-side)
+  {
+    id: 'm10d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f',
+    teamId: 'e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b',
+    opposition: 'City United FC',
+    date: new Date('2024-12-14T15:00:00'),
+    kickOffTime: new Date('2024-12-14T15:00:00'),
+    meetTime: new Date('2024-12-14T13:30:00'),
+    location: 'Vale Stadium, Main Pitch',
+    isHome: true,
+    competition: 'Premier Division',
+    status: 'scheduled',
+    kit: {
+      primary: 'Home Kit'
+    },
+    lineup: {
+      formationId: 'f2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7', // 4-3-3 Attack
+      starting: [],
+      substitutes: []
+    },
+    weather: {
+      condition: 'Cloudy',
+      temperature: 12
+    },
+    notes: 'Important league match. Full squad required. Team meeting at 1:30pm.'
+  },
+  // Senior First Team - completed match
+  {
+    id: 'm11e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a',
+    teamId: 'e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b',
+    opposition: 'Riverside Rangers',
+    date: new Date('2024-12-07T15:00:00'),
+    kickOffTime: new Date('2024-12-07T15:00:00'),
+    location: 'Riverside Arena',
+    isHome: false,
+    competition: 'Premier Division',
+    status: 'completed',
+    kit: {
+      primary: 'Away Kit'
+    },
+    score: {
+      home: 1,
+      away: 2
+    },
+    lineup: {
+      formationId: 'f4d5e6f7-a8b9-c0d1-e2f3-a4b5c6d7e8f9', // 4-2-3-1
+      starting: [],
+      substitutes: []
+    },
+    report: {
+      summary: 'Excellent away victory against a tough opponent. Strong defensive performance and clinical finishing secured all three points.',
+      goalScorers: [],
+      cards: [],
+      injuries: [],
+      performanceRatings: [],
+      playerOfTheMatch: undefined
+    },
+    weather: {
+      condition: 'Clear',
       temperature: 8
     }
   }

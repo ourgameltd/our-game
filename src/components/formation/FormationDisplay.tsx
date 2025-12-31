@@ -69,7 +69,7 @@ export default function FormationDisplay({
         </svg>
 
         {/* Player positions */}
-        {formation.positions.map((pos, formationIndex) => {
+        {(formation.positions || []).map((pos, formationIndex) => {
           // Simply map formation positions to players by index order
           // This allows any player to be in any formation slot after swapping
           const player = selectedPlayers[formationIndex];

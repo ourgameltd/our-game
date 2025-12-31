@@ -6,12 +6,13 @@ import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
 import { samplePlayers } from '@/data/players';
 import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
+import { sampleTactics, getResolvedPositions } from '@/data/tactics';
 import { getAgeGroupById, sampleAgeGroups } from '@/data/ageGroups';
 import { sampleCoaches, getCoachesByTeam, getCoachesByAgeGroup } from '@/data/coaches';
 import { weatherConditions, squadSizes, cardTypes, injurySeverities, coachRoleDisplay } from '@/data/referenceData';
-import { PlayerPosition, SquadSize } from '@/types';
+import { PlayerPosition, SquadSize, Tactic } from '@/types';
 import { Routes } from '@utils/routes';
-import FormationDisplay from '@/components/formation/FormationDisplay';
+import TacticDisplay from '@/components/tactics/TacticDisplay';
 
 export default function AddEditMatchPage() {
   const { clubId, ageGroupId, teamId, matchId } = useParams();
@@ -85,11 +86,64 @@ export default function AddEditMatchPage() {
   const [kit, setKit] = useState(existingMatch?.kit?.primary || (availableKits.find(k => k.type === 'home')?.id || ''));
   const [goalkeeperKit, setGoalkeeperKit] = useState(existingMatch?.kit?.goalkeeper || (availableKits.find(k => k.type === 'goalkeeper')?.id || ''));
   const [formationId, setFormationId] = useState(existingMatch?.lineup?.formationId || '');
+  const [tacticId, setTacticId] = useState(existingMatch?.lineup?.tacticId || '');
   const [weather, setWeather] = useState(existingMatch?.weather?.condition || '');
   const [temperature, setTemperature] = useState(existingMatch?.weather?.temperature?.toString() || '');
   
   // Get formations filtered by squad size
   const availableFormations = getFormationsBySquadSize(squadSize);
+  
+  // Get tactics available for this team (including inherited from club and age group)
+  const getAvailableTactics = (): Tactic[] => {
+    return sampleTactics.filter(tactic => {
+      // Must match squad size
+      if (tactic.squadSize !== squadSize) return false;
+      
+      const scope = tactic.scope;
+      
+      // Team-level tactics for this team
+      if (scope.type === 'team' && scope.teamId === teamId) return true;
+      
+      // Age group tactics for this age group
+      if (scope.type === 'ageGroup' && scope.ageGroupId === ageGroupId) return true;
+      
+      // Club-level tactics for this club
+      if (scope.type === 'club' && scope.clubId === clubId) return true;
+      
+      return false;
+    });
+  };
+  
+  const availableTactics = getAvailableTactics();
+  const selectedTactic = tacticId ? sampleTactics.find(t => t.id === tacticId) : null;
+  const selectedFormation = formationId ? sampleFormations.find(f => f.id === formationId) : null;
+  
+  // Combined formation/tactic selection value
+  const getSelectionValue = () => {
+    if (tacticId) return `tactic:${tacticId}`;
+    if (formationId) return `formation:${formationId}`;
+    return '';
+  };
+  
+  const handleSelectionChange = (value: string) => {
+    if (!value) {
+      setFormationId('');
+      setTacticId('');
+      return;
+    }
+    
+    const [type, id] = value.split(':');
+    if (type === 'tactic') {
+      const tactic = sampleTactics.find(t => t.id === id);
+      if (tactic) {
+        setTacticId(id);
+        setFormationId(tactic.parentFormationId || '');
+      }
+    } else if (type === 'formation') {
+      setFormationId(id);
+      setTacticId('');
+    }
+  };
   
   // Match result state
   const [homeScore, setHomeScore] = useState(existingMatch?.score?.home?.toString() || '');
@@ -355,10 +409,11 @@ export default function AddEditMatchPage() {
         goalkeeper: goalkeeperKit || undefined
       },
       formationId,
+      tacticId: tacticId || undefined,
       weather,
       temperature,
       score: { home: parseInt(homeScore) || 0, away: parseInt(awayScore) || 0 },
-      lineup: { formationId, starting: startingPlayers, substitutes, substitutions },
+      lineup: { formationId, tacticId: tacticId || undefined, starting: startingPlayers, substitutes, substitutions },
       report: {
         summary,
         goalScorers: goals,
@@ -947,30 +1002,83 @@ export default function AddEditMatchPage() {
           {/* Team Selection Tab */}
           {activeTab === 'lineup' && (
             <div className="mt-6 space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Formation
-                </label>
-                <select
-                  value={formationId}
-                  onChange={(e) => setFormationId(e.target.value)}
-                  disabled={isLocked}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">Select formation</option>
-                  {availableFormations.map(f => (
-                    <option key={f.id} value={f.id}>{f.name} ({f.system})</option>
-                  ))}
-                </select>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Showing formations for {squadSize}-a-side ({availableFormations.length} available)
-                </p>
-              </div>
 
               {/* Two Column Layout: Players List + Formation Display */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Left Column: Starting XI and Substitutes */}
                 <div className="space-y-6">
+                   {/* Formation/Tactic Selection - Merged Dropdown */}
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+                  Formation / Tactic
+                </h3>
+                <select
+                  value={getSelectionValue()}
+                  onChange={(e) => handleSelectionChange(e.target.value)}
+                  disabled={isLocked}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <option value="">Select formation or tactic</option>
+                  
+                  {/* Base Formations */}
+                  <optgroup label="📐 Base Formations">
+                    {availableFormations.map(f => (
+                      <option key={`formation:${f.id}`} value={`formation:${f.id}`}>
+                        {f.name} ({f.system})
+                      </option>
+                    ))}
+                  </optgroup>
+                  
+                  {/* Tactics grouped by scope */}
+                  {availableTactics.filter(t => t.scope.type === 'team').length > 0 && (
+                    <optgroup label="⚽ Team Tactics">
+                      {availableTactics
+                        .filter(t => t.scope.type === 'team')
+                        .map(t => {
+                          const parentFormation = sampleFormations.find(f => f.id === t.parentFormationId);
+                          return (
+                            <option key={`tactic:${t.id}`} value={`tactic:${t.id}`}>
+                              {t.name} {parentFormation ? `(${parentFormation.system})` : ''}
+                            </option>
+                          );
+                        })}
+                    </optgroup>
+                  )}
+                  
+                  {availableTactics.filter(t => t.scope.type === 'ageGroup').length > 0 && (
+                    <optgroup label="👥 Age Group Tactics">
+                      {availableTactics
+                        .filter(t => t.scope.type === 'ageGroup')
+                        .map(t => {
+                          const parentFormation = sampleFormations.find(f => f.id === t.parentFormationId);
+                          return (
+                            <option key={`tactic:${t.id}`} value={`tactic:${t.id}`}>
+                              {t.name} {parentFormation ? `(${parentFormation.system})` : ''}
+                            </option>
+                          );
+                        })}
+                    </optgroup>
+                  )}
+                  
+                  {availableTactics.filter(t => t.scope.type === 'club').length > 0 && (
+                    <optgroup label="🏛️ Club Tactics">
+                      {availableTactics
+                        .filter(t => t.scope.type === 'club')
+                        .map(t => {
+                          const parentFormation = sampleFormations.find(f => f.id === t.parentFormationId);
+                          return (
+                            <option key={`tactic:${t.id}`} value={`tactic:${t.id}`}>
+                              {t.name} {parentFormation ? `(${parentFormation.system})` : ''}
+                            </option>
+                          );
+                        })}
+                    </optgroup>
+                  )}
+                </select>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  {availableFormations.length} formations and {availableTactics.length} tactics available for {squadSize}-a-side
+                </p>
+              </div>
                   {/* Starting XI */}
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
@@ -1161,17 +1269,62 @@ export default function AddEditMatchPage() {
               </div>
                 </div>
 
-                {/* Right Column: Formation Display */}
+                {/* Right Column: Formation/Tactic Display */}
                 <div className="lg:sticky lg:top-6 lg:self-start">
-                  {formationId ? (
+                  {selectedTactic ? (
                     <>
-                      <FormationDisplay
-                        formation={sampleFormations.find(f => f.id === formationId)!}
+                      {/* Tactic Display */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900 dark:text-white">{selectedTactic.name}</h4>
+                          <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded">
+                            {selectedTactic.scope.type === 'club' ? 'Club' : selectedTactic.scope.type === 'ageGroup' ? 'Age Group' : 'Team'} Tactic
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          Based on {selectedFormation?.name} ({selectedFormation?.system})
+                        </p>
+                        {selectedTactic.summary && (
+                          <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mb-2">{selectedTactic.summary}</p>
+                        )}
+                      </div>
+                      <TacticDisplay
+                        tactic={selectedTactic}
+                        resolvedPositions={getResolvedPositions(selectedTactic)}
+                        showDirections={true}
+                        showInheritance={false}
                         selectedPlayers={startingPlayers}
                         getPlayerName={getPlayerName}
                         showPlayerNames={true}
                         interactive={!isLocked}
-                        onPlayerClick={handlePlayerClickForSwap}
+                        onPositionClick={handlePlayerClickForSwap}
+                        highlightedPlayerIndex={selectedPlayerIndexForSwap}
+                      />
+                    </>
+                  ) : selectedFormation ? (
+                    <>
+                      {/* Formation Display */}
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <h4 className="font-medium text-gray-900 dark:text-white">{selectedFormation.name}</h4>
+                          <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded">
+                            Base Formation
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                          {selectedFormation.system} • {squadSize}-a-side
+                        </p>
+                      </div>
+                      <TacticDisplay
+                        tactic={selectedFormation}
+                        resolvedPositions={getResolvedPositions(selectedFormation)}
+                        showDirections={false}
+                        showInheritance={false}
+                        selectedPlayers={startingPlayers}
+                        getPlayerName={getPlayerName}
+                        showPlayerNames={true}
+                        interactive={!isLocked}
+                        onPositionClick={handlePlayerClickForSwap}
                         highlightedPlayerIndex={selectedPlayerIndexForSwap}
                       />
                     </>
@@ -1184,7 +1337,7 @@ export default function AddEditMatchPage() {
                       </div>
                       <p className="text-gray-600 dark:text-gray-400 font-medium">No Formation Selected</p>
                       <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-                        Select a formation above to see the tactical setup
+                        Select a formation or tactic above to see the tactical setup
                       </p>
                     </div>
                   )}
