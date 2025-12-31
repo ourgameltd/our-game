@@ -92,33 +92,6 @@ export default function ClubPlayersPage() {
     });
   }, [allPlayers, searchName, filterAgeGroup, filterPosition, filterTeam, showArchived]);
 
-  // Group players by position
-  const goalkeepers = useMemo(() => 
-    filteredPlayers.filter(p => p.preferredPositions.includes('GK')),
-    [filteredPlayers]
-  );
-  
-  const defenders = useMemo(() =>
-    filteredPlayers.filter(p => 
-      p.preferredPositions.some(pos => ['LB', 'CB', 'RB', 'LWB', 'RWB'].includes(pos))
-    ),
-    [filteredPlayers]
-  );
-  
-  const midfielders = useMemo(() =>
-    filteredPlayers.filter(p => 
-      p.preferredPositions.some(pos => ['CDM', 'CM', 'CAM', 'LM', 'RM'].includes(pos))
-    ),
-    [filteredPlayers]
-  );
-  
-  const forwards = useMemo(() =>
-    filteredPlayers.filter(p => 
-      p.preferredPositions.some(pos => ['LW', 'RW', 'CF', 'ST'].includes(pos))
-    ),
-    [filteredPlayers]
-  );
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="container mx-auto px-4 py-4">
@@ -279,103 +252,23 @@ export default function ClubPlayersPage() {
           )}
         </div>
 
-        {/* Goalkeepers */}
-        {goalkeepers.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>🥅</span> Goalkeepers ({goalkeepers.length})
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
-              {goalkeepers.map((player) => (
-                <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
-                  <PlayerCard 
-                    player={player}
-                    badges={
-                      player.isArchived ? (
-                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                          🗄️ Archived
-                        </span>
-                      ) : undefined
-                    }
-                  />
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Defenders */}
-        {defenders.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>🛡️</span> Defenders ({defenders.length})
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
-              {defenders.map((player) => (
-                <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
-                  <PlayerCard 
-                    player={player}
-                    badges={
-                      player.isArchived ? (
-                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                          🗄️ Archived
-                        </span>
-                      ) : undefined
-                    }
-                  />
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Midfielders */}
-        {midfielders.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>⚙️</span> Midfielders ({midfielders.length})
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
-              {midfielders.map((player) => (
-                <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
-                  <PlayerCard 
-                    player={player}
-                    badges={
-                      player.isArchived ? (
-                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                          🗄️ Archived
-                        </span>
-                      ) : undefined
-                    }
-                  />
-                </Link>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Forwards */}
-        {forwards.length > 0 && (
-          <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-              <span>⚡</span> Forwards ({forwards.length})
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
-              {forwards.map((player) => (
-                <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
-                  <PlayerCard 
-                    player={player}
-                    badges={
-                      player.isArchived ? (
-                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                          🗄️ Archived
-                        </span>
-                      ) : undefined
-                    }
-                  />
-                </Link>
-              ))}
-            </div>
+        {/* Players List */}
+        {filteredPlayers.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+            {filteredPlayers.map((player) => (
+              <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
+                <PlayerCard 
+                  player={player}
+                  badges={
+                    player.isArchived ? (
+                      <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                        🗄️ Archived
+                      </span>
+                    ) : undefined
+                  }
+                />
+              </Link>
+            ))}
           </div>
         )}
 

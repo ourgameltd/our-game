@@ -59,7 +59,7 @@ export default function TeamCoachesPage() {
         {/* All Coaches */}
         {teamCoaches.length > 0 && (
           <div className="mb-8">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
               {teamCoaches.map((coach) => (
                 <Link key={coach.id} to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
                   <CoachCard 

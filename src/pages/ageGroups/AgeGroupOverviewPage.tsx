@@ -3,14 +3,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { getAgeGroupById } from '../../data/ageGroups';
 import { getTeamsByAgeGroupId, getTeamById } from '../../data/teams';
-import { getAgeGroupStatistics } from '../../data/statistics';
+import { getAgeGroupStatistics, getTeamStatistics } from '../../data/statistics';
+import { getClubById } from '../../data/clubs';
 import { samplePlayers } from '../../data/players';
 import StatsGrid from '../../components/stats/StatsGrid';
-import UpcomingMatchesCard from '../../components/matches/UpcomingMatchesCard';
-import PreviousResultsCard from '../../components/matches/PreviousResultsCard';
+import MatchesCard from '../../components/matches/MatchesCard';
 import TopPerformersCard from '../../components/players/TopPerformersCard';
 import NeedsSupportCard from '../../components/players/NeedsSupportCard';
-import TeamCard from '../../components/team/TeamCard';
+import TeamListCard from '../../components/team/TeamListCard';
 import PageTitle from '../../components/common/PageTitle';
 import { Routes } from '@utils/routes';
 
@@ -19,16 +19,32 @@ const AgeGroupOverviewPage: React.FC = () => {
   const navigate = useNavigate();
   
   const ageGroup = getAgeGroupById(ageGroupId || '');
+  const club = getClubById(clubId || '');
   const teams = getTeamsByAgeGroupId(ageGroupId || '');
   const stats = getAgeGroupStatistics(ageGroupId || '');
   
-  if (!ageGroup) {
+  if (!ageGroup || !club) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <p className="text-red-500">Age group not found</p>
+        <p className="text-red-500">{!ageGroup ? 'Age group not found' : 'Club not found'}</p>
       </div>
     );
   }
+  
+  // Helper function to get team stats
+  const getTeamStats = (team: typeof teams[0]) => {
+    const teamStats = getTeamStatistics(team.id);
+    return {
+      playerCount: team.playerIds.length,
+      coachCount: team.coachIds.length,
+      matchesPlayed: teamStats.matchesPlayed,
+      wins: teamStats.wins,
+      draws: teamStats.draws,
+      losses: teamStats.losses,
+      winRate: teamStats.winRate,
+      goalDifference: teamStats.goalDifference
+    };
+  };
   
   // Get top performers details
   const topPerformersData = stats.topPerformers.map(perf => {
@@ -93,11 +109,14 @@ const AgeGroupOverviewPage: React.FC = () => {
           </div>
           
           {teams.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="flex flex-col gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
               {teams.map(team => (
-                <TeamCard
+                <TeamListCard
                   key={team.id}
                   team={team}
+                  club={club}
+                  ageGroup={ageGroup}
+                  stats={getTeamStats(team)}
                   onClick={team.isArchived ? undefined : () => navigate(Routes.team(clubId!, ageGroupId!, team.id))}
                 />
               ))}
@@ -118,9 +137,11 @@ const AgeGroupOverviewPage: React.FC = () => {
         </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-8">
-        <UpcomingMatchesCard 
-          matches={stats.upcomingMatches} 
-          viewAllLink={Routes.ageGroup(clubId!, ageGroupId!)}
+        <MatchesCard 
+          type="upcoming"
+          matches={stats.upcomingMatches}
+          limit={3}
+          viewAllLink={Routes.ageGroupMatches(clubId!, ageGroupId!)}
           showTeamInfo={true}
           getTeamInfo={(match) => {
             const team = getTeamById(match.teamId);
@@ -132,16 +153,14 @@ const AgeGroupOverviewPage: React.FC = () => {
             }
             return null;
           }}
-          getMatchLink={(matchId) => {
-            const match = stats.upcomingMatches.find(m => m.id === matchId);
-            if (match) {
-              return Routes.matchReport(clubId!, ageGroupId!, match.teamId, matchId);
-            }
-            return '#';
+          getMatchLink={(matchId, match) => {
+            return Routes.matchReport(clubId!, ageGroupId!, match.teamId, matchId);
           }}
         />
-        <PreviousResultsCard 
+        <MatchesCard 
+          type="results"
           matches={stats.previousResults}
+          limit={3}
           viewAllLink={Routes.ageGroupMatches(clubId!, ageGroupId!)}
           showTeamInfo={true}
           getTeamInfo={(match) => {

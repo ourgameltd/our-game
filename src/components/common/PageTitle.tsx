@@ -6,6 +6,12 @@ interface PageTitleProps {
   subtitle?: string;
   badge?: string | number;
   backLink?: string;
+  image?: {
+    src?: string;
+    alt: string;
+    initials?: string;
+    colorClass?: string;
+  };
   action?: {
     label: string;
     onClick?: () => void;
@@ -16,7 +22,7 @@ interface PageTitleProps {
   };
 }
 
-export default function PageTitle({ title, subtitle, badge, backLink, action }: PageTitleProps) {
+export default function PageTitle({ title, subtitle, badge, backLink, image, action }: PageTitleProps) {
   const getActionButtonClass = (variant: string = 'primary') => {
     const baseClass = 'btn-md';
     const variantClass = {
@@ -31,14 +37,27 @@ export default function PageTitle({ title, subtitle, badge, backLink, action }: 
 
   return (
     <div className="flex items-center justify-between mb-6 w-full">
-      <div className="flex items-start gap-3">
+      <div className="flex items-center gap-3">
         {backLink && (
           <Link
             to={backLink}
-            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors mt-0.5"
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
           </Link>
+        )}
+        {image && (
+          image.src ? (
+            <img 
+              src={image.src} 
+              alt={image.alt}
+              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+            />
+          ) : (
+            <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${image.colorClass || 'from-primary-500 to-primary-600'} flex items-center justify-center text-white text-lg font-bold flex-shrink-0`}>
+              {image.initials}
+            </div>
+          )
         )}
         <div>
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">

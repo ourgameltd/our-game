@@ -4,13 +4,15 @@ import { getPlayerRecentPerformances, getUpcomingMatchesByTeamIds } from '@data/
 import { getTeamById } from '@data/teams';
 import { getAgeGroupById } from '@data/ageGroups';
 import { Routes } from '@utils/routes';
-import PlayerDetailsHeader from '@components/player/PlayerDetailsHeader';
+import PageTitle from '@components/common/PageTitle';
 import RecentPerformanceCard from '@components/player/RecentPerformanceCard';
-import UpcomingMatchesCard from '@components/matches/UpcomingMatchesCard';
+import MatchesCard from '@components/matches/MatchesCard';
 
 export default function PlayerProfilePage() {
-  const { clubId, playerId, ageGroupId } = useParams();
+  const { clubId, playerId, ageGroupId, teamId } = useParams();
   const player = getPlayerById(playerId!);
+  const ageGroup = ageGroupId ? getAgeGroupById(ageGroupId) : null;
+  const team = teamId ? getTeamById(teamId) : null;
   const recentPerformances = getPlayerRecentPerformances(playerId!, 5);
   const upcomingMatches = getUpcomingMatchesByTeamIds(player?.ageGroupIds || [], 3);
 
@@ -26,16 +28,51 @@ export default function PlayerProfilePage() {
     );
   }
 
+  // Determine back link based on context (team, age group, or club)
+  let backLink: string;
+  let subtitle: string;
+  if (teamId && ageGroupId) {
+    backLink = Routes.teamSquad(clubId!, ageGroupId, teamId);
+    subtitle = `${ageGroup?.name || 'Age Group'} • ${team?.name || 'Team'}`;
+  } else if (ageGroupId) {
+    backLink = Routes.ageGroupPlayers(clubId!, ageGroupId);
+    subtitle = ageGroup?.name || 'Age Group';
+  } else {
+    backLink = Routes.clubPlayers(clubId!);
+    subtitle = 'Club Players';
+  }
+
+  // Determine settings link based on context
+  let settingsLink: string;
+  if (teamId && ageGroupId) {
+    settingsLink = Routes.teamPlayerSettings(clubId!, ageGroupId, teamId, playerId!);
+  } else if (ageGroupId) {
+    settingsLink = Routes.playerSettings(clubId!, ageGroupId, playerId!);
+  } else {
+    settingsLink = Routes.clubPlayerSettings(clubId!, playerId!);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="container mx-auto px-4 py-4">
-        {/* Player Header */}
-        <div className="card mb-6">
-          <PlayerDetailsHeader 
-            player={player} 
-            settingsLink={Routes.playerSettings(clubId!, ageGroupId!, playerId!)}
-          />
-        </div>
+        {/* Page Title with Back Button */}
+        <PageTitle
+          title={`${player.firstName} ${player.lastName}`}
+          subtitle={subtitle}
+          backLink={backLink}
+          image={{
+            src: player.photo,
+            alt: `${player.firstName} ${player.lastName}`,
+            initials: `${player.firstName[0]}${player.lastName[0]}`,
+            colorClass: 'from-primary-500 to-primary-600'
+          }}
+          action={{
+            label: 'Settings',
+            href: settingsLink,
+            icon: 'settings',
+            title: 'Player Settings'
+          }}
+        />
 
         {/* Player Stats */}
         <div className="grid grid-cols-3 gap-3 mb-8">
@@ -102,8 +139,10 @@ export default function PlayerProfilePage() {
         {/* Upcoming Matches */}
         {/* Upcoming Matches */}
         <div className="mt-6">
-          <UpcomingMatchesCard 
+          <MatchesCard 
+            type="upcoming"
             matches={upcomingMatches}
+            limit={3}
             showTeamInfo={player.ageGroupIds.length > 1}
             getTeamInfo={(match) => {
               const team = getTeamById(match.teamId);
@@ -116,13 +155,10 @@ export default function PlayerProfilePage() {
               }
               return null;
             }}
-            getMatchLink={(matchId) => {
-              const match = upcomingMatches.find(m => m.id === matchId);
-              if (match) {
-                const team = getTeamById(match.teamId);
-                if (team) {
-                  return Routes.matchReport(clubId!, team.ageGroupId, match.teamId, matchId);
-                }
+            getMatchLink={(matchId, match) => {
+              const team = getTeamById(match.teamId);
+              if (team) {
+                return Routes.matchReport(clubId!, team.ageGroupId, match.teamId, matchId);
               }
               return '#';
             }}

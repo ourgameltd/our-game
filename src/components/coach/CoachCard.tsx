@@ -20,8 +20,8 @@ export default function CoachCard({ coach, onClick, badges, actions }: CoachCard
 
   return (
     <div 
-      className={`card-hover h-full ${onClick ? 'cursor-pointer' : ''} 
-        flex flex-col md:flex-row md:items-center md:gap-4 md:py-3`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 md:rounded-none md:shadow-none md:p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b hover:shadow-card-hover md:hover:shadow-none md:hover:bg-gray-50 md:dark:hover:bg-gray-700 transition-all h-full ${onClick ? 'cursor-pointer' : ''} 
+        flex flex-col md:flex-row md:items-center md:gap-4`}
       onClick={onClick}
     >
       {/* Photo - shows at top on mobile, left on desktop */}

@@ -5,11 +5,10 @@ import { getAgeGroupsByClubId, getAgeGroupById } from '@data/ageGroups';
 import { getClubStatistics, getAgeGroupStatistics } from '@data/statistics';
 import { getTeamById, getTeamsByAgeGroupId } from '@data/teams';
 import StatsGrid from '@components/stats/StatsGrid';
-import UpcomingMatchesCard from '@components/matches/UpcomingMatchesCard';
-import PreviousResultsCard from '@components/matches/PreviousResultsCard';
+import MatchesCard from '@components/matches/MatchesCard';
+import AgeGroupListCard from '@components/ageGroup/AgeGroupListCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
-import { getGradientColors, getContrastTextColorClass } from '@utils/colorHelpers';
 
 export default function ClubOverviewPage() {
   const { clubId } = useParams();
@@ -59,63 +58,32 @@ export default function ClubOverviewPage() {
           </div>
           
           {ageGroups.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
               {ageGroups.map(ageGroup => {
                 const ageGroupStats = getAgeGroupStatistics(ageGroup.id);
                 const ageGroupTeams = getTeamsByAgeGroupId(ageGroup.id);
-                const { primaryColor, secondaryColor } = getGradientColors(club);
-                const textColorClass = getContrastTextColorClass(primaryColor);
                 
                 return (
-                  <div
+                  <Link
                     key={ageGroup.id}
-                    className={`overflow-hidden rounded-lg shadow-md hover:shadow-xl transition-shadow flex flex-col ${
-                      !ageGroup.isArchived ? 'cursor-pointer' : ''
-                    } ${
-                      ageGroup.isArchived ? 'opacity-75 border-2 border-orange-200 dark:border-orange-800' : ''
-                    }`}
-                    onClick={ageGroup.isArchived ? undefined : () => navigate(Routes.ageGroup(clubId!, ageGroup.id))}
+                    to={Routes.ageGroup(clubId!, ageGroup.id)}
+                    className="block"
                   >
-                    {/* Gradient Header */}
-                    <div 
-                      className="p-4 flex-shrink-0"
-                      style={{
-                        backgroundImage: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
+                    <AgeGroupListCard
+                      ageGroup={ageGroup}
+                      club={club}
+                      stats={{
+                        teamCount: ageGroupTeams.length,
+                        playerCount: ageGroupStats.playerCount,
+                        matchesPlayed: ageGroupStats.matchesPlayed,
+                        wins: ageGroupStats.wins,
+                        draws: ageGroupStats.draws,
+                        losses: ageGroupStats.losses,
+                        winRate: ageGroupStats.winRate,
+                        goalDifference: ageGroupStats.goalDifference
                       }}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <h3 className={`text-lg font-semibold ${textColorClass}`}>
-                            {ageGroup.name}
-                          </h3>
-                          {ageGroup.isArchived && (
-                            <span className="badge bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs">
-                              🗄️ Archived
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                      <p className={`text-sm opacity-90 ${textColorClass} mt-1`}>{ageGroup.description}</p>
-                    </div>
-
-                    {/* Card Content */}
-                    <div className="bg-white dark:bg-gray-800 p-4 flex-grow">
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <div className="text-2xl font-bold text-gray-900 dark:text-white">{ageGroupTeams.length}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-500">Teams</div>
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-gray-900 dark:text-white">{ageGroupStats.playerCount}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-500">Players</div>
-                        </div>
-                        <div>
-                          <div className="text-2xl font-bold text-primary-600 dark:text-primary-400">{ageGroupStats.winRate}%</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-500">Win Rate</div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    />
+                  </Link>
                 );
               })}
             </div>
@@ -133,9 +101,11 @@ export default function ClubOverviewPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-6">
-          <UpcomingMatchesCard 
-            matches={stats.upcomingMatches.slice(0, 3)}
-            viewAllLink={Routes.club(clubId!)}
+          <MatchesCard 
+            type="upcoming"
+            matches={stats.upcomingMatches}
+            limit={3}
+            viewAllLink={Routes.clubMatches(clubId!)}
             showTeamInfo={true}
             getTeamInfo={(match) => {
               const team = getTeamById(match.teamId);
@@ -148,19 +118,18 @@ export default function ClubOverviewPage() {
               }
               return null;
             }}
-            getMatchLink={(matchId) => {
-              const match = stats.upcomingMatches.find(m => m.id === matchId);
-              if (match) {
-                const team = getTeamById(match.teamId);
-                if (team) {
-                  return Routes.matchReport(clubId!, team.ageGroupId, match.teamId, matchId);
-                }
+            getMatchLink={(matchId, match) => {
+              const team = getTeamById(match.teamId);
+              if (team) {
+                return Routes.matchReport(clubId!, team.ageGroupId, match.teamId, matchId);
               }
               return '#';
             }}
           />
-          <PreviousResultsCard 
-            matches={stats.previousResults.slice(0, 3)}
+          <MatchesCard 
+            type="results"
+            matches={stats.previousResults}
+            limit={3}
             viewAllLink={Routes.clubMatches(clubId!)}
             showTeamInfo={true}
             getTeamInfo={(match) => {

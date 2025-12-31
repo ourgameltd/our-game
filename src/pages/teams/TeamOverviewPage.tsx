@@ -4,8 +4,7 @@ import { getPlayersByTeamId } from '@data/players';
 import { getTrainingSessionsByTeamId } from '@data/training';
 import { getTeamStatistics } from '@data/statistics';
 import StatsGrid from '@components/stats/StatsGrid';
-import UpcomingMatchesCard from '@components/matches/UpcomingMatchesCard';
-import PreviousResultsCard from '@components/matches/PreviousResultsCard';
+import MatchesCard from '@components/matches/MatchesCard';
 import TopPerformersCard from '@components/players/TopPerformersCard';
 import NeedsSupportCard from '@components/players/NeedsSupportCard';
 import PageTitle from '@components/common/PageTitle';
@@ -79,12 +78,17 @@ export default function TeamOverviewPage() {
         <StatsGrid stats={stats} />
 
         <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <UpcomingMatchesCard 
-            matches={stats.upcomingMatches.slice(0, 2)}
+          <MatchesCard 
+            type="upcoming"
+            matches={stats.upcomingMatches}
+            limit={3}
+            viewAllLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
             getMatchLink={(matchId) => Routes.matchReport(clubId!, ageGroupId!, teamId!, matchId)}
           />
-          <PreviousResultsCard 
-            matches={stats.previousResults.slice(0, 3)}
+          <MatchesCard 
+            type="results"
+            matches={stats.previousResults}
+            limit={3}
             viewAllLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
             getMatchLink={(matchId) => Routes.matchReport(clubId!, ageGroupId!, teamId!, matchId)}
           />

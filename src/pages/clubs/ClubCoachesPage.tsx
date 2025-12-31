@@ -99,33 +99,11 @@ export default function ClubCoachesPage() {
     });
   }, [allCoaches, searchName, filterRole, filterTeam, showArchived]);
 
-  // Group filtered coaches by role
-  const coachesByRole = useMemo(() => {
-    return filteredCoaches.reduce((acc, coach) => {
-      const role = coachRoleDisplay[coach.role] || coach.role;
-      if (!acc[role]) {
-        acc[role] = [];
-      }
-      acc[role].push(coach);
-      return acc;
-    }, {} as Record<string, typeof filteredCoaches>);
-  }, [filteredCoaches]);
-
   // Filter teams by age group for the team dropdown
   const filteredTeams = useMemo(() => {
     if (!filterAgeGroup) return teams;
     return teams.filter(team => team.ageGroupId === filterAgeGroup);
   }, [teams, filterAgeGroup]);
-
-  // Sort roles by priority
-  const roleOrder = ['Head Coach', 'Assistant Coach', 'Goalkeeper Coach', 'Fitness Coach', 'Technical Coach'];
-  const sortedRoles = Object.keys(coachesByRole).sort(
-    (a, b) => {
-      const indexA = roleOrder.indexOf(a);
-      const indexB = roleOrder.indexOf(b);
-      return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
-    }
-  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -290,37 +268,32 @@ export default function ClubCoachesPage() {
           )}
         </div>
 
-        {/* Coaches grouped by role */}
-        {sortedRoles.map((role) => (
-          <div key={role} className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              {role} ({coachesByRole[role].length})
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
-              {coachesByRole[role].map((coach) => (
-                <Link key={coach.id} to={Routes.coach(clubId!, coach.id)}>
-                  <CoachCard 
-                    coach={coach} 
-                    badges={
-                      <>
-                        {coach.isArchived && (
-                          <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                            🗄️ Archived
-                          </span>
-                        )}
-                        {coach.teamIds.length > 1 && (
-                          <span className="bg-secondary-600 text-white text-xs px-2 py-1 rounded-full">
-                            {coach.teamIds.length} teams
-                          </span>
-                        )}
-                      </>
-                    }
-                  />
-                </Link>
-              ))}
-            </div>
+        {/* Coaches List */}
+        {filteredCoaches.length > 0 && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+            {filteredCoaches.map((coach) => (
+              <Link key={coach.id} to={Routes.coach(clubId!, coach.id)}>
+                <CoachCard 
+                  coach={coach} 
+                  badges={
+                    <>
+                      {coach.isArchived && (
+                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                          🗄️ Archived
+                        </span>
+                      )}
+                      {coach.teamIds.length > 1 && (
+                        <span className="bg-secondary-600 text-white text-xs px-2 py-1 rounded-full">
+                          {coach.teamIds.length} teams
+                        </span>
+                      )}
+                    </>
+                  }
+                />
+              </Link>
+            ))}
           </div>
-        ))}
+        )}
 
         {filteredCoaches.length === 0 && allCoaches.length === 0 && (
           <div className="text-center py-12">

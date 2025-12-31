@@ -4,12 +4,15 @@ import { getTeamsByIds } from '@data/teams';
 import { getAgeGroupById } from '@data/ageGroups';
 import { getClubById } from '@data/clubs';
 import { Routes } from '@utils/routes';
-import CoachDetailsHeader from '@components/coach/CoachDetailsHeader';
+import { coachRoleDisplay } from '@/data/referenceData';
+import PageTitle from '@components/common/PageTitle';
 
 export default function CoachProfilePage() {
   const { clubId, coachId, ageGroupId, teamId } = useParams();
   const coach = getCoachById(coachId!);
   const club = getClubById(clubId!);
+  const ageGroup = ageGroupId ? getAgeGroupById(ageGroupId) : null;
+  const team = teamId ? getTeamsByIds([teamId])[0] : null;
 
   if (!coach || !club) {
     return <div>Coach not found</div>;
@@ -21,6 +24,20 @@ export default function CoachProfilePage() {
     // In a real app, this would send an invite email via the backend
     alert(`Invite sent to ${coach.email}! (Demo - not actually sent)`);
   };
+
+  // Determine back link based on context (team, age group, or club)
+  let backLink: string;
+  let subtitle: string;
+  if (teamId && ageGroupId) {
+    backLink = Routes.teamCoaches(clubId!, ageGroupId, teamId);
+    subtitle = `${ageGroup?.name || 'Age Group'} • ${team?.name || 'Team'}`;
+  } else if (ageGroupId) {
+    backLink = Routes.ageGroupCoaches(clubId!, ageGroupId);
+    subtitle = ageGroup?.name || 'Age Group';
+  } else {
+    backLink = Routes.clubCoaches(clubId!);
+    subtitle = 'Club Coaches';
+  }
 
   // Determine settings link based on context
   let settingsLink: string;
@@ -35,13 +52,24 @@ export default function CoachProfilePage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="container mx-auto px-4 py-4">
-        {/* Header */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-6">
-          <CoachDetailsHeader 
-            coach={coach} 
-            settingsLink={settingsLink}
-          />
-        </div>
+        {/* Page Title with Back Button */}
+        <PageTitle
+          title={`${coach.firstName} ${coach.lastName}`}
+          subtitle={`${coachRoleDisplay[coach.role]} • ${subtitle}`}
+          backLink={backLink}
+          image={{
+            src: coach.photo,
+            alt: `${coach.firstName} ${coach.lastName}`,
+            initials: `${coach.firstName[0]}${coach.lastName[0]}`,
+            colorClass: 'from-secondary-500 to-secondary-600'
+          }}
+          action={{
+            label: 'Settings',
+            href: settingsLink,
+            icon: 'settings',
+            title: 'Coach Settings'
+          }}
+        />
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
           {/* Contact Information */}

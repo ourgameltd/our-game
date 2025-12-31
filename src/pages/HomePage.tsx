@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import Logo from '../components/common/Logo';
-import UpcomingMatchesCard from '../components/matches/UpcomingMatchesCard';
+import MatchesCard from '../components/matches/MatchesCard';
 import { currentUser } from '../data/currentUser';
 import { sampleMatches } from '../data/matches';
 import { sampleTeams } from '../data/teams';
@@ -70,10 +70,7 @@ export default function HomePage() {
   };
 
   // Helper function to get match link
-  const getMatchLink = (matchId: string) => {
-    const match = sampleMatches.find(m => m.id === matchId);
-    if (!match) return '#';
-    
+  const getMatchLink = (matchId: string, match: any) => {
     const team = sampleTeams.find(t => t.id === match.teamId);
     if (!team) return '#';
     
@@ -144,7 +141,7 @@ export default function HomePage() {
                   Welcome back, {currentUser.firstName}!
                 </p>
                 <Link 
-                  to="/dashboard" 
+                  to="/login" 
                   className="inline-block mt-4 px-8 py-3 text-base font-semibold bg-white text-primary-700 rounded-full hover:bg-primary-50 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
                   Go to Dashboard
@@ -152,20 +149,6 @@ export default function HomePage() {
               </div>
             )}
           </div>
-
-          {/* Upcoming Matches for logged in users */}
-          {isLoggedIn && userUpcomingMatches.length > 0 && (
-            <div className="mt-8">
-              <div className="bg-white/95 backdrop-blur-md rounded-lg shadow-2xl p-6">
-                <UpcomingMatchesCard
-                  matches={userUpcomingMatches}
-                  getMatchLink={getMatchLink}
-                  showTeamInfo={true}
-                  getTeamInfo={getTeamInfo}
-                />
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

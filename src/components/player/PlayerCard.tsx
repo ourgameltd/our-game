@@ -28,9 +28,9 @@ export default function PlayerCard({ player, onClick, isSelected = false, badges
 
   return (
     <div 
-      className={`card-hover h-full ${onClick ? 'cursor-pointer' : ''} ${
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 md:rounded-none md:shadow-none md:p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b hover:shadow-card-hover md:hover:shadow-none md:hover:bg-gray-50 md:dark:hover:bg-gray-700 transition-all h-full ${onClick ? 'cursor-pointer' : ''} ${
         isSelected ? 'ring-4 ring-primary-500 dark:ring-primary-400 bg-primary-50 dark:bg-primary-900/30' : ''
-      } flex flex-col md:flex-row md:items-center md:gap-4 md:py-3`}
+      } flex flex-col md:flex-row md:items-center md:gap-4`}
       onClick={onClick}
     >
       {/* Photo - shows at top on mobile, left on desktop */}
@@ -67,12 +67,14 @@ export default function PlayerCard({ player, onClick, isSelected = false, badges
       </div>
 
       {/* Name - desktop only (separate column) */}
-      <h3 className="hidden md:block text-base font-semibold text-gray-900 dark:text-white truncate md:w-44 md:flex-shrink-0 md:order-2">
-        {player.firstName} {player.lastName}
+      <div className="hidden md:flex md:items-baseline md:gap-2 md:min-w-48 md:flex-shrink-0 md:order-2">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-white whitespace-nowrap">
+          {player.firstName} {player.lastName}
+        </h3>
         {player.nickname && (
-          <span className="text-xs font-normal text-primary-600 dark:text-primary-400 ml-1">"{player.nickname}"</span>
+          <span className="text-xs font-normal text-primary-600 dark:text-primary-400 whitespace-nowrap">"{player.nickname}"</span>
         )}
-      </h3>
+      </div>
 
       {/* Age - desktop only */}
       <p className="hidden md:block text-sm text-gray-600 dark:text-gray-400 md:w-16 md:flex-shrink-0 md:order-3">
@@ -92,8 +94,8 @@ export default function PlayerCard({ player, onClick, isSelected = false, badges
 
       {/* Top Attributes - shown differently on mobile vs desktop */}
       {topAttributes.length > 0 && (
-        <div className="mt-auto pt-4 md:pt-0 md:mt-0 border-t md:border-t-0 border-gray-100 dark:border-gray-700 md:order-5">
-          <div className="grid grid-cols-2 md:flex md:gap-6 gap-2">
+        <div className="mt-auto pt-4 md:pt-0 md:mt-0 border-t md:border-t-0 border-gray-100 dark:border-gray-700 md:order-5 md:flex-1">
+          <div className="grid grid-cols-2 md:flex md:gap-6 gap-2 md:justify-end">
             {topAttributes.map(attribute => (
               <div key={attribute.name} className="flex justify-between md:flex-row md:items-center md:gap-2 text-sm gap-1">
                 <span className="text-gray-600 dark:text-gray-400 truncate text-xs">{attribute.name}</span>
@@ -106,7 +108,7 @@ export default function PlayerCard({ player, onClick, isSelected = false, badges
       
       {/* Empty spacer when no attributes on desktop */}
       {topAttributes.length === 0 && (
-        <div className="hidden md:block md:order-5" />
+        <div className="hidden md:block md:flex-1 md:order-5" />
       )}
 
       {/* Desktop badges - inline */}
