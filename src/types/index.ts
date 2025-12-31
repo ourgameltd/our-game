@@ -370,16 +370,19 @@ export interface Formation {
 // Tactics Types
 
 /**
- * Player directional tendency for tactical positioning
- * - defensive: Player positioned more defensively
- * - neutral: Balanced positioning
- * - attacking: Player positioned more offensively
+ * Player directional tendency for tactical positioning using compass directions
+ * Primary directions: N (North/Up), S (South/Down), E (East/Right), W (West/Left)
+ * Diagonal directions: NE, NW, SE, SW
+ * Bent directions (for runs): WN, WS, EN, ES (start direction then curve)
  */
-export type PlayerDirection = 'defensive' | 'neutral' | 'attacking';
+export type PlayerDirection = 
+  | 'N' | 'S' | 'E' | 'W'           // Primary compass directions
+  | 'NE' | 'NW' | 'SE' | 'SW'       // Diagonal directions
+  | 'WN' | 'WS' | 'EN' | 'ES';     // Bent/curved run directions
 
 /**
  * Override specific position attributes in a tactic
- * All fields are optional to support partial overrides from parent formation
+ * Only position and direction can be customized
  */
 export interface TacticalPositionOverride {
   /** Override x position (0-100 percentage of field width) */
@@ -388,34 +391,21 @@ export interface TacticalPositionOverride {
   y?: number;
   /** Override player directional tendency */
   direction?: PlayerDirection;
-  /** Tactical role description for this position */
-  roleDescription?: string;
-  /** Key responsibilities for this position in the tactic */
-  keyResponsibilities?: string[];
 }
 
 /**
- * Type of relationship between two players on the field
- * - passing-lane: Indicates preferred passing connection
- * - cover: Defensive coverage relationship
- * - overlap: Overlapping run relationship
- * - combination: Combination play relationship
+ * A tactical principle that can be associated with players
+ * Principles define team objectives and responsibilities
  */
-export type RelationshipType = 'passing-lane' | 'cover' | 'overlap' | 'combination';
-
-/**
- * Defines a tactical relationship between two player positions
- * Used to visualize and understand tactical connections on the field
- */
-export interface PlayerRelationship {
-  /** Index of the starting position in the formation's positions array */
-  fromPositionIndex: number;
-  /** Index of the target position in the formation's positions array */
-  toPositionIndex: number;
-  /** Type of tactical relationship */
-  type: RelationshipType;
-  /** Optional description of the relationship */
-  description?: string;
+export interface TacticPrinciple {
+  /** Unique identifier for the principle */
+  id: string;
+  /** Short title for the principle (e.g., "Press High", "Hold Line") */
+  title: string;
+  /** Detailed description of what this principle means */
+  description: string;
+  /** Position indices that this principle applies to (empty = all players) */
+  positionIndices: number[];
 }
 
 /**
@@ -448,8 +438,9 @@ export interface Tactic {
   
   /** Position-specific overrides (only changed values stored) */
   positionOverrides: Record<number, TacticalPositionOverride>;
-  /** Tactical relationships between player positions */
-  relationships: PlayerRelationship[];
+  
+  /** Tactical principles with associated players */
+  principles: TacticPrinciple[];
   
   /** Summary description of the tactic in Markdown format */
   summary: string;

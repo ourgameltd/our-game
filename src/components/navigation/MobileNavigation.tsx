@@ -3,7 +3,6 @@ import { Link, useLocation, matchPath } from 'react-router-dom';
 import { 
   Users, 
   Home,
-  Settings,
   HelpCircle,
   LogOut,
   X,
@@ -231,7 +230,7 @@ export default function MobileNavigation() {
         </button>
 
         <div className="mobile-nav-drawer-header">
-          <div className="mobile-nav-user-profile">
+          <Link to="/profile" className="mobile-nav-user-profile hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
             <div className="mobile-nav-user-avatar-wrapper">
               <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
             </div>
@@ -239,7 +238,7 @@ export default function MobileNavigation() {
               <span className="mobile-nav-user-name">John Doe</span>
               <span className="mobile-nav-user-role">Coach</span>
             </div>
-          </div>
+          </Link>
           <button 
             className="mobile-nav-close lg:hidden"
             onClick={toggleMenu}
@@ -732,16 +731,6 @@ export default function MobileNavigation() {
 
           {/* Secondary Navigation */}
           <ul className="mobile-nav-menu mobile-nav-menu-secondary">
-            <li className="mobile-nav-item">
-              <Link 
-                to="/profile" 
-                className={`mobile-nav-link ${isActive('/profile') ? 'active' : ''}`}
-              >
-                <Settings className="mobile-nav-icon" />
-                <span className="mobile-nav-text">Profile & Settings</span>
-              </Link>
-            </li>
-
             <li className="mobile-nav-item">
               <button
                 onClick={toggleTheme}

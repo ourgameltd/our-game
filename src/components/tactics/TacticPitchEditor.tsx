@@ -1,12 +1,10 @@
 import { useState, useRef, useCallback } from 'react';
-import { Formation, Tactic, TacticalPositionOverride, PlayerRelationship } from '@/types';
+import { Formation, Tactic, TacticalPositionOverride } from '@/types';
 
 interface TacticPitchEditorProps {
   tactic: Tactic;
   parentFormation: Formation;
   onPositionChange: (index: number, override: Partial<TacticalPositionOverride>) => void;
-  onRelationshipAdd: (relationship: PlayerRelationship) => void;
-  onRelationshipRemove?: (index: number) => void;
   snapToGrid?: boolean;
   gridSize?: number; // Default 5
   className?: string;
@@ -21,16 +19,10 @@ interface DragState {
   startY: number;
 }
 
-interface RelationshipDragState {
-  isDrawing: boolean;
-  fromIndex: number | null;
-}
-
 export default function TacticPitchEditor({
   tactic,
   parentFormation,
   onPositionChange,
-  onRelationshipAdd,
   snapToGrid = true,
   gridSize = 5,
   className = '',
@@ -39,10 +31,6 @@ export default function TacticPitchEditor({
 }: TacticPitchEditorProps) {
   const pitchRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
-  const [relationshipDrag, setRelationshipDrag] = useState<RelationshipDragState>({
-    isDrawing: false,
-    fromIndex: null,
-  });
   const [hoverPositionIndex, setHoverPositionIndex] = useState<number | null>(null);
 
   // Snap value to grid
@@ -65,8 +53,6 @@ export default function TacticPitchEditor({
         x: override?.x !== undefined ? override.x : parentPos.x,
         y: override?.y !== undefined ? override.y : parentPos.y,
         direction: override?.direction,
-        roleDescription: override?.roleDescription,
-        keyResponsibilities: override?.keyResponsibilities,
         isOverridden: !!override && (override.x !== undefined || override.y !== undefined),
       };
     },
@@ -77,26 +63,6 @@ export default function TacticPitchEditor({
   const handlePointerDown = useCallback(
     (e: React.PointerEvent, index: number) => {
       if (!pitchRef.current) return;
-
-      // Check if Shift key is pressed for relationship drawing
-      if (e.shiftKey) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        if (relationshipDrag.isDrawing && relationshipDrag.fromIndex !== null) {
-          // Complete the relationship
-          if (relationshipDrag.fromIndex !== index) {
-            // Will be handled in handlePointerUp
-          }
-        } else {
-          // Start relationship drawing
-          setRelationshipDrag({
-            isDrawing: true,
-            fromIndex: index,
-          });
-        }
-        return;
-      }
 
       // Regular position drag
       e.preventDefault();
@@ -117,7 +83,7 @@ export default function TacticPitchEditor({
         onPositionSelect(index);
       }
     },
-    [getMergedPosition, onPositionSelect, relationshipDrag]
+    [getMergedPosition, onPositionSelect]
   );
 
   // Handle pointer move (during drag)
@@ -152,40 +118,18 @@ export default function TacticPitchEditor({
 
   // Handle pointer up (end drag)
   const handlePointerUp = useCallback(
-    (e: React.PointerEvent, index?: number) => {
-      if (e.shiftKey && relationshipDrag.isDrawing && relationshipDrag.fromIndex !== null) {
-        // Complete relationship if clicking on a position
-        if (index !== undefined && index !== relationshipDrag.fromIndex) {
-          // Create relationship (will trigger popup in parent component)
-          const newRelationship: PlayerRelationship = {
-            fromPositionIndex: relationshipDrag.fromIndex,
-            toPositionIndex: index,
-            type: 'passing-lane', // Default, should be selected via popup
-          };
-          onRelationshipAdd(newRelationship);
-        }
-        
-        // Reset relationship drag state
-        setRelationshipDrag({
-          isDrawing: false,
-          fromIndex: null,
-        });
-        return;
-      }
-
+    (e: React.PointerEvent) => {
       if (dragState?.isDragging) {
         e.currentTarget.releasePointerCapture(e.pointerId);
         setDragState(null);
       }
     },
-    [dragState, relationshipDrag, onRelationshipAdd]
+    [dragState]
   );
 
   // Handle position click (for selection)
   const handlePositionClick = useCallback(
-    (e: React.MouseEvent, index: number) => {
-      if (e.shiftKey) return; // Handled by pointer events
-      
+    (_e: React.MouseEvent, index: number) => {
       if (onPositionSelect) {
         onPositionSelect(selectedPositionIndex === index ? null : index);
       }
@@ -234,35 +178,6 @@ export default function TacticPitchEditor({
           <circle cx="50" cy="130" r="0.5" fill="white" opacity="0.8" />
         </svg>
 
-        {/* Relationships */}
-        <svg className="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 100 140" preserveAspectRatio="none">
-          {tactic.relationships.map((rel, relIndex) => {
-            const fromPos = getMergedPosition(rel.fromPositionIndex);
-            const toPos = getMergedPosition(rel.toPositionIndex);
-            
-            return (
-              <g key={`rel-${relIndex}-${rel.fromPositionIndex}-${rel.toPositionIndex}`}>
-                <line
-                  x1={fromPos.x}
-                  y1={fromPos.y}
-                  x2={toPos.x}
-                  y2={toPos.y}
-                  stroke="#fbbf24"
-                  strokeWidth="0.5"
-                  strokeDasharray="2,2"
-                  opacity="0.8"
-                />
-                {/* Arrow head */}
-                <polygon
-                  points={`${toPos.x},${toPos.y} ${toPos.x - 1},${toPos.y - 1.5} ${toPos.x + 1},${toPos.y - 1.5}`}
-                  fill="#fbbf24"
-                  opacity="0.8"
-                />
-              </g>
-            );
-          })}
-        </svg>
-
         {/* Player positions */}
         {parentFormation.positions.map((_, index) => {
           const mergedPos = getMergedPosition(index);
@@ -280,7 +195,7 @@ export default function TacticPitchEditor({
                 top: `${mergedPos.y}%`,
               }}
               onPointerDown={(e) => handlePointerDown(e, index)}
-              onPointerUp={(e) => handlePointerUp(e, index)}
+              onPointerUp={(e) => handlePointerUp(e)}
               onClick={(e) => handlePositionClick(e, index)}
               onMouseEnter={() => setHoverPositionIndex(index)}
               onMouseLeave={() => setHoverPositionIndex(null)}
@@ -327,16 +242,6 @@ export default function TacticPitchEditor({
             </div>
           );
         })}
-
-        {/* Relationship drawing preview */}
-        {relationshipDrag.isDrawing && relationshipDrag.fromIndex !== null && (
-          <div className="absolute inset-0 pointer-events-none">
-            <div className="absolute inset-0 bg-blue-500/10" />
-            <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-3 py-2 rounded shadow-lg">
-              Hold Shift and click another position to create relationship
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Info bar */}

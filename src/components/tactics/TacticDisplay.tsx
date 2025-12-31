@@ -1,58 +1,86 @@
-import { Tactic, PlayerDirection, RelationshipType } from '@/types';
+import { Tactic, PlayerDirection, TacticPrinciple } from '@/types';
 import { ResolvedPosition } from '@/data/tactics';
 
 interface TacticDisplayProps {
   tactic: Tactic;
   resolvedPositions: ResolvedPosition[];
-  showRelationships?: boolean;
   showDirections?: boolean;
   showInheritance?: boolean;
   onPositionClick?: (index: number) => void;
-  selectedPositionIndex?: number;
+  selectedPositionIndex?: number | null;
   className?: string;
+}
+
+/**
+ * Get principles that apply to a specific position
+ * Returns principles that either:
+ * - Have this position explicitly listed
+ * - Apply to all players (empty positionIndices array)
+ */
+export function getPrinciplesForPosition(
+  principles: TacticPrinciple[],
+  positionIndex: number,
+  includeGlobal: boolean = true
+): TacticPrinciple[] {
+  return principles.filter(p => {
+    // Global principle (applies to all)
+    if (p.positionIndices.length === 0) {
+      return includeGlobal;
+    }
+    // Position-specific principle
+    return p.positionIndices.includes(positionIndex);
+  });
+}
+
+/**
+ * Check if a position has any non-global principles
+ */
+export function hasSpecificPrinciples(
+  principles: TacticPrinciple[],
+  positionIndex: number
+): boolean {
+  return principles.some(p => 
+    p.positionIndices.length > 0 && p.positionIndices.includes(positionIndex)
+  );
 }
 
 export default function TacticDisplay({
   tactic,
   resolvedPositions,
-  showRelationships = true,
   showDirections = true,
   showInheritance = false,
   onPositionClick,
   selectedPositionIndex,
   className = '',
 }: TacticDisplayProps) {
-  // Constants
-  const MINIMUM_DISTANCE_THRESHOLD = 0.01;
-
-  // Get direction arrow symbol
-  const getDirectionSymbol = (direction?: PlayerDirection) => {
-    switch (direction) {
-      case 'attacking':
-        return '↑';
-      case 'defensive':
-        return '↓';
-      case 'neutral':
-      default:
-        return '●';
-    }
+  // Get direction arrow positioning and rotation based on compass direction
+  const getDirectionStyle = (direction?: PlayerDirection): { rotation: number; position: string } | null => {
+    if (!direction) return null;
+    
+    // Map compass directions to rotation degrees (0 = pointing up/north)
+    // and position classes for where the arrow should appear relative to the circle
+    const directionMap: Record<PlayerDirection, { rotation: number; position: string }> = {
+      'N': { rotation: 0, position: 'bottom-full left-1/2 -translate-x-1/2 mb-1' },
+      'S': { rotation: 180, position: 'top-full left-1/2 -translate-x-1/2 mt-1' },
+      'E': { rotation: 90, position: 'left-full top-1/2 -translate-y-1/2 ml-1' },
+      'W': { rotation: -90, position: 'right-full top-1/2 -translate-y-1/2 mr-1' },
+      'NE': { rotation: 45, position: 'bottom-full left-full -translate-x-1/4 mb-0.5' },
+      'NW': { rotation: -45, position: 'bottom-full right-full translate-x-1/4 mb-0.5' },
+      'SE': { rotation: 135, position: 'top-full left-full -translate-x-1/4 mt-0.5' },
+      'SW': { rotation: -135, position: 'top-full right-full translate-x-1/4 mt-0.5' },
+      'WN': { rotation: -45, position: 'right-full top-1/2 -translate-y-full mr-0.5' },
+      'WS': { rotation: -135, position: 'right-full top-1/2 translate-y-0 mr-0.5' },
+      'EN': { rotation: 45, position: 'left-full top-1/2 -translate-y-full ml-0.5' },
+      'ES': { rotation: 135, position: 'left-full top-1/2 translate-y-0 ml-0.5' },
+    };
+    
+    return directionMap[direction] || null;
   };
 
-  // Get line style for relationship type
-  const getLineStyle = (type: RelationshipType) => {
-    switch (type) {
-      case 'passing-lane':
-        return { strokeDasharray: 'none', stroke: 'white', opacity: 0.6 };
-      case 'cover':
-        return { strokeDasharray: '5,5', stroke: 'white', opacity: 0.6 };
-      case 'overlap':
-        return { strokeDasharray: 'none', stroke: 'yellow', opacity: 0.5 };
-      case 'combination':
-        return { strokeDasharray: '2,4', stroke: 'white', opacity: 0.5 };
-      default:
-        return { strokeDasharray: 'none', stroke: 'white', opacity: 0.6 };
-    }
-  };
+  // Get principles for selected position (excluding global ones that apply to everyone)
+  const selectedPrinciples = selectedPositionIndex !== null && selectedPositionIndex !== undefined
+    ? getPrinciplesForPosition(tactic.principles, selectedPositionIndex, false) // Don't include global when showing for selected
+    : [];
 
   return (
     <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
@@ -87,104 +115,20 @@ export default function TacticDisplay({
           {/* Penalty spots */}
           <circle cx="50" cy="10" r="0.5" fill="white" opacity="0.8" />
           <circle cx="50" cy="130" r="0.5" fill="white" opacity="0.8" />
-
-          {/* Relationship lines */}
-          {showRelationships && tactic.relationships?.map((rel, idx) => {
-            const fromPos = resolvedPositions[rel.fromPositionIndex];
-            const toPos = resolvedPositions[rel.toPositionIndex];
-            
-            if (!fromPos || !toPos) return null;
-            
-            const lineStyle = getLineStyle(rel.type);
-            
-            // For overlap type, draw a curved line
-            if (rel.type === 'overlap') {
-              // Calculate curve control point
-              const midX = (fromPos.x + toPos.x) / 2;
-              const midY = (fromPos.y + toPos.y) / 2;
-              // Offset the control point perpendicular to the line
-              const dx = toPos.x - fromPos.x;
-              const dy = toPos.y - fromPos.y;
-              const dist = Math.sqrt(dx * dx + dy * dy);
-              
-              // Avoid division by zero - use straight line if positions are too close
-              if (dist < MINIMUM_DISTANCE_THRESHOLD) {
-                return (
-                  <line
-                    key={`rel-${idx}`}
-                    x1={fromPos.x}
-                    y1={fromPos.y}
-                    x2={toPos.x}
-                    y2={toPos.y}
-                    stroke={lineStyle.stroke}
-                    strokeWidth="0.4"
-                    opacity={lineStyle.opacity}
-                  />
-                );
-              }
-              
-              const offsetX = -dy / dist * 8; // Perpendicular offset
-              const offsetY = dx / dist * 8;
-              
-              return (
-                <g key={`rel-${idx}`}>
-                  <path
-                    d={`M ${fromPos.x} ${fromPos.y} Q ${midX + offsetX} ${midY + offsetY} ${toPos.x} ${toPos.y}`}
-                    fill="none"
-                    stroke={lineStyle.stroke}
-                    strokeWidth="0.4"
-                    opacity={lineStyle.opacity}
-                  />
-                  {rel.description && (
-                    <text
-                      x={midX + offsetX}
-                      y={midY + offsetY}
-                      fill="white"
-                      fontSize="2.5"
-                      textAnchor="middle"
-                      className="pointer-events-none"
-                    >
-                      {rel.description}
-                    </text>
-                  )}
-                </g>
-              );
-            }
-            
-            // Straight line for other types
-            return (
-              <g key={`rel-${idx}`}>
-                <line
-                  x1={fromPos.x}
-                  y1={fromPos.y}
-                  x2={toPos.x}
-                  y2={toPos.y}
-                  stroke={lineStyle.stroke}
-                  strokeWidth="0.4"
-                  strokeDasharray={lineStyle.strokeDasharray}
-                  opacity={lineStyle.opacity}
-                />
-                {rel.description && (
-                  <text
-                    x={(fromPos.x + toPos.x) / 2}
-                    y={(fromPos.y + toPos.y) / 2}
-                    fill="white"
-                    fontSize="2.5"
-                    textAnchor="middle"
-                    className="pointer-events-none"
-                  >
-                    {rel.description}
-                  </text>
-                )}
-              </g>
-            );
-          })}
         </svg>
 
         {/* Player positions */}
         {resolvedPositions.map((pos, index) => {
           const isSelected = index === selectedPositionIndex;
           const hasOverrides = showInheritance && pos.overriddenBy && pos.overriddenBy.length > 0;
+          const hasPrinciples = hasSpecificPrinciples(tactic.principles, index);
+          
+          // Dim positions not related to selected position's principles
+          const isDimmed = selectedPositionIndex !== null && 
+            selectedPositionIndex !== undefined && 
+            !isSelected &&
+            selectedPrinciples.length > 0 &&
+            !selectedPrinciples.some(p => p.positionIndices.includes(index));
 
           const handleClick = () => {
             if (onPositionClick) {
@@ -197,7 +141,7 @@ export default function TacticDisplay({
               key={index}
               className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
                 onPositionClick ? 'cursor-pointer hover:scale-110' : ''
-              } transition-all duration-200 group`}
+              } transition-all duration-200 group ${isDimmed ? 'opacity-40' : ''}`}
               style={{
                 left: `${pos.x}%`,
                 top: `${pos.y}%`,
@@ -205,15 +149,6 @@ export default function TacticDisplay({
               onClick={handleClick}
               title={hasOverrides ? `Overridden by: ${pos.overriddenBy?.join(', ')}` : undefined}
             >
-              {/* Direction arrow above/below */}
-              {showDirections && pos.direction && (
-                <div className="absolute left-1/2 transform -translate-x-1/2 -top-6">
-                  <span className="text-white text-lg font-bold drop-shadow-lg">
-                    {getDirectionSymbol(pos.direction)}
-                  </span>
-                </div>
-              )}
-
               {/* Position marker */}
               <div className="relative">
                 <div
@@ -222,6 +157,8 @@ export default function TacticDisplay({
                       ? 'bg-yellow-500 dark:bg-yellow-600 border-yellow-300 dark:border-yellow-400 ring-4 ring-yellow-400 dark:ring-yellow-500'
                       : hasOverrides
                       ? 'bg-blue-600 dark:bg-blue-700 border-orange-400 dark:border-orange-500 ring-2 ring-orange-400 dark:ring-orange-500'
+                      : hasPrinciples
+                      ? 'bg-blue-600 dark:bg-blue-700 border-purple-400 dark:border-purple-500 ring-2 ring-purple-400/50 dark:ring-purple-500/50'
                       : 'bg-blue-600 dark:bg-blue-700 border-blue-400 dark:border-blue-500'
                   }`}
                 >
@@ -229,28 +166,43 @@ export default function TacticDisplay({
                     {pos.position}
                   </span>
                 </div>
+
+                {/* Principle indicator dot */}
+                {hasPrinciples && !isSelected && (
+                  <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-purple-500 rounded-full border border-white shadow-sm" />
+                )}
+
+                {/* Direction arrow - positioned outside the circle */}
+                {showDirections && pos.direction && (() => {
+                  const dirStyle = getDirectionStyle(pos.direction);
+                  if (!dirStyle) return null;
+                  
+                  return (
+                    <div 
+                      className={`absolute ${dirStyle.position} pointer-events-none`}
+                    >
+                      <svg 
+                        width="16" 
+                        height="16" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        className="drop-shadow-lg"
+                        style={{ transform: `rotate(${dirStyle.rotation}deg)` }}
+                      >
+                        <path 
+                          d="M12 4L6 14H18L12 4Z" 
+                          fill="white" 
+                          stroke="rgba(0,0,0,0.3)" 
+                          strokeWidth="1"
+                        />
+                      </svg>
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           );
         })}
-      </div>
-
-      {/* Tactic Info */}
-      <div className="px-4 py-3 bg-gray-50 dark:bg-gray-700/50 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex items-center justify-between text-sm">
-          <div>
-            <span className="font-semibold text-gray-900 dark:text-white">{tactic.name}</span>
-            {tactic.style && (
-              <span className="text-gray-600 dark:text-gray-400 ml-2">({tactic.style})</span>
-            )}
-          </div>
-          <span className="text-gray-600 dark:text-gray-400">
-            {tactic.squadSize}-a-side
-          </span>
-        </div>
-        {tactic.summary && (
-          <p className="text-sm text-gray-600 dark:text-gray-400 mt-2 line-clamp-2">{tactic.summary.slice(0, 100)}...</p>
-        )}
       </div>
     </div>
   );

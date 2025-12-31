@@ -38,12 +38,6 @@ export default function ResetOverridesModal({
     if (override.direction !== undefined) {
       changes.push('direction');
     }
-    if (override.roleDescription !== undefined) {
-      changes.push('role');
-    }
-    if (override.keyResponsibilities !== undefined) {
-      changes.push('responsibilities');
-    }
     
     return changes;
   };
@@ -126,20 +120,12 @@ export default function ResetOverridesModal({
                               </span>
                             </div>
                           )}
-                          {override.roleDescription && (
+                          {(override.x !== undefined || override.y !== undefined) && (
                             <div className="text-xs">
-                              <span className="text-gray-500 dark:text-gray-400">Role:</span>
+                              <span className="text-gray-500 dark:text-gray-400">Position:</span>
                               <span className="ml-1 text-gray-700 dark:text-gray-300">
-                                {override.roleDescription.substring(0, 50)}
-                                {override.roleDescription.length > 50 ? '...' : ''}
-                              </span>
-                            </div>
-                          )}
-                          {override.keyResponsibilities && override.keyResponsibilities.length > 0 && (
-                            <div className="text-xs">
-                              <span className="text-gray-500 dark:text-gray-400">Responsibilities:</span>
-                              <span className="ml-1 text-gray-700 dark:text-gray-300">
-                                {override.keyResponsibilities.length} items
+                                {override.x !== undefined ? `X: ${override.x}%` : ''} 
+                                {override.y !== undefined ? `Y: ${override.y}%` : ''}
                               </span>
                             </div>
                           )}
@@ -161,7 +147,7 @@ export default function ResetOverridesModal({
                   Warning: This action cannot be undone
                 </h4>
                 <p className="text-xs text-yellow-800 dark:text-yellow-300 mt-1">
-                  All position overrides, directions, roles, and responsibilities will be permanently removed.
+                  All position overrides and directions will be permanently removed.
                   You will need to reconfigure them manually if needed.
                 </p>
               </div>

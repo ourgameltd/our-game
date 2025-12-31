@@ -35,7 +35,6 @@ export const HighPress442: Story = {
   args: {
     tactic: highPressTactic,
     resolvedPositions: getResolvedPositions(highPressTactic),
-    showRelationships: true,
     showDirections: true,
     showInheritance: false,
   },
@@ -46,18 +45,6 @@ export const Compact4231: Story = {
   args: {
     tactic: compactTactic,
     resolvedPositions: getResolvedPositions(compactTactic),
-    showRelationships: true,
-    showDirections: true,
-    showInheritance: false,
-  },
-};
-
-// Without relationships
-export const WithoutRelationships: Story = {
-  args: {
-    tactic: highPressTactic,
-    resolvedPositions: getResolvedPositions(highPressTactic),
-    showRelationships: false,
     showDirections: true,
     showInheritance: false,
   },
@@ -68,7 +55,6 @@ export const WithoutDirections: Story = {
   args: {
     tactic: highPressTactic,
     resolvedPositions: getResolvedPositions(highPressTactic),
-    showRelationships: true,
     showDirections: false,
     showInheritance: false,
   },
@@ -79,7 +65,6 @@ export const WithInheritance: Story = {
   args: {
     tactic: bluesHighPress,
     resolvedPositions: getResolvedPositions(bluesHighPress),
-    showRelationships: true,
     showDirections: true,
     showInheritance: true,
   },
@@ -93,7 +78,6 @@ const InteractiveTemplate = () => {
     <TacticDisplay
       tactic={highPressTactic}
       resolvedPositions={getResolvedPositions(highPressTactic)}
-      showRelationships={true}
       showDirections={true}
       showInheritance={false}
       onPositionClick={(index) => {
@@ -117,7 +101,6 @@ export const AllFeatures: Story = {
   args: {
     tactic: compactTactic,
     resolvedPositions: getResolvedPositions(compactTactic),
-    showRelationships: true,
     showDirections: true,
     showInheritance: false,
   },

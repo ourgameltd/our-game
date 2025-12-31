@@ -2,9 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react';
 import { useState } from 'react';
 import TacticPitchEditor from '../components/tactics/TacticPitchEditor';
 import PositionRolePanel from '../components/tactics/PositionRolePanel';
-import RelationshipDrawer from '../components/tactics/RelationshipDrawer';
 import ResetOverridesModal from '../components/tactics/ResetOverridesModal';
-import { Formation, Tactic, TacticalPositionOverride, PlayerRelationship } from '@/types';
+import { Formation, Tactic, TacticalPositionOverride } from '@/types';
 
 const meta: Meta<typeof TacticPitchEditor> = {
   title: 'Components/Tactics/TacticPitchEditor',
@@ -54,34 +53,22 @@ const sampleTactic: Tactic = {
   positionOverrides: {
     1: { // LB
       y: 40,
-      direction: 'attacking',
-      roleDescription: 'Advanced fullback who **overlaps** the winger',
-      keyResponsibilities: ['Support attacks', 'Overlap winger', 'Track back quickly'],
+      direction: 'NE',
     },
     4: { // RB
       y: 40,
-      direction: 'attacking',
-      roleDescription: 'Advanced fullback who provides width',
-      keyResponsibilities: ['Provide width', 'Cross from deep', 'Cover center-backs'],
+      direction: 'NW',
     },
     5: { // CDM
-      direction: 'defensive',
-      roleDescription: 'Defensive shield',
-      keyResponsibilities: ['Protect defense', 'Break up play', 'Distribute from deep'],
+      direction: 'S',
     },
   },
-  relationships: [
+  principles: [
     {
-      fromPositionIndex: 1,
-      toPositionIndex: 8,
-      type: 'overlap',
-      description: 'LB overlaps LW on attacking runs',
-    },
-    {
-      fromPositionIndex: 5,
-      toPositionIndex: 2,
-      type: 'cover',
-      description: 'CDM drops to cover CB when fullbacks advance',
+      id: 'principle-1',
+      title: 'High Press',
+      description: 'Press high up the pitch to win the ball back quickly',
+      positionIndices: [8, 9, 10],
     },
   ],
   createdBy: 'coach-1',
@@ -113,29 +100,7 @@ export const Interactive: Story = {
       });
     };
 
-    const handleRelationshipAdd = (relationship: PlayerRelationship) => {
-      setTactic((prev) => ({
-        ...prev,
-        relationships: [...prev.relationships, relationship],
-      }));
-    };
-
-    const handleRelationshipUpdate = (relationship: PlayerRelationship, index: number) => {
-      setTactic((prev) => {
-        const newRelationships = [...prev.relationships];
-        newRelationships[index] = relationship;
-        return { ...prev, relationships: newRelationships };
-      });
-    };
-
-    const handleRelationshipRemove = (index: number) => {
-      setTactic((prev) => ({
-        ...prev,
-        relationships: prev.relationships.filter((_, i) => i !== index),
-      }));
-    };
-
-    const handleResetField = (field: 'direction' | 'roleDescription' | 'keyResponsibilities') => {
+    const handleResetField = (field: 'direction' | 'x' | 'y') => {
       if (selectedPosition === null) return;
 
       setTactic((prev) => {
@@ -175,9 +140,7 @@ export const Interactive: Story = {
     const selectedOverride = selectedPosition !== null ? tactic.positionOverrides[selectedPosition] : undefined;
     const selectedParentData = selectedPosition !== null ? {
       direction: undefined,
-      roleDescription: undefined,
-      keyResponsibilities: undefined,
-    } : { direction: undefined, roleDescription: undefined, keyResponsibilities: undefined };
+    } : { direction: undefined };
 
     return (
       <div className="space-y-6">
@@ -208,8 +171,6 @@ export const Interactive: Story = {
               tactic={tactic}
               parentFormation={sampleFormation}
               onPositionChange={handlePositionChange}
-              onRelationshipAdd={handleRelationshipAdd}
-              onRelationshipRemove={handleRelationshipRemove}
               snapToGrid={snapToGrid}
               gridSize={5}
               onPositionSelect={setSelectedPosition}
@@ -230,14 +191,6 @@ export const Interactive: Story = {
                 onResetField={handleResetField}
               />
             )}
-
-            {/* Relationship Drawer */}
-            <RelationshipDrawer
-              relationships={tactic.relationships}
-              positions={sampleFormation.positions.map((p) => p.position)}
-              onUpdate={handleRelationshipUpdate}
-              onRemove={handleRelationshipRemove}
-            />
           </div>
         </div>
 
@@ -260,7 +213,6 @@ export const Basic: Story = {
     tactic: sampleTactic,
     parentFormation: sampleFormation,
     onPositionChange: () => {},
-    onRelationshipAdd: () => {},
   },
 };
 
@@ -270,7 +222,6 @@ export const FreePositioning: Story = {
     tactic: sampleTactic,
     parentFormation: sampleFormation,
     onPositionChange: () => {},
-    onRelationshipAdd: () => {},
     snapToGrid: false,
   },
 };
@@ -281,7 +232,6 @@ export const LargeGridSize: Story = {
     tactic: sampleTactic,
     parentFormation: sampleFormation,
     onPositionChange: () => {},
-    onRelationshipAdd: () => {},
     snapToGrid: true,
     gridSize: 10,
   },

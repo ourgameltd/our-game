@@ -269,24 +269,26 @@ export function getKitTypeLabel(type: string): string {
   return kitTypeDisplay[type] ?? type;
 }
 
-// Player directions for tactics
+// Player directions for tactics - compass-based directions
 export const playerDirections = [
-  { value: 'defensive', label: 'Defensive', icon: '↓' },
-  { value: 'neutral', label: 'Neutral', icon: '●' },
-  { value: 'attacking', label: 'Attacking', icon: '↑' },
+  // Primary compass directions
+  { value: 'N', label: 'North (Forward)', icon: '↑' },
+  { value: 'S', label: 'South (Back)', icon: '↓' },
+  { value: 'E', label: 'East (Right)', icon: '→' },
+  { value: 'W', label: 'West (Left)', icon: '←' },
+  // Diagonal directions
+  { value: 'NE', label: 'North-East', icon: '↗' },
+  { value: 'NW', label: 'North-West', icon: '↖' },
+  { value: 'SE', label: 'South-East', icon: '↘' },
+  { value: 'SW', label: 'South-West', icon: '↙' },
+  // Bent/curved run directions
+  { value: 'WN', label: 'West then North', icon: '↰' },
+  { value: 'WS', label: 'West then South', icon: '↲' },
+  { value: 'EN', label: 'East then North', icon: '↱' },
+  { value: 'ES', label: 'East then South', icon: '↳' },
 ] as const;
 
 export type PlayerDirectionValue = typeof playerDirections[number]['value'];
-
-// Relationship types for tactics
-export const relationshipTypes = [
-  { value: 'passing-lane', label: 'Passing Lane', description: 'Primary passing connection' },
-  { value: 'cover', label: 'Cover', description: 'Defensive cover responsibility' },
-  { value: 'overlap', label: 'Overlap', description: 'Overlapping run pattern' },
-  { value: 'combination', label: 'Combination', description: 'Quick combination play' },
-] as const;
-
-export type RelationshipTypeValue = typeof relationshipTypes[number]['value'];
 
 // Tactic styles
 export const tacticStyles = [
@@ -308,16 +310,6 @@ export const playerDirectionDisplay: Record<string, string> = Object.fromEntries
 // Get player direction label
 export function getPlayerDirectionLabel(direction: string): string {
   return playerDirectionDisplay[direction] ?? direction;
-}
-
-// Relationship type display mapping
-export const relationshipTypeDisplay: Record<string, string> = Object.fromEntries(
-  relationshipTypes.map(r => [r.value, r.label])
-);
-
-// Get relationship type label
-export function getRelationshipTypeLabel(type: string): string {
-  return relationshipTypeDisplay[type] ?? type;
 }
 
 // Tactic style display mapping

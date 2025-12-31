@@ -1,4 +1,4 @@
-import { Tactic, TacticalPositionOverride } from '../types';
+import { Tactic, TacticalPositionOverride, PlayerDirection } from '../types';
 import { getFormationById } from './formations';
 
 /**
@@ -20,73 +20,47 @@ export const sampleTactics: Tactic[] = [
     },
     positionOverrides: {
       6: { // CM (left)
-        direction: 'defensive',
-        roleDescription: 'Defensive Midfielder',
-        keyResponsibilities: ['Press opposition midfield', 'Quick transitions'],
+        direction: 'S',
       },
       7: { // CM (right)
-        direction: 'defensive',
-        roleDescription: 'Box-to-Box Midfielder',
-        keyResponsibilities: ['Press opposition midfield', 'Support attacks'],
+        direction: 'S',
       },
       9: { // ST (left)
         y: 85, // Push higher up the pitch
-        direction: 'attacking',
-        roleDescription: 'Advanced Striker',
-        keyResponsibilities: ['Press center backs', 'Force play wide', 'Clinical finishing'],
+        direction: 'N',
       },
       10: { // ST (right)
         y: 85, // Push higher up the pitch
-        direction: 'attacking',
-        roleDescription: 'Target Man',
-        keyResponsibilities: ['Press center backs', 'Force play wide', 'Hold-up play'],
+        direction: 'N',
       },
     },
-    relationships: [
+    principles: [
       {
-        fromPositionIndex: 6, // CM (left)
-        toPositionIndex: 7, // CM (right)
-        type: 'passing-lane',
-        description: 'Central midfield partnership - quick interchanges',
+        id: 'p1-press-high',
+        title: 'Press High',
+        description: 'Immediately press the opposition when they have the ball in their defensive third. Force them to play long or make mistakes.',
+        positionIndices: [9, 10], // Strikers
       },
       {
-        fromPositionIndex: 6, // CM (left)
-        toPositionIndex: 9, // ST (left)
-        type: 'passing-lane',
-        description: 'Thread balls through to striker',
+        id: 'p1-compact-midfield',
+        title: 'Stay Compact',
+        description: 'Keep distances between units tight. No more than 10 yards between each line of defense.',
+        positionIndices: [], // All players
       },
       {
-        fromPositionIndex: 7, // CM (right)
-        toPositionIndex: 10, // ST (right)
-        type: 'passing-lane',
-        description: 'Thread balls through to striker',
+        id: 'p1-quick-transition',
+        title: 'Quick Transition',
+        description: 'When we win the ball, look to play forward immediately. Maximum 3 touches before a forward pass.',
+        positionIndices: [5, 6, 7, 8], // Midfielders and wingers
       },
       {
-        fromPositionIndex: 9, // ST (left)
-        toPositionIndex: 10, // ST (right)
-        type: 'combination',
-        description: 'Striker partnership - one-twos and overlaps',
+        id: 'p1-force-wide',
+        title: 'Force Play Wide',
+        description: 'Block central passing lanes to force opposition to play wide where we can trap the ball.',
+        positionIndices: [6, 7, 9, 10], // Central midfielders and strikers
       },
     ],
-    summary: `## High Press Philosophy
-
-Vale FC's signature high-pressing system designed to win the ball back quickly in the opponent's half.
-
-### Key Principles
-- **Aggressive Pressing**: Strikers initiate the press on opposition center backs
-- **Compact Shape**: Midfield stays tight to support the press
-- **Quick Transitions**: Win the ball and attack immediately
-- **Team Effort**: Everyone works together to press and recover
-
-### When to Use
-- Against teams that build from the back
-- When we have high energy and fitness
-- In games where we need to dominate possession
-
-### Coaching Points
-- Press as a unit, not individuals
-- Force play into wide areas where we can trap the ball
-- Quick recovery when press is broken`,
+    summary: `Vale FC's signature high-pressing system designed to win the ball back quickly in the opponent's half. The strikers initiate aggressive pressing on opposition center backs while the midfield stays compact to support. When we win the ball, we look to transition quickly and attack immediately. This system works best against teams that build from the back and requires the whole team to press and recover as a unit.`,
     style: 'High Press',
     createdBy: 'c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f',
     createdAt: '2024-09-01T00:00:00.000Z',
@@ -110,68 +84,49 @@ Vale FC's signature high-pressing system designed to win the ball back quickly i
     positionOverrides: {
       5: { // LM
         x: 18, // Slightly narrower to support press
-        direction: 'attacking',
-        keyResponsibilities: ['Cut passing lanes', 'Quick overlaps'],
+        direction: 'NE',
       },
       6: { // CM (left)
         x: 38, // Slightly adjusted for specific player strengths
-        keyResponsibilities: ['Press opposition midfield', 'Quick transitions', 'Playmaking from deep'],
       },
       8: { // RM
         x: 82, // Slightly narrower to support press
-        direction: 'attacking',
-        keyResponsibilities: ['Cut passing lanes', 'Quick overlaps'],
+        direction: 'NW',
       },
       9: { // ST (left)
         x: 33, // Adjusted for specific player (faster, more agile)
-        keyResponsibilities: ['Press center backs', 'Force play wide', 'Clinical finishing', 'Use pace to run in behind'],
       },
       10: { // ST (right)
         x: 67, // Adjusted for specific player (stronger, better hold-up)
-        keyResponsibilities: ['Press center backs', 'Force play wide', 'Hold-up play', 'Target for long balls'],
       },
     },
-    relationships: [
-      // Additional team-specific relationships
+    principles: [
       {
-        fromPositionIndex: 9, // ST (left)
-        toPositionIndex: 10, // ST (right)
-        type: 'combination',
-        description: 'Striker partnership - left striker runs in behind, right striker holds up',
+        id: 'p2-run-in-behind',
+        title: 'Run In Behind',
+        description: 'Use pace to exploit space behind the defensive line. Make diagonal runs when pressing is triggered.',
+        positionIndices: [9], // Left striker
       },
       {
-        fromPositionIndex: 5, // LM
-        toPositionIndex: 9, // ST (left)
-        type: 'overlap',
-        description: 'Winger supports striker runs',
+        id: 'p2-hold-up-play',
+        title: 'Hold-Up Play',
+        description: 'Receive with back to goal and bring teammates into play. Be the target for long balls.',
+        positionIndices: [10], // Right striker
       },
       {
-        fromPositionIndex: 8, // RM
-        toPositionIndex: 10, // ST (right)
-        type: 'overlap',
-        description: 'Winger supports striker hold-up',
+        id: 'p2-inside-cuts',
+        title: 'Cut Inside When Pressing',
+        description: 'Move inside to cut passing lanes when strikers initiate the press.',
+        positionIndices: [5, 8], // Wingers
+      },
+      {
+        id: 'p2-playmaker',
+        title: 'Playmaking from Deep',
+        description: 'Look for creative passes through the lines when we win possession.',
+        positionIndices: [6], // Left CM
       },
     ],
-    summary: `## 2015 Blues Adapted High Press
-
-Team-specific adaptation of Vale FC's high press system, optimized for the Blues squad's strengths.
-
-### Team-Specific Adjustments
-- **Pacey Left Striker**: Exploits space in behind with speed
-- **Target Right Striker**: Holds up play and brings others into the game
-- **Narrower Wingers**: Support the press more effectively
-- **Creative Left CM**: Added playmaking responsibilities
-
-### Player Roles
-- Left Striker: Runner in behind
-- Right Striker: Target man
-- Left CM: Deep-lying playmaker
-- Wingers: Inside forwards when pressing
-
-### Training Focus
-- Striker combination play
-- Winger positioning during press
-- Quick transition drills`,
+    summary: `A team-specific adaptation of Vale FC's high press system, optimized for the Blues squad's strengths. Our pacey left striker exploits space in behind while the target right striker holds up play and brings others into the game. The wingers have been moved narrower to support the press more effectively, and our creative left CM has added playmaking responsibilities to unlock defences when we win possession.`,
     style: 'High Press',
     createdBy: 'c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f',
     createdAt: '2024-09-20T00:00:00.000Z',
@@ -191,62 +146,47 @@ Team-specific adaptation of Vale FC's high press system, optimized for the Blues
     },
     positionOverrides: {
       5: { // CDM (left)
-        direction: 'defensive',
-        roleDescription: 'Holding Midfielder',
-        keyResponsibilities: ['Shield back four', 'Break up play'],
+        direction: 'S',
       },
       6: { // CDM (right)
-        direction: 'defensive',
-        roleDescription: 'Holding Midfielder',
-        keyResponsibilities: ['Shield back four', 'Break up play'],
+        direction: 'S',
       },
       7: { // LM
         y: 55, // Deeper to help defend
-        direction: 'defensive',
-        roleDescription: 'Defensive Winger',
-        keyResponsibilities: ['Track back', 'Defensive width'],
+        direction: 'SW',
       },
       9: { // RM
         y: 55, // Deeper to help defend
-        direction: 'defensive',
-        roleDescription: 'Defensive Winger',
-        keyResponsibilities: ['Track back', 'Defensive width'],
+        direction: 'SE',
       },
     },
-    relationships: [
+    principles: [
       {
-        fromPositionIndex: 5, // CDM (left)
-        toPositionIndex: 6, // CDM (right)
-        type: 'cover',
-        description: 'Double pivot - cover each other',
+        id: 'p3-shield-back-four',
+        title: 'Shield the Back Four',
+        description: 'Position between the opposition and our defense. Screen passes and break up play.',
+        positionIndices: [5, 6], // CDMs
       },
       {
-        fromPositionIndex: 7, // LM
-        toPositionIndex: 1, // LB
-        type: 'cover',
-        description: 'Winger drops to support full-back',
+        id: 'p3-track-back',
+        title: 'Track Back',
+        description: 'When opposition has the ball, drop deep to form a solid block of 8 outfield players.',
+        positionIndices: [7, 9], // Wide midfielders
       },
       {
-        fromPositionIndex: 9, // RM
-        toPositionIndex: 4, // RB
-        type: 'cover',
-        description: 'Winger drops to support full-back',
+        id: 'p3-counter-attack',
+        title: 'Counter Attack',
+        description: 'When we win the ball, look to release the striker quickly on the counter.',
+        positionIndices: [], // All players
+      },
+      {
+        id: 'p3-stay-narrow',
+        title: 'Stay Narrow',
+        description: 'Protect the central areas. Force opposition to play wide and cross.',
+        positionIndices: [2, 3, 5, 6], // CBs and CDMs
       },
     ],
-    summary: `## Compact Defensive System
-
-A solid defensive setup using the 4-2-3-1 formation with emphasis on compactness and organization.
-
-### Key Principles
-- **Compact Shape**: Stay tight as a unit
-- **Double Pivot**: Two holding midfielders protect defense
-- **Wide Players Track**: Wingers help defend
-- **Counter Attack**: Quick breaks when we win the ball
-
-### When to Use
-- Against stronger opposition
-- When protecting a lead
-- Away games requiring solid defense`,
+    summary: `A solid defensive setup using the 4-2-3-1 formation with emphasis on compactness and organization. The double pivot of two holding midfielders protects the back four while the wide players track back to help defend. When we win the ball, we look to break quickly on the counter. This system is ideal against stronger opposition, when protecting a lead, or in away games requiring solid defensive structure.`,
     style: 'Defensive',
     createdBy: 'c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f',
     createdAt: '2024-09-10T00:00:00.000Z',
@@ -269,9 +209,7 @@ export interface ResolvedPosition {
   position: string;
   x: number;
   y: number;
-  direction?: 'defensive' | 'neutral' | 'attacking';
-  roleDescription?: string;
-  keyResponsibilities?: string[];
+  direction?: PlayerDirection;
   sourceFormationId: string;
   overriddenBy?: string[];
 }
@@ -321,18 +259,6 @@ export const getResolvedPositions = (tactic: Tactic): ResolvedPosition[] => {
       }
       if (override.direction !== undefined) {
         position.direction = override.direction;
-        modified = true;
-      }
-      if (override.roleDescription !== undefined) {
-        position.roleDescription = override.roleDescription;
-        modified = true;
-      }
-      if (override.keyResponsibilities !== undefined) {
-        // Merge key responsibilities rather than replacing
-        position.keyResponsibilities = [
-          ...(position.keyResponsibilities || []),
-          ...override.keyResponsibilities,
-        ];
         modified = true;
       }
 
@@ -441,17 +367,6 @@ export const isFieldOverridden = (
   }
 
   // Compare values based on field type
-  if (field === 'keyResponsibilities') {
-    // For arrays, check if they're different
-    const currentAreas = override[field] as string[] | undefined;
-    const parentAreas = parentPosition.keyResponsibilities;
-    
-    if (!currentAreas && !parentAreas) return false;
-    if (!currentAreas || !parentAreas) return true;
-    
-    return JSON.stringify(currentAreas) !== JSON.stringify(parentAreas);
-  }
-
   // For other fields, simple comparison
   const parentValue = parentPosition[field as keyof ResolvedPosition];
   return override[field] !== parentValue;
@@ -500,7 +415,7 @@ export const getOverriddenFieldsList = (tactic: Tactic): OverrideInfo[] => {
 
     // Check each field
     const fields: Array<keyof TacticalPositionOverride> = [
-      'x', 'y', 'direction', 'roleDescription', 'keyResponsibilities'
+      'x', 'y', 'direction'
     ];
 
     fields.forEach(field => {
