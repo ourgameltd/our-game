@@ -59,26 +59,31 @@ export default function TeamCoachesPage() {
         {/* All Coaches */}
         {teamCoaches.length > 0 && (
           <div className="mb-8">
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {teamCoaches.map((coach) => (
-                <div key={coach.id} className="relative group">
-                  <Link to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
-                </div>
+                <Link key={coach.id} to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
+                  <CoachCard 
+                    coach={coach}
+                    badges={
+                      coach.teamIds.length > 1 ? (
+                        <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                          {coach.teamIds.length} teams
+                        </span>
+                      ) : undefined
+                    }
+                    actions={
+                      !team.isArchived ? (
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                          title="Remove from team"
+                        >
+                          ✕
+                        </button>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>

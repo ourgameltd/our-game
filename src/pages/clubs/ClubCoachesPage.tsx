@@ -296,23 +296,27 @@ export default function ClubCoachesPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               {role} ({coachesByRole[role].length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {coachesByRole[role].map((coach) => (
-                <div key={coach.id} className="relative">
-                  <Link to={Routes.coach(clubId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                  {coach.isArchived && (
-                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                      🗄️ Archived
-                    </div>
-                  )}
-                  {coach.teamIds.length > 1 && (
-                    <div className="absolute top-2 right-2 bg-secondary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {coach.teamIds.length} teams
-                    </div>
-                  )}
-                </div>
+                <Link key={coach.id} to={Routes.coach(clubId!, coach.id)}>
+                  <CoachCard 
+                    coach={coach} 
+                    badges={
+                      <>
+                        {coach.isArchived && (
+                          <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                            🗄️ Archived
+                          </span>
+                        )}
+                        {coach.teamIds.length > 1 && (
+                          <span className="bg-secondary-600 text-white text-xs px-2 py-1 rounded-full">
+                            {coach.teamIds.length} teams
+                          </span>
+                        )}
+                      </>
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>

@@ -91,28 +91,31 @@ export default function TeamPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🥅</span> Goalkeepers ({goalkeepers.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {goalkeepers.map((player) => (
-                <div key={player.id} className="relative group">
-                  <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.id)}
-                  >
-                    <PlayerCard player={player} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {player.teamIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.teamIds.length} teams
-                    </div>
-                  )}
-                </div>
+                <Link key={player.id} to={Routes.player(clubId!, ageGroupId!, player.id)}>
+                  <PlayerCard 
+                    player={player}
+                    badges={
+                      player.teamIds.length > 1 ? (
+                        <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                          {player.teamIds.length} teams
+                        </span>
+                      ) : undefined
+                    }
+                    actions={
+                      !team.isArchived ? (
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                          title="Remove from team"
+                        >
+                          ✕
+                        </button>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -124,28 +127,31 @@ export default function TeamPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🛡️</span> Defenders ({defenders.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {defenders.map((player) => (
-                <div key={player.id} className="relative group">
-                  <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.id)}
-                  >
-                    <PlayerCard player={player} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {player.ageGroupIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.ageGroupIds.length} teams
-                    </div>
-                  )}
-                </div>
+                <Link key={player.id} to={Routes.player(clubId!, ageGroupId!, player.id)}>
+                  <PlayerCard 
+                    player={player}
+                    badges={
+                      player.teamIds.length > 1 ? (
+                        <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                          {player.teamIds.length} teams
+                        </span>
+                      ) : undefined
+                    }
+                    actions={
+                      !team.isArchived ? (
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                          title="Remove from team"
+                        >
+                          ✕
+                        </button>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -157,28 +163,31 @@ export default function TeamPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚙️</span> Midfielders ({midfielders.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {midfielders.map((player) => (
-                <div key={player.id} className="relative group">
-                  <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.id)}
-                  >
-                    <PlayerCard player={player} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {player.ageGroupIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.ageGroupIds.length} teams
-                    </div>
-                  )}
-                </div>
+                <Link key={player.id} to={Routes.player(clubId!, ageGroupId!, player.id)}>
+                  <PlayerCard 
+                    player={player}
+                    badges={
+                      player.teamIds.length > 1 ? (
+                        <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                          {player.teamIds.length} teams
+                        </span>
+                      ) : undefined
+                    }
+                    actions={
+                      !team.isArchived ? (
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                          title="Remove from team"
+                        >
+                          ✕
+                        </button>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -190,28 +199,31 @@ export default function TeamPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚡</span> Forwards ({forwards.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {forwards.map((player) => (
-                <div key={player.id} className="relative group">
-                  <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.id)}
-                  >
-                    <PlayerCard player={player} />
-                  </Link>
-                  {!team.isArchived && (
-                    <button
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg hover:bg-red-600"
-                      title="Remove from team"
-                    >
-                      ✕
-                    </button>
-                  )}
-                  {player.ageGroupIds.length > 1 && (
-                    <div className="absolute top-2 left-2 bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                      {player.ageGroupIds.length} teams
-                    </div>
-                  )}
-                </div>
+                <Link key={player.id} to={Routes.player(clubId!, ageGroupId!, player.id)}>
+                  <PlayerCard 
+                    player={player}
+                    badges={
+                      player.teamIds.length > 1 ? (
+                        <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                          {player.teamIds.length} teams
+                        </span>
+                      ) : undefined
+                    }
+                    actions={
+                      !team.isArchived ? (
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                          className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                          title="Remove from team"
+                        >
+                          ✕
+                        </button>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>

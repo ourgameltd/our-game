@@ -38,13 +38,11 @@ export default function AgeGroupCoachesPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>👨‍🏫</span> Head Coaches ({headCoaches.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {headCoaches.map((coach) => (
-                <div key={coach.id} className="relative">
-                  <Link to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                </div>
+                <Link key={coach.id} to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
+                  <CoachCard coach={coach} />
+                </Link>
               ))}
             </div>
           </div>
@@ -56,13 +54,11 @@ export default function AgeGroupCoachesPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🤝</span> Assistant Coaches ({assistantCoaches.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {assistantCoaches.map((coach) => (
-                <div key={coach.id} className="relative">
-                  <Link to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                </div>
+                <Link key={coach.id} to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
+                  <CoachCard coach={coach} />
+                </Link>
               ))}
             </div>
           </div>
@@ -74,13 +70,11 @@ export default function AgeGroupCoachesPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚙️</span> Specialist Coaches ({specialistCoaches.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {specialistCoaches.map((coach) => (
-                <div key={coach.id} className="relative">
-                  <Link to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
-                    <CoachCard coach={coach} />
-                  </Link>
-                </div>
+                <Link key={coach.id} to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
+                  <CoachCard coach={coach} />
+                </Link>
               ))}
             </div>
           </div>

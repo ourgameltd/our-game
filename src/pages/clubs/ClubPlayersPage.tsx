@@ -285,18 +285,20 @@ export default function ClubPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🥅</span> Goalkeepers ({goalkeepers.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {goalkeepers.map((player) => (
-                <div key={player.id} className="relative">
-                  <Link to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
-                    <PlayerCard player={player} />
-                  </Link>
-                  {player.isArchived && (
-                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                      🗄️ Archived
-                    </div>
-                  )}
-                </div>
+                <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
+                  <PlayerCard 
+                    player={player}
+                    badges={
+                      player.isArchived ? (
+                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                          🗄️ Archived
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -308,18 +310,20 @@ export default function ClubPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🛡️</span> Defenders ({defenders.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {defenders.map((player) => (
-                <div key={player.id} className="relative">
-                  <Link to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
-                    <PlayerCard player={player} />
-                  </Link>
-                  {player.isArchived && (
-                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                      🗄️ Archived
-                    </div>
-                  )}
-                </div>
+                <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
+                  <PlayerCard 
+                    player={player}
+                    badges={
+                      player.isArchived ? (
+                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                          🗄️ Archived
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -331,18 +335,20 @@ export default function ClubPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚙️</span> Midfielders ({midfielders.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {midfielders.map((player) => (
-                <div key={player.id} className="relative">
-                  <Link to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
-                    <PlayerCard player={player} />
-                  </Link>
-                  {player.isArchived && (
-                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                      🗄️ Archived
-                    </div>
-                  )}
-                </div>
+                <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
+                  <PlayerCard 
+                    player={player}
+                    badges={
+                      player.isArchived ? (
+                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                          🗄️ Archived
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -354,18 +360,20 @@ export default function ClubPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚡</span> Forwards ({forwards.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {forwards.map((player) => (
-                <div key={player.id} className="relative">
-                  <Link to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
-                    <PlayerCard player={player} />
-                  </Link>
-                  {player.isArchived && (
-                    <div className="absolute top-2 left-2 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                      🗄️ Archived
-                    </div>
-                  )}
-                </div>
+                <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
+                  <PlayerCard 
+                    player={player}
+                    badges={
+                      player.isArchived ? (
+                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                          🗄️ Archived
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                </Link>
               ))}
             </div>
           </div>

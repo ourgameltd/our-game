@@ -58,15 +58,21 @@ export default function AgeGroupPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🥅</span> Goalkeepers ({goalkeepers.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {goalkeepers.map((player) => (
-                <div key={player.id} className="relative">
-                  <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.id)}
-                  >
-                    <PlayerCard player={player} />
-                  </Link>
-                </div>
+                <Link
+                  key={player.id}
+                  to={Routes.player(clubId!, ageGroupId!, player.id)}
+                >
+                  <PlayerCard 
+                    player={player}
+                    badges={player.isArchived ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                        🗄️ Archived
+                      </span>
+                    ) : undefined}
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -78,15 +84,21 @@ export default function AgeGroupPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>🛡️</span> Defenders ({defenders.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {defenders.map((player) => (
-                <div key={player.id} className="relative">
-                  <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.id)}
-                  >
-                    <PlayerCard player={player} />
-                  </Link>
-                </div>
+                <Link
+                  key={player.id}
+                  to={Routes.player(clubId!, ageGroupId!, player.id)}
+                >
+                  <PlayerCard 
+                    player={player}
+                    badges={player.isArchived ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                        🗄️ Archived
+                      </span>
+                    ) : undefined}
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -98,15 +110,21 @@ export default function AgeGroupPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚙️</span> Midfielders ({midfielders.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {midfielders.map((player) => (
-                <div key={player.id} className="relative">
-                  <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.id)}
-                  >
-                    <PlayerCard player={player} />
-                  </Link>
-                </div>
+                <Link
+                  key={player.id}
+                  to={Routes.player(clubId!, ageGroupId!, player.id)}
+                >
+                  <PlayerCard 
+                    player={player}
+                    badges={player.isArchived ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                        🗄️ Archived
+                      </span>
+                    ) : undefined}
+                  />
+                </Link>
               ))}
             </div>
           </div>
@@ -118,15 +136,21 @@ export default function AgeGroupPlayersPage() {
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
               <span>⚡</span> Forwards ({forwards.length})
             </h3>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0">
               {forwards.map((player) => (
-                <div key={player.id} className="relative">
-                  <Link
-                    to={Routes.player(clubId!, ageGroupId!, player.id)}
-                  >
-                    <PlayerCard player={player} />
-                  </Link>
-                </div>
+                <Link
+                  key={player.id}
+                  to={Routes.player(clubId!, ageGroupId!, player.id)}
+                >
+                  <PlayerCard 
+                    player={player}
+                    badges={player.isArchived ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                        🗄️ Archived
+                      </span>
+                    ) : undefined}
+                  />
+                </Link>
               ))}
             </div>
           </div>
