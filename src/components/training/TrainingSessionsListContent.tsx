@@ -158,7 +158,7 @@ export default function TrainingSessionsListContent({
       {/* Upcoming Sessions */}
       {upcomingSessions.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Upcoming Sessions
           </h2>
           <div className="space-y-3">
@@ -171,7 +171,7 @@ export default function TrainingSessionsListContent({
 
       {/* Past Sessions */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Previous Sessions
         </h2>
         {pastSessions.length > 0 ? (

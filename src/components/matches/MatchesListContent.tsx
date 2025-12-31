@@ -221,7 +221,7 @@ export default function MatchesListContent({
       {/* Upcoming Matches */}
       {upcomingMatches.length > 0 && (
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
             Upcoming Matches
           </h2>
           <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
@@ -234,7 +234,7 @@ export default function MatchesListContent({
 
       {/* Past Matches */}
       <div>
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
           Previous Matches
         </h2>
         {pastMatches.length > 0 ? (
