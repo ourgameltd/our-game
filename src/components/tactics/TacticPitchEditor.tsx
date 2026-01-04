@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, ArrowUpLeft, ArrowDownRight, ArrowDownLeft, X } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, ArrowUpLeft, ArrowDownRight, ArrowDownLeft, Move } from 'lucide-react';
 import { Formation, Tactic, TacticalPositionOverride, PlayerDirection } from '@/types';
 
 interface TacticPitchEditorProps {
@@ -65,9 +65,10 @@ export default function TacticPitchEditor({
   selectedPositionIndex = null,
 }: TacticPitchEditorProps) {
   const pitchRef = useRef<HTMLDivElement>(null);
-  const [dragState, setDragState] = useState<DragState | null>(null);
   const [hoverPositionIndex, setHoverPositionIndex] = useState<number | null>(null);
   const [showDirectionFlyout, setShowDirectionFlyout] = useState<number | null>(null);
+  const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
+  const [dragPreviewPos, setDragPreviewPos] = useState<{ x: number; y: number } | null>(null);
 
   // Snap value to grid
   const snapToGridValue = useCallback(
@@ -94,40 +95,46 @@ export default function TacticPitchEditor({
     return result;
   };
 
-  // Handle pointer down (start drag)
-  const handlePointerDown = useCallback(
-    (e: React.PointerEvent, index: number) => {
-      if (!pitchRef.current) return;
+  // Handle drag start
+  const handleDragStart = useCallback((e: React.DragEvent, index: number) => {
+    e.stopPropagation();
+    setDraggingIndex(index);
+    // Make the drag image invisible
+    const img = new Image();
+    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(img, 0, 0);
+    e.dataTransfer.effectAllowed = 'move';
+  }, []);
 
-      // Regular position drag
-      e.preventDefault();
-      e.currentTarget.setPointerCapture(e.pointerId);
-      
+  // Handle drag over pitch
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Update preview position
+    if (draggingIndex !== null && pitchRef.current) {
       const rect = pitchRef.current.getBoundingClientRect();
-      const parentPos = parentFormation.positions?.[index];
-      const override = tactic.positionOverrides?.[index];
-      const posX = override?.x !== undefined ? override.x : (parentPos?.x ?? 50);
-      const posY = override?.y !== undefined ? override.y : (parentPos?.y ?? 50);
-      
-      setDragState({
-        isDragging: true,
-        positionIndex: index,
-        startX: (posX / 100) * rect.width,
-        startY: (posY / 100) * rect.height,
-      });
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
 
-      // Select this position
-      if (onPositionSelect) {
-        onPositionSelect(index);
-      }
-    },
-    [parentFormation, tactic.positionOverrides, onPositionSelect]
-  );
+      let xPercent = (x / rect.width) * 100;
+      let yPercent = (y / rect.height) * 100;
 
-  // Handle pointer move (during drag)
-  const handlePointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!dragState?.isDragging || !pitchRef.current) return;
+      xPercent = Math.max(2, Math.min(98, xPercent));
+      yPercent = Math.max(2, Math.min(98, yPercent));
+
+      xPercent = snapToGridValue(xPercent);
+      yPercent = snapToGridValue(yPercent);
+
+      setDragPreviewPos({ x: xPercent, y: yPercent });
+    }
+  }, [draggingIndex, snapToGridValue]);
+
+  // Handle drop
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      if (draggingIndex === null || !pitchRef.current) return;
 
       const rect = pitchRef.current.getBoundingClientRect();
       const x = e.clientX - rect.left;
@@ -145,47 +152,50 @@ export default function TacticPitchEditor({
       xPercent = snapToGridValue(xPercent);
       yPercent = snapToGridValue(yPercent);
 
-      // Update override
-      onPositionChange(dragState.positionIndex, {
+      // Update position
+      onPositionChange(draggingIndex, {
         x: xPercent,
         y: yPercent,
       });
+
+      setDraggingIndex(null);
+      setDragPreviewPos(null);
     },
-    [dragState, snapToGridValue, onPositionChange]
+    [draggingIndex, snapToGridValue, onPositionChange]
   );
 
-  // Handle pointer up (end drag)
-  const handlePointerUp = useCallback(
-    (e: React.PointerEvent) => {
-      if (dragState?.isDragging) {
-        e.currentTarget.releasePointerCapture(e.pointerId);
-        setDragState(null);
-      }
-    },
-    [dragState]
-  );
+  // Handle drag end
+  const handleDragEnd = useCallback(() => {
+    setDraggingIndex(null);
+    setDragPreviewPos(null);
+  }, []);
 
-  // Handle position click (for selection and showing flyout)
+  // Handle position click (toggle direction flyout)
   const handlePositionClick = useCallback(
-    (_e: React.MouseEvent, index: number) => {
-      if (onPositionSelect) {
-        onPositionSelect(selectedPositionIndex === index ? null : index);
-      }
+    (e: React.MouseEvent, index: number) => {
+      e.stopPropagation();
+      
       // Toggle flyout for this position
-      setShowDirectionFlyout(showDirectionFlyout === index ? null : index);
+      if (showDirectionFlyout === index) {
+        setShowDirectionFlyout(null);
+      } else {
+        setShowDirectionFlyout(index);
+      }
+      
+      if (onPositionSelect) {
+        onPositionSelect(index);
+      }
     },
-    [onPositionSelect, selectedPositionIndex, showDirectionFlyout]
+    [showDirectionFlyout, onPositionSelect]
   );
 
   // Handle direction selection from flyout
   const handleDirectionSelect = useCallback(
     (index: number, direction: PlayerDirection | null) => {
-      if (direction === null) {
-        // Clear direction by setting it to undefined
-        console.log('Clearing direction - setting to undefined');
+      const currentDir = getMergedPosition(index).direction;
+      if (direction === null || currentDir === direction) {
         onPositionChange(index, { direction: undefined });
       } else {
-        console.log('Setting direction to:', direction);
         onPositionChange(index, { direction });
       }
       setShowDirectionFlyout(null);
@@ -193,7 +203,7 @@ export default function TacticPitchEditor({
     [onPositionChange]
   );
 
-  // Close flyout when clicking outside
+  // Handle pitch click
   const handlePitchClick = useCallback(
     (e: React.MouseEvent) => {
       // Only close if clicking directly on the pitch, not on a position
@@ -212,10 +222,10 @@ export default function TacticPitchEditor({
       {/* Pitch */}
       <div
         ref={pitchRef}
-        className="relative w-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-700 dark:to-green-800 cursor-crosshair"
+        className="relative w-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-700 dark:to-green-800"
         style={{ paddingBottom: '140%' }}
-        onPointerMove={handlePointerMove}
-        onPointerUp={(e) => handlePointerUp(e)}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
         onClick={handlePitchClick}
       >
         {/* Pitch markings */}
@@ -254,29 +264,35 @@ export default function TacticPitchEditor({
           const mergedPos = getMergedPosition(index);
           const isSelected = selectedPositionIndex === index;
           const isHovered = hoverPositionIndex === index;
+          const isDragging = draggingIndex === index;
+          
+          // Use preview position if this marker is being dragged
+          const displayX = isDragging && dragPreviewPos ? dragPreviewPos.x : mergedPos.x;
+          const displayY = isDragging && dragPreviewPos ? dragPreviewPos.y : mergedPos.y;
 
           return (
             <div
               key={index}
-              className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 group ${
+              draggable
+              className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 cursor-move ${
                 showDirectionFlyout === index 
                   ? 'z-[90]' 
-                  : dragState?.positionIndex === index 
+                  : isDragging
                   ? 'z-50 scale-110' 
                   : 'z-10'
               }`}
               style={{
-                left: `${mergedPos.x}%`,
-                top: `${mergedPos.y}%`,
+                left: `${displayX}%`,
+                top: `${displayY}%`,
               }}
-              onPointerDown={(e) => handlePointerDown(e, index)}
-              onPointerUp={(e) => handlePointerUp(e)}
+              onDragStart={(e) => handleDragStart(e, index)}
+              onDragEnd={handleDragEnd}
               onClick={(e) => handlePositionClick(e, index)}
               onMouseEnter={() => setHoverPositionIndex(index)}
               onMouseLeave={() => setHoverPositionIndex(null)}
             >
               {/* Position marker */}
-              <div className="relative cursor-move touch-none">
+              <div className="relative cursor-move">
                 <div
                   className={`w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-lg transition-all ${
                     isSelected
@@ -403,22 +419,6 @@ export default function TacticPitchEditor({
                         <Icon className="w-4 h-4" />
                       </button>
                     ))}
-                    
-                    {/* Clear direction button in center (if direction is set) */}
-                    {mergedPos.direction && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          e.preventDefault();
-                          handleDirectionSelect(index, null);
-                        }}
-                        onPointerDown={(e) => e.stopPropagation()}
-                        className="absolute z-[110] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-all shadow-lg pointer-events-auto"
-                        title="Clear direction"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
                   </div>
                 )}
               </div>
