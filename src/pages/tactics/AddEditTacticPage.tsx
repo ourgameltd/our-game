@@ -5,7 +5,6 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import TacticPitchEditor from '@/components/tactics/TacticPitchEditor';
 import PrinciplePanel from '@/components/tactics/PrinciplePanel';
-import PositionRolePanel from '@/components/tactics/PositionRolePanel';
 import { getTacticById, getResolvedPositions } from '@/data/tactics';
 import { getFormationById, sampleFormations } from '@/data/formations';
 import { Tactic, TacticalPositionOverride, TacticPrinciple } from '@/types';
@@ -85,17 +84,32 @@ export default function AddEditTacticPage() {
 
   const handlePositionChange = (index: number, override: Partial<TacticalPositionOverride>) => {
     setTactic(prev => {
-      const existingOverride = prev.positionOverrides?.[index];
-      return {
+      const existingOverride = prev.positionOverrides?.[index] || {};
+      
+      // Merge the override, but handle undefined values specially (they clear the field)
+      const newOverride = { ...existingOverride };
+      for (const [key, value] of Object.entries(override)) {
+        if (value === undefined) {
+          delete newOverride[key as keyof TacticalPositionOverride];
+        } else {
+          (newOverride as Record<string, unknown>)[key] = value;
+        }
+      }
+      
+      // If the override is now empty, remove it entirely
+      const newOverrides = { ...(prev.positionOverrides || {}) };
+      if (Object.keys(newOverride).length === 0) {
+        delete newOverrides[index];
+      } else {
+        newOverrides[index] = newOverride;
+      }
+      
+      const newTactic = {
         ...prev,
-        positionOverrides: {
-          ...(prev.positionOverrides || {}),
-          [index]: existingOverride 
-            ? { ...existingOverride, ...override }
-            : override,
-        },
+        positionOverrides: newOverrides,
         updatedAt: new Date().toISOString(),
       };
+      return newTactic;
     });
   };
 
@@ -128,19 +142,7 @@ export default function AddEditTacticPage() {
     navigate(getBackUrl());
   };
 
-  const selectedOverride = selectedPosition !== null 
-    ? tactic.positionOverrides?.[selectedPosition] 
-    : undefined;
 
-  // Get parent data for the selected position (from formation or parent tactic)
-  const selectedParentData = selectedPosition !== null && formation
-    ? {
-        position: formation.positions?.[selectedPosition]?.position as string | undefined,
-        x: formation.positions?.[selectedPosition]?.x,
-        y: formation.positions?.[selectedPosition]?.y,
-        direction: undefined,
-      }
-    : { direction: undefined };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -160,6 +162,7 @@ export default function AddEditTacticPage() {
           <div className="lg:col-span-4">
             {formation && (
               <TacticPitchEditor
+                key={tactic.updatedAt}
                 tactic={tactic}
                 parentFormation={formation}
                 onPositionChange={handlePositionChange}
@@ -246,41 +249,6 @@ export default function AddEditTacticPage() {
                 />
               </div>
             </div>
-
-            {/* Position Direction Panel */}
-            {selectedPosition !== null && formation && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                <PositionRolePanel
-                  positionIndex={selectedPosition}
-                  position={formation.positions?.[selectedPosition]?.position || ''}
-                  override={selectedOverride}
-                  parentData={selectedParentData}
-                  onUpdate={(override) => handlePositionChange(selectedPosition, override)}
-                  onResetField={(field) => {
-                    if (selectedOverride) {
-                      const newOverride = { ...selectedOverride };
-                      delete newOverride[field as keyof TacticalPositionOverride];
-                      // If override is now empty, remove it entirely
-                      if (Object.keys(newOverride).length === 0) {
-                        setTactic(prev => {
-                          const newOverrides = { ...prev.positionOverrides };
-                          delete newOverrides[selectedPosition];
-                          return { ...prev, positionOverrides: newOverrides };
-                        });
-                      } else {
-                        setTactic(prev => ({
-                          ...prev,
-                          positionOverrides: {
-                            ...prev.positionOverrides,
-                            [selectedPosition]: newOverride,
-                          },
-                        }));
-                      }
-                    }
-                  }}
-                />
-              </div>
-            )}
             
             {/* Principles Panel */}
             <PrinciplePanel

@@ -246,28 +246,70 @@ export default function TacticDisplay({
                   <div className="absolute -top-0.5 -right-0.5 w-3 h-3 bg-purple-500 rounded-full border border-white shadow-sm" />
                 )}
 
-                {/* Direction arrow - positioned outside the circle, hidden in compact mode */}
+                {/* Direction arrow with line - positioned outside the circle, hidden in compact mode */}
                 {!compact && showDirections && pos.direction && (() => {
                   const dirStyle = getDirectionStyle(pos.direction);
                   if (!dirStyle) return null;
                   
+                  // Calculate line and arrow positioning based on direction
+                  // Arrow points in the direction, line connects from circle edge to arrow
+                  const getLineCoords = (rotation: number) => {
+                    // Convert rotation to radians (0 = up/north)
+                    const rad = (rotation - 90) * (Math.PI / 180);
+                    const circleRadius = 24; // Half of the circle size (w-12 = 48px, so radius = 24)
+                    const lineLength = 20;
+                    
+                    // Start point (edge of circle)
+                    const startX = 30 + Math.cos(rad) * circleRadius;
+                    const startY = 30 + Math.sin(rad) * circleRadius;
+                    
+                    // End point (where arrow tip will be)
+                    const endX = 30 + Math.cos(rad) * (circleRadius + lineLength);
+                    const endY = 30 + Math.sin(rad) * (circleRadius + lineLength);
+                    
+                    return { startX, startY, endX, endY, rad };
+                  };
+                  
+                  const coords = getLineCoords(dirStyle.rotation);
+                  
                   return (
                     <div 
-                      className={`absolute ${dirStyle.position} pointer-events-none`}
+                      className="absolute inset-0 pointer-events-none z-20"
+                      style={{ 
+                        width: '100px', 
+                        height: '100px', 
+                        left: '50%', 
+                        top: '50%', 
+                        transform: 'translate(-50%, -50%)' 
+                      }}
                     >
                       <svg 
-                        width="16" 
-                        height="16" 
-                        viewBox="0 0 24 24" 
+                        width="100" 
+                        height="100" 
+                        viewBox="0 0 100 100" 
                         fill="none" 
-                        className="drop-shadow-lg"
-                        style={{ transform: `rotate(${dirStyle.rotation}deg)` }}
+                        className="drop-shadow-lg overflow-visible"
                       >
-                        <path 
-                          d="M12 4L6 14H18L12 4Z" 
-                          fill="white" 
-                          stroke="rgba(0,0,0,0.3)" 
+                        {/* Line from circle edge */}
+                        <line 
+                          x1={coords.startX + 20} 
+                          y1={coords.startY + 20} 
+                          x2={coords.endX + 20} 
+                          y2={coords.endY + 20}
+                          stroke="white"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          className="drop-shadow-md"
+                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                        />
+                        {/* Arrow head at end */}
+                        <polygon 
+                          points="0,-6 5,4 -5,4"
+                          fill="white"
+                          stroke="rgba(0,0,0,0.4)"
                           strokeWidth="1"
+                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                          transform={`translate(${coords.endX + 20}, ${coords.endY + 20}) rotate(${dirStyle.rotation})`}
                         />
                       </svg>
                     </div>

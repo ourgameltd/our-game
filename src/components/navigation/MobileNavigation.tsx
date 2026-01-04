@@ -906,7 +906,10 @@ export default function MobileNavigation() {
             </>
           )}
 
-          <div className="mobile-nav-divider"></div>
+          {/* Only show divider if not on dashboard */}
+          {location.pathname !== '/dashboard' && (
+            <div className="mobile-nav-divider"></div>
+          )}
 
           {/* Secondary Navigation */}
           <ul className="mobile-nav-menu mobile-nav-menu-secondary">

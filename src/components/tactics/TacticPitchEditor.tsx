@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react';
-import { Formation, Tactic, TacticalPositionOverride } from '@/types';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, ArrowUpLeft, ArrowDownRight, ArrowDownLeft, X } from 'lucide-react';
+import { Formation, Tactic, TacticalPositionOverride, PlayerDirection } from '@/types';
 
 interface TacticPitchEditorProps {
   tactic: Tactic;
@@ -19,6 +20,40 @@ interface DragState {
   startY: number;
 }
 
+// Direction button configuration
+const directionButtons: { direction: PlayerDirection; icon: typeof ArrowUp; position: string }[] = [
+  { direction: 'N', icon: ArrowUp, position: 'top-0 left-1/2 -translate-x-1/2 -translate-y-full' },
+  { direction: 'NE', icon: ArrowUpRight, position: 'top-0 right-0 translate-x-1/2 -translate-y-1/2' },
+  { direction: 'E', icon: ArrowRight, position: 'top-1/2 right-0 translate-x-full -translate-y-1/2' },
+  { direction: 'SE', icon: ArrowDownRight, position: 'bottom-0 right-0 translate-x-1/2 translate-y-1/2' },
+  { direction: 'S', icon: ArrowDown, position: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-full' },
+  { direction: 'SW', icon: ArrowDownLeft, position: 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2' },
+  { direction: 'W', icon: ArrowLeft, position: 'top-1/2 left-0 -translate-x-full -translate-y-1/2' },
+  { direction: 'NW', icon: ArrowUpLeft, position: 'top-0 left-0 -translate-x-1/2 -translate-y-1/2' },
+];
+
+// Get direction arrow rotation based on compass direction
+const getDirectionRotation = (direction?: PlayerDirection): number | null => {
+  if (!direction) return null;
+  
+  const rotationMap: Record<PlayerDirection, number> = {
+    'N': 0,
+    'S': 180,
+    'E': 90,
+    'W': -90,
+    'NE': 45,
+    'NW': -45,
+    'SE': 135,
+    'SW': -135,
+    'WN': -45,
+    'WS': -135,
+    'EN': 45,
+    'ES': 135,
+  };
+  
+  return rotationMap[direction] ?? null;
+};
+
 export default function TacticPitchEditor({
   tactic,
   parentFormation,
@@ -32,6 +67,7 @@ export default function TacticPitchEditor({
   const pitchRef = useRef<HTMLDivElement>(null);
   const [dragState, setDragState] = useState<DragState | null>(null);
   const [hoverPositionIndex, setHoverPositionIndex] = useState<number | null>(null);
+  const [showDirectionFlyout, setShowDirectionFlyout] = useState<number | null>(null);
 
   // Snap value to grid
   const snapToGridValue = useCallback(
@@ -42,22 +78,21 @@ export default function TacticPitchEditor({
     [snapToGrid, gridSize]
   );
 
-  // Get merged position (parent + override)
-  const getMergedPosition = useCallback(
-    (index: number) => {
-      const parentPos = parentFormation.positions?.[index];
-      const override = tactic.positionOverrides?.[index];
-      
-      return {
-        position: parentPos?.position || '',
-        x: override?.x !== undefined ? override.x : (parentPos?.x ?? 50),
-        y: override?.y !== undefined ? override.y : (parentPos?.y ?? 50),
-        direction: override?.direction,
-        isOverridden: !!override && (override.x !== undefined || override.y !== undefined),
-      };
-    },
-    [parentFormation, tactic.positionOverrides]
-  );
+  // Get merged position (parent + override) - not memoized to ensure fresh data on every render
+  const getMergedPosition = (index: number) => {
+    const parentPos = parentFormation.positions?.[index];
+    const override = tactic.positionOverrides?.[index];
+    
+    const result = {
+      position: parentPos?.position || '',
+      x: override?.x !== undefined ? override.x : (parentPos?.x ?? 50),
+      y: override?.y !== undefined ? override.y : (parentPos?.y ?? 50),
+      direction: override?.direction || parentPos?.direction,
+      isOverridden: !!override && (override.x !== undefined || override.y !== undefined || override.direction !== undefined),
+    };
+    
+    return result;
+  };
 
   // Handle pointer down (start drag)
   const handlePointerDown = useCallback(
@@ -69,13 +104,16 @@ export default function TacticPitchEditor({
       e.currentTarget.setPointerCapture(e.pointerId);
       
       const rect = pitchRef.current.getBoundingClientRect();
-      const position = getMergedPosition(index);
+      const parentPos = parentFormation.positions?.[index];
+      const override = tactic.positionOverrides?.[index];
+      const posX = override?.x !== undefined ? override.x : (parentPos?.x ?? 50);
+      const posY = override?.y !== undefined ? override.y : (parentPos?.y ?? 50);
       
       setDragState({
         isDragging: true,
         positionIndex: index,
-        startX: (position.x / 100) * rect.width,
-        startY: (position.y / 100) * rect.height,
+        startX: (posX / 100) * rect.width,
+        startY: (posY / 100) * rect.height,
       });
 
       // Select this position
@@ -83,7 +121,7 @@ export default function TacticPitchEditor({
         onPositionSelect(index);
       }
     },
-    [getMergedPosition, onPositionSelect]
+    [parentFormation, tactic.positionOverrides, onPositionSelect]
   );
 
   // Handle pointer move (during drag)
@@ -127,14 +165,46 @@ export default function TacticPitchEditor({
     [dragState]
   );
 
-  // Handle position click (for selection)
+  // Handle position click (for selection and showing flyout)
   const handlePositionClick = useCallback(
     (_e: React.MouseEvent, index: number) => {
       if (onPositionSelect) {
         onPositionSelect(selectedPositionIndex === index ? null : index);
       }
+      // Toggle flyout for this position
+      setShowDirectionFlyout(showDirectionFlyout === index ? null : index);
     },
-    [onPositionSelect, selectedPositionIndex]
+    [onPositionSelect, selectedPositionIndex, showDirectionFlyout]
+  );
+
+  // Handle direction selection from flyout
+  const handleDirectionSelect = useCallback(
+    (index: number, direction: PlayerDirection | null) => {
+      if (direction === null) {
+        // Clear direction by setting it to undefined
+        console.log('Clearing direction - setting to undefined');
+        onPositionChange(index, { direction: undefined });
+      } else {
+        console.log('Setting direction to:', direction);
+        onPositionChange(index, { direction });
+      }
+      setShowDirectionFlyout(null);
+    },
+    [onPositionChange]
+  );
+
+  // Close flyout when clicking outside
+  const handlePitchClick = useCallback(
+    (e: React.MouseEvent) => {
+      // Only close if clicking directly on the pitch, not on a position
+      if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'svg') {
+        setShowDirectionFlyout(null);
+        if (onPositionSelect) {
+          onPositionSelect(null);
+        }
+      }
+    },
+    [onPositionSelect]
   );
 
   return (
@@ -146,6 +216,7 @@ export default function TacticPitchEditor({
         style={{ paddingBottom: '140%' }}
         onPointerMove={handlePointerMove}
         onPointerUp={(e) => handlePointerUp(e)}
+        onClick={handlePitchClick}
       >
         {/* Pitch markings */}
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 140" preserveAspectRatio="none">
@@ -188,7 +259,11 @@ export default function TacticPitchEditor({
             <div
               key={index}
               className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 group ${
-                dragState?.positionIndex === index ? 'z-50 scale-110' : 'z-10'
+                showDirectionFlyout === index 
+                  ? 'z-[90]' 
+                  : dragState?.positionIndex === index 
+                  ? 'z-50 scale-110' 
+                  : 'z-10'
               }`}
               style={{
                 left: `${mergedPos.x}%`,
@@ -227,17 +302,125 @@ export default function TacticPitchEditor({
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-gray-800" />
                 )}
 
+                {/* Direction arrow with line - from circle edge */}
+                {mergedPos.direction && (() => {
+                  const rotation = getDirectionRotation(mergedPos.direction);
+                  if (rotation === null) return null;
+                  
+                  // Calculate line and arrow positioning based on direction
+                  const rad = (rotation - 90) * (Math.PI / 180);
+                  const circleRadius = 24; // Half of w-12 (48px)
+                  const lineLength = 20;
+                  
+                  // Start point (edge of circle)
+                  const startX = 30 + Math.cos(rad) * circleRadius;
+                  const startY = 30 + Math.sin(rad) * circleRadius;
+                  
+                  // End point (where arrow tip will be)
+                  const endX = 30 + Math.cos(rad) * (circleRadius + lineLength);
+                  const endY = 30 + Math.sin(rad) * (circleRadius + lineLength);
+                  
+                  return (
+                    <div 
+                      className="absolute inset-0 pointer-events-none z-20"
+                      style={{ 
+                        width: '100px', 
+                        height: '100px', 
+                        left: '50%', 
+                        top: '50%', 
+                        transform: 'translate(-50%, -50%)' 
+                      }}
+                    >
+                      <svg 
+                        width="100" 
+                        height="100" 
+                        viewBox="0 0 100 100" 
+                        fill="none" 
+                        className="drop-shadow-lg overflow-visible"
+                      >
+                        {/* Line from circle edge */}
+                        <line 
+                          x1={startX + 20} 
+                          y1={startY + 20} 
+                          x2={endX + 20} 
+                          y2={endY + 20}
+                          stroke="white"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                          className="drop-shadow-md"
+                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                        />
+                        {/* Arrow head at end */}
+                        <polygon 
+                          points="0,-6 5,4 -5,4"
+                          fill="white"
+                          stroke="rgba(0,0,0,0.4)"
+                          strokeWidth="1"
+                          style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.5))' }}
+                          transform={`translate(${endX + 20}, ${endY + 20}) rotate(${rotation})`}
+                        />
+                      </svg>
+                    </div>
+                  );
+                })()}
+
                 {/* Position label */}
                 <div className="absolute top-full mt-1 left-1/2 transform -translate-x-1/2 pointer-events-none">
                   <div className="bg-black/70 text-white text-xs px-2 py-0.5 rounded whitespace-nowrap">
                     {mergedPos.position}
-                    {mergedPos.direction && (
-                      <span className="ml-1 text-yellow-300">
-                        ({mergedPos.direction})
-                      </span>
-                    )}
                   </div>
                 </div>
+
+                {/* Direction Flyout */}
+                {showDirectionFlyout === index && (
+                  <div 
+                    className="absolute inset-0 z-[100] pointer-events-auto" 
+                    style={{ width: '120px', height: '120px', left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+                    onClick={(e) => e.stopPropagation()}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onPointerUp={(e) => e.stopPropagation()}
+                  >
+                    {/* Background circle for better visibility */}
+                    <div className="absolute inset-0 bg-black/30 rounded-full pointer-events-none" style={{ width: '120px', height: '120px' }} />
+                    
+                    {/* Direction buttons arranged in a circle */}
+                    {directionButtons.map(({ direction, icon: Icon, position }) => (
+                      <button
+                        key={direction}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleDirectionSelect(index, direction);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        className={`absolute z-[110] ${position} w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-lg pointer-events-auto ${
+                          mergedPos.direction === direction
+                            ? 'bg-yellow-500 text-white scale-110'
+                            : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-200 hover:bg-blue-500 hover:text-white hover:scale-110'
+                        }`}
+                        title={direction}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </button>
+                    ))}
+                    
+                    {/* Clear direction button in center (if direction is set) */}
+                    {mergedPos.direction && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          e.preventDefault();
+                          handleDirectionSelect(index, null);
+                        }}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        className="absolute z-[110] top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-all shadow-lg pointer-events-auto"
+                        title="Clear direction"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           );
