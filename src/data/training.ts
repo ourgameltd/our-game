@@ -1,5 +1,4 @@
 import { TrainingSession, Drill, DrillTemplate } from '../types/index';
-import { getDominantCategory } from './referenceData';
 
 export const sampleDrills: Drill[] = [
   {

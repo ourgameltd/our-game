@@ -121,7 +121,6 @@ export default function PrinciplePanel({
     const isExpanded = expandedPrinciple === principle.id;
     const isEditing = editingPrinciple === principle.id;
     const isPrincipleSelected = selectedPrincipleId === principle.id;
-    const hasNoPositions = principle.positionIndices.length === 0 && !isGlobal;
     
     // Determine color scheme based on state
     const getColorScheme = () => {

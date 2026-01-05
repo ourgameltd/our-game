@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback } from 'react';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, ArrowUpLeft, ArrowDownRight, ArrowDownLeft, Move } from 'lucide-react';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight, ArrowUpRight, ArrowUpLeft, ArrowDownRight, ArrowDownLeft } from 'lucide-react';
 import { Formation, Tactic, TacticalPositionOverride, PlayerDirection } from '@/types';
 
 interface TacticPitchEditorProps {
@@ -11,13 +11,6 @@ interface TacticPitchEditorProps {
   className?: string;
   onPositionSelect?: (index: number | null) => void;
   selectedPositionIndex?: number | null;
-}
-
-interface DragState {
-  isDragging: boolean;
-  positionIndex: number;
-  startX: number;
-  startY: number;
 }
 
 // Direction button configuration

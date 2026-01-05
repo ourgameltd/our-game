@@ -234,7 +234,7 @@ export default function AddEditTrainingSessionPage() {
     const template = sampleDrillTemplates.find(t => t.id === templateId);
     if (template) {
       setSelectedDrillIds(template.drillIds);
-      setFocusAreas(template.focusAreas);
+      setFocusAreas(template.attributes);
       setDuration(template.totalDuration.toString());
       setShowTemplateModal(false);
     }
@@ -635,7 +635,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                             {drill.description}
                           </p>
                           <div className="flex flex-wrap gap-1 mb-2">
-                            {drill.skillsFocused.map((skill, i) => (
+                            {drill.attributes.map((skill: string, i: number) => (
                               <span key={i} className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded">
                                 {skill}
                               </span>
@@ -1059,7 +1059,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Skills Focused</h4>
                       <div className="flex flex-wrap gap-1">
-                        {previewDrill.skillsFocused.map((skill, i) => (
+                        {previewDrill.attributes.map((skill: string, i: number) => (
                           <span key={i} className="px-2 py-1 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700">
                             {skill}
                           </span>
@@ -1238,7 +1238,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                             
                             {/* Focus Areas */}
                             <div className="flex flex-wrap gap-1">
-                              {template.focusAreas.map((area, i) => (
+                              {template.attributes.map((area: string, i: number) => (
                                 <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded">
                                   {area}
                                 </span>

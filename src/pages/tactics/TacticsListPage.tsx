@@ -1,9 +1,8 @@
 import { Link, useParams } from 'react-router-dom';
 import { Settings2, Users } from 'lucide-react';
-import { sampleTactics, getResolvedPositions } from '@/data/tactics';
+import { sampleTactics } from '@/data/tactics';
 import { getFormationById } from '@/data/formations';
 import { Routes } from '@/utils/routes';
-import TacticDisplay from '@/components/tactics/TacticDisplay';
 import PageTitle from '@/components/common/PageTitle';
 
 export default function TacticsListPage() {
@@ -114,7 +113,6 @@ export default function TacticsListPage() {
           <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {tactics.map(tactic => {
               const formation = getFormationById(tactic.parentFormationId || '');
-              const resolvedPositions = getResolvedPositions(tactic);
               
               return (
                 <Link
@@ -157,7 +155,6 @@ export default function TacticsListPage() {
             <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
               {inheritedTactics.map(tactic => {
                 const formation = getFormationById(tactic.parentFormationId || '');
-                const resolvedPositions = getResolvedPositions(tactic);
                 const scopeLabel = tactic.scope.type === 'club' ? 'Club' : 'Age Group';
                 
                 return (
