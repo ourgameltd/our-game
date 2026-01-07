@@ -4,6 +4,7 @@ import { getPlayerById } from '@data/players';
 import { getDevelopmentPlansByPlayerId } from '@data/developmentPlans';
 import { getAgeGroupById } from '@data/ageGroups';
 import { getTeamById } from '@data/teams';
+import { developmentPlanStatuses, type DevelopmentPlanStatus } from '@data/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
@@ -37,7 +38,7 @@ export default function AddEditDevelopmentPlanPage() {
   const [periodEnd, setPeriodEnd] = useState(
     plan?.period.end.toISOString().split('T')[0] || ''
   );
-  const [status, setStatus] = useState<'active' | 'completed' | 'archived'>(
+  const [status, setStatus] = useState<DevelopmentPlanStatus>(
     plan?.status || 'active'
   );
   const [goals, setGoals] = useState<Goal[]>(
@@ -224,12 +225,12 @@ export default function AddEditDevelopmentPlanPage() {
                   <select
                     id="status"
                     value={status}
-                    onChange={(e) => setStatus(e.target.value as 'active' | 'completed' | 'archived')}
+                    onChange={(e) => setStatus(e.target.value as DevelopmentPlanStatus)}
                     className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                   >
-                    <option value="active">Active</option>
-                    <option value="completed">Completed</option>
-                    <option value="archived">Archived</option>
+                    {developmentPlanStatuses.map(s => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>

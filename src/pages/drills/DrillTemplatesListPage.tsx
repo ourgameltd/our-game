@@ -5,7 +5,7 @@ import { sampleDrillTemplates } from '@/data/training';
 import { sampleClubs } from '@/data/clubs';
 import { sampleAgeGroups } from '@/data/ageGroups';
 import { sampleTeams } from '@/data/teams';
-import { getAttributeLabel, getAttributeCategory } from '@/data/referenceData';
+import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors } from '@/data/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 
@@ -77,14 +77,8 @@ export default function DrillTemplatesListPage() {
   });
 
   const getCategoryColor = (category?: string) => {
-    switch (category) {
-      case 'technical': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
-      case 'tactical': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
-      case 'physical': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300';
-      case 'mental': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
-      case 'mixed': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300';
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
-    }
+    const colors = getDrillCategoryColors(category || 'mixed');
+    return `${colors.bgColor} ${colors.textColor}`;
   };
 
   // Generate the correct route based on context
@@ -144,11 +138,9 @@ export default function DrillTemplatesListPage() {
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               >
                 <option value="all">All Categories</option>
-                <option value="technical">Technical</option>
-                <option value="tactical">Tactical</option>
-                <option value="physical">Physical</option>
-                <option value="mental">Mental</option>
-                <option value="mixed">Mixed</option>
+                {drillCategories.map(cat => (
+                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                ))}
               </select>
             </div>
           </div>

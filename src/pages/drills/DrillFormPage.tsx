@@ -6,7 +6,7 @@ import { sampleClubs } from '@/data/clubs';
 import { sampleAgeGroups } from '@/data/ageGroups';
 import { sampleTeams } from '@/data/teams';
 import { currentUser } from '@/data/currentUser';
-import { getAttributeCategory, playerAttributes } from '@/data/referenceData';
+import { getAttributeCategory, playerAttributes, linkTypes } from '@/data/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
@@ -480,11 +480,9 @@ export default function DrillFormPage() {
                         className="w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                         disabled={isInherited}
                       >
-                        <option value="youtube">YouTube</option>
-                        <option value="instagram">Instagram</option>
-                        <option value="tiktok">TikTok</option>
-                        <option value="website">Website</option>
-                        <option value="other">Other</option>
+                        {linkTypes.map(lt => (
+                          <option key={lt.value} value={lt.value}>{lt.label}</option>
+                        ))}
                       </select>
                       <input
                         type="text"

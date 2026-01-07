@@ -4,6 +4,7 @@ import { getCoachById } from '@data/coaches';
 import { getClubById } from '@data/clubs';
 import { getTeamsByClubId } from '@data/teams';
 import { getAgeGroupById } from '@data/ageGroups';
+import { coachRoles } from '@data/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
@@ -111,13 +112,8 @@ export default function CoachSettingsPage() {
     alert(`Invite sent to ${coach?.email}! (Demo - not actually sent)`);
   };
 
-  const roleOptions = [
-    { value: 'head-coach', label: 'Head Coach' },
-    { value: 'assistant-coach', label: 'Assistant Coach' },
-    { value: 'goalkeeper-coach', label: 'Goalkeeper Coach' },
-    { value: 'fitness-coach', label: 'Fitness Coach' },
-    { value: 'technical-coach', label: 'Technical Coach' },
-  ];
+  // Use coachRoles from referenceData
+  const roleOptions = coachRoles;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

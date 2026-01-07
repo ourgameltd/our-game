@@ -386,3 +386,190 @@ export function getDominantCategory(attributeKeys: string[]): 'technical' | 'tac
   // Mixed if no clear dominant category
   return 'mixed';
 }
+
+// ============================================================================
+// Development Plan & Training Session Statuses
+// ============================================================================
+
+// Development plan status
+export const developmentPlanStatuses = [
+  { value: 'active', label: 'Active' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'archived', label: 'Archived' },
+] as const;
+
+export type DevelopmentPlanStatus = typeof developmentPlanStatuses[number]['value'];
+
+// Development plan status display mapping
+export const developmentPlanStatusDisplay: Record<string, string> = Object.fromEntries(
+  developmentPlanStatuses.map(s => [s.value, s.label])
+);
+
+// Get development plan status label
+export function getDevelopmentPlanStatusLabel(status: string): string {
+  return developmentPlanStatusDisplay[status] ?? status;
+}
+
+// Training session status
+export const trainingSessionStatuses = [
+  { value: 'scheduled', label: 'Scheduled' },
+  { value: 'in-progress', label: 'In Progress' },
+  { value: 'completed', label: 'Completed' },
+  { value: 'cancelled', label: 'Cancelled' },
+] as const;
+
+export type TrainingSessionStatus = typeof trainingSessionStatuses[number]['value'];
+
+// Training session status display mapping
+export const trainingSessionStatusDisplay: Record<string, string> = Object.fromEntries(
+  trainingSessionStatuses.map(s => [s.value, s.label])
+);
+
+// Get training session status label
+export function getTrainingSessionStatusLabel(status: string): string {
+  return trainingSessionStatusDisplay[status] ?? status;
+}
+
+// Objective/goal status (used in training plans)
+export const objectiveStatuses = [
+  { value: 'not-started', label: 'Not Started' },
+  { value: 'in-progress', label: 'In Progress' },
+  { value: 'completed', label: 'Completed' },
+] as const;
+
+export type ObjectiveStatus = typeof objectiveStatuses[number]['value'];
+
+// ============================================================================
+// Link Types (for drills, training sessions, etc.)
+// ============================================================================
+
+export const linkTypes = [
+  { value: 'youtube', label: 'YouTube', icon: 'Youtube' },
+  { value: 'instagram', label: 'Instagram', icon: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok', icon: 'TikTok' },
+  { value: 'website', label: 'Website', icon: 'Globe' },
+  { value: 'other', label: 'Other', icon: 'ExternalLink' },
+] as const;
+
+export type LinkTypeValue = typeof linkTypes[number]['value'];
+
+// Link type display mapping
+export const linkTypeDisplay: Record<string, string> = Object.fromEntries(
+  linkTypes.map(l => [l.value, l.label])
+);
+
+// Get link type label
+export function getLinkTypeLabel(type: string): string {
+  return linkTypeDisplay[type] ?? type;
+}
+
+// ============================================================================
+// Notification Types
+// ============================================================================
+
+export const notificationTypes = [
+  { value: 'match', label: 'Match', icon: 'Trophy', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30', textColor: 'text-yellow-700 dark:text-yellow-400' },
+  { value: 'training', label: 'Training', icon: 'Calendar', bgColor: 'bg-blue-100 dark:bg-blue-900/30', textColor: 'text-blue-700 dark:text-blue-400' },
+  { value: 'team', label: 'Team', icon: 'Users', bgColor: 'bg-green-100 dark:bg-green-900/30', textColor: 'text-green-700 dark:text-green-400' },
+  { value: 'announcement', label: 'Announcement', icon: 'Megaphone', bgColor: 'bg-purple-100 dark:bg-purple-900/30', textColor: 'text-purple-700 dark:text-purple-400' },
+  { value: 'message', label: 'Message', icon: 'MessageSquare', bgColor: 'bg-pink-100 dark:bg-pink-900/30', textColor: 'text-pink-700 dark:text-pink-400' },
+] as const;
+
+export type NotificationType = typeof notificationTypes[number]['value'];
+
+// Notification type display mapping
+export const notificationTypeDisplay: Record<string, string> = Object.fromEntries(
+  notificationTypes.map(n => [n.value, n.label])
+);
+
+// Get notification type label
+export function getNotificationTypeLabel(type: string): string {
+  return notificationTypeDisplay[type] ?? type;
+}
+
+// Get notification type colors
+export function getNotificationTypeColors(type: string): { bgColor: string; textColor: string } {
+  const notificationType = notificationTypes.find(n => n.value === type);
+  return {
+    bgColor: notificationType?.bgColor ?? 'bg-gray-100 dark:bg-gray-900/30',
+    textColor: notificationType?.textColor ?? 'text-gray-700 dark:text-gray-400',
+  };
+}
+
+// ============================================================================
+// Drill Categories
+// ============================================================================
+
+export const drillCategories = [
+  { value: 'technical', label: 'Technical', bgColor: 'bg-blue-100 dark:bg-blue-900/30', textColor: 'text-blue-800 dark:text-blue-300' },
+  { value: 'tactical', label: 'Tactical', bgColor: 'bg-purple-100 dark:bg-purple-900/30', textColor: 'text-purple-800 dark:text-purple-300' },
+  { value: 'physical', label: 'Physical', bgColor: 'bg-orange-100 dark:bg-orange-900/30', textColor: 'text-orange-800 dark:text-orange-300' },
+  { value: 'mental', label: 'Mental', bgColor: 'bg-green-100 dark:bg-green-900/30', textColor: 'text-green-800 dark:text-green-300' },
+  { value: 'mixed', label: 'Mixed', bgColor: 'bg-gray-100 dark:bg-gray-900/30', textColor: 'text-gray-800 dark:text-gray-300' },
+] as const;
+
+export type DrillCategory = typeof drillCategories[number]['value'];
+
+// Drill category display mapping
+export const drillCategoryDisplay: Record<string, string> = Object.fromEntries(
+  drillCategories.map(c => [c.value, c.label])
+);
+
+// Get drill category label
+export function getDrillCategoryLabel(category: string): string {
+  return drillCategoryDisplay[category] ?? category;
+}
+
+// Get drill category colors
+export function getDrillCategoryColors(category: string): { bgColor: string; textColor: string } {
+  const drillCategory = drillCategories.find(c => c.value === category);
+  return {
+    bgColor: drillCategory?.bgColor ?? 'bg-gray-100 dark:bg-gray-900/30',
+    textColor: drillCategory?.textColor ?? 'text-gray-800 dark:text-gray-300',
+  };
+}
+
+// ============================================================================
+// Sort Options (for lists)
+// ============================================================================
+
+export const developmentPlanSortOptions = [
+  { value: 'date', label: 'Most Recent' },
+  { value: 'progress', label: 'Highest Progress' },
+] as const;
+
+export type DevelopmentPlanSortOption = typeof developmentPlanSortOptions[number]['value'];
+
+export const reportCardSortOptions = [
+  { value: 'date', label: 'Most Recent' },
+  { value: 'rating', label: 'Highest Rating' },
+] as const;
+
+export type ReportCardSortOption = typeof reportCardSortOptions[number]['value'];
+
+// ============================================================================
+// Session Duration Options (for training sessions)
+// ============================================================================
+
+export const sessionDurations = [
+  { value: 30, label: '30 minutes' },
+  { value: 45, label: '45 minutes' },
+  { value: 60, label: '60 minutes (1 hour)' },
+  { value: 75, label: '75 minutes' },
+  { value: 90, label: '90 minutes (1.5 hours)' },
+  { value: 120, label: '120 minutes (2 hours)' },
+] as const;
+
+export type SessionDurationValue = typeof sessionDurations[number]['value'];
+
+// ============================================================================
+// Theme Options
+// ============================================================================
+
+export const themeOptions = [
+  { value: 'light', label: 'Light', icon: 'Sun' },
+  { value: 'dark', label: 'Dark', icon: 'Moon' },
+  { value: 'system', label: 'System', icon: 'Monitor' },
+] as const;
+
+export type ThemeOption = typeof themeOptions[number]['value'];
