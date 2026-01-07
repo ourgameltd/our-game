@@ -318,12 +318,12 @@ Formation: 4-3-3 - will work on movements`,
     drillIds: ['d3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8', 'd4d5e6f7-a8b9-c0d1-e2f3-a4b5c6d7e8f9'],
     coachIds: ['c1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', 'c2a3b4c5-d6e7-f8a9-b0c1-d2e3f4a5b6c7'],
     attendance: [
-      { playerId: 'p1a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', present: true },
-      { playerId: 'p2b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6', present: true },
-      { playerId: 'p3c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7', present: true, notes: 'Left early - minor injury' },
-      { playerId: 'p4d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8', present: false, notes: 'Illness' },
-      { playerId: 'p5e5f6a7-b8c9-d0e1-f2a3-b4c5d6e7f8a9', present: true },
-      { playerId: 'p6f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0', present: true }
+      { playerId: 'p1a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', status: 'confirmed' },
+      { playerId: 'p2b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6', status: 'confirmed' },
+      { playerId: 'p3c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7', status: 'confirmed', notes: 'Left early - minor injury' },
+      { playerId: 'p4d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8', status: 'declined', notes: 'Illness' },
+      { playerId: 'p5e5f6a7-b8c9-d0e1-f2a3-b4c5d6e7f8a9', status: 'confirmed' },
+      { playerId: 'p6f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0', status: 'confirmed' }
     ],
     notes: `Good session overall. 
 
@@ -347,12 +347,12 @@ Next session: Focus on defensive transition`,
     drillIds: ['d1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', 'd3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8'],
     coachIds: ['c1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6'],
     attendance: [
-      { playerId: 'p1a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', present: true },
-      { playerId: 'p2b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6', present: true },
-      { playerId: 'p3c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7', present: true },
-      { playerId: 'p4d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8', present: true },
-      { playerId: 'p5e5f6a7-b8c9-d0e1-f2a3-b4c5d6e7f8a9', present: false, notes: 'School trip' },
-      { playerId: 'p6f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0', present: true }
+      { playerId: 'p1a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', status: 'confirmed' },
+      { playerId: 'p2b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6', status: 'confirmed' },
+      { playerId: 'p3c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7', status: 'confirmed' },
+      { playerId: 'p4d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8', status: 'confirmed' },
+      { playerId: 'p5e5f6a7-b8c9-d0e1-f2a3-b4c5d6e7f8a9', status: 'declined', notes: 'School trip' },
+      { playerId: 'p6f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0', status: 'confirmed' }
     ],
     notes: `Excellent session! Communication much improved from last week.
 
@@ -370,11 +370,11 @@ Players responding well to possession drills - keeping the ball much better unde
     drillIds: ['d2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7'],
     coachIds: ['c2a3b4c5-d6e7-f8a9-b0c1-d2e3f4a5b6c7'],
     attendance: [
-      { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', present: true },
-      { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', present: true },
-      { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', present: true },
-      { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', present: true },
-      { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', present: true }
+      { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', status: 'confirmed' },
+      { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', status: 'confirmed' },
+      { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', status: 'confirmed' },
+      { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', status: 'confirmed' },
+      { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', status: 'confirmed' }
     ],
     notes: 'All players showed great attitude. Ethan particularly impressive with ball control. Need more work on weak foot.',
     status: 'completed',
@@ -391,11 +391,11 @@ Players responding well to possession drills - keeping the ball much better unde
     drillIds: ['d4d5e6f7-a8b9-c0d1-e2f3-a4b5c6d7e8f9', 'd5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0'],
     coachIds: ['c3a4b5c6-d7e8-f9a0-b1c2-d3e4f5a6b7c8', 'c4a5b6c7-d8e9-f0a1-b2c3-d4e5f6a7b8c9'],
     attendance: [
-      { playerId: 'p14f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', present: true },
-      { playerId: 'p15a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', present: true },
-      { playerId: 'p16b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d', present: true },
-      { playerId: 'p17c9d0e-1f2a-3b4c-5d6e-7f8a9b0c1d2e', present: false, notes: 'Family commitment' },
-      { playerId: 'p18d0e1f-2a3b-4c5d-6e7f-8a9b0c1d2e3f', present: true }
+      { playerId: 'p14f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', status: 'confirmed' },
+      { playerId: 'p15a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', status: 'confirmed' },
+      { playerId: 'p16b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d', status: 'confirmed' },
+      { playerId: 'p17c9d0e-1f2a-3b4c-5d6e-7f8a9b0c1d2e', status: 'declined', notes: 'Family commitment' },
+      { playerId: 'p18d0e1f-2a3b-4c5d-6e7f-8a9b0c1d2e3f', status: 'confirmed' }
     ],
     notes: `Post-match analysis from Saturday's 3-1 win.
 

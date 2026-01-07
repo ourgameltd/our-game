@@ -66,7 +66,20 @@ export const sampleMatches: Match[] = [
       goalkeeper: '9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a' // Vale Goalkeeper Kit
     },
     status: 'scheduled',
-    coachIds: ['c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f']
+    coachIds: ['c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f'],
+    attendance: [
+      { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', status: 'confirmed' },
+      { playerId: 'p0b2c3d4-e5f6-a7b8-c9d0-e1f2a3b4c5d6', status: 'confirmed' },
+      { playerId: 'p1c3d4e5-f6a7-b8c9-d0e1-f2a3b4c5d6e7', status: 'confirmed' },
+      { playerId: 'p2d4e5f6-a7b8-c9d0-e1f2-a3b4c5d6e7f8', status: 'confirmed' },
+      { playerId: 'p3e5f6a7-b8c9-d0e1-f2a3-b4c5d6e7f8a9', status: 'maybe', notes: 'Waiting on work schedule' },
+      { playerId: 'p4f6a7b8-c9d0-e1f2-a3b4-c5d6e7f8a9b0', status: 'declined', notes: 'Family commitment' },
+      { playerId: 'p5a7b8c9-d0e1-f2a3-b4c5-d6e7f8a9b0c1', status: 'pending' },
+      { playerId: 'p6b8c9d0-e1f2-a3b4-c5d6-e7f8a9b0c1d2', status: 'confirmed' },
+      { playerId: 'p7c9d0e1-f2a3-b4c5-d6e7-f8a9b0c1d2e3', status: 'confirmed' },
+      { playerId: 'p8d0e1f2-a3b4-c5d6-e7f8-a9b0c1d2e3f4', status: 'pending' },
+      { playerId: 'p9e1f2a3-b4c5-d6e7-f8a9-b0c1d2e3f4a5', status: 'confirmed' }
+    ]
   },
   {
     id: 'm16u2p3c4-o5m6-i7n8-g9m0-a1t2c3h4e5s6',

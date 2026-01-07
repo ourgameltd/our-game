@@ -292,6 +292,11 @@ export interface Match {
   isLocked?: boolean; // Whether the match is locked from editing
   coachIds?: string[]; // Coaches assigned to this match
   notes?: string; // Additional notes/details about the match
+  attendance?: {
+    playerId: string;
+    status: 'confirmed' | 'declined' | 'maybe' | 'pending';
+    notes?: string;
+  }[];
 }
 
 export interface MatchLineup {
@@ -354,7 +359,7 @@ export interface TrainingSession {
   coachIds?: string[]; // Coaches assigned to this session
   attendance?: {
     playerId: string;
-    present: boolean;
+    status: 'confirmed' | 'declined' | 'maybe' | 'pending';
     notes?: string;
   }[];
   notes?: string; // Free text area for session plan and additional details

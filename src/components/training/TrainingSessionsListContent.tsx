@@ -32,7 +32,7 @@ export default function TrainingSessionsListContent({
   const completedCount = pastSessions.length;
   const totalAttendance = pastSessions.reduce((acc, s) => {
     if (s.attendance) {
-      return acc + s.attendance.filter(a => a.present).length;
+      return acc + s.attendance.filter(a => a.status === 'confirmed').length;
     }
     return acc;
   }, 0);
@@ -129,7 +129,7 @@ export default function TrainingSessionsListContent({
           <div className="hidden md:flex md:order-5 md:flex-shrink-0 items-center gap-2 md:w-[120px] justify-end">
             {isPast && session.attendance && session.attendance.length > 0 && (
               <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded whitespace-nowrap">
-                {session.attendance.filter(a => a.present).length}/{session.attendance.length}
+                {session.attendance.filter(a => a.status === 'confirmed').length}/{session.attendance.length}
               </span>
             )}
             {!isPast && (
@@ -143,7 +143,7 @@ export default function TrainingSessionsListContent({
           <div className="md:hidden flex items-center gap-2">
             {isPast && session.attendance && session.attendance.length > 0 && (
               <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded whitespace-nowrap">
-                {session.attendance.filter(a => a.present).length}/{session.attendance.length} attended
+                {session.attendance.filter(a => a.status === 'confirmed').length}/{session.attendance.length} attended
               </span>
             )}
             {!isPast && (
