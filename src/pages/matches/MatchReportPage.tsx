@@ -212,6 +212,18 @@ export default function MatchReportPage() {
                 <div className="card mb-6">
                   <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Team Sheet & Player Ratings</h2>
                   
+                  {/* Captain Display */}
+                  {match.report?.captainId && (
+                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <span className="text-amber-500 text-lg">©</span>
+                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                          Captain: {getPlayerName(match.report.captainId)}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                  
                   {/* Starting XI */}
                   <div className="mb-6">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Starting XI</h3>
@@ -220,13 +232,19 @@ export default function MatchReportPage() {
                         const playerData = getPlayerById(player.playerId);
                         const rating = getRatingForPlayer(player.playerId);
                         const isMotM = player.playerId === playerOfTheMatchId;
+                        const isCaptain = player.playerId === match.report?.captainId;
                         const cards = getCardsForPlayer(player.playerId);
                         const goals = getGoalsForPlayer(player.playerId);
                         const injuries = getInjuriesForPlayer(player.playerId);
                         
                         return (
-                          <div key={index} className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                          <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${isCaptain ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700' : 'bg-green-50 dark:bg-green-900/20'}`}>
                             <div className="flex items-center gap-3 flex-1">
+                              {player.squadNumber !== undefined && (
+                                <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
+                                  {player.squadNumber}
+                                </span>
+                              )}
                               <span className="px-2 py-1 bg-green-600 text-white rounded text-xs font-semibold min-w-[3rem] text-center">
                                 {player.position}
                               </span>
@@ -241,6 +259,9 @@ export default function MatchReportPage() {
                                 <span className="text-gray-900 dark:text-white font-medium">
                                   {getPlayerName(player.playerId)}
                                 </span>
+                                {isCaptain && (
+                                  <span className="text-amber-500" title="Captain">©</span>
+                                )}
                                 {isMotM && (
                                   <span className="text-yellow-500" title="Player of the Match">⭐</span>
                                 )}
@@ -309,7 +330,9 @@ export default function MatchReportPage() {
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Substitutes</h3>
                       <div className="grid grid-cols-1 gap-3">
-                        {match.lineup.substitutes.map((playerId, index) => {
+                        {match.lineup.substitutes.map((sub, index) => {
+                          const playerId = typeof sub === 'string' ? sub : sub.playerId;
+                          const squadNumber = typeof sub === 'string' ? undefined : sub.squadNumber;
                           const playerData = getPlayerById(playerId);
                           const rating = getRatingForPlayer(playerId);
                           const isMotM = playerId === playerOfTheMatchId;
@@ -320,6 +343,11 @@ export default function MatchReportPage() {
                           return (
                             <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                               <div className="flex items-center gap-3 flex-1">
+                                {squadNumber !== undefined && (
+                                  <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
+                                    {squadNumber}
+                                  </span>
+                                )}
                                 {playerData?.photo && (
                                   <img 
                                     src={playerData.photo} 

@@ -161,19 +161,20 @@ export const sampleMatches: Match[] = [
     lineup: {
       formationId: 'f1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
       starting: [
-        { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', position: 'GK' },
-        { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', position: 'CB' },
-        { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', position: 'CB' },
-        { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', position: 'CM' },
-        { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', position: 'ST' }
+        { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', position: 'GK', squadNumber: 1 },
+        { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', position: 'CB', squadNumber: 4 },
+        { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', position: 'CB', squadNumber: 5 },
+        { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', position: 'CM', squadNumber: 8 },
+        { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', position: 'ST', squadNumber: 9 }
       ],
-      substitutes: ['p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b'],
+      substitutes: [{ playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', squadNumber: 11 }],
       substitutions: [
         { minute: 75, playerOut: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', playerIn: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b' }
       ]
     },
     report: {
       summary: 'Dominant performance from the Reds with excellent teamwork. Strong defensive display kept Rangers at bay.',
+      captainId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d',
       goalScorers: [
         { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', minute: 23, assist: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f' },
         { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', minute: 67, assist: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b' },
@@ -218,14 +219,15 @@ export const sampleMatches: Match[] = [
     lineup: {
       formationId: 'f2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7',
       starting: [
-        { playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', position: 'ST' },
-        { playerId: 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', position: 'CM' },
-        { playerId: 'p31b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d', position: 'CB' }
+        { playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', position: 'ST', squadNumber: 9 },
+        { playerId: 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', position: 'CM', squadNumber: 8 },
+        { playerId: 'p31b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d', position: 'CB', squadNumber: 5 }
       ],
       substitutes: []
     },
     report: {
       summary: 'Hard-fought draw away from home. The Whites came from 2-0 down to secure a point.',
+      captainId: 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c',
       goalScorers: [
         { playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', minute: 65 },
         { playerId: 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', minute: 88 }
@@ -260,16 +262,17 @@ export const sampleMatches: Match[] = [
     lineup: {
       formationId: 'f1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
       starting: [
-        { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', position: 'GK' },
-        { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', position: 'CB' },
-        { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', position: 'CB' },
-        { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', position: 'CM' },
-        { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', position: 'ST' }
+        { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', position: 'GK', squadNumber: 1 },
+        { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', position: 'CB', squadNumber: 4 },
+        { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', position: 'CB', squadNumber: 5 },
+        { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', position: 'CM', squadNumber: 8 },
+        { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', position: 'ST', squadNumber: 9 }
       ],
-      substitutes: ['p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b']
+      substitutes: [{ playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', squadNumber: 11 }]
     },
     report: {
       summary: 'Comprehensive victory with a clean sheet. Outstanding performance from the whole team.',
+      captainId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d',
       goalScorers: [
         { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', minute: 12, assist: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f' },
         { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', minute: 34, assist: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d' },
@@ -305,9 +308,9 @@ export const sampleMatches: Match[] = [
     lineup: {
       formationId: 'f1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
       starting: [
-        { playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', position: 'ST' },
-        { playerId: 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', position: 'CM' },
-        { playerId: 'p31b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d', position: 'CB' }
+        { playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', position: 'ST', squadNumber: 9 },
+        { playerId: 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', position: 'CM', squadNumber: 8 },
+        { playerId: 'p31b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d', position: 'CB', squadNumber: 5 }
       ],
       substitutes: []
     },
@@ -344,13 +347,13 @@ export const sampleMatches: Match[] = [
     lineup: {
       formationId: 'f1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6',
       starting: [
-        { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', position: 'GK' },
-        { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', position: 'CB' },
-        { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', position: 'CB' },
-        { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', position: 'CM' },
-        { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', position: 'ST' }
+        { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', position: 'GK', squadNumber: 1 },
+        { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', position: 'CB', squadNumber: 4 },
+        { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', position: 'CB', squadNumber: 5 },
+        { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', position: 'CM', squadNumber: 8 },
+        { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', position: 'ST', squadNumber: 9 }
       ],
-      substitutes: ['p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b']
+      substitutes: [{ playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', squadNumber: 11 }]
     },
     report: {
       summary: 'Exciting match with both teams showing great spirit. All players got plenty of game time and experience.',

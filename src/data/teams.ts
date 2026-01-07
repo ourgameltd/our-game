@@ -11,6 +11,14 @@ export const sampleTeams: Team[] = [
     season: '2024/25',
     coachIds: ['c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f'],
     playerIds: ['p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b'],
+    playerAssignments: [
+      { playerId: 'p9a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5', squadNumber: 1 },  // GK
+      { playerId: 'p10b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d', squadNumber: 4 },  // CB
+      { playerId: 'p11c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e', squadNumber: 7 },  // Midfielder
+      { playerId: 'p12d4e5f-6a7b-8c9d-0e1f-2a3b4c5d6e7f', squadNumber: 9 },  // Forward
+      { playerId: 'p13e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a', squadNumber: 10 }, // Forward
+      { playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', squadNumber: 11 }  // Winger
+    ],
     colors: {
       primary: '#DC2626', // Red
       secondary: '#FFFFFF'
@@ -27,6 +35,11 @@ export const sampleTeams: Team[] = [
     season: '2024/25',
     coachIds: ['c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f'],
     playerIds: ['p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', 'p31b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d'],
+    playerAssignments: [
+      { playerId: 'p29f6a7b-8c9d-0e1f-2a3b-4c5d6e7f8a9b', squadNumber: 7 },
+      { playerId: 'p30a7b8c-9d0e-1f2a-3b4c-5d6e7f8a9b0c', squadNumber: 8 },
+      { playerId: 'p31b8c9d-0e1f-2a3b-4c5d-6e7f8a9b0c1d', squadNumber: 9 }
+    ],
     colors: {
       primary: '#F3F4F6', // Light gray/white
       secondary: '#1F2937'
@@ -43,6 +56,11 @@ export const sampleTeams: Team[] = [
     season: '2024/25',
     coachIds: ['c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f'],
     playerIds: ['p32c9d0e-1f2a-3b4c-5d6e-7f8a9b0c1d2e', 'p33d0e1f-2a3b-4c5d-6e7f-8a9b0c1d2e3f', 'p34e1f2a-3b4c-5d6e-7f8a-9b0c1d2e3f4a'],
+    playerAssignments: [
+      { playerId: 'p32c9d0e-1f2a-3b4c-5d6e-7f8a9b0c1d2e', squadNumber: 2 },
+      { playerId: 'p33d0e1f-2a3b-4c5d-6e7f-8a9b0c1d2e3f', squadNumber: 5 },
+      { playerId: 'p34e1f2a-3b4c-5d6e-7f8a-9b0c1d2e3f4a', squadNumber: 6 }
+    ],
     colors: {
       primary: '#2563EB', // Blue
       secondary: '#FFFFFF'
@@ -113,5 +131,12 @@ export const getTeamById = (id: string): Team | undefined => {
 
 export const getTeamsByIds = (ids: string[]): Team[] => {
   return sampleTeams.filter(team => ids.includes(team.id));
+};
+
+export const getPlayerSquadNumber = (teamId: string, playerId: string): number | undefined => {
+  const team = getTeamById(teamId);
+  if (!team?.playerAssignments) return undefined;
+  const assignment = team.playerAssignments.find(a => a.playerId === playerId);
+  return assignment?.squadNumber;
 };
 

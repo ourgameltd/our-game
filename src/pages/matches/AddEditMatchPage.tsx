@@ -9,6 +9,7 @@ import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
 import { sampleTactics, getResolvedPositions } from '@/data/tactics';
 import { getAgeGroupById, sampleAgeGroups } from '@/data/ageGroups';
 import { sampleCoaches, getCoachesByTeam, getCoachesByAgeGroup } from '@/data/coaches';
+import { getPlayerSquadNumber } from '@/data/teams';
 import { weatherConditions, squadSizes, cardTypes, injurySeverities, coachRoleDisplay } from '@/data/referenceData';
 import { PlayerPosition, SquadSize, Tactic } from '@/types';
 import { Routes } from '@utils/routes';
@@ -166,10 +167,12 @@ export default function AddEditMatchPage() {
   const [summary, setSummary] = useState(existingMatch?.report?.summary || '');
   
   // Lineup state
-  const [startingPlayers, setStartingPlayers] = useState<{ playerId: string; position: PlayerPosition }[]>(
+  const [startingPlayers, setStartingPlayers] = useState<{ playerId: string; position: PlayerPosition; squadNumber?: number }[]>(
     existingMatch?.lineup?.starting || []
   );
-  const [substitutes, setSubstitutes] = useState<string[]>(existingMatch?.lineup?.substitutes || []);
+  const [substitutes, setSubstitutes] = useState<{ playerId: string; squadNumber?: number }[]>(
+    existingMatch?.lineup?.substitutes || []
+  );
   const [substitutions, setSubstitutions] = useState<{ minute: number; playerOut: string; playerIn: string }[]>(
     existingMatch?.lineup?.substitutions || []
   );
@@ -188,6 +191,7 @@ export default function AddEditMatchPage() {
     existingMatch?.report?.performanceRatings || []
   );
   const [playerOfTheMatch, setPlayerOfTheMatch] = useState(existingMatch?.report?.playerOfTheMatch || '');
+  const [captainId, setCaptainId] = useState(existingMatch?.report?.captainId || '');
   const [isLocked, setIsLocked] = useState(existingMatch?.isLocked || false);
   const [notes, setNotes] = useState(existingMatch?.notes || '');
   
@@ -247,24 +251,32 @@ export default function AddEditMatchPage() {
 
   const handleAddStartingPlayer = (playerId: string, position: PlayerPosition) => {
     if (!startingPlayers.find(p => p.playerId === playerId)) {
-      setStartingPlayers([...startingPlayers, { playerId, position }]);
+      // Get default squad number from team assignment
+      const squadNumber = getPlayerSquadNumber(teamId!, playerId);
+      setStartingPlayers([...startingPlayers, { playerId, position, squadNumber }]);
       // Remove from substitutes if present
-      setSubstitutes(substitutes.filter(id => id !== playerId));
+      setSubstitutes(substitutes.filter(s => s.playerId !== playerId));
     }
   };
 
   const handleRemoveStartingPlayer = (playerId: string) => {
     setStartingPlayers(startingPlayers.filter(p => p.playerId !== playerId));
+    // Clear captain if removed player was captain
+    if (captainId === playerId) {
+      setCaptainId('');
+    }
   };
 
   const handleAddSubstitute = (playerId: string) => {
-    if (!substitutes.includes(playerId) && !startingPlayers.find(p => p.playerId === playerId)) {
-      setSubstitutes([...substitutes, playerId]);
+    if (!substitutes.find(s => s.playerId === playerId) && !startingPlayers.find(p => p.playerId === playerId)) {
+      // Get default squad number from team assignment
+      const squadNumber = getPlayerSquadNumber(teamId!, playerId);
+      setSubstitutes([...substitutes, { playerId, squadNumber }]);
     }
   };
 
   const handleRemoveSubstitute = (playerId: string) => {
-    setSubstitutes(substitutes.filter(id => id !== playerId));
+    setSubstitutes(substitutes.filter(s => s.playerId !== playerId));
   };
 
   const handleAddGoal = () => {
@@ -431,6 +443,7 @@ export default function AddEditMatchPage() {
       lineup: { formationId, tacticId: tacticId || undefined, starting: startingPlayers, substitutes, substitutions },
       report: {
         summary,
+        captainId: captainId || undefined,
         goalScorers: goals,
         cards,
         injuries,
@@ -444,7 +457,7 @@ export default function AddEditMatchPage() {
     navigate(Routes.matches(clubId!, ageGroupId!, teamId!));
   };
 
-  const allPlayersInMatch = [...startingPlayers.map(p => p.playerId), ...substitutes];
+  const allPlayersInMatch = [...startingPlayers.map(p => p.playerId), ...substitutes.map(s => s.playerId)];
   const availablePlayers = teamPlayers.filter(p => !allPlayersInMatch.includes(p.id));
 
   return (
@@ -1133,9 +1146,15 @@ export default function AddEditMatchPage() {
                     
                     return sortedPlayers.map((player) => {
                       const playerData = allClubPlayers.find(p => p.id === player.playerId);
+                      const isCaptain = captainId === player.playerId;
                       return (
-                        <div key={player.playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                        <div key={player.playerId} className={`flex items-center justify-between p-3 rounded-lg ${isCaptain ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700' : 'bg-gray-50 dark:bg-gray-700'}`}>
                           <div className="flex items-center gap-3">
+                            {player.squadNumber !== undefined && (
+                              <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
+                                {player.squadNumber}
+                              </span>
+                            )}
                             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
                               {player.position}
                             </span>
@@ -1148,15 +1167,28 @@ export default function AddEditMatchPage() {
                             )}
                             <span className="text-gray-900 dark:text-white font-medium">
                               {getPlayerName(player.playerId)}
+                              {isCaptain && <span className="ml-1 text-amber-500" title="Captain">©</span>}
                             </span>
                           </div>
-                          <button
-                            onClick={() => handleRemoveStartingPlayer(player.playerId)}
-                            disabled={isLocked}
-                            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Remove
-                          </button>
+                          <div className="flex items-center gap-2">
+                            {!isLocked && (
+                              <button
+                                type="button"
+                                onClick={() => setCaptainId(isCaptain ? '' : player.playerId)}
+                                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${isCaptain ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30'}`}
+                                title={isCaptain ? 'Remove as captain' : 'Set as captain'}
+                              >
+                                {isCaptain ? '© Captain' : 'Captain'}
+                              </button>
+                            )}
+                            <button
+                              onClick={() => handleRemoveStartingPlayer(player.playerId)}
+                              disabled={isLocked}
+                              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
                       );
                     });
@@ -1222,24 +1254,29 @@ export default function AddEditMatchPage() {
                   Substitutes ({substitutes.length})
                 </h3>
                 <div className="space-y-2 mb-4">
-                  {substitutes.map((playerId) => {
-                    const playerData = allClubPlayers.find(p => p.id === playerId);
+                  {substitutes.map((sub) => {
+                    const playerData = allClubPlayers.find(p => p.id === sub.playerId);
                     return (
-                      <div key={playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                      <div key={sub.playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         <div className="flex items-center gap-3">
+                          {sub.squadNumber !== undefined && (
+                            <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
+                              {sub.squadNumber}
+                            </span>
+                          )}
                           {playerData?.photo && (
                             <img 
                               src={playerData.photo} 
-                              alt={getPlayerName(playerId)}
+                              alt={getPlayerName(sub.playerId)}
                               className="w-8 h-8 rounded-full object-cover"
                             />
                           )}
                           <span className="text-gray-900 dark:text-white font-medium">
-                            {getPlayerName(playerId)}
+                            {getPlayerName(sub.playerId)}
                           </span>
                         </div>
                         <button
-                          onClick={() => handleRemoveSubstitute(playerId)}
+                          onClick={() => handleRemoveSubstitute(sub.playerId)}
                           disabled={isLocked}
                           className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
@@ -1711,9 +1748,9 @@ export default function AddEditMatchPage() {
                             className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <option value="">Select player</option>
-                            {substitutes.map(pId => (
-                              <option key={pId} value={pId}>
-                                {getPlayerName(pId)}
+                            {substitutes.map(sub => (
+                              <option key={sub.playerId} value={sub.playerId}>
+                                {getPlayerName(sub.playerId)}
                               </option>
                             ))}
                           </select>

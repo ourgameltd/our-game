@@ -1,7 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { getTeamById } from '@data/teams';
+import { getTeamById, getPlayerSquadNumber } from '@data/teams';
 import { getPlayersByTeamId, getPlayersByAgeGroupId } from '@data/players';
 import PlayerCard from '@components/player/PlayerCard';
 import PageTitle from '@components/common/PageTitle';
@@ -80,6 +80,7 @@ export default function TeamPlayersPage() {
               <Link key={player.id} to={Routes.player(clubId!, ageGroupId!, player.id)}>
                 <PlayerCard 
                   player={player}
+                  squadNumber={getPlayerSquadNumber(teamId!, player.id)}
                   badges={
                     player.teamIds.length > 1 ? (
                       <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">

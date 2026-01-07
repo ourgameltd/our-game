@@ -4,13 +4,15 @@ import { ReactNode } from 'react';
 
 interface PlayerCardProps {
   player: Player;
+  squadNumber?: number;
+  isCaptain?: boolean;
   onClick?: () => void;
   isSelected?: boolean;
   badges?: ReactNode;
   actions?: ReactNode;
 }
 
-export default function PlayerCard({ player, onClick, isSelected = false, badges, actions }: PlayerCardProps) {
+export default function PlayerCard({ player, squadNumber, isCaptain = false, onClick, isSelected = false, badges, actions }: PlayerCardProps) {
   const age = new Date().getFullYear() - player.dateOfBirth.getFullYear();
   
   // Convert player attributes to grouped format and get top 4 attributes
@@ -35,6 +37,12 @@ export default function PlayerCard({ player, onClick, isSelected = false, badges
     >
       {/* Photo - shows at top on mobile, left on desktop */}
       <div className="flex items-center gap-3 mb-3 md:mb-0 md:flex-shrink-0 md:order-1">
+        {/* Squad Number */}
+        {squadNumber !== undefined && (
+          <div className="w-8 h-8 md:w-7 md:h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-sm font-bold flex-shrink-0">
+            {squadNumber}
+          </div>
+        )}
         {player.photo ? (
           <img 
             src={player.photo} 
@@ -51,6 +59,9 @@ export default function PlayerCard({ player, onClick, isSelected = false, badges
         <div className="flex-1 min-w-0 md:hidden">
           <h3 className="text-lg font-semibold text-gray-900 dark:text-white truncate">
             {player.firstName} {player.lastName}
+            {isCaptain && (
+              <span className="ml-2 text-amber-500" title="Captain">©</span>
+            )}
             {player.nickname && (
               <span className="text-sm font-normal text-primary-600 dark:text-primary-400 ml-2">"{player.nickname}"</span>
             )}
@@ -70,6 +81,9 @@ export default function PlayerCard({ player, onClick, isSelected = false, badges
       <div className="hidden md:flex md:items-baseline md:gap-2 md:min-w-48 md:flex-shrink-0 md:order-2">
         <h3 className="text-base font-semibold text-gray-900 dark:text-white whitespace-nowrap">
           {player.firstName} {player.lastName}
+          {isCaptain && (
+            <span className="ml-1 text-amber-500" title="Captain">©</span>
+          )}
         </h3>
         {player.nickname && (
           <span className="text-xs font-normal text-primary-600 dark:text-primary-400 whitespace-nowrap">"{player.nickname}"</span>

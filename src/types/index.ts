@@ -54,6 +54,11 @@ export interface AgeGroup {
 }
 
 // Team Types
+export interface TeamPlayerAssignment {
+  playerId: string;
+  squadNumber?: number; // Squad number for this player in this team (1-99)
+}
+
 export interface Team {
   id: string;
   clubId: string;
@@ -64,6 +69,7 @@ export interface Team {
   season: string;
   coachIds: string[];
   playerIds: string[];
+  playerAssignments?: TeamPlayerAssignment[]; // Squad numbers for players in this team
   formationId?: string;
   colors?: {
     primary: string;
@@ -291,8 +297,8 @@ export interface Match {
 export interface MatchLineup {
   formationId: string;
   tacticId?: string; // Optional tactic to apply on top of formation
-  starting: { playerId: string; position: PlayerPosition }[];
-  substitutes: string[];
+  starting: { playerId: string; position: PlayerPosition; squadNumber?: number }[]; // squadNumber can override team default
+  substitutes: { playerId: string; squadNumber?: number }[]; // squadNumber can override team default
   substitutions?: {
     minute: number;
     playerOut: string;
@@ -302,6 +308,7 @@ export interface MatchLineup {
 
 export interface MatchReport {
   summary: string;
+  captainId?: string; // playerId of the match captain (optional)
   goalScorers?: { playerId: string; minute: number; assist?: string }[];
   cards?: {
     playerId: string;
