@@ -1,26 +1,35 @@
 erDiagram
-    USER ||--o{ CLUB : "manages"
+    %% Core Entities
+    USER ||--o| CLUB : "manages"
     USER ||--o{ PLAYER : "is parent of"
-    USER }o--|| COACH : "linked to"
-    USER }o--|| PLAYER : "linked to"
+    USER }o--o| COACH : "linked to"
+    USER }o--o| PLAYER : "linked to"
     
+    %% Club Structure
     CLUB ||--|{ AGE_GROUP : "has"
-    CLUB ||--|{ KIT : "owns"
+    CLUB ||--o{ KIT : "owns"
     CLUB ||--o{ COACH : "employs"
     CLUB ||--o{ PLAYER : "registers"
     CLUB ||--o{ FORMATION : "defines"
     CLUB ||--o{ DRILL : "creates"
+    CLUB ||--o{ DRILL_TEMPLATE : "creates"
     
+    %% Age Group & Team Hierarchy
     AGE_GROUP ||--|{ TEAM : "contains"
     AGE_GROUP }o--o{ PLAYER : "belongs to"
     AGE_GROUP ||--o{ FORMATION : "customizes"
+    AGE_GROUP }o--o{ COACH : "coordinated by"
     
+    %% Team Relationships
     TEAM }o--o{ COACH : "coached by"
     TEAM }o--o{ PLAYER : "plays for"
     TEAM ||--o{ MATCH : "participates in"
     TEAM ||--o{ TRAINING_SESSION : "trains"
-    TEAM ||--o{ FORMATION : "uses"
+    TEAM }o--o| FORMATION : "uses"
+    TEAM ||--o{ KIT : "has"
     
+    %% Player Development
+    PLAYER ||--|| PLAYER_ATTRIBUTES : "has stats"
     PLAYER ||--o{ ATTRIBUTE_EVALUATION : "receives"
     PLAYER ||--o{ PLAYER_IMAGE : "has photos"
     PLAYER ||--o{ EMERGENCY_CONTACT : "has contacts"
@@ -29,33 +38,54 @@ erDiagram
     PLAYER ||--o{ TRAINING_PLAN : "assigned"
     PLAYER ||--o{ KIT_ORDER : "orders"
     
+    %% Match Management
     MATCH ||--o| MATCH_LINEUP : "has"
     MATCH ||--o| MATCH_REPORT : "generates"
     MATCH }o--o{ COACH : "managed by"
+    MATCH }o--o{ KIT : "uses"
     
     MATCH_LINEUP }o--|| FORMATION : "uses"
     MATCH_LINEUP }o--o{ PLAYER : "includes"
+    MATCH_LINEUP ||--o{ MATCH_SUBSTITUTION : "records"
     
     MATCH_REPORT ||--o{ GOAL : "records"
     MATCH_REPORT ||--o{ CARD : "records"
     MATCH_REPORT ||--o{ INJURY : "records"
     MATCH_REPORT ||--o{ PERFORMANCE_RATING : "contains"
     
+    %% Training Management
     TRAINING_SESSION }o--o{ DRILL : "includes"
     TRAINING_SESSION }o--o{ COACH : "led by"
     TRAINING_SESSION ||--o{ ATTENDANCE : "tracks"
+    TRAINING_SESSION }o--o| DRILL_TEMPLATE : "uses"
     
+    %% Drill & Template
     DRILL ||--o{ DRILL_LINK : "has resources"
-    
     DRILL_TEMPLATE }o--o{ DRILL : "contains"
     
+    %% Formation & Tactics
     FORMATION ||--o{ FORMATION_POSITION : "defines"
     FORMATION ||--o{ TACTIC_PRINCIPLE : "includes"
+    FORMATION ||--o{ POSITION_OVERRIDE : "customizes"
     FORMATION }o--o| FORMATION : "inherits from"
     
+    %% Development & Reports
     DEVELOPMENT_PLAN ||--o{ DEVELOPMENT_GOAL : "contains"
     DEVELOPMENT_PLAN }o--o| PLAYER_REPORT : "links to"
     
+    PLAYER_REPORT ||--o{ DEVELOPMENT_ACTION : "contains"
+    PLAYER_REPORT ||--o{ SIMILAR_PROFESSIONAL : "references"
+    
+    %% Training Plans
     TRAINING_PLAN ||--o{ TRAINING_OBJECTIVE : "targets"
     TRAINING_PLAN ||--o{ PERSONAL_SESSION : "schedules"
+    TRAINING_PLAN ||--o{ PROGRESS_NOTE : "tracks"
+    
+    PERSONAL_SESSION }o--o{ DRILL : "uses"
+    
+    %% Kit Orders
+    KIT_ORDER ||--o{ KIT_ORDER_ITEM : "contains"
+    
+    %% Attribute Evaluations
+    ATTRIBUTE_EVALUATION ||--o{ EVALUATION_ATTRIBUTE : "contains"
     TRAINING_PLAN ||--o{ PROGRESS_NOTE : "tracks"

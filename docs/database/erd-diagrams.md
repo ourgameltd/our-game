@@ -4,30 +4,43 @@ This document contains the Entity Relationship Diagrams for the Our Game footbal
 
 ## Logical ERD (Conceptual Model)
 
+The logical ERD shows the high-level relationships between entities without implementation details.
+
+![Logical ERD](./logical-erd.png)
+
 ```mermaid
 erDiagram
-    USER ||--o{ CLUB : "manages"
+    %% Core Entities
+    USER ||--o| CLUB : "manages"
     USER ||--o{ PLAYER : "is parent of"
-    USER }o--|| COACH : "linked to"
-    USER }o--|| PLAYER : "linked to"
+    USER }o--o| COACH : "linked to"
+    USER }o--o| PLAYER : "linked to"
     
+    %% Club Structure
     CLUB ||--|{ AGE_GROUP : "has"
-    CLUB ||--|{ KIT : "owns"
+    CLUB ||--o{ KIT : "owns"
     CLUB ||--o{ COACH : "employs"
     CLUB ||--o{ PLAYER : "registers"
     CLUB ||--o{ FORMATION : "defines"
     CLUB ||--o{ DRILL : "creates"
+    CLUB ||--o{ DRILL_TEMPLATE : "creates"
     
+    %% Age Group & Team Hierarchy
     AGE_GROUP ||--|{ TEAM : "contains"
     AGE_GROUP }o--o{ PLAYER : "belongs to"
     AGE_GROUP ||--o{ FORMATION : "customizes"
+    AGE_GROUP }o--o{ COACH : "coordinated by"
     
+    %% Team Relationships
     TEAM }o--o{ COACH : "coached by"
     TEAM }o--o{ PLAYER : "plays for"
     TEAM ||--o{ MATCH : "participates in"
     TEAM ||--o{ TRAINING_SESSION : "trains"
-    TEAM ||--o{ FORMATION : "uses"
+    TEAM }o--o| FORMATION : "uses"
+    TEAM ||--o{ KIT : "has"
     
+    %% Player Development
+    PLAYER ||--|| PLAYER_ATTRIBUTES : "has stats"
     PLAYER ||--o{ ATTRIBUTE_EVALUATION : "receives"
     PLAYER ||--o{ PLAYER_IMAGE : "has photos"
     PLAYER ||--o{ EMERGENCY_CONTACT : "has contacts"
@@ -36,39 +49,63 @@ erDiagram
     PLAYER ||--o{ TRAINING_PLAN : "assigned"
     PLAYER ||--o{ KIT_ORDER : "orders"
     
+    %% Match Management
     MATCH ||--o| MATCH_LINEUP : "has"
     MATCH ||--o| MATCH_REPORT : "generates"
     MATCH }o--o{ COACH : "managed by"
+    MATCH }o--o{ KIT : "uses"
     
     MATCH_LINEUP }o--|| FORMATION : "uses"
     MATCH_LINEUP }o--o{ PLAYER : "includes"
+    MATCH_LINEUP ||--o{ MATCH_SUBSTITUTION : "records"
     
     MATCH_REPORT ||--o{ GOAL : "records"
     MATCH_REPORT ||--o{ CARD : "records"
     MATCH_REPORT ||--o{ INJURY : "records"
     MATCH_REPORT ||--o{ PERFORMANCE_RATING : "contains"
     
+    %% Training Management
     TRAINING_SESSION }o--o{ DRILL : "includes"
     TRAINING_SESSION }o--o{ COACH : "led by"
     TRAINING_SESSION ||--o{ ATTENDANCE : "tracks"
+    TRAINING_SESSION }o--o| DRILL_TEMPLATE : "uses"
     
+    %% Drill & Template
     DRILL ||--o{ DRILL_LINK : "has resources"
-    
     DRILL_TEMPLATE }o--o{ DRILL : "contains"
     
+    %% Formation & Tactics
     FORMATION ||--o{ FORMATION_POSITION : "defines"
     FORMATION ||--o{ TACTIC_PRINCIPLE : "includes"
+    FORMATION ||--o{ POSITION_OVERRIDE : "customizes"
     FORMATION }o--o| FORMATION : "inherits from"
     
+    %% Development & Reports
     DEVELOPMENT_PLAN ||--o{ DEVELOPMENT_GOAL : "contains"
     DEVELOPMENT_PLAN }o--o| PLAYER_REPORT : "links to"
     
+    PLAYER_REPORT ||--o{ DEVELOPMENT_ACTION : "contains"
+    PLAYER_REPORT ||--o{ SIMILAR_PROFESSIONAL : "references"
+    
+    %% Training Plans
     TRAINING_PLAN ||--o{ TRAINING_OBJECTIVE : "targets"
     TRAINING_PLAN ||--o{ PERSONAL_SESSION : "schedules"
     TRAINING_PLAN ||--o{ PROGRESS_NOTE : "tracks"
+    
+    PERSONAL_SESSION }o--o{ DRILL : "uses"
+    
+    %% Kit Orders
+    KIT_ORDER ||--o{ KIT_ORDER_ITEM : "contains"
+    
+    %% Attribute Evaluations
+    ATTRIBUTE_EVALUATION ||--o{ EVALUATION_ATTRIBUTE : "contains"
 ```
 
 ## Physical ERD (PostgreSQL Database Schema)
+
+The physical ERD shows the detailed database schema with tables, columns, data types, and relationships.
+
+![Physical ERD](./physical-erd.png)
 
 ```mermaid
 erDiagram
@@ -254,6 +291,7 @@ erDiagram
         uuid id PK
         uuid player_id FK
         uuid team_id FK
+        int squad_number
         timestamp assigned_at
     }
     
@@ -311,6 +349,7 @@ erDiagram
         uuid parent_formation_id FK
         uuid parent_tactic_id FK
         text summary
+        text description
         varchar(50) style
         scope_type_enum scope_type
         uuid scope_club_id FK
@@ -393,6 +432,7 @@ erDiagram
         uuid lineup_id FK
         uuid player_id FK
         player_position_enum position
+        int squad_number
         boolean is_starting
     }
     
@@ -408,6 +448,7 @@ erDiagram
         uuid id PK
         uuid match_id FK
         text summary
+        uuid captain_id FK
         uuid player_of_match_id FK
         timestamp created_at
     }
@@ -465,7 +506,16 @@ erDiagram
         uuid id PK
         uuid session_id FK
         uuid drill_id FK
+        drill_source_enum source
+        uuid template_id FK
         int drill_order
+    }
+    
+    applied_templates {
+        uuid id PK
+        uuid session_id FK
+        uuid template_id FK
+        timestamp applied_at
     }
     
     session_coaches {
@@ -656,7 +706,7 @@ erDiagram
     }
 
     %% Relationships
-    users ||--o{ clubs : club_id
+    users ||--o| clubs : club_id
     kits }o--|| clubs : club_id
     kits }o--o| teams : team_id
     age_groups }o--|| clubs : club_id
@@ -688,37 +738,68 @@ erDiagram
     position_overrides }o--|| formations : formation_id
     tactic_principles }o--|| formations : formation_id
     matches }o--|| teams : team_id
+    matches }o--o| kits : primary_kit_id
+    matches }o--o| kits : secondary_kit_id
+    matches }o--o| kits : goalkeeper_kit_id
     match_coaches }o--|| matches : match_id
     match_coaches }o--|| coaches : coach_id
-    match_lineups ||--|| matches : match_id
-    match_lineups }o--|| formations : formation_id
+    match_lineups }o--|| matches : match_id
+    match_lineups }o--o| formations : formation_id
+    match_lineups }o--o| formations : tactic_id
     lineup_players }o--|| match_lineups : lineup_id
     lineup_players }o--|| players : player_id
     match_substitutions }o--|| matches : match_id
-    match_reports ||--|| matches : match_id
+    match_substitutions }o--|| players : player_out_id
+    match_substitutions }o--|| players : player_in_id
+    match_reports }o--|| matches : match_id
+    match_reports }o--o| players : captain_id
+    match_reports }o--o| players : player_of_match_id
     goals }o--|| match_reports : match_report_id
+    goals }o--|| players : player_id
+    goals }o--o| players : assist_player_id
     cards }o--|| match_reports : match_report_id
+    cards }o--|| players : player_id
     injuries }o--|| match_reports : match_report_id
+    injuries }o--|| players : player_id
     performance_ratings }o--|| match_reports : match_report_id
+    performance_ratings }o--|| players : player_id
     training_sessions }o--|| teams : team_id
+    training_sessions }o--o| drill_templates : template_id
     session_drills }o--|| training_sessions : session_id
     session_drills }o--|| drills : drill_id
+    session_drills }o--o| drill_templates : template_id
+    applied_templates }o--|| training_sessions : session_id
+    applied_templates }o--|| drill_templates : template_id
     session_coaches }o--|| training_sessions : session_id
+    session_coaches }o--|| coaches : coach_id
     session_attendance }o--|| training_sessions : session_id
+    session_attendance }o--|| players : player_id
     drills }o--o| clubs : club_id
+    drills }o--o| coaches : created_by
     drill_links }o--|| drills : drill_id
     drill_templates }o--o| clubs : club_id
+    drill_templates }o--o| coaches : created_by
     template_drills }o--|| drill_templates : template_id
+    template_drills }o--|| drills : drill_id
     development_plans }o--|| players : player_id
+    development_plans }o--o| coaches : created_by
+    development_plans }o--o| player_reports : linked_report_id
     development_goals }o--|| development_plans : plan_id
     player_reports }o--|| players : player_id
+    player_reports }o--o| coaches : created_by
     report_development_actions }o--|| player_reports : report_id
     similar_professionals }o--|| player_reports : report_id
     training_plans }o--|| players : player_id
+    training_plans }o--o| coaches : created_by
     training_objectives }o--|| training_plans : plan_id
     personal_sessions }o--|| training_plans : plan_id
+    personal_session_drills }o--|| personal_sessions : personal_session_id
+    personal_session_drills }o--|| drills : drill_id
     progress_notes }o--|| training_plans : plan_id
+    progress_notes }o--o| coaches : added_by
     kit_orders }o--|| players : player_id
+    kit_orders }o--|| teams : team_id
+    kit_orders }o--o| users : ordered_by
     kit_order_items }o--|| kit_orders : order_id
 ```
 
@@ -739,6 +820,7 @@ CREATE TYPE card_type_enum AS ENUM ('yellow', 'red');
 CREATE TYPE severity_enum AS ENUM ('minor', 'moderate', 'serious');
 CREATE TYPE session_status_enum AS ENUM ('scheduled', 'in-progress', 'completed', 'cancelled');
 CREATE TYPE drill_category_enum AS ENUM ('technical', 'tactical', 'physical', 'mental');
+CREATE TYPE drill_source_enum AS ENUM ('template', 'adhoc');
 CREATE TYPE link_type_enum AS ENUM ('youtube', 'instagram', 'tiktok', 'website', 'other');
 CREATE TYPE plan_status_enum AS ENUM ('active', 'completed', 'archived');
 CREATE TYPE objective_status_enum AS ENUM ('not-started', 'in-progress', 'completed');
@@ -751,45 +833,72 @@ CREATE TYPE kit_item_type_enum AS ENUM ('shirt', 'shorts', 'socks', 'tracksuit',
 | Aspect | Decision | Rationale |
 |--------|----------|-----------|
 | **UUIDs** | All PKs are UUIDs | Better for distributed systems, no collision risks |
-| **Many-to-Many** | Junction tables (e.g., `team_coaches`, `player_teams`) | Proper normalization for flexible relationships |
-| **Attributes** | Separate `player_attributes` table | Allows easy querying/updating of individual stats |
-| **Formations/Tactics** | Single `formations` table with self-referencing FK | Supports inheritance hierarchy (system → club → age group → team) |
-| **Match Reports** | Normalized into separate tables (goals, cards, etc.) | Better querying and indexing for statistics |
+| **Many-to-Many** | Junction tables (e.g., `team_coaches`, `player_teams`, `player_age_groups`) | Proper normalization for flexible relationships |
+| **Squad Numbers** | `squad_number` column on `player_teams` | Players can have different squad numbers per team |
+| **Attributes** | Separate `player_attributes` table with 35+ EA FC-style attributes | Allows easy querying/updating of individual stats |
+| **Formations/Tactics** | Single `formations` table with self-referencing FKs | Supports inheritance hierarchy (system → club → age group → team) |
+| **Position Overrides** | Separate `position_overrides` table | Tactics can customize positions without duplicating base formation |
+| **Match Reports** | Normalized into separate tables (goals, cards, injuries, etc.) | Better querying and indexing for statistics |
+| **Training Sessions** | `session_drills` with source tracking | Track whether drills came from templates or were added ad-hoc |
 | **Soft Deletes** | `is_archived` boolean flags | Preserve historical data integrity |
 | **Audit Fields** | `created_at`, `updated_at` on major entities | Track data lineage |
-| **JSON/Arrays** | Limited use (preferences, tags, equipment) | Where flexibility outweighs query needs |
+| **JSON/Arrays** | Limited use (preferences, tags, equipment, focus_areas) | Where flexibility outweighs query needs |
 
 ## Entity Descriptions
 
 ### Core Entities
 
-- **users**: System users with authentication and role-based access
-- **clubs**: Football clubs with branding, location, and identity information
-- **age_groups**: Organizational units grouping teams by age/level (e.g., 2014s, Seniors)
-- **teams**: Individual teams within age groups (e.g., Reds, Blues, Whites)
+- **users**: System users with authentication and role-based access (admin, coach, player, parent, fan)
+- **clubs**: Football clubs with branding, location, history, ethos, and principles
+- **age_groups**: Organizational units grouping teams by age/level (e.g., 2014s, Seniors) with season and squad size defaults
+- **teams**: Individual teams within age groups (e.g., Reds, Blues, Whites) with formation and color overrides
 
 ### People
 
-- **coaches**: Staff members who coach teams with certifications and specializations
-- **players**: Registered players with attributes, positions, and medical info
+- **coaches**: Staff members who coach teams with specializations and association registration
+- **players**: Registered players with EA FC-style attributes (35+ metrics), positions, and medical info
+- **player_attributes**: Separate table for 35 player attributes across Skills, Physical, and Mental categories
 
 ### Football Operations
 
-- **formations**: Base formations and tactical variants with inheritance
-- **matches**: Scheduled and completed matches with lineups and reports
-- **training_sessions**: Team training sessions with drills and attendance
-- **drills**: Reusable training exercises with instructions and media links
+- **formations**: Base formations and tactical variants with inheritance and scoping (system → club → ageGroup → team)
+- **formation_positions**: Position definitions with x/y coordinates and directional tendencies
+- **position_overrides**: Tactical customizations of base formation positions
+- **tactic_principles**: Named tactical principles (e.g., "Press High") with associated player positions
+- **matches**: Scheduled and completed matches with lineups, reports, kit selection, and weather
+- **match_lineups**: Starting XI and substitutes with formation and tactic references
+- **training_sessions**: Team training sessions with drills, attendance, and template tracking
+- **drills**: Reusable training exercises with instructions, media links, and attribute mapping
+- **drill_templates**: Reusable session plans combining multiple drills
 
 ### Player Development
 
-- **player_attributes**: EA Sports FC-style player ratings (0-99 scale)
-- **attribute_evaluations**: Historical tracking of player assessments
-- **development_plans**: Goal-oriented improvement plans for players
-- **player_reports**: Periodic assessment reports with professional comparisons
-- **training_plans**: Individual training programs with sessions and objectives
+- **player_attributes**: EA Sports FC-style player ratings (0-99 scale) across 35 attributes
+- **attribute_evaluations**: Historical tracking of player assessments by coaches
+- **development_plans**: Goal-oriented improvement plans for players with progress tracking
+- **player_reports**: Periodic assessment reports with similar professional player comparisons
+- **training_plans**: Individual training programs with sessions, objectives, and progress notes
 
 ### Administration
 
-- **kits**: Team/club kit definitions with colors
-- **kit_orders**: Player kit orders with items and status
-- **emergency_contacts**: Player emergency contact information
+- **kits**: Team/club kit definitions with colors (home, away, third, goalkeeper, training)
+- **kit_orders**: Player kit orders with items, sizes, and status tracking
+- **emergency_contacts**: Player emergency contact information with primary contact flag
+- **player_images**: Player photo albums with tagging support
+
+## Table Summary
+
+| Category | Tables |
+|----------|--------|
+| **Core** | users, clubs, age_groups, teams |
+| **People** | coaches, players, player_attributes, player_parents |
+| **Junction** | team_coaches, player_teams, player_age_groups, age_group_coordinators |
+| **Formations** | formations, formation_positions, position_overrides, tactic_principles |
+| **Matches** | matches, match_lineups, lineup_players, match_substitutions, match_coaches |
+| **Match Reports** | match_reports, goals, cards, injuries, performance_ratings |
+| **Training** | training_sessions, session_drills, applied_templates, session_coaches, session_attendance |
+| **Drills** | drills, drill_links, drill_templates, template_drills |
+| **Development** | development_plans, development_goals, attribute_evaluations, evaluation_attributes |
+| **Reports** | player_reports, report_development_actions, similar_professionals |
+| **Training Plans** | training_plans, training_objectives, personal_sessions, personal_session_drills, progress_notes |
+| **Administration** | kits, kit_orders, kit_order_items, emergency_contacts, player_images |
