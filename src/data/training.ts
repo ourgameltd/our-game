@@ -166,7 +166,20 @@ export const sampleTrainingSessions: TrainingSession[] = [
     duration: 75,
     location: 'Community Sports Ground - Pitch 2',
     focusAreas: ['Passing & Movement', 'Build-up Play', 'Team Shape'],
-    drillIds: ['d1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', 'd3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8'],
+    drillIds: ['d1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', 'd2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7', 'd3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8'],
+    // Example: Session using Technical Foundation template plus an ad-hoc 5v5 Possession drill
+    sessionDrills: [
+      { drillId: 'd1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', source: 'template', templateId: 'dt1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c', order: 1 }, // Passing Triangle from template
+      { drillId: 'd2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7', source: 'template', templateId: 'dt1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c', order: 2 }, // Dribbling Gates from template
+      { drillId: 'd3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8', source: 'adhoc', order: 3 }, // 5v5 Possession added manually
+    ],
+    appliedTemplates: [
+      {
+        templateId: 'dt1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c',
+        appliedAt: new Date('2025-12-20T14:30:00'),
+        drillIds: ['d1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', 'd2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7']
+      }
+    ],
     coachIds: ['c1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6'],
     notes: `Post-Christmas training session! Let's shake off those mince pies 🎄
 
@@ -188,7 +201,20 @@ Please bring water and a positive attitude after the festive break.`,
     duration: 90,
     location: 'Community Sports Ground - Pitch 1',
     focusAreas: ['Tactical Awareness', 'Set Pieces', 'Defensive Shape'],
-    drillIds: ['d3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8', 'd5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0'],
+    drillIds: ['d3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8', 'd5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0', 'd7a8b9c0-d1e2-f3a4-b5c6-d7e8f9a0b1c2'],
+    // Example: Defensive Fundamentals template with an extra possession drill
+    sessionDrills: [
+      { drillId: 'd7a8b9c0-d1e2-f3a4-b5c6-d7e8f9a0b1c2', source: 'template', templateId: 'dt5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a', order: 1 }, // 1v1 Defending
+      { drillId: 'd5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0', source: 'template', templateId: 'dt5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a', order: 2 }, // Defensive Shape
+      { drillId: 'd3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8', source: 'adhoc', order: 3 }, // 5v5 Possession (ad-hoc)
+    ],
+    appliedTemplates: [
+      {
+        templateId: 'dt5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a',
+        appliedAt: new Date('2025-01-05T10:00:00'),
+        drillIds: ['d7a8b9c0-d1e2-f3a4-b5c6-d7e8f9a0b1c2', 'd5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0']
+      }
+    ],
     coachIds: ['c1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', 'c2a3b4c5-d6e7-f8a9-b0c1-d2e3f4a5b6c7'],
     notes: `Session Plan:
 - Warm up (15 mins): Dynamic stretches, passing combinations
@@ -210,6 +236,12 @@ Equipment: Cones, bibs, portable goals needed.`,
     location: 'Community Sports Ground - Pitch 2',
     focusAreas: ['Technical Skills', 'Finishing', 'First Touch'],
     drillIds: ['d1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', 'd2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7', 'd4d5e6f7-a8b9-c0d1-e2f3-a4b5c6d7e8f9'],
+    // Example: Fully ad-hoc session with no template
+    sessionDrills: [
+      { drillId: 'd1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6', source: 'adhoc', order: 1 }, // Passing Triangle
+      { drillId: 'd2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7', source: 'adhoc', order: 2 }, // Dribbling Gates
+      { drillId: 'd4d5e6f7-a8b9-c0d1-e2f3-a4b5c6d7e8f9', source: 'adhoc', order: 3 }, // Finishing Circuit
+    ],
     coachIds: ['c1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6'],
     notes: `Focus on shooting technique this week. 
 

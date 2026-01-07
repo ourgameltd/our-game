@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTeamById } from '@/data/teams';
+import { getTeamById, getPlayerSquadNumber } from '@/data/teams';
+import { getPlayersByTeamId } from '@/data/players';
 import { teamLevels } from '@/data/referenceData';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
+import { TeamPlayerAssignment } from '@/types';
 
 export default function TeamSettingsPage() {
   const { clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
   const team = getTeamById(teamId!);
+  const teamPlayers = team ? getPlayersByTeamId(teamId!) : [];
 
   const [formData, setFormData] = useState({
     name: team?.name || '',
@@ -18,6 +21,14 @@ export default function TeamSettingsPage() {
     season: team?.season || '2024/25',
     primaryColor: team?.colors?.primary || '#1a472a',
     secondaryColor: team?.colors?.secondary || '#ffffff'
+  });
+
+  // Initialize squad numbers from team data
+  const [squadNumbers, setSquadNumbers] = useState<TeamPlayerAssignment[]>(() => {
+    return teamPlayers.map(player => ({
+      playerId: player.id,
+      squadNumber: getPlayerSquadNumber(teamId!, player.id)
+    }));
   });
 
   if (!team) {
@@ -38,6 +49,33 @@ export default function TeamSettingsPage() {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  const handleSquadNumberChange = (playerId: string, value: string) => {
+    const numValue = value === '' ? undefined : parseInt(value, 10);
+    setSquadNumbers(prev => 
+      prev.map(assignment => 
+        assignment.playerId === playerId 
+          ? { ...assignment, squadNumber: numValue }
+          : assignment
+      )
+    );
+  };
+
+  // Check for duplicate squad numbers
+  const getDuplicateSquadNumbers = (): number[] => {
+    const numbers = squadNumbers
+      .map(a => a.squadNumber)
+      .filter((n): n is number => n !== undefined);
+    const seen = new Set<number>();
+    const duplicates = new Set<number>();
+    numbers.forEach(n => {
+      if (seen.has(n)) duplicates.add(n);
+      seen.add(n);
+    });
+    return Array.from(duplicates);
+  };
+
+  const duplicates = getDuplicateSquadNumbers();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -228,12 +266,108 @@ export default function TeamSettingsPage() {
             </div>
           </div>
 
+          {/* Squad Numbers */}
+          <div className="card">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Squad Numbers
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Assign squad numbers (1-99) to players in this team. These numbers will appear on match sheets and player cards.
+            </p>
+
+            {duplicates.length > 0 && (
+              <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                <p className="text-sm text-red-800 dark:text-red-300">
+                  ⚠️ Duplicate squad numbers detected: {duplicates.join(', ')}. Each player should have a unique number.
+                </p>
+              </div>
+            )}
+
+            {teamPlayers.length > 0 ? (
+              <div className="space-y-3">
+                {teamPlayers
+                  .sort((a, b) => {
+                    const numA = squadNumbers.find(s => s.playerId === a.id)?.squadNumber ?? 999;
+                    const numB = squadNumbers.find(s => s.playerId === b.id)?.squadNumber ?? 999;
+                    return numA - numB;
+                  })
+                  .map(player => {
+                    const assignment = squadNumbers.find(a => a.playerId === player.id);
+                    const isDuplicate = assignment?.squadNumber !== undefined && duplicates.includes(assignment.squadNumber);
+                    
+                    return (
+                      <div 
+                        key={player.id} 
+                        className={`flex items-center gap-4 p-3 rounded-lg border ${
+                          isDuplicate 
+                            ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-700' 
+                            : 'bg-gray-50 dark:bg-gray-700/50 border-gray-200 dark:border-gray-600'
+                        }`}
+                      >
+                        {/* Player Photo */}
+                        <div className="flex-shrink-0">
+                          {player.photo ? (
+                            <img 
+                              src={player.photo} 
+                              alt={`${player.firstName} ${player.lastName}`}
+                              className="w-10 h-10 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-medium">
+                              {player.firstName[0]}{player.lastName[0]}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Player Name & Position */}
+                        <div className="flex-grow min-w-0">
+                          <p className="font-medium text-gray-900 dark:text-white truncate">
+                            {player.firstName} {player.lastName}
+                          </p>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {player.preferredPositions?.join(', ') || 'No position'}
+                          </p>
+                        </div>
+
+                        {/* Squad Number Input */}
+                        <div className="flex-shrink-0 w-20">
+                          <input
+                            type="number"
+                            min="1"
+                            max="99"
+                            value={assignment?.squadNumber ?? ''}
+                            onChange={(e) => handleSquadNumberChange(player.id, e.target.value)}
+                            disabled={team.isArchived}
+                            placeholder="#"
+                            className={`w-full px-3 py-2 text-center font-bold text-lg border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                              isDuplicate 
+                                ? 'border-red-500 dark:border-red-500' 
+                                : 'border-gray-300 dark:border-gray-600'
+                            }`}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                <p className="text-gray-500 dark:text-gray-400">
+                  No players assigned to this team yet.
+                </p>
+                <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
+                  Add players from the Squad page to assign squad numbers.
+                </p>
+              </div>
+            )}
+          </div>
+
           {/* Action Buttons */}
           <FormActions
             isArchived={team.isArchived}
             onArchive={handleArchive}
             onCancel={handleCancel}
-            saveDisabled={team.isArchived}
+            saveDisabled={team.isArchived || duplicates.length > 0}
           />
         </form>
       </main>

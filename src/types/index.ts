@@ -327,6 +327,15 @@ export interface MatchReport {
 }
 
 // Training Types
+
+// Session drill entry - tracks source of drill (template vs ad-hoc)
+export interface SessionDrill {
+  drillId: string;
+  source: 'template' | 'adhoc'; // Whether this drill came from a template or was added manually
+  templateId?: string; // If source is 'template', which template it came from
+  order: number; // Position in the session
+}
+
 export interface TrainingSession {
   id: string;
   teamId: string;
@@ -335,8 +344,13 @@ export interface TrainingSession {
   duration: number; // minutes
   location: string;
   focusAreas: string[];
-  drillIds: string[]; // Individual drills added to this session
-  templateId?: string; // If created from a template
+  drillIds: string[]; // Legacy: simple array of drill IDs (for backward compatibility)
+  sessionDrills?: SessionDrill[]; // Enhanced: drills with source tracking
+  appliedTemplates?: { // Templates that have been applied to this session
+    templateId: string;
+    appliedAt: Date;
+    drillIds: string[]; // Drills that were added from this template
+  }[];
   coachIds?: string[]; // Coaches assigned to this session
   attendance?: {
     playerId: string;

@@ -279,6 +279,20 @@ export default function AddEditMatchPage() {
     setSubstitutes(substitutes.filter(s => s.playerId !== playerId));
   };
 
+  const handleUpdateStartingPlayerSquadNumber = (playerId: string, value: string) => {
+    const numValue = value === '' ? undefined : parseInt(value, 10);
+    setStartingPlayers(prev => 
+      prev.map(p => p.playerId === playerId ? { ...p, squadNumber: numValue } : p)
+    );
+  };
+
+  const handleUpdateSubstituteSquadNumber = (playerId: string, value: string) => {
+    const numValue = value === '' ? undefined : parseInt(value, 10);
+    setSubstitutes(prev => 
+      prev.map(s => s.playerId === playerId ? { ...s, squadNumber: numValue } : s)
+    );
+  };
+
   const handleAddGoal = () => {
     setGoals([...goals, { playerId: '', minute: 0 }]);
   };
@@ -1150,10 +1164,23 @@ export default function AddEditMatchPage() {
                       return (
                         <div key={player.playerId} className={`flex items-center justify-between p-3 rounded-lg ${isCaptain ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700' : 'bg-gray-50 dark:bg-gray-700'}`}>
                           <div className="flex items-center gap-3">
-                            {player.squadNumber !== undefined && (
-                              <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
-                                {player.squadNumber}
-                              </span>
+                            {isLocked ? (
+                              player.squadNumber !== undefined && (
+                                <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
+                                  {player.squadNumber}
+                                </span>
+                              )
+                            ) : (
+                              <input
+                                type="number"
+                                min="1"
+                                max="99"
+                                value={player.squadNumber ?? ''}
+                                onChange={(e) => handleUpdateStartingPlayerSquadNumber(player.playerId, e.target.value)}
+                                placeholder="#"
+                                className="w-10 h-7 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                title="Squad number for this match (can differ from team default)"
+                              />
                             )}
                             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
                               {player.position}
@@ -1259,10 +1286,23 @@ export default function AddEditMatchPage() {
                     return (
                       <div key={sub.playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         <div className="flex items-center gap-3">
-                          {sub.squadNumber !== undefined && (
-                            <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
-                              {sub.squadNumber}
-                            </span>
+                          {isLocked ? (
+                            sub.squadNumber !== undefined && (
+                              <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
+                                {sub.squadNumber}
+                              </span>
+                            )
+                          ) : (
+                            <input
+                              type="number"
+                              min="1"
+                              max="99"
+                              value={sub.squadNumber ?? ''}
+                              onChange={(e) => handleUpdateSubstituteSquadNumber(sub.playerId, e.target.value)}
+                              placeholder="#"
+                              className="w-10 h-7 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              title="Squad number for this match (can differ from team default)"
+                            />
                           )}
                           {playerData?.photo && (
                             <img 

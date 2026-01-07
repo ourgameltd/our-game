@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, Youtube, Instagram, Globe, BookOpen } from 'lucide-react';
+import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, Youtube, Instagram, Globe, BookOpen, FileText } from 'lucide-react';
 import { sampleTrainingSessions, sampleDrills, sampleDrillTemplates } from '@/data/training';
 import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
@@ -9,7 +9,7 @@ import { getAgeGroupById } from '@/data/ageGroups';
 import { sampleCoaches, getCoachesByTeam, getCoachesByAgeGroup } from '@/data/coaches';
 import { coachRoleDisplay, sessionDurations, drillCategories, getDrillCategoryColors } from '@/data/referenceData';
 import { Routes } from '@utils/routes';
-import { Drill } from '@/types';
+import { Drill, SessionDrill } from '@/types';
 
 export default function AddEditTrainingSessionPage() {
   const { clubId, ageGroupId, teamId, sessionId } = useParams();
@@ -65,7 +65,31 @@ export default function AddEditTrainingSessionPage() {
   const [location, setLocation] = useState(existingSession?.location || '');
   const [focusAreas, setFocusAreas] = useState<string[]>(existingSession?.focusAreas || []);
   const [focusAreaInput, setFocusAreaInput] = useState('');
-  const [selectedDrillIds, setSelectedDrillIds] = useState<string[]>(existingSession?.drillIds || []);
+  
+  // Initialize session drills from existing session (prefer sessionDrills, fallback to drillIds)
+  const initSessionDrills = (): SessionDrill[] => {
+    if (existingSession?.sessionDrills && existingSession.sessionDrills.length > 0) {
+      return existingSession.sessionDrills;
+    }
+    // Convert legacy drillIds to SessionDrill format (all as ad-hoc)
+    if (existingSession?.drillIds) {
+      return existingSession.drillIds.map((drillId, index) => ({
+        drillId,
+        source: 'adhoc' as const,
+        order: index + 1
+      }));
+    }
+    return [];
+  };
+  
+  const [sessionDrills, setSessionDrills] = useState<SessionDrill[]>(initSessionDrills());
+  const [appliedTemplates, setAppliedTemplates] = useState<{ templateId: string; appliedAt: Date; drillIds: string[] }[]>(
+    existingSession?.appliedTemplates || []
+  );
+  
+  // Legacy: keep selectedDrillIds for backward compatibility (computed from sessionDrills)
+  const selectedDrillIds = sessionDrills.map(sd => sd.drillId);
+  
   const [notes, setNotes] = useState(existingSession?.notes || '');
   const [isLocked, setIsLocked] = useState(existingSession?.isLocked || false);
   
@@ -134,12 +158,28 @@ export default function AddEditTrainingSessionPage() {
 
   const handleAddDrill = (drillId: string) => {
     if (!selectedDrillIds.includes(drillId)) {
-      setSelectedDrillIds([...selectedDrillIds, drillId]);
+      const newDrill: SessionDrill = {
+        drillId,
+        source: 'adhoc',
+        order: sessionDrills.length + 1
+      };
+      setSessionDrills([...sessionDrills, newDrill]);
     }
   };
 
   const handleRemoveDrill = (drillId: string) => {
-    setSelectedDrillIds(selectedDrillIds.filter(id => id !== drillId));
+    const updatedDrills = sessionDrills
+      .filter(sd => sd.drillId !== drillId)
+      .map((sd, index) => ({ ...sd, order: index + 1 }));
+    setSessionDrills(updatedDrills);
+    
+    // If removing a drill from a template, update the applied templates
+    setAppliedTemplates(prev => 
+      prev.map(at => ({
+        ...at,
+        drillIds: at.drillIds.filter(id => id !== drillId)
+      })).filter(at => at.drillIds.length > 0) // Remove template if all its drills are removed
+    );
   };
 
   const handleToggleAttendance = (playerId: string) => {
@@ -192,7 +232,9 @@ export default function AddEditTrainingSessionPage() {
       duration: parseInt(duration) || 60,
       location,
       focusAreas,
-      drillIds: selectedDrillIds,
+      drillIds: selectedDrillIds, // Legacy field for backward compatibility
+      sessionDrills, // New enhanced drill structure with source tracking
+      appliedTemplates, // Templates that have been applied
       coachIds: assignedCoachIds,
       attendance,
       notes,
@@ -230,12 +272,65 @@ export default function AddEditTrainingSessionPage() {
     }
   };
 
-  const handleApplyTemplate = (templateId: string) => {
+  const handleApplyTemplate = (templateId: string, replaceAll: boolean = false) => {
     const template = sampleDrillTemplates.find(t => t.id === templateId);
     if (template) {
-      setSelectedDrillIds(template.drillIds);
-      setFocusAreas(template.attributes);
-      setDuration(template.totalDuration.toString());
+      if (replaceAll) {
+        // Replace all existing drills with template drills
+        const newDrills: SessionDrill[] = template.drillIds.map((drillId, index) => ({
+          drillId,
+          source: 'template' as const,
+          templateId: template.id,
+          order: index + 1
+        }));
+        setSessionDrills(newDrills);
+        setAppliedTemplates([{
+          templateId: template.id,
+          appliedAt: new Date(),
+          drillIds: template.drillIds
+        }]);
+        setFocusAreas(template.attributes);
+        setDuration(template.totalDuration.toString());
+      } else {
+        // Add template drills to existing drills (only drills not already in session)
+        const existingDrillIds = sessionDrills.map(sd => sd.drillId);
+        const newDrillIds = template.drillIds.filter(id => !existingDrillIds.includes(id));
+        
+        if (newDrillIds.length === 0) {
+          alert('All drills from this template are already in your session.');
+          return;
+        }
+        
+        const startOrder = sessionDrills.length + 1;
+        const newDrills: SessionDrill[] = newDrillIds.map((drillId, index) => ({
+          drillId,
+          source: 'template' as const,
+          templateId: template.id,
+          order: startOrder + index
+        }));
+        
+        setSessionDrills([...sessionDrills, ...newDrills]);
+        setAppliedTemplates([...appliedTemplates, {
+          templateId: template.id,
+          appliedAt: new Date(),
+          drillIds: newDrillIds
+        }]);
+        
+        // Add focus areas from template (avoiding duplicates)
+        const newFocusAreas = template.attributes.filter(attr => !focusAreas.includes(attr));
+        if (newFocusAreas.length > 0) {
+          setFocusAreas([...focusAreas, ...newFocusAreas]);
+        }
+        
+        // Update duration if template adds significant time
+        const templateDuration = template.drillIds
+          .map(id => sampleDrills.find(d => d.id === id)?.duration || 0)
+          .reduce((a, b) => a + b, 0);
+        const currentDuration = parseInt(duration) || 60;
+        if (templateDuration + totalDrillDuration > currentDuration) {
+          setDuration((templateDuration + totalDrillDuration).toString());
+        }
+      }
       setShowTemplateModal(false);
     }
   };
@@ -603,13 +698,52 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                 )}
               </div>
 
+              {/* Applied Templates Summary */}
+              {appliedTemplates.length > 0 && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h4 className="text-sm font-semibold text-blue-800 dark:text-blue-300 mb-2 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Applied Templates
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {appliedTemplates.map((at) => {
+                      const template = sampleDrillTemplates.find(t => t.id === at.templateId);
+                      return template ? (
+                        <span
+                          key={at.templateId}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-800/40 text-blue-800 dark:text-blue-200 rounded-full text-sm"
+                        >
+                          <BookOpen className="w-3 h-3" />
+                          {template.name}
+                          <span className="text-blue-600 dark:text-blue-400 text-xs">
+                            ({at.drillIds.length} drills)
+                          </span>
+                        </span>
+                      ) : null;
+                    })}
+                  </div>
+                </div>
+              )}
+
               {selectedDrills.length > 0 ? (
                 <div className="space-y-4">
-                  {selectedDrills.map((drill, index) => (
-                    <div key={drill.id} className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  {sessionDrills.map((sessionDrill, index) => {
+                    const drill = sampleDrills.find(d => d.id === sessionDrill.drillId);
+                    if (!drill) return null;
+                    
+                    const sourceTemplate = sessionDrill.source === 'template' && sessionDrill.templateId
+                      ? sampleDrillTemplates.find(t => t.id === sessionDrill.templateId)
+                      : null;
+                    
+                    return (
+                    <div key={drill.id} className={`rounded-lg p-4 ${
+                      sessionDrill.source === 'template' 
+                        ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
+                        : 'bg-gray-50 dark:bg-gray-700'
+                    }`}>
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-2">
+                          <div className="flex items-center flex-wrap gap-2 mb-2">
                             <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
                               {index + 1}.
                             </span>
@@ -622,6 +756,18 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                               {drill.duration} mins
                             </span>
+                            {/* Source badge */}
+                            {sessionDrill.source === 'template' ? (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300 rounded-full" title={sourceTemplate ? `From: ${sourceTemplate.name}` : 'From template'}>
+                                <BookOpen className="w-3 h-3" />
+                                Template
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-800/40 text-green-700 dark:text-green-300 rounded-full">
+                                <Plus className="w-3 h-3" />
+                                Ad-hoc
+                              </span>
+                            )}
                           </div>
                           <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
                             {drill.description}
@@ -663,13 +809,14 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                         )}
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                   <span className="text-5xl mb-3 block">⚽</span>
                   <p className="font-medium">No drills linked to this session</p>
-                  <p className="text-sm mt-1">Click "Add Drill" to link drills from the library</p>
+                  <p className="text-sm mt-1">Click "Use Template" to start with a pre-built plan, or "Add Drill" to build from scratch</p>
                 </div>
               )}
             </div>
@@ -1203,11 +1350,23 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                             <div className="mb-2">
                               <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Drills:</p>
                               <div className="flex flex-wrap gap-1">
-                                {templateDrills.map((drill, i) => (
-                                  <span key={i} className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-                                    {drill?.name}
-                                  </span>
-                                ))}
+                                {templateDrills.map((drill, i) => {
+                                  const alreadyInSession = selectedDrillIds.includes(drill?.id || '');
+                                  return (
+                                    <span 
+                                      key={i} 
+                                      className={`px-2 py-0.5 text-xs rounded ${
+                                        alreadyInSession 
+                                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' 
+                                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
+                                      }`}
+                                      title={alreadyInSession ? 'Already in session' : ''}
+                                    >
+                                      {drill?.name}
+                                      {alreadyInSession && ' ✓'}
+                                    </span>
+                                  );
+                                })}
                               </div>
                             </div>
                             
@@ -1220,13 +1379,30 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                               ))}
                             </div>
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => handleApplyTemplate(template.id)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap"
-                          >
-                            Use Template
-                          </button>
+                          <div className="flex flex-col gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleApplyTemplate(template.id, false)}
+                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap text-sm"
+                              title="Add template drills to your existing session"
+                            >
+                              Add to Session
+                            </button>
+                            {sessionDrills.length > 0 && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  if (window.confirm('This will replace all existing drills with the template drills. Continue?')) {
+                                    handleApplyTemplate(template.id, true);
+                                  }
+                                }}
+                                className="px-4 py-2 border border-orange-500 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors whitespace-nowrap text-sm"
+                                title="Replace all existing drills with template drills"
+                              >
+                                Replace All
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
                     );
@@ -1242,7 +1418,9 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
             <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
               <div className="flex items-center justify-between">
                 <p className="text-sm text-gray-600 dark:text-gray-400">
-                  Select a template to automatically add drills and focus areas
+                  {sessionDrills.length > 0 
+                    ? 'Add template drills to your session, or replace all existing drills' 
+                    : 'Select a template to automatically add drills and focus areas'}
                 </p>
                 <button
                   type="button"

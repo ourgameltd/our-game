@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Search } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { sampleDrills } from '@/data/training';
 import { sampleClubs } from '@/data/clubs';
 import { sampleAgeGroups } from '@/data/ageGroups';
@@ -18,6 +18,7 @@ export default function DrillsListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   // Get all unique attributes from drills
   const availableAttributes = useMemo(() => {
@@ -114,75 +115,99 @@ export default function DrillsListPage() {
 
         {/* Filters */}
         <div className="card mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                <Search className="w-4 h-4 inline mr-1" />
-                Search Drills
-              </label>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name, description, or attributes..."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
+          <button
+            onClick={() => setFiltersExpanded(!filtersExpanded)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
+              {(searchTerm || categoryFilter !== 'all' || selectedAttributes.length > 0) && (
+                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                  {[searchTerm ? 1 : 0, categoryFilter !== 'all' ? 1 : 0, selectedAttributes.length].reduce((a, b) => a + b, 0)} active
+                </span>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Category
-              </label>
-              <select
-                value={categoryFilter}
-                onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="all">All Categories</option>
-                {drillCategories.filter(c => c.value !== 'mixed').map(cat => (
-                  <option key={cat.value} value={cat.value}>{cat.label}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Attribute Filters */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-              Filter by Attributes {selectedAttributes.length > 0 && `(${selectedAttributes.length} selected)`}
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {availableAttributes.map(attr => {
-                const category = getAttributeCategory(attr);
-                const isSelected = selectedAttributes.includes(attr);
-                return (
-                  <button
-                    key={attr}
-                    onClick={() => toggleAttribute(attr)}
-                    className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                      isSelected 
-                        ? 'bg-primary-600 text-white dark:bg-primary-500'
-                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                    }`}
-                  >
-                    {getAttributeLabel(attr)}
-                    {category && (
-                      <span className="ml-1 opacity-60 text-[10px]">
-                        {category === 'Skills' ? '⚽' : category === 'Physical' ? '💪' : '🧠'}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-            {selectedAttributes.length > 0 && (
-              <button
-                onClick={() => setSelectedAttributes([])}
-                className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
-              >
-                Clear all filters
-              </button>
+            {filtersExpanded ? (
+              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
             )}
-          </div>
+          </button>
+
+          {filtersExpanded && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <Search className="w-4 h-4 inline mr-1" />
+                    Search Drills
+                  </label>
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search by name, description, or attributes..."
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Category
+                  </label>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => setCategoryFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  >
+                    <option value="all">All Categories</option>
+                    {drillCategories.filter(c => c.value !== 'mixed').map(cat => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Attribute Filters */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Filter by Attributes {selectedAttributes.length > 0 && `(${selectedAttributes.length} selected)`}
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {availableAttributes.map(attr => {
+                    const category = getAttributeCategory(attr);
+                    const isSelected = selectedAttributes.includes(attr);
+                    return (
+                      <button
+                        key={attr}
+                        onClick={() => toggleAttribute(attr)}
+                        className={`px-3 py-1 text-xs rounded-full transition-colors ${
+                          isSelected 
+                            ? 'bg-primary-600 text-white dark:bg-primary-500'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        }`}
+                      >
+                        {getAttributeLabel(attr)}
+                        {category && (
+                          <span className="ml-1 opacity-60 text-[10px]">
+                            {category === 'Skills' ? '⚽' : category === 'Physical' ? '💪' : '🧠'}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+                {selectedAttributes.length > 0 && (
+                  <button
+                    onClick={() => setSelectedAttributes([])}
+                    className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                  >
+                    Clear all filters
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Drills List */}
