@@ -8,5 +8,15 @@
             },
             "enableLiveMetricsFilters": true
         }
+    },
+    "extensions": {
+        "openApi": {
+            "version": "v3",
+            "info": {
+                "title": "OurGame API",
+                "version": "1.0.0",
+                "description": "Football Club Management Platform API"
+            }
+        }
     }
 }

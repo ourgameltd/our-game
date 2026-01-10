@@ -1,0 +1,8 @@
+{
+  "OpenApi": {
+    "Version": "v3",
+    "DocVersion": "1.0.0",
+    "DocTitle": "OurGame API",
+    "DocDescription": "Football Club Management Platform API"
+  }
+}
