@@ -20,6 +20,7 @@ import type {
   MatchDto,
   MatchLineupDto,
   AgeGroupDto,
+  ErrorResponse,
 } from './generated';
 
 // Re-export types for convenience
@@ -33,7 +34,23 @@ export type {
   AgeGroupDto,
 };
 
-/**
+// Generic API response type for endpoints not yet in generated types
+export interface ApiResponse<T> {
+  success?: boolean;
+  data?: T;
+  error?: ErrorResponse;
+  statusCode?: number;
+}
+
+// Club summary for list endpoint (subset of ClubDetailDto)
+export interface ClubSummaryDto {
+  id?: string;
+  name?: string;
+  shortName?: string;
+  logo?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+}/**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
  */
@@ -76,33 +93,35 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
  */
 export const apiClient = {
   clubs: {
+    getAll: () => 
+      fetchApi<ApiResponse<ClubSummaryDto[]>>(`/v1/clubs`),
     getById: (clubId: string) => 
-      fetchApi<ApiResponseClubDetailDto>(`/clubs/${clubId}`),
+      fetchApi<ApiResponseClubDetailDto>(`/v1/clubs/${clubId}`),
   },
 
   teams: {
     getById: (teamId: string) => 
-      fetchApi<ApiResponseTeamDetailDto>(`/teams/${teamId}`),
-    getByClub: (clubId: string) => 
-      fetchApi<ApiResponseTeamDetailDto[]>(`/clubs/${clubId}/teams`),
+      fetchApi<ApiResponseTeamDetailDto>(`/v1/teams/${teamId}`),
+    getSquad: (teamId: string) =>
+      fetchApi<ApiResponse<PlayerProfileDto[]>>(`/v1/teams/${teamId}/squad`),
   },
 
   players: {
     getById: (playerId: string) => 
-      fetchApi<ApiResponsePlayerProfileDto>(`/players/${playerId}`),
+      fetchApi<ApiResponsePlayerProfileDto>(`/v1/players/${playerId}`),
     getAttributes: (playerId: string) => 
-      fetchApi<ApiResponsePlayerAttributesDto>(`/players/${playerId}/attributes`),
+      fetchApi<ApiResponsePlayerAttributesDto>(`/v1/players/${playerId}/attributes`),
   },
 
   ageGroups: {
     getByClub: (clubId: string) => 
-      fetchApi<ApiResponseList1>(`/clubs/${clubId}/age-groups`),
+      fetchApi<ApiResponseList1>(`/v1/clubs/${clubId}/age-groups`),
   },
 
   matches: {
     getById: (matchId: string) => 
-      fetchApi<ApiResponseMatchDto>(`/matches/${matchId}`),
+      fetchApi<ApiResponseMatchDto>(`/v1/matches/${matchId}`),
     getLineup: (matchId: string) => 
-      fetchApi<ApiResponseMatchLineupDto>(`/matches/${matchId}/lineup`),
+      fetchApi<ApiResponseMatchLineupDto>(`/v1/matches/${matchId}/lineup`),
   },
 };

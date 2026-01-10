@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { sampleClubs } from '@data/clubs';
 import { sampleTeams } from '@data/teams';
@@ -5,8 +6,26 @@ import { samplePlayers } from '@data/players';
 import { currentUser } from '@data/currentUser';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
+import { apiClient } from '@/api';
 
 export default function ClubsListPage() {
+  // Test API call on page load
+  useEffect(() => {
+    console.log('🔌 Testing API connection...');
+    apiClient.clubs.getAll()
+      .then(response => {
+        if (response.success) {
+          console.log('✅ API connection successful!', response.data);
+        } else {
+          console.warn('⚠️ API returned error:', response.error);
+        }
+      })
+      .catch(err => {
+        console.error('❌ API connection failed:', err.message);
+        console.info('💡 Make sure Azure Functions is running: cd api/OurGame.Api && func start');
+      });
+  }, []);
+
   // Get teams assigned to the current user (if they are a coach/staff)
   const myTeams = currentUser.staffId 
     ? sampleTeams.filter(team => team.coachIds.includes(currentUser.staffId!))
