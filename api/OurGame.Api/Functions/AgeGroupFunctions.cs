@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using OurGame.Application.Abstractions.Responses;
-using Swashbuckle.AspNetCore.Annotations;
 using OurGame.Application.UseCases.AgeGroups.DTOs;
 using OurGame.Application.UseCases.AgeGroups.Queries;
 using System.Net;
@@ -30,14 +32,12 @@ public class AgeGroupFunctions
     /// <param name="req">The HTTP request</param>
     /// <param name="clubId">The club ID (GUID)</param>
     /// <returns>List of age groups for the specified club</returns>
-    /// <response code="200">Age groups retrieved successfully</response>
-    /// <response code="400">Invalid club ID format</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetAgeGroupsByClubId")]
-    [SwaggerOperation(OperationId = "GetAgeGroupsByClubId", Tags = new[] { "Age Groups" }, Summary = "Get age groups by club", Description = "Retrieves all age groups for a specific club")]
-    [SwaggerResponse(200, "Age groups retrieved successfully", typeof(ApiResponse<List<AgeGroupDto>>))]
-    [SwaggerResponse(400, "Invalid club ID format", typeof(ApiResponse<List<AgeGroupDto>>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<List<AgeGroupDto>>))]
+    [OpenApiOperation(operationId: "GetAgeGroupsByClubId", tags: new[] { "Age Groups" }, Summary = "Get age groups by club", Description = "Retrieves all age groups for a specific club")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The club ID (GUID)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<AgeGroupDto>>), Description = "Age groups retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<AgeGroupDto>>), Description = "Invalid club ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<AgeGroupDto>>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetAgeGroupsByClubId(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/clubs/{clubId}/age-groups")] HttpRequestData req,
         string clubId)

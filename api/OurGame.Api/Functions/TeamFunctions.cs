@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using OurGame.Application.Abstractions.Exceptions;
-using Swashbuckle.AspNetCore.Annotations;
 using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Teams.DTOs;
 using OurGame.Application.UseCases.Teams.Queries;
@@ -31,16 +33,13 @@ public class TeamFunctions
     /// <param name="req">The HTTP request</param>
     /// <param name="teamId">The team ID (GUID)</param>
     /// <returns>Detailed information about a specific team</returns>
-    /// <response code="200">Team retrieved successfully</response>
-    /// <response code="400">Invalid team ID format</response>
-    /// <response code="404">Team not found</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetTeamById")]
-    [SwaggerOperation(OperationId = "GetTeamById", Tags = new[] { "Teams" }, Summary = "Get team by ID", Description = "Retrieves detailed information about a specific team")]
-    [SwaggerResponse(200, "Team retrieved successfully", typeof(ApiResponse<TeamDetailDto>))]
-    [SwaggerResponse(400, "Invalid team ID format", typeof(ApiResponse<TeamDetailDto>))]
-    [SwaggerResponse(404, "Team not found", typeof(ApiResponse<TeamDetailDto>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<TeamDetailDto>))]
+    [OpenApiOperation(operationId: "GetTeamById", tags: new[] { "Teams" }, Summary = "Get team by ID", Description = "Retrieves detailed information about a specific team")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The team ID (GUID)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<TeamDetailDto>), Description = "Team retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<TeamDetailDto>), Description = "Invalid team ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<TeamDetailDto>), Description = "Team not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<TeamDetailDto>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetTeamById(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/teams/{teamId}")] HttpRequestData req,
         string teamId)
@@ -83,14 +82,12 @@ public class TeamFunctions
     /// <param name="req">The HTTP request</param>
     /// <param name="teamId">The team ID (GUID)</param>
     /// <returns>List of players in the team squad with squad numbers</returns>
-    /// <response code="200">Squad retrieved successfully</response>
-    /// <response code="400">Invalid team ID format</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetTeamSquad")]
-    [SwaggerOperation(OperationId = "GetTeamSquad", Tags = new[] { "Teams" }, Summary = "Get team squad", Description = "Retrieves the squad list for a specific team with squad numbers")]
-    [SwaggerResponse(200, "Squad retrieved successfully", typeof(ApiResponse<List<TeamSquadPlayerDto>>))]
-    [SwaggerResponse(400, "Invalid team ID format", typeof(ApiResponse<List<TeamSquadPlayerDto>>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<List<TeamSquadPlayerDto>>))]
+    [OpenApiOperation(operationId: "GetTeamSquad", tags: new[] { "Teams" }, Summary = "Get team squad", Description = "Retrieves the squad list for a specific team with squad numbers")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The team ID (GUID)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamSquadPlayerDto>>), Description = "Squad retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamSquadPlayerDto>>), Description = "Invalid team ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamSquadPlayerDto>>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetTeamSquad(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/teams/{teamId}/squad")] HttpRequestData req,
         string teamId)

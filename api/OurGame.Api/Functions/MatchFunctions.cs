@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using OurGame.Application.Abstractions.Exceptions;
-using Swashbuckle.AspNetCore.Annotations;
 using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Matches.DTOs;
 using OurGame.Application.UseCases.Matches.Queries;
@@ -31,16 +33,13 @@ public class MatchFunctions
     /// <param name="req">The HTTP request</param>
     /// <param name="matchId">The match ID (GUID)</param>
     /// <returns>Detailed information about a specific match</returns>
-    /// <response code="200">Match retrieved successfully</response>
-    /// <response code="400">Invalid match ID format</response>
-    /// <response code="404">Match not found</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetMatchById")]
-    [SwaggerOperation(OperationId = "GetMatchById", Tags = new[] { "Matches" }, Summary = "Get match by ID", Description = "Retrieves detailed information about a specific match")]
-    [SwaggerResponse(200, "Match retrieved successfully", typeof(ApiResponse<MatchDto>))]
-    [SwaggerResponse(400, "Invalid match ID format", typeof(ApiResponse<MatchDto>))]
-    [SwaggerResponse(404, "Match not found", typeof(ApiResponse<MatchDto>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<MatchDto>))]
+    [OpenApiOperation(operationId: "GetMatchById", tags: new[] { "Matches" }, Summary = "Get match by ID", Description = "Retrieves detailed information about a specific match")]
+    [OpenApiParameter(name: "matchId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The match ID (GUID)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<MatchDto>), Description = "Match retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<MatchDto>), Description = "Invalid match ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<MatchDto>), Description = "Match not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<MatchDto>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetMatchById(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/matches/{matchId}")] HttpRequestData req,
         string matchId)
@@ -83,16 +82,13 @@ public class MatchFunctions
     /// <param name="req">The HTTP request</param>
     /// <param name="matchId">The match ID (GUID)</param>
     /// <returns>The lineup (starting players and substitutes) for a specific match</returns>
-    /// <response code="200">Lineup retrieved successfully</response>
-    /// <response code="400">Invalid match ID format</response>
-    /// <response code="404">Match lineup not found</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetMatchLineup")]
-    [SwaggerOperation(OperationId = "GetMatchLineup", Tags = new[] { "Matches" }, Summary = "Get match lineup", Description = "Retrieves the lineup (starting players and substitutes) for a specific match")]
-    [SwaggerResponse(200, "Lineup retrieved successfully", typeof(ApiResponse<MatchLineupDto>))]
-    [SwaggerResponse(400, "Invalid match ID format", typeof(ApiResponse<MatchLineupDto>))]
-    [SwaggerResponse(404, "Match lineup not found", typeof(ApiResponse<MatchLineupDto>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<MatchLineupDto>))]
+    [OpenApiOperation(operationId: "GetMatchLineup", tags: new[] { "Matches" }, Summary = "Get match lineup", Description = "Retrieves the lineup (starting players and substitutes) for a specific match")]
+    [OpenApiParameter(name: "matchId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The match ID (GUID)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<MatchLineupDto>), Description = "Lineup retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<MatchLineupDto>), Description = "Invalid match ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<MatchLineupDto>), Description = "Match lineup not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<MatchLineupDto>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetMatchLineup(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/matches/{matchId}/lineup")] HttpRequestData req,
         string matchId)

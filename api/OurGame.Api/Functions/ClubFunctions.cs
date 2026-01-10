@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using OurGame.Application.Abstractions.Exceptions;
-using Swashbuckle.AspNetCore.Annotations;
 using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Clubs.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries;
@@ -29,12 +31,10 @@ public class ClubFunctions
     /// Get all clubs
     /// </summary>
     /// <returns>List of all clubs the user has access to</returns>
-    /// <response code="200">List of clubs retrieved successfully</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetAllClubs")]
-    [SwaggerOperation(OperationId = "GetAllClubs", Tags = new[] { "Clubs" }, Summary = "Get all clubs", Description = "Retrieves a list of all clubs the user has access to")]
-    [SwaggerResponse(200, "List of clubs retrieved successfully", typeof(ApiResponse<List<ClubSummaryDto>>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<List<ClubSummaryDto>>))]
+    [OpenApiOperation(operationId: "GetAllClubs", tags: new[] { "Clubs" }, Summary = "Get all clubs", Description = "Retrieves a list of all clubs the user has access to")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubSummaryDto>>), Description = "List of clubs retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubSummaryDto>>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetAllClubs(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/clubs")] HttpRequestData req)
     {
@@ -62,16 +62,13 @@ public class ClubFunctions
     /// <param name="req">The HTTP request</param>
     /// <param name="clubId">The club ID (GUID)</param>
     /// <returns>Detailed information about a specific club</returns>
-    /// <response code="200">Club retrieved successfully</response>
-    /// <response code="400">Invalid club ID format</response>
-    /// <response code="404">Club not found</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetClubById")]
-    [SwaggerOperation(OperationId = "GetClubById", Tags = new[] { "Clubs" }, Summary = "Get club by ID", Description = "Retrieves detailed information about a specific club")]
-    [SwaggerResponse(200, "Club retrieved successfully", typeof(ApiResponse<ClubDetailDto>))]
-    [SwaggerResponse(400, "Invalid club ID format", typeof(ApiResponse<ClubDetailDto>))]
-    [SwaggerResponse(404, "Club not found", typeof(ApiResponse<ClubDetailDto>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<ClubDetailDto>))]
+    [OpenApiOperation(operationId: "GetClubById", tags: new[] { "Clubs" }, Summary = "Get club by ID", Description = "Retrieves detailed information about a specific club")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The club ID (GUID)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "Club retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "Invalid club ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "Club not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetClubById(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/clubs/{clubId}")] HttpRequestData req,
         string clubId)

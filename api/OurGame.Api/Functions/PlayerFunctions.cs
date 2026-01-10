@@ -1,9 +1,11 @@
 using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.OpenApi.Models;
 using OurGame.Application.Abstractions.Exceptions;
-using Swashbuckle.AspNetCore.Annotations;
 using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Players.DTOs;
 using OurGame.Application.UseCases.Players.Queries;
@@ -31,16 +33,13 @@ public class PlayerFunctions
     /// <param name="req">The HTTP request</param>
     /// <param name="playerId">The player ID (GUID)</param>
     /// <returns>Detailed profile information about a specific player</returns>
-    /// <response code="200">Player retrieved successfully</response>
-    /// <response code="400">Invalid player ID format</response>
-    /// <response code="404">Player not found</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetPlayerById")]
-    [SwaggerOperation(OperationId = "GetPlayerById", Tags = new[] { "Players" }, Summary = "Get player by ID", Description = "Retrieves detailed profile information about a specific player")]
-    [SwaggerResponse(200, "Player retrieved successfully", typeof(ApiResponse<PlayerProfileDto>))]
-    [SwaggerResponse(400, "Invalid player ID format", typeof(ApiResponse<PlayerProfileDto>))]
-    [SwaggerResponse(404, "Player not found", typeof(ApiResponse<PlayerProfileDto>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<PlayerProfileDto>))]
+    [OpenApiOperation(operationId: "GetPlayerById", tags: new[] { "Players" }, Summary = "Get player by ID", Description = "Retrieves detailed profile information about a specific player")]
+    [OpenApiParameter(name: "playerId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The player ID (GUID)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerProfileDto>), Description = "Player retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerProfileDto>), Description = "Invalid player ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerProfileDto>), Description = "Player not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerProfileDto>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetPlayerById(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/players/{playerId}")] HttpRequestData req,
         string playerId)
@@ -83,16 +82,13 @@ public class PlayerFunctions
     /// <param name="req">The HTTP request</param>
     /// <param name="playerId">The player ID (GUID)</param>
     /// <returns>The 35 EA FC-style attributes for a specific player</returns>
-    /// <response code="200">Attributes retrieved successfully</response>
-    /// <response code="400">Invalid player ID format</response>
-    /// <response code="404">Player attributes not found</response>
-    /// <response code="500">Internal server error</response>
     [Function("GetPlayerAttributes")]
-    [SwaggerOperation(OperationId = "GetPlayerAttributes", Tags = new[] { "Players" }, Summary = "Get player attributes", Description = "Retrieves the 35 EA FC-style attributes for a specific player")]
-    [SwaggerResponse(200, "Attributes retrieved successfully", typeof(ApiResponse<PlayerAttributesDto>))]
-    [SwaggerResponse(400, "Invalid player ID format", typeof(ApiResponse<PlayerAttributesDto>))]
-    [SwaggerResponse(404, "Player attributes not found", typeof(ApiResponse<PlayerAttributesDto>))]
-    [SwaggerResponse(500, "Internal server error", typeof(ApiResponse<PlayerAttributesDto>))]
+    [OpenApiOperation(operationId: "GetPlayerAttributes", tags: new[] { "Players" }, Summary = "Get player attributes", Description = "Retrieves the 35 EA FC-style attributes for a specific player")]
+    [OpenApiParameter(name: "playerId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The player ID (GUID)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerAttributesDto>), Description = "Attributes retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerAttributesDto>), Description = "Invalid player ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerAttributesDto>), Description = "Player attributes not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerAttributesDto>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetPlayerAttributes(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/players/{playerId}/attributes")] HttpRequestData req,
         string playerId)
