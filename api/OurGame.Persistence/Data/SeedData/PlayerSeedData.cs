@@ -5,18 +5,18 @@ namespace OurGame.Persistence.Data.SeedData;
 public static class PlayerSeedData
 {
     // Player IDs from TypeScript data
-    public static readonly Guid OliverThompson_Id = Guid.Parse("p1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6");
-    public static readonly Guid JamesWilson_Id = Guid.Parse("p2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7");
-    public static readonly Guid LucasMartinez_Id = Guid.Parse("p3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8");
-    public static readonly Guid EthanDavies_Id = Guid.Parse("p4d5e6f7-a8b9-c0d1-e2f3-a4b5c6d7e8f9");
-    public static readonly Guid NoahAnderson_Id = Guid.Parse("p5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0");
-    public static readonly Guid CharlieRoberts_Id = Guid.Parse("p6f7a8b9-c0d1-e2f3-a4b5-c6d7e8f9a0b1");
-    public static readonly Guid WilliamBrown_Id = Guid.Parse("p7a8b9c0-d1e2-f3a4-b5c6-d7e8f9a0b1c2");
-    public static readonly Guid HarryTaylor_Id = Guid.Parse("p8b9c0d1-e2f3-a4b5-c6d7-e8f9a0b1c2d3");
-    public static readonly Guid MasonEvans_Id = Guid.Parse("p9c0d1e2-f3a4-b5c6-d7e8-f9a0b1c2d3e4");
-    public static readonly Guid AlexanderWhite_Id = Guid.Parse("p10d1e2f3-a4b5-c6d7-e8f9-a0b1c2d3e4f5");
-    public static readonly Guid GeorgeHarris_Id = Guid.Parse("p11e2f3a4-b5c6-d7e8-f9a0-b1c2d3e4f5a6");
-    public static readonly Guid CarlosRodriguez_Id = Guid.Parse("p21a3b4c-5d6e-7f8a-9b0c-1d2e3f4a5b6c");
+    public static readonly Guid OliverThompson_Id = Guid.Parse("a1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6");
+    public static readonly Guid JamesWilson_Id = Guid.Parse("a2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7");
+    public static readonly Guid LucasMartinez_Id = Guid.Parse("a3c4d5e6-f7a8-b9c0-d1e2-f3a4b5c6d7e8");
+    public static readonly Guid EthanDavies_Id = Guid.Parse("a4d5e6f7-a8b9-c0d1-e2f3-a4b5c6d7e8f9");
+    public static readonly Guid NoahAnderson_Id = Guid.Parse("a5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0");
+    public static readonly Guid CharlieRoberts_Id = Guid.Parse("a6f7a8b9-c0d1-e2f3-a4b5-c6d7e8f9a0b1");
+    public static readonly Guid WilliamBrown_Id = Guid.Parse("a7a8b9c0-d1e2-f3a4-b5c6-d7e8f9a0b1c2");
+    public static readonly Guid HarryTaylor_Id = Guid.Parse("a8b9c0d1-e2f3-a4b5-c6d7-e8f9a0b1c2d3");
+    public static readonly Guid MasonEvans_Id = Guid.Parse("a9c0d1e2-f3a4-b5c6-d7e8-f9a0b1c2d3e4");
+    public static readonly Guid AlexanderWhite_Id = Guid.Parse("ab0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f");
+    public static readonly Guid GeorgeHarris_Id = Guid.Parse("ac1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a");
+    public static readonly Guid CarlosRodriguez_Id = Guid.Parse("ad21a3b4-c5d6-e7f8-a9b0-c1d2e3f4a5b6");
 
     public static List<Player> GetPlayers()
     {
