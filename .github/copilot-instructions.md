@@ -211,7 +211,7 @@ The database follows the comprehensive schema documented in `/docs/database/erd-
 ### Local Development Setup
 1. **SQL Server**: Run Docker container with SQL Server
    ```bash
-   docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourPassword123!" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
+   docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong@Passw0rd" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
    ```
 2. **Database Project**: Open `.sqlproj` in Visual Studio or Azure Data Studio
 3. **EF Core**: Run migrations to local database
