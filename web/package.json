@@ -12,7 +12,8 @@
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "screenshots": "node scripts/capture-screenshots.js",
-    "screenshots:clean": "node -e \"require('fs').rmSync('screenshots', {recursive: true, force: true})\""
+    "screenshots:clean": "node -e \"require('fs').rmSync('screenshots', {recursive: true, force: true})\"",
+    "generate:api": "nswag run ../api/OurGame.Api/nswag.json"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",
