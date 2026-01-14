@@ -233,6 +233,21 @@ try
     
     try
     {
+        if (!await context.Goals.AnyAsync())
+        {
+            Console.WriteLine("  ⚽ Seeding goals...");
+            var goals = OurGame.Persistence.Data.SeedData.GoalSeedData.GetGoals();
+            await context.Goals.AddRangeAsync(goals);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping goals: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
         if (!await context.Cards.AnyAsync())
         {
             Console.WriteLine("  🟨 Seeding cards...");
@@ -244,6 +259,111 @@ try
     catch (Exception ex)
     {
         Console.WriteLine($"  ⚠️  Skipping cards: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.PerformanceRatings.AnyAsync())
+        {
+            Console.WriteLine("  ⭐ Seeding performance ratings...");
+            var ratings = OurGame.Persistence.Data.SeedData.PerformanceRatingSeedData.GetPerformanceRatings();
+            await context.PerformanceRatings.AddRangeAsync(ratings);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping performance ratings: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.EmergencyContacts.AnyAsync())
+        {
+            Console.WriteLine("  📞 Seeding emergency contacts...");
+            var contacts = OurGame.Persistence.Data.SeedData.EmergencyContactSeedData.GetEmergencyContacts();
+            await context.EmergencyContacts.AddRangeAsync(contacts);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping emergency contacts: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.Injuries.AnyAsync())
+        {
+            Console.WriteLine("  🤕 Seeding injuries...");
+            var injuries = OurGame.Persistence.Data.SeedData.InjurySeedData.GetInjuries();
+            await context.Injuries.AddRangeAsync(injuries);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping injuries: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.SessionCoaches.AnyAsync())
+        {
+            Console.WriteLine("  👨‍🏫 Seeding session coaches...");
+            var sessionCoaches = OurGame.Persistence.Data.SeedData.SessionCoachSeedData.GetSessionCoaches();
+            await context.SessionCoaches.AddRangeAsync(sessionCoaches);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping session coaches: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.AttributeEvaluations.AnyAsync())
+        {
+            Console.WriteLine("  📋 Seeding attribute evaluations...");
+            var evaluations = OurGame.Persistence.Data.SeedData.AttributeEvaluationSeedData.GetAttributeEvaluations();
+            await context.AttributeEvaluations.AddRangeAsync(evaluations);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping attribute evaluations: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.EvaluationAttributes.AnyAsync())
+        {
+            Console.WriteLine("  ⭐ Seeding evaluation attributes...");
+            var evalAttrs = OurGame.Persistence.Data.SeedData.EvaluationAttributeSeedData.GetEvaluationAttributes();
+            await context.EvaluationAttributes.AddRangeAsync(evalAttrs);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping evaluation attributes: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.PositionOverrides.AnyAsync())
+        {
+            Console.WriteLine("  🔧 Seeding position overrides...");
+            var overrides = OurGame.Persistence.Data.SeedData.PositionOverrideSeedData.GetPositionOverrides();
+            await context.PositionOverrides.AddRangeAsync(overrides);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping position overrides: {ex.InnerException?.Message ?? ex.Message}");
     }
     
     try
@@ -349,6 +469,12 @@ try
     Console.WriteLine($"  Goals: {await context.Goals.CountAsync()}");
     Console.WriteLine($"  Cards: {await context.Cards.CountAsync()}");
     Console.WriteLine($"  Performance Ratings: {await context.PerformanceRatings.CountAsync()}");
+    Console.WriteLine($"  Emergency Contacts: {await context.EmergencyContacts.CountAsync()}");
+    Console.WriteLine($"  Injuries: {await context.Injuries.CountAsync()}");
+    Console.WriteLine($"  Session Coaches: {await context.SessionCoaches.CountAsync()}");
+    Console.WriteLine($"  Attribute Evaluations: {await context.AttributeEvaluations.CountAsync()}");
+    Console.WriteLine($"  Evaluation Attributes: {await context.EvaluationAttributes.CountAsync()}");
+    Console.WriteLine($"  Position Overrides: {await context.PositionOverrides.CountAsync()}");
     Console.WriteLine($"  Match Substitutions: {await context.MatchSubstitutions.CountAsync()}");
     Console.WriteLine($"  Player Reports: {await context.PlayerReports.CountAsync()}");
     Console.WriteLine($"  Development Plans: {await context.DevelopmentPlans.CountAsync()}");

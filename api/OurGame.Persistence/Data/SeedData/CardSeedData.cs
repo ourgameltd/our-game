@@ -6,8 +6,18 @@ public static class CardSeedData
 {
     public static List<Card> GetCards()
     {
-        // TODO: Cannot seed Cards until MatchReport IDs are available
-        // Cards are linked to MatchReports via MatchReportId, not directly to Matches
-        return new List<Card>();
+        return new List<Card>
+        {
+            // Match 3 - Yellow card
+            new Card
+            {
+                Id = Guid.NewGuid(),
+                MatchReportId = MatchReportSeedData.Match3_Report_Id,
+                PlayerId = PlayerSeedData.EthanDavies_Id,
+                Type = "yellow",
+                Minute = 55,
+                Reason = "Tactical foul"
+            }
+        };
     }
 }
