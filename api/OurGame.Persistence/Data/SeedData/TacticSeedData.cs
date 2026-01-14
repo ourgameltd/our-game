@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -20,13 +21,13 @@ public static class TacticSeedData
                 Id = Tactic1_Balanced_Id,
                 Name = "High Press 4-4-2",
                 System = "4-4-2",
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 ParentFormationId = FormationSeedData.Formation_442_Classic_Id,
                 Summary = "Vale FC's signature high-pressing system designed to win the ball back quickly in the opponent's half.",
                 Description = "The strikers initiate aggressive pressing on opposition center backs while the midfield stays compact to support. When we win the ball, we look to transition quickly and attack immediately.",
                 Style = "High Press",
                 IsSystemFormation = false,
-                ScopeType = "club",
+                ScopeType = ScopeType.Club,
                 ScopeClubId = ClubSeedData.ValeFC_Id,
                 Tags = "[\"pressing\",\"attacking\",\"4-4-2\"]",
                 CreatedBy = CoachSeedData.MichaelRobertson_Id,
@@ -39,14 +40,14 @@ public static class TacticSeedData
                 Id = Tactic2_Attacking_Id,
                 Name = "Blues High Press",
                 System = "4-4-2",
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 ParentFormationId = FormationSeedData.Formation_442_Classic_Id,
                 ParentTacticId = Tactic1_Balanced_Id,
                 Summary = "Team-specific adaptation of club high press tactics for Blues team.",
                 Description = "Modified high press with specific player roles and adjusted positions for Blues team strengths.",
                 Style = "High Press",
                 IsSystemFormation = false,
-                ScopeType = "team",
+                ScopeType = ScopeType.Team,
                 ScopeClubId = ClubSeedData.ValeFC_Id,
                 ScopeAgeGroupId = AgeGroupSeedData.AgeGroup2014_Id,
                 ScopeTeamId = TeamSeedData.Blues2014_Id,

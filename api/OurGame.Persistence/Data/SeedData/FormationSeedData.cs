@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -36,12 +37,11 @@ public static class FormationSeedData
                 Id = Formation_442_Classic_Id,
                 Name = "4-4-2 Classic",
                 System = "4-4-2",
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 Summary = "Traditional 4-4-2 formation with two strikers and flat midfield",
                 Tags = "[\"Direct play through the middle\",\"Wide play using full-backs\",\"Two strikers working in partnership\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             new Formation
@@ -49,12 +49,11 @@ public static class FormationSeedData
                 Id = Formation_433_Attack_Id,
                 Name = "4-3-3 Attack",
                 System = "4-3-3",
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 Summary = "Attacking 4-3-3 with wingers and central striker",
                 Tags = "[\"Width provided by wingers\",\"Central striker as focal point\",\"Defensive midfielder shields back four\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             new Formation
@@ -62,12 +61,11 @@ public static class FormationSeedData
                 Id = Formation_352_Id,
                 Name = "3-5-2",
                 System = "3-5-2",
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 Summary = "Three at the back with wing-backs providing width",
                 Tags = "[\"Wing-backs push high\",\"Central midfield control\",\"Two strikers partnership\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             new Formation
@@ -75,12 +73,11 @@ public static class FormationSeedData
                 Id = Formation_4231_Id,
                 Name = "4-2-3-1",
                 System = "4-2-3-1",
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 Summary = "Modern formation with two holding midfielders and attacking midfielder",
                 Tags = "[\"Double pivot in midfield\",\"Attacking midfielder supports striker\",\"Wide players cut inside\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             // 9-a-side formations
@@ -89,12 +86,11 @@ public static class FormationSeedData
                 Id = Formation_332_Id,
                 Name = "3-3-2",
                 System = "3-3-2",
-                SquadSize = "9",
+                SquadSize = SquadSize.NineASide,
                 Summary = "Solid 9-a-side formation with three defenders and two strikers",
                 Tags = "[\"Strong defensive shape\",\"Midfield control in center\",\"Two strikers partnership\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             new Formation
@@ -102,12 +98,11 @@ public static class FormationSeedData
                 Id = Formation_233_Id,
                 Name = "2-3-3",
                 System = "2-3-3",
-                SquadSize = "9",
+                SquadSize = SquadSize.NineASide,
                 Summary = "Attacking 9-a-side formation with wide players",
                 Tags = "[\"Width in attack\",\"Two solid center backs\",\"Central striker supported by wingers\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             // 7-a-side formations
@@ -116,12 +111,11 @@ public static class FormationSeedData
                 Id = Formation_231_Id,
                 Name = "2-3-1",
                 System = "2-3-1",
-                SquadSize = "7",
+                SquadSize = SquadSize.SevenASide,
                 Summary = "Classic 7-a-side formation with two defenders and lone striker",
                 Tags = "[\"Two solid defenders\",\"Strong midfield presence\",\"Support striker from midfield\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             new Formation
@@ -129,12 +123,11 @@ public static class FormationSeedData
                 Id = Formation_222_Id,
                 Name = "2-2-2",
                 System = "2-2-2",
-                SquadSize = "7",
+                SquadSize = SquadSize.SevenASide,
                 Summary = "Balanced 7-a-side with two strikers",
                 Tags = "[\"Balanced shape throughout\",\"Two strikers working together\",\"Central midfield partnership\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             // 5-a-side formations
@@ -143,12 +136,11 @@ public static class FormationSeedData
                 Id = Formation_5aside_121_Id,
                 Name = "1-2-1",
                 System = "1-2-1",
-                SquadSize = "5",
+                SquadSize = SquadSize.FiveASide,
                 Summary = "Classic 5-a-side diamond formation",
                 Tags = "[\"One defender sweeps behind\",\"Two midfielders control center\",\"Lone striker up front\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             },
             // 4-a-side formations
@@ -157,12 +149,11 @@ public static class FormationSeedData
                 Id = Formation_4aside_121_Id,
                 Name = "1-2-1",
                 System = "1-2-1",
-                SquadSize = "4",
+                SquadSize = SquadSize.FourASide,
                 Summary = "Basic 4-a-side formation with one defender and two midfielders",
                 Tags = "[\"Single defender covers back\",\"Two players share attacking duties\",\"Encourage passing and movement\"]",
                 IsSystemFormation = true,
-                ScopeType = "system",
-                CreatedAt = now,
+                                CreatedAt = now,
                 UpdatedAt = now
             }
         };

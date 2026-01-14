@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -16,7 +17,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "GK",
+                Position = PlayerPosition.GK,
                 XCoord = 50.0m,
                 YCoord = 5.0m,
             },
@@ -25,7 +26,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "LB",
+                Position = PlayerPosition.LB,
                 XCoord = 20.0m,
                 YCoord = 25.0m,
             },
@@ -33,7 +34,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "CB",
+                Position = PlayerPosition.CB,
                 XCoord = 40.0m,
                 YCoord = 20.0m,
             },
@@ -41,7 +42,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "CB",
+                Position = PlayerPosition.CB,
                 XCoord = 60.0m,
                 YCoord = 20.0m,
             },
@@ -49,7 +50,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "RB",
+                Position = PlayerPosition.RB,
                 XCoord = 80.0m,
                 YCoord = 25.0m,
             },
@@ -58,7 +59,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "LM",
+                Position = PlayerPosition.LM,
                 XCoord = 20.0m,
                 YCoord = 50.0m,
             },
@@ -66,7 +67,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "CM",
+                Position = PlayerPosition.CM,
                 XCoord = 40.0m,
                 YCoord = 50.0m,
             },
@@ -74,7 +75,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "CM",
+                Position = PlayerPosition.CM,
                 XCoord = 60.0m,
                 YCoord = 50.0m,
             },
@@ -82,7 +83,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "RM",
+                Position = PlayerPosition.RM,
                 XCoord = 80.0m,
                 YCoord = 50.0m,
             },
@@ -91,7 +92,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "ST",
+                Position = PlayerPosition.ST,
                 XCoord = 40.0m,
                 YCoord = 80.0m,
             },
@@ -99,7 +100,7 @@ public static class FormationPositionSeedData
             {
                 Id = Guid.NewGuid(),
                 FormationId = FormationSeedData.Formation_442_Classic_Id,
-                Position = "ST",
+                Position = PlayerPosition.ST,
                 XCoord = 60.0m,
                 YCoord = 80.0m,
             }

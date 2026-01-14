@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -20,7 +21,7 @@ public static class MatchSeedData
             {
                 Id = Match1_Id,
                 TeamId = TeamSeedData.Reds2014_Id,
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 Opposition = "Riverside United",
                 MatchDate = new DateTime(2025, 12, 13, 15, 0, 0, DateTimeKind.Utc),
                 KickOffTime = new DateTime(2025, 12, 13, 15, 0, 0, DateTimeKind.Utc),
@@ -30,7 +31,7 @@ public static class MatchSeedData
                 Competition = "County League Division 1",
                 PrimaryKitId = KitSeedData.ValeHomeKit_Id,
                 GoalkeeperKitId = KitSeedData.ValeGKKit_Id,
-                Status = "completed",
+                Status = MatchStatus.Completed,
                 HomeScore = 2,
                 AwayScore = 1,
                 WeatherCondition = "Partly Cloudy",
@@ -43,7 +44,7 @@ public static class MatchSeedData
             {
                 Id = Match2_Id,
                 TeamId = TeamSeedData.Whites2014_Id,
-                SquadSize = "9",
+                SquadSize = SquadSize.NineASide,
                 Opposition = "Hillside Youth",
                 MatchDate = new DateTime(2025, 12, 14, 18, 30, 0, DateTimeKind.Utc),
                 KickOffTime = new DateTime(2025, 12, 14, 18, 30, 0, DateTimeKind.Utc),
@@ -53,7 +54,7 @@ public static class MatchSeedData
                 Competition = "Youth Cup - Quarter Final",
                 PrimaryKitId = KitSeedData.ValeAwayKit_Id,
                 GoalkeeperKitId = KitSeedData.ValeGKKit_Id,
-                Status = "completed",
+                Status = MatchStatus.Completed,
                 HomeScore = 1,
                 AwayScore = 3,
                 IsLocked = false,
@@ -64,7 +65,7 @@ public static class MatchSeedData
             {
                 Id = Match3_Id,
                 TeamId = TeamSeedData.Reds2014_Id,
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 Opposition = "Parkside Rangers",
                 MatchDate = new DateTime(2024, 12, 1, 15, 0, 0, DateTimeKind.Utc),
                 KickOffTime = new DateTime(2024, 12, 1, 15, 0, 0, DateTimeKind.Utc),
@@ -73,7 +74,7 @@ public static class MatchSeedData
                 Competition = "County League Division 1",
                 PrimaryKitId = KitSeedData.ValeHomeKit_Id,
                 GoalkeeperKitId = KitSeedData.ValeGKKit_Id,
-                Status = "completed",
+                Status = MatchStatus.Completed,
                 HomeScore = 3,
                 AwayScore = 1,
                 WeatherCondition = "Clear",
@@ -86,14 +87,14 @@ public static class MatchSeedData
             {
                 Id = Match4_Id,
                 TeamId = TeamSeedData.Whites2014_Id,
-                SquadSize = "9",
+                SquadSize = SquadSize.NineASide,
                 Opposition = "Hillside Athletic",
                 MatchDate = new DateTime(2024, 12, 1, 13, 0, 0, DateTimeKind.Utc),
                 KickOffTime = new DateTime(2024, 12, 1, 13, 0, 0, DateTimeKind.Utc),
                 Location = "Hillside Park",
                 IsHome = false,
                 Competition = "Youth League",
-                Status = "completed",
+                Status = MatchStatus.Completed,
                 HomeScore = 2,
                 AwayScore = 2,
                 IsLocked = false,
@@ -104,14 +105,14 @@ public static class MatchSeedData
             {
                 Id = Match5_Id,
                 TeamId = TeamSeedData.Reds2014_Id,
-                SquadSize = "11",
+                SquadSize = SquadSize.ElevenASide,
                 Opposition = "Meadow United",
                 MatchDate = new DateTime(2024, 11, 24, 15, 0, 0, DateTimeKind.Utc),
                 KickOffTime = new DateTime(2024, 11, 24, 15, 0, 0, DateTimeKind.Utc),
                 Location = "Community Sports Ground",
                 IsHome = true,
                 Competition = "County League Division 1",
-                Status = "completed",
+                Status = MatchStatus.Completed,
                 HomeScore = 4,
                 AwayScore = 0,
                 IsLocked = false,

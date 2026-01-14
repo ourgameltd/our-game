@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OurGame.Persistence.Data.SeedData;
+
 using OurGame.Persistence.Models;
 
 namespace OurGame.Persistence.Data.Configurations;
@@ -17,7 +17,5 @@ public class TacticPrincipleConfiguration : IEntityTypeConfiguration<TacticPrinc
             .WithMany()
             .HasForeignKey(e => e.FormationId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasData(TacticPrincipleSeedData.GetTacticPrinciples());
     }
 }

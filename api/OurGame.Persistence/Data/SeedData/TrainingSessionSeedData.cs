@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -25,7 +26,7 @@ public static class TrainingSessionSeedData
                 Location = "Community Sports Ground - Pitch 2",
                 FocusAreas = "[\"Passing & Movement\",\"Build-up Play\",\"Team Shape\"]",
                 Notes = "Post-Christmas training session! Let's shake off those mince pies. Focus on passing drills and possession game.",
-                Status = "scheduled",
+                Status = SessionStatus.Scheduled,
                 CreatedAt = now,
                 UpdatedAt = now
             },
@@ -39,7 +40,7 @@ public static class TrainingSessionSeedData
                 Location = "Community Sports Ground - Pitch 1",
                 FocusAreas = "[\"Tactical Awareness\",\"Set Pieces\",\"Defensive Shape\"]",
                 Notes = "Focus on defensive organization ahead of the cup match on Saturday.",
-                Status = "scheduled",
+                Status = SessionStatus.Scheduled,
                 CreatedAt = now,
                 UpdatedAt = now
             },
@@ -53,7 +54,7 @@ public static class TrainingSessionSeedData
                 Location = "Community Sports Ground - Pitch 2",
                 FocusAreas = "[\"Technical Skills\",\"Finishing\",\"First Touch\"]",
                 Notes = "Focus on shooting technique this week. Bring shin pads.",
-                Status = "scheduled",
+                Status = SessionStatus.Scheduled,
                 CreatedAt = now,
                 UpdatedAt = now
             }

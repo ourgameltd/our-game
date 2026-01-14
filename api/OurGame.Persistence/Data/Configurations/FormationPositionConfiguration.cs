@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OurGame.Persistence.Data.SeedData;
+
 using OurGame.Persistence.Models;
 
 namespace OurGame.Persistence.Data.Configurations;
@@ -17,7 +17,5 @@ public class FormationPositionConfiguration : IEntityTypeConfiguration<Formation
             .WithMany(f => f.FormationPositions)
             .HasForeignKey(e => e.FormationId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasData(FormationPositionSeedData.GetFormationPositions());
     }
 }

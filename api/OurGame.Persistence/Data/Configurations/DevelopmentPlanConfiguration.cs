@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OurGame.Persistence.Data.SeedData;
+
 using OurGame.Persistence.Models;
 
 namespace OurGame.Persistence.Data.Configurations;
@@ -13,6 +13,5 @@ public class DevelopmentPlanConfiguration : IEntityTypeConfiguration<Development
         builder.HasKey(d => d.Id);
 
         // Seed data
-        builder.HasData(DevelopmentPlanSeedData.GetDevelopmentPlans());
     }
 }

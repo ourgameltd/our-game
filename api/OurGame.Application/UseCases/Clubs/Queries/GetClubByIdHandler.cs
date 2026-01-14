@@ -79,7 +79,7 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
 
         // Get match statistics
         var matches = await _db.Matches
-            .Where(m => m.Team.ClubId == clubId && m.Status == "completed")
+            .Where(m => m.Team.ClubId == clubId && m.Status == Persistence.Enums.MatchStatus.Completed)
             .Select(m => new
             {
                 m.IsHome,

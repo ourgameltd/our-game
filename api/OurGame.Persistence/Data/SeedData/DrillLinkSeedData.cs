@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -15,7 +16,7 @@ public static class DrillLinkSeedData
                 DrillId = DrillSeedData.PassingTriangle_Id,
                 Url = "https://www.youtube.com/watch?v=example1",
                 Title = "Passing Triangle Tutorial - Pro Coach Tips",
-                Type = "youtube"
+                Type = LinkType.Youtube
             },
             // Links for Dribbling Gates drill
             new DrillLink
@@ -24,7 +25,7 @@ public static class DrillLinkSeedData
                 DrillId = DrillSeedData.DribblingGates_Id,
                 Url = "https://www.instagram.com/reel/example",
                 Title = "Dribbling Gates Demo",
-                Type = "instagram"
+                Type = LinkType.Instagram
             }
         };
     }

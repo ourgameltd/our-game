@@ -58,7 +58,7 @@ public class GetTeamByIdHandler : IRequestHandler<GetTeamByIdQuery, TeamDetailDt
         var playerCount = await _db.PlayerTeams.CountAsync(pt => pt.TeamId == teamId);
 
         var matches = await _db.Matches
-            .Where(m => m.TeamId == teamId && m.Status == "completed")
+            .Where(m => m.TeamId == teamId && m.Status == Persistence.Enums.MatchStatus.Completed)
             .Select(m => new
             {
                 m.IsHome,

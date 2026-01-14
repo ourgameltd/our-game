@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -26,7 +27,7 @@ public static class KitSeedData
                 ClubId = ClubSeedData.ValeFC_Id,
                 TeamId = null,
                 Name = "Vale Home Kit",
-                Type = "home",
+                Type = KitType.Home,
                 ShirtColor = "#000080",
                 ShortsColor = "#000080",
                 SocksColor = "#000080",
@@ -40,7 +41,7 @@ public static class KitSeedData
                 ClubId = ClubSeedData.ValeFC_Id,
                 TeamId = null,
                 Name = "Vale Away Kit",
-                Type = "away",
+                Type = KitType.Away,
                 ShirtColor = "#87CEEB",
                 ShortsColor = "#000080",
                 SocksColor = "#000080",
@@ -54,7 +55,7 @@ public static class KitSeedData
                 ClubId = ClubSeedData.ValeFC_Id,
                 TeamId = null,
                 Name = "Vale Goalkeeper Kit",
-                Type = "goalkeeper",
+                Type = KitType.Goalkeeper,
                 ShirtColor = "#00FF00",
                 ShortsColor = "#00FF00",
                 SocksColor = "#00FF00",
@@ -70,7 +71,7 @@ public static class KitSeedData
                 ClubId = ClubSeedData.RentonUnited_Id,
                 TeamId = null,
                 Name = "Renton Home Kit",
-                Type = "home",
+                Type = KitType.Home,
                 ShirtColor = "#CC0014",
                 ShortsColor = "#000000",
                 SocksColor = "#CC0014",
@@ -84,7 +85,7 @@ public static class KitSeedData
                 ClubId = ClubSeedData.RentonUnited_Id,
                 TeamId = null,
                 Name = "Renton Goalkeeper Kit",
-                Type = "goalkeeper",
+                Type = KitType.Goalkeeper,
                 ShirtColor = "#00ff00",
                 ShortsColor = "#000000",
                 SocksColor = "#00ff00",

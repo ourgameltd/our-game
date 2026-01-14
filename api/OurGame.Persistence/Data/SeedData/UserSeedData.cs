@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -22,7 +23,7 @@ public static class UserSeedData
                 Email = "demo@valefc.com",
                 FirstName = "Demo",
                 LastName = "User",
-                Role = "coach",
+                Role = UserRole.Coach,
                 ClubId = ClubSeedData.ValeFC_Id,
                 PlayerId = null,
                 StaffId = CoachSeedData.MichaelRobertson_Id,
@@ -37,7 +38,7 @@ public static class UserSeedData
                 Email = "oliver.thompson@example.com",
                 FirstName = "Oliver",
                 LastName = "Thompson",
-                Role = "player",
+                Role = UserRole.Player,
                 ClubId = ClubSeedData.ValeFC_Id,
                 PlayerId = PlayerSeedData.OliverThompson_Id,
                 StaffId = null,
@@ -52,7 +53,7 @@ public static class UserSeedData
                 Email = "sarah.thompson@example.com",
                 FirstName = "Sarah",
                 LastName = "Thompson",
-                Role = "parent",
+                Role = UserRole.Parent,
                 ClubId = ClubSeedData.ValeFC_Id,
                 PlayerId = null,
                 StaffId = null,
@@ -67,7 +68,7 @@ public static class UserSeedData
                 Email = "mike.anderson@example.com",
                 FirstName = "Mike",
                 LastName = "Anderson",
-                Role = "fan",
+                Role = UserRole.Fan,
                 ClubId = ClubSeedData.ValeFC_Id,
                 PlayerId = null,
                 StaffId = null,

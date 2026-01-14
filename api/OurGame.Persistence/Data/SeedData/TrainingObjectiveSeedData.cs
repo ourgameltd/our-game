@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -17,7 +18,7 @@ public static class TrainingObjectiveSeedData
                 Description = "Increase heading accuracy and success rate in aerial duels. Target: 60% aerial duel success rate in matches.",
                 StartDate = new DateOnly(2024, 12, 1),
                 TargetDate = new DateOnly(2025, 2, 28),
-                Status = "in-progress",
+                Status = ObjectiveStatus.InProgress,
                 Progress = 25,
                 Completed = false
             },
@@ -29,7 +30,7 @@ public static class TrainingObjectiveSeedData
                 Description = "Increase pressing actions and defensive contributions. Target: 10+ pressing actions per game.",
                 StartDate = new DateOnly(2024, 12, 1),
                 TargetDate = new DateOnly(2025, 2, 28),
-                Status = "in-progress",
+                Status = ObjectiveStatus.InProgress,
                 Progress = 40,
                 Completed = false
             },
@@ -41,7 +42,7 @@ public static class TrainingObjectiveSeedData
                 Description = "Complete strength and stamina program to maintain performance in final 15 minutes of games.",
                 StartDate = new DateOnly(2024, 12, 1),
                 TargetDate = new DateOnly(2025, 2, 28),
-                Status = "in-progress",
+                Status = ObjectiveStatus.InProgress,
                 Progress = 50,
                 Completed = false
             },
@@ -54,7 +55,7 @@ public static class TrainingObjectiveSeedData
                 Description = "Improve finishing and assist numbers. Target: 1 goal contribution per 2 games.",
                 StartDate = new DateOnly(2024, 12, 1),
                 TargetDate = new DateOnly(2025, 2, 28),
-                Status = "in-progress",
+                Status = ObjectiveStatus.InProgress,
                 Progress = 35,
                 Completed = false
             },
@@ -66,7 +67,7 @@ public static class TrainingObjectiveSeedData
                 Description = "Develop confidence and accuracy with left foot. Practice shooting and passing drills.",
                 StartDate = new DateOnly(2024, 12, 1),
                 TargetDate = new DateOnly(2025, 1, 31),
-                Status = "in-progress",
+                Status = ObjectiveStatus.InProgress,
                 Progress = 60,
                 Completed = false
             }

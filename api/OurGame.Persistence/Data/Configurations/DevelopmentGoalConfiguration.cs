@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OurGame.Persistence.Data.SeedData;
+
 using OurGame.Persistence.Models;
 
 namespace OurGame.Persistence.Data.Configurations;
@@ -17,7 +17,5 @@ public class DevelopmentGoalConfiguration : IEntityTypeConfiguration<Development
             .WithMany(p => p.DevelopmentGoals)
             .HasForeignKey(e => e.PlanId)
             .OnDelete(DeleteBehavior.Cascade);
-
-        builder.HasData(DevelopmentGoalSeedData.GetDevelopmentGoals());
     }
 }

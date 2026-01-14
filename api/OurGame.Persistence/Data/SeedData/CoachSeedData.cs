@@ -1,4 +1,5 @@
 using OurGame.Persistence.Models;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -30,7 +31,7 @@ public static class CoachSeedData
                 Phone = "+44 7700 900123",
                 AssociationId = "SFA-24781",
                 HasAccount = true,
-                Role = "head-coach",
+                Role = CoachRole.HeadCoach,
                 Biography = "Experienced youth coach with over 15 years developing young talent. Former professional player with Vale of Leven FC and passionate about grassroots football development.",
                 Specializations = "[\"Youth Development\",\"Tactical Training\",\"Team Building\"]",
                 IsArchived = false,
@@ -49,7 +50,7 @@ public static class CoachSeedData
                 Phone = "+44 7700 900124",
                 AssociationId = "SFA-31245",
                 HasAccount = false,
-                Role = "assistant-coach",
+                Role = CoachRole.AssistantCoach,
                 Biography = "Dedicated assistant coach with expertise in fitness and conditioning. Former semi-professional player committed to player welfare and development.",
                 Specializations = "[\"Fitness Training\",\"Player Welfare\",\"Set Pieces\"]",
                 IsArchived = false,
@@ -68,7 +69,7 @@ public static class CoachSeedData
                 Phone = "+44 7700 900125",
                 AssociationId = "SFA-28934",
                 HasAccount = true,
-                Role = "goalkeeper-coach",
+                Role = CoachRole.GoalkeeperCoach,
                 Biography = "Former professional goalkeeper with over 200 appearances. Specializes in goalkeeper development and technical training for all age groups.",
                 Specializations = "[\"Goalkeeper Training\",\"Shot Stopping\",\"Distribution\"]",
                 IsArchived = false,
@@ -87,7 +88,7 @@ public static class CoachSeedData
                 Phone = "+44 7700 900126",
                 AssociationId = "SFA-34567",
                 HasAccount = false,
-                Role = "head-coach",
+                Role = CoachRole.HeadCoach,
                 Biography = "Young and dynamic coach with a focus on modern coaching methodologies. Passionate about developing well-rounded players both on and off the pitch.",
                 Specializations = "[\"Technical Skills\",\"Game Intelligence\",\"Youth Psychology\"]",
                 IsArchived = false,
@@ -106,7 +107,7 @@ public static class CoachSeedData
                 Phone = "+44 7700 900127",
                 AssociationId = "SFA-21456",
                 HasAccount = true,
-                Role = "head-coach",
+                Role = CoachRole.HeadCoach,
                 Biography = "Veteran coach with extensive experience in Scottish football. Known for developing young talent and building strong team cultures.",
                 Specializations = "[\"Team Leadership\",\"Defensive Organization\",\"Match Analysis\"]",
                 IsArchived = false,
@@ -125,7 +126,7 @@ public static class CoachSeedData
                 Phone = "+44 7700 900128",
                 AssociationId = "SFA-32789",
                 HasAccount = false,
-                Role = "fitness-coach",
+                Role = CoachRole.FitnessCoach,
                 Biography = "Sports science specialist focusing on youth player physical development and injury prevention.",
                 Specializations = "[\"Physical Development\",\"Injury Prevention\",\"Nutrition\"]",
                 IsArchived = false,

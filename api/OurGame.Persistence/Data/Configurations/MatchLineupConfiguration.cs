@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OurGame.Persistence.Data.SeedData;
+
 using OurGame.Persistence.Models;
 
 namespace OurGame.Persistence.Data.Configurations;
@@ -27,7 +27,5 @@ public class MatchLineupConfiguration : IEntityTypeConfiguration<MatchLineup>
             .WithMany()
             .HasForeignKey(e => e.TacticId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasData(MatchLineupSeedData.GetMatchLineups());
     }
 }

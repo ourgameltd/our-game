@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using OurGame.Persistence.Data.SeedData;
+
 using OurGame.Persistence.Models;
 
 namespace OurGame.Persistence.Data.Configurations;
@@ -22,7 +22,5 @@ public class LineupPlayerConfiguration : IEntityTypeConfiguration<LineupPlayer>
             .WithMany()
             .HasForeignKey(e => e.PlayerId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        builder.HasData(LineupPlayerSeedData.GetLineupPlayers());
     }
 }
