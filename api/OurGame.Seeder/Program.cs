@@ -8,10 +8,23 @@ Console.WriteLine("OurGame Database Seeder");
 Console.WriteLine("======================");
 Console.WriteLine();
 
+// Find the OurGame.Api directory
+var currentDir = Directory.GetCurrentDirectory();
+var apiDir = FindApiDirectory(currentDir);
+
+if (apiDir == null)
+{
+    Console.WriteLine("❌ Error: Could not find OurGame.Api directory");
+    return 1;
+}
+
+Console.WriteLine($"📁 Using config from: {apiDir}");
+
 // Load configuration from OurGame.Api
 var config = new ConfigurationBuilder()
-    .SetBasePath(Path.Combine(Directory.GetCurrentDirectory(), "..", "OurGame.Api"))
-    .AddJsonFile("appsettings.json", optional: false)
+    .SetBasePath(apiDir)
+    .AddJsonFile("appsettings.json", optional: true)
+    .AddJsonFile("local.settings.json", optional: true)
     .AddEnvironmentVariables()
     .Build();
 
@@ -36,10 +49,44 @@ try
     await using var scope = serviceProvider.CreateAsyncScope();
     var context = scope.ServiceProvider.GetRequiredService<OurGameContext>();
     
-    Console.WriteLine("⏳ Applying migrations...");
+    Console.WriteLine("⏳ Checking database...");
     
-    // Apply all pending migrations
-    await context.Database.MigrateAsync();
+    // Check if database exists
+    var canConnect = await context.Database.CanConnectAsync();
+    
+    if (!canConnect)
+    {
+        Console.WriteLine("⏳ Creating database and applying migrations...");
+        await context.Database.MigrateAsync();
+        Console.WriteLine("✅ Database created successfully");
+    }
+    else
+    {
+        // Database exists, check migration state
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        var appliedMigrations = await context.Database.GetAppliedMigrationsAsync();
+        
+        Console.WriteLine($"✅ Database exists with {appliedMigrations.Count()} migrations recorded");
+        
+        if (pendingMigrations.Any())
+        {
+            Console.WriteLine($"⏳ Applying {pendingMigrations.Count()} pending migration(s)...");
+            try
+            {
+                await context.Database.MigrateAsync();
+                Console.WriteLine("✅ Migrations applied successfully");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"⚠️  Warning: Migration error (tables may already exist): {ex.Message}");
+                Console.WriteLine("⏳ Attempting to seed existing database...");
+            }
+        }
+        else
+        {
+            Console.WriteLine("✅ Database is up to date");
+        }
+    }
     
     Console.WriteLine("⏳ Seeding database...");
     
@@ -466,4 +513,33 @@ catch (Exception ex)
     Console.WriteLine($"❌ Error seeding database: {ex.Message}");
     Console.WriteLine(ex.StackTrace);
     return 1;
+}
+
+static string? FindApiDirectory(string startDirectory)
+{
+    var directoryInfo = new DirectoryInfo(startDirectory);
+
+    while (directoryInfo != null)
+    {
+        // Look for OurGame.Api subdirectory
+        var candidate = Path.Combine(directoryInfo.FullName, "OurGame.Api");
+        if (Directory.Exists(candidate) && File.Exists(Path.Combine(candidate, "appsettings.json")))
+        {
+            return candidate;
+        }
+
+        // If we're already in the api folder, look for sibling
+        if (directoryInfo.Name == "api" || directoryInfo.Name == "OurGame.Seeder")
+        {
+            var sibling = Path.Combine(directoryInfo.Parent?.FullName ?? directoryInfo.FullName, "OurGame.Api");
+            if (Directory.Exists(sibling))
+            {
+                return sibling;
+            }
+        }
+
+        directoryInfo = directoryInfo.Parent;
+    }
+
+    return null;
 }

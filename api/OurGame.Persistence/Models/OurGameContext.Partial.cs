@@ -10,6 +10,12 @@ public partial class OurGameContext
         // Apply all entity configurations from the Configurations folder
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(OurGameContext).Assembly);
         
+        // Fix cascade delete conflicts - SQL Server doesn't allow multiple cascade paths
+        foreach (var relationship in modelBuilder.Model.GetEntityTypes().SelectMany(e => e.GetForeignKeys()))
+        {
+            relationship.DeleteBehavior = DeleteBehavior.Restrict;
+        }
+        
         // Configure UTC DateTime conversion for all DateTime properties
         foreach (var entityType in modelBuilder.Model.GetEntityTypes())
         {

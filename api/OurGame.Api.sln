@@ -14,6 +14,28 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OurGame.Seeder", "OurGame.Seeder\OurGame.Seeder.csproj", "{0A807EAC-A06F-4046-82D9-481B82B75392}"
 EndProject
 Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A05F7262-F3D8-4656-A4E1-2ADE7730970C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A05F7262-F3D8-4656-A4E1-2ADE7730970C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A05F7262-F3D8-4656-A4E1-2ADE7730970C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A05F7262-F3D8-4656-A4E1-2ADE7730970C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A3901DA-8CF4-497C-A838-EEC6DFAD31C5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A3901DA-8CF4-497C-A838-EEC6DFAD31C5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A3901DA-8CF4-497C-A838-EEC6DFAD31C5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A3901DA-8CF4-497C-A838-EEC6DFAD31C5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{09A5793C-EA25-4265-8DFD-C8E1782F5AA5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{09A5793C-EA25-4265-8DFD-C8E1782F5AA5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{09A5793C-EA25-4265-8DFD-C8E1782F5AA5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{09A5793C-EA25-4265-8DFD-C8E1782F5AA5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0A807EAC-A06F-4046-82D9-481B82B75392}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0A807EAC-A06F-4046-82D9-481B82B75392}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0A807EAC-A06F-4046-82D9-481B82B75392}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0A807EAC-A06F-4046-82D9-481B82B75392}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection

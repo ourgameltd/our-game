@@ -64,7 +64,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.ClubId,
                         principalTable: "clubs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -96,7 +96,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.ClubId,
                         principalTable: "clubs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -127,7 +127,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.ClubId,
                         principalTable: "clubs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -154,7 +154,8 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_users_clubs",
                         column: x => x.club_id,
                         principalTable: "clubs",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -173,13 +174,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.AgeGroupId,
                         principalTable: "age_groups",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_AgeGroupCoordinators_coaches_CoachId",
                         column: x => x.CoachId,
                         principalTable: "coaches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -210,12 +211,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_drills_clubs_ClubId",
                         column: x => x.ClubId,
                         principalTable: "clubs",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_drills_coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
                         principalTable: "coaches",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -241,12 +244,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_DrillTemplates_clubs_ClubId",
                         column: x => x.ClubId,
                         principalTable: "clubs",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_DrillTemplates_coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
                         principalTable: "coaches",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -280,12 +285,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_formations_clubs_ScopeClubId",
                         column: x => x.ScopeClubId,
                         principalTable: "clubs",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_formations_coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
                         principalTable: "coaches",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_formations_formations_ParentFormationId",
                         column: x => x.ParentFormationId,
@@ -321,13 +328,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_AttributeEvaluations_coaches_EvaluatedByNavigationId",
                         column: x => x.EvaluatedByNavigationId,
                         principalTable: "coaches",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_AttributeEvaluations_players_PlayerId",
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -349,7 +357,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -368,13 +376,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.AgeGroupId,
                         principalTable: "age_groups",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_player_age_groups_players_PlayerId",
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -428,7 +436,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -454,13 +462,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_player_reports_coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
                         principalTable: "coaches",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_player_reports_players_PlayerId",
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -484,13 +493,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_TrainingPlans_coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
                         principalTable: "coaches",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_TrainingPlans_players_PlayerId",
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -515,12 +525,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_PlayerImages_users_UploadedByNavigationId",
                         column: x => x.UploadedByNavigationId,
                         principalTable: "users",
-                        principalColumn: "id");
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -539,13 +550,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_PlayerParents_users_ParentUserId",
                         column: x => x.ParentUserId,
                         principalTable: "users",
                         principalColumn: "id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -566,7 +577,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.DrillId,
                         principalTable: "drills",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -587,7 +598,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.TemplateId,
                         principalTable: "DrillTemplates",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_template_drills_drills_DrillId",
                         column: x => x.DrillId,
@@ -598,7 +609,8 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_template_drills_drills_DrillId1",
                         column: x => x.DrillId1,
                         principalTable: "drills",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -621,7 +633,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.FormationId,
                         principalTable: "formations",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -643,7 +655,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.FormationId,
                         principalTable: "formations",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -665,12 +677,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.FormationId,
                         principalTable: "formations",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_tactic_principles_formations_FormationId1",
                         column: x => x.FormationId1,
                         principalTable: "formations",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -699,18 +712,19 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.AgeGroupId,
                         principalTable: "age_groups",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_teams_clubs_ClubId",
                         column: x => x.ClubId,
                         principalTable: "clubs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_teams_formations_FormationId",
                         column: x => x.FormationId,
                         principalTable: "formations",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -731,7 +745,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.EvaluationId,
                         principalTable: "AttributeEvaluations",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -759,18 +773,20 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_development_plans_coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
                         principalTable: "coaches",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_development_plans_player_reports_LinkedReportId",
                         column: x => x.LinkedReportId,
                         principalTable: "player_reports",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_development_plans_players_PlayerId",
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -794,7 +810,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.ReportId,
                         principalTable: "player_reports",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -816,7 +832,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.ReportId,
                         principalTable: "player_reports",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -839,7 +855,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlanId,
                         principalTable: "TrainingPlans",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -861,12 +877,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlanId,
                         principalTable: "TrainingPlans",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_ProgressNotes_coaches_AddedByNavigationId",
                         column: x => x.AddedByNavigationId,
                         principalTable: "coaches",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -892,7 +909,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlanId,
                         principalTable: "TrainingPlans",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -916,18 +933,19 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_KitOrders_teams_TeamId",
                         column: x => x.TeamId,
                         principalTable: "teams",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_KitOrders_users_OrderedByNavigationId",
                         column: x => x.OrderedByNavigationId,
                         principalTable: "users",
-                        principalColumn: "id");
+                        principalColumn: "id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -954,12 +972,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.ClubId,
                         principalTable: "clubs",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_kits_teams_TeamId",
                         column: x => x.TeamId,
                         principalTable: "teams",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -980,13 +999,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_player_teams_teams_TeamId",
                         column: x => x.TeamId,
                         principalTable: "teams",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1006,13 +1025,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.CoachId,
                         principalTable: "coaches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_team_coaches_teams_TeamId",
                         column: x => x.TeamId,
                         principalTable: "teams",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1040,13 +1059,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_TrainingSessions_DrillTemplates_TemplateId",
                         column: x => x.TemplateId,
                         principalTable: "DrillTemplates",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_TrainingSessions_teams_TeamId",
                         column: x => x.TeamId,
                         principalTable: "teams",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1071,7 +1091,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PlanId,
                         principalTable: "development_plans",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1090,13 +1110,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.PersonalSessionId,
                         principalTable: "PersonalSessions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_PersonalSessionDrills_drills_DrillId",
                         column: x => x.DrillId,
                         principalTable: "drills",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1118,7 +1138,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.OrderId,
                         principalTable: "KitOrders",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1175,7 +1195,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.TeamId,
                         principalTable: "teams",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1195,13 +1215,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.TemplateId,
                         principalTable: "DrillTemplates",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_AppliedTemplates_TrainingSessions_SessionId",
                         column: x => x.SessionId,
                         principalTable: "TrainingSessions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1223,7 +1243,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.SessionId,
                         principalTable: "TrainingSessions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_session_attendance_players_PlayerId",
                         column: x => x.PlayerId,
@@ -1234,7 +1254,8 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_session_attendance_players_PlayerId1",
                         column: x => x.PlayerId1,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1256,13 +1277,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_session_drills_DrillTemplates_TemplateId",
                         column: x => x.TemplateId,
                         principalTable: "DrillTemplates",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_session_drills_TrainingSessions_SessionId",
                         column: x => x.SessionId,
                         principalTable: "TrainingSessions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_session_drills_drills_DrillId",
                         column: x => x.DrillId,
@@ -1273,7 +1295,8 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_session_drills_drills_DrillId1",
                         column: x => x.DrillId1,
                         principalTable: "drills",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1292,13 +1315,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.SessionId,
                         principalTable: "TrainingSessions",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_SessionCoaches_coaches_CoachId",
                         column: x => x.CoachId,
                         principalTable: "coaches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1325,12 +1348,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_match_lineups_formations_FormationId1",
                         column: x => x.FormationId1,
                         principalTable: "formations",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_match_lineups_formations_FormationId2",
                         column: x => x.FormationId2,
                         principalTable: "formations",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_match_lineups_formations_TacticId",
                         column: x => x.TacticId,
@@ -1342,7 +1367,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.MatchId,
                         principalTable: "matches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1366,7 +1391,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.MatchId,
                         principalTable: "matches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_match_reports_players_CaptainId",
                         column: x => x.CaptainId,
@@ -1377,12 +1402,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_match_reports_players_PlayerId",
                         column: x => x.PlayerId,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_match_reports_players_PlayerId1",
                         column: x => x.PlayerId1,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_match_reports_players_PlayerOfMatchId",
                         column: x => x.PlayerOfMatchId,
@@ -1411,17 +1438,19 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.MatchId,
                         principalTable: "matches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_match_substitutions_players_PlayerId",
                         column: x => x.PlayerId,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_match_substitutions_players_PlayerId1",
                         column: x => x.PlayerId1,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_match_substitutions_players_PlayerInId",
                         column: x => x.PlayerInId,
@@ -1452,13 +1481,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.CoachId,
                         principalTable: "coaches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_MatchCoaches_matches_MatchId",
                         column: x => x.MatchId,
                         principalTable: "matches",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1481,7 +1510,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.LineupId,
                         principalTable: "match_lineups",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_lineup_players_players_PlayerId",
                         column: x => x.PlayerId,
@@ -1492,7 +1521,8 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_lineup_players_players_PlayerId1",
                         column: x => x.PlayerId1,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1515,7 +1545,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.MatchReportId,
                         principalTable: "match_reports",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_cards_players_PlayerId",
                         column: x => x.PlayerId,
@@ -1526,7 +1556,8 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_cards_players_PlayerId1",
                         column: x => x.PlayerId1,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1549,7 +1580,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.MatchReportId,
                         principalTable: "match_reports",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_goals_players_AssistPlayerId",
                         column: x => x.AssistPlayerId,
@@ -1566,12 +1597,14 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_goals_players_PlayerId1",
                         column: x => x.PlayerId1,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_goals_players_PlayerId2",
                         column: x => x.PlayerId2,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1593,13 +1626,13 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.MatchReportId,
                         principalTable: "match_reports",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_Injuries_players_PlayerId",
                         column: x => x.PlayerId,
                         principalTable: "players",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
@@ -1620,7 +1653,7 @@ namespace OurGame.Persistence.Migrations
                         column: x => x.MatchReportId,
                         principalTable: "match_reports",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
                         name: "FK_performance_ratings_players_PlayerId",
                         column: x => x.PlayerId,
@@ -1631,7 +1664,8 @@ namespace OurGame.Persistence.Migrations
                         name: "FK_performance_ratings_players_PlayerId1",
                         column: x => x.PlayerId1,
                         principalTable: "players",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateIndex(

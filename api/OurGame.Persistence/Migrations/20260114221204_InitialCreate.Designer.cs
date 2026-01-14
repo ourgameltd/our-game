@@ -12,7 +12,7 @@ using OurGame.Persistence.Models;
 namespace OurGame.Persistence.Migrations
 {
     [DbContext(typeof(OurGameContext))]
-    [Migration("20260114214518_InitialCreate")]
+    [Migration("20260114221204_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -2090,7 +2090,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Club", "Club")
                         .WithMany("AgeGroups")
                         .HasForeignKey("ClubId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Club");
@@ -2101,13 +2101,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.AgeGroup", "AgeGroup")
                         .WithMany("AgeGroupCoordinators")
                         .HasForeignKey("AgeGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Coach", "Coach")
                         .WithMany("AgeGroupCoordinators")
                         .HasForeignKey("CoachId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("AgeGroup");
@@ -2120,13 +2120,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.TrainingSession", "Session")
                         .WithMany("AppliedTemplates")
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.DrillTemplate", "Template")
                         .WithMany("AppliedTemplates")
                         .HasForeignKey("TemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Session");
@@ -2138,12 +2138,13 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.Coach", "EvaluatedByNavigation")
                         .WithMany("AttributeEvaluations")
-                        .HasForeignKey("EvaluatedByNavigationId");
+                        .HasForeignKey("EvaluatedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("AttributeEvaluations")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("EvaluatedByNavigation");
@@ -2156,7 +2157,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.MatchReport", "MatchReport")
                         .WithMany("Cards")
                         .HasForeignKey("MatchReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
@@ -2167,7 +2168,8 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("Cards")
-                        .HasForeignKey("PlayerId1");
+                        .HasForeignKey("PlayerId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("MatchReport");
 
@@ -2179,7 +2181,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Club", "Club")
                         .WithMany("Coaches")
                         .HasForeignKey("ClubId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Club");
@@ -2190,7 +2192,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.DevelopmentPlan", "Plan")
                         .WithMany("DevelopmentGoals")
                         .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Plan");
@@ -2200,16 +2202,18 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.Coach", "CreatedByNavigation")
                         .WithMany("DevelopmentPlans")
-                        .HasForeignKey("CreatedByNavigationId");
+                        .HasForeignKey("CreatedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.PlayerReport", "LinkedReport")
                         .WithMany("DevelopmentPlans")
-                        .HasForeignKey("LinkedReportId");
+                        .HasForeignKey("LinkedReportId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("DevelopmentPlans")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("CreatedByNavigation");
@@ -2223,11 +2227,13 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.Club", "Club")
                         .WithMany("Drills")
-                        .HasForeignKey("ClubId");
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Coach", "CreatedByNavigation")
                         .WithMany("Drills")
-                        .HasForeignKey("CreatedByNavigationId");
+                        .HasForeignKey("CreatedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Club");
 
@@ -2239,7 +2245,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Drill", "Drill")
                         .WithMany("DrillLinks")
                         .HasForeignKey("DrillId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Drill");
@@ -2249,11 +2255,13 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.Club", "Club")
                         .WithMany("DrillTemplates")
-                        .HasForeignKey("ClubId");
+                        .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Coach", "CreatedByNavigation")
                         .WithMany("DrillTemplates")
-                        .HasForeignKey("CreatedByNavigationId");
+                        .HasForeignKey("CreatedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Club");
 
@@ -2265,7 +2273,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("EmergencyContacts")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Player");
@@ -2276,7 +2284,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.AttributeEvaluation", "Evaluation")
                         .WithMany("EvaluationAttributes")
                         .HasForeignKey("EvaluationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Evaluation");
@@ -2286,7 +2294,8 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.Coach", "CreatedByNavigation")
                         .WithMany("Formations")
-                        .HasForeignKey("CreatedByNavigationId");
+                        .HasForeignKey("CreatedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Formation", "ParentFormation")
                         .WithMany("InverseParentFormation")
@@ -2300,7 +2309,8 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Club", "ScopeClub")
                         .WithMany("Formations")
-                        .HasForeignKey("ScopeClubId");
+                        .HasForeignKey("ScopeClubId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("CreatedByNavigation");
 
@@ -2316,7 +2326,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Formation", "Formation")
                         .WithMany("FormationPositions")
                         .HasForeignKey("FormationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Formation");
@@ -2332,7 +2342,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.MatchReport", "MatchReport")
                         .WithMany("Goals")
                         .HasForeignKey("MatchReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
@@ -2343,11 +2353,13 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("GoalAssistPlayers")
-                        .HasForeignKey("PlayerId1");
+                        .HasForeignKey("PlayerId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("GoalPlayers")
-                        .HasForeignKey("PlayerId2");
+                        .HasForeignKey("PlayerId2")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AssistPlayer");
 
@@ -2361,13 +2373,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.MatchReport", "MatchReport")
                         .WithMany("Injuries")
                         .HasForeignKey("MatchReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("Injuries")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("MatchReport");
@@ -2380,12 +2392,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Club", "Club")
                         .WithMany("Kits")
                         .HasForeignKey("ClubId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Team", "Team")
                         .WithMany("Kits")
-                        .HasForeignKey("TeamId");
+                        .HasForeignKey("TeamId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Club");
 
@@ -2396,18 +2409,19 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.User", "OrderedByNavigation")
                         .WithMany("KitOrders")
-                        .HasForeignKey("OrderedByNavigationId");
+                        .HasForeignKey("OrderedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("KitOrders")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Team", "Team")
                         .WithMany("KitOrders")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("OrderedByNavigation");
@@ -2422,7 +2436,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.KitOrder", "Order")
                         .WithMany("KitOrderItems")
                         .HasForeignKey("OrderId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Order");
@@ -2433,7 +2447,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.MatchLineup", "Lineup")
                         .WithMany("LineupPlayers")
                         .HasForeignKey("LineupId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
@@ -2444,7 +2458,8 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("LineupPlayers")
-                        .HasForeignKey("PlayerId1");
+                        .HasForeignKey("PlayerId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Lineup");
 
@@ -2471,7 +2486,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Team", "Team")
                         .WithMany("Matches")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("GoalkeeperKit");
@@ -2488,13 +2503,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Coach", "Coach")
                         .WithMany("MatchCoaches")
                         .HasForeignKey("CoachId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Match", "Match")
                         .WithMany("MatchCoaches")
                         .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Coach");
@@ -2511,16 +2526,18 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Formation", null)
                         .WithMany("MatchLineupFormations")
-                        .HasForeignKey("FormationId1");
+                        .HasForeignKey("FormationId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Formation", null)
                         .WithMany("MatchLineupTactics")
-                        .HasForeignKey("FormationId2");
+                        .HasForeignKey("FormationId2")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Match", "Match")
                         .WithMany("MatchLineups")
                         .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Formation", "Tactic")
@@ -2545,16 +2562,18 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Match", "Match")
                         .WithMany("MatchReports")
                         .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("MatchReportCaptains")
-                        .HasForeignKey("PlayerId");
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("MatchReportPlayerOfMatches")
-                        .HasForeignKey("PlayerId1");
+                        .HasForeignKey("PlayerId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", "PlayerOfMatch")
                         .WithMany()
@@ -2573,16 +2592,18 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Match", "Match")
                         .WithMany("MatchSubstitutions")
                         .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("MatchSubstitutionPlayerIns")
-                        .HasForeignKey("PlayerId");
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("MatchSubstitutionPlayerOuts")
-                        .HasForeignKey("PlayerId1");
+                        .HasForeignKey("PlayerId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", "PlayerIn")
                         .WithMany()
@@ -2608,7 +2629,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.MatchReport", "MatchReport")
                         .WithMany("PerformanceRatings")
                         .HasForeignKey("MatchReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
@@ -2619,7 +2640,8 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("PerformanceRatings")
-                        .HasForeignKey("PlayerId1");
+                        .HasForeignKey("PlayerId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("MatchReport");
 
@@ -2631,7 +2653,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.TrainingPlan", "Plan")
                         .WithMany("PersonalSessions")
                         .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Plan");
@@ -2642,13 +2664,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Drill", "Drill")
                         .WithMany("PersonalSessionDrills")
                         .HasForeignKey("DrillId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.PersonalSession", "PersonalSession")
                         .WithMany("PersonalSessionDrills")
                         .HasForeignKey("PersonalSessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Drill");
@@ -2661,7 +2683,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Club", "Club")
                         .WithMany("Players")
                         .HasForeignKey("ClubId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Club");
@@ -2672,13 +2694,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.AgeGroup", "AgeGroup")
                         .WithMany("PlayerAgeGroups")
                         .HasForeignKey("AgeGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("PlayerAgeGroups")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("AgeGroup");
@@ -2691,7 +2713,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithOne("PlayerAttribute")
                         .HasForeignKey("OurGame.Persistence.Models.PlayerAttribute", "PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Player");
@@ -2702,12 +2724,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("PlayerImages")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.User", "UploadedByNavigation")
                         .WithMany("PlayerImages")
-                        .HasForeignKey("UploadedByNavigationId");
+                        .HasForeignKey("UploadedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Player");
 
@@ -2719,13 +2742,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.User", "ParentUser")
                         .WithMany("PlayerParents")
                         .HasForeignKey("ParentUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("PlayerParents")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("ParentUser");
@@ -2737,12 +2760,13 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.Coach", "CreatedByNavigation")
                         .WithMany("PlayerReports")
-                        .HasForeignKey("CreatedByNavigationId");
+                        .HasForeignKey("CreatedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("PlayerReports")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("CreatedByNavigation");
@@ -2755,13 +2779,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("PlayerTeams")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Team", "Team")
                         .WithMany("PlayerTeams")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Player");
@@ -2774,7 +2798,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Formation", "Formation")
                         .WithMany("PositionOverrides")
                         .HasForeignKey("FormationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Formation");
@@ -2784,12 +2808,13 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.Coach", "AddedByNavigation")
                         .WithMany("ProgressNotes")
-                        .HasForeignKey("AddedByNavigationId");
+                        .HasForeignKey("AddedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.TrainingPlan", "Plan")
                         .WithMany("ProgressNotes")
                         .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("AddedByNavigation");
@@ -2802,7 +2827,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.PlayerReport", "Report")
                         .WithMany("ReportDevelopmentActions")
                         .HasForeignKey("ReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Report");
@@ -2818,12 +2843,13 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Player", null)
                         .WithMany("SessionAttendances")
-                        .HasForeignKey("PlayerId1");
+                        .HasForeignKey("PlayerId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.TrainingSession", "Session")
                         .WithMany("SessionAttendances")
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Player");
@@ -2836,13 +2862,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Coach", "Coach")
                         .WithMany("SessionCoaches")
                         .HasForeignKey("CoachId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.TrainingSession", "Session")
                         .WithMany("SessionCoaches")
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Coach");
@@ -2860,17 +2886,19 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Drill", null)
                         .WithMany("SessionDrills")
-                        .HasForeignKey("DrillId1");
+                        .HasForeignKey("DrillId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.TrainingSession", "Session")
                         .WithMany("SessionDrills")
                         .HasForeignKey("SessionId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.DrillTemplate", "Template")
                         .WithMany("SessionDrills")
-                        .HasForeignKey("TemplateId");
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Drill");
 
@@ -2884,7 +2912,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.PlayerReport", "Report")
                         .WithMany("SimilarProfessionals")
                         .HasForeignKey("ReportId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Report");
@@ -2895,12 +2923,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Formation", "Formation")
                         .WithMany()
                         .HasForeignKey("FormationId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Formation", null)
                         .WithMany("TacticPrinciples")
-                        .HasForeignKey("FormationId1");
+                        .HasForeignKey("FormationId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Formation");
                 });
@@ -2910,18 +2939,19 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.AgeGroup", "AgeGroup")
                         .WithMany("Teams")
                         .HasForeignKey("AgeGroupId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Club", "Club")
                         .WithMany("Teams")
                         .HasForeignKey("ClubId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Formation", "Formation")
                         .WithMany("Teams")
-                        .HasForeignKey("FormationId");
+                        .HasForeignKey("FormationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AgeGroup");
 
@@ -2935,13 +2965,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Coach", "Coach")
                         .WithMany("TeamCoaches")
                         .HasForeignKey("CoachId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.Team", "Team")
                         .WithMany("TeamCoaches")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Coach");
@@ -2959,12 +2989,13 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasOne("OurGame.Persistence.Models.Drill", null)
                         .WithMany("TemplateDrills")
-                        .HasForeignKey("DrillId1");
+                        .HasForeignKey("DrillId1")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.DrillTemplate", "Template")
                         .WithMany("TemplateDrills")
                         .HasForeignKey("TemplateId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Drill");
@@ -2977,7 +3008,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.TrainingPlan", "Plan")
                         .WithMany("TrainingObjectives")
                         .HasForeignKey("PlanId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Plan");
@@ -2987,12 +3018,13 @@ namespace OurGame.Persistence.Migrations
                 {
                     b.HasOne("OurGame.Persistence.Models.Coach", "CreatedByNavigation")
                         .WithMany("TrainingPlans")
-                        .HasForeignKey("CreatedByNavigationId");
+                        .HasForeignKey("CreatedByNavigationId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("OurGame.Persistence.Models.Player", "Player")
                         .WithMany("TrainingPlans")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("CreatedByNavigation");
@@ -3005,12 +3037,13 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Team", "Team")
                         .WithMany("TrainingSessions")
                         .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("OurGame.Persistence.Models.DrillTemplate", "Template")
                         .WithMany("TrainingSessions")
-                        .HasForeignKey("TemplateId");
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Team");
 
@@ -3022,6 +3055,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasOne("OurGame.Persistence.Models.Club", "Club")
                         .WithMany("Users")
                         .HasForeignKey("ClubId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .HasConstraintName("FK_users_clubs");
 
                     b.Navigation("Club");
