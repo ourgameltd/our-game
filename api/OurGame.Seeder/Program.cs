@@ -81,6 +81,21 @@ try
         await context.SaveChangesAsync();
     }
     
+    try
+    {
+        if (!await context.DrillLinks.AnyAsync())
+        {
+            Console.WriteLine("  🔗 Seeding drill links...");
+            var links = OurGame.Persistence.Data.SeedData.DrillLinkSeedData.GetDrillLinks();
+            await context.DrillLinks.AddRangeAsync(links);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping drill links: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
     // Skip drill templates if they cause initialization errors
     try
     {
@@ -175,6 +190,66 @@ try
     
     try
     {
+        if (!await context.AppliedTemplates.AnyAsync())
+        {
+            Console.WriteLine("  📋 Seeding applied templates...");
+            var appliedTemplates = OurGame.Persistence.Data.SeedData.AppliedTemplateSeedData.GetAppliedTemplates();
+            await context.AppliedTemplates.AddRangeAsync(appliedTemplates);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping applied templates: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.AgeGroupCoordinators.AnyAsync())
+        {
+            Console.WriteLine("  👨‍💼 Seeding age group coordinators...");
+            var coordinators = OurGame.Persistence.Data.SeedData.AgeGroupCoordinatorSeedData.GetAgeGroupCoordinators();
+            await context.AgeGroupCoordinators.AddRangeAsync(coordinators);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping age group coordinators: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.PlayerImages.AnyAsync())
+        {
+            Console.WriteLine("  📸 Seeding player images...");
+            var images = OurGame.Persistence.Data.SeedData.PlayerImageSeedData.GetPlayerImages();
+            await context.PlayerImages.AddRangeAsync(images);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping player images: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.PlayerParents.AnyAsync())
+        {
+            Console.WriteLine("  👨‍👩‍👦 Seeding player parents...");
+            var parents = OurGame.Persistence.Data.SeedData.PlayerParentSeedData.GetPlayerParents();
+            await context.PlayerParents.AddRangeAsync(parents);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping player parents: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
         if (!await context.MatchLineups.AnyAsync())
         {
             Console.WriteLine("  📋 Seeding match lineups...");
@@ -186,6 +261,21 @@ try
     catch (Exception ex)
     {
         Console.WriteLine($"  ⚠️  Skipping match lineups: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.MatchCoaches.AnyAsync())
+        {
+            Console.WriteLine("  👨‍🏫 Seeding match coaches...");
+            var matchCoaches = OurGame.Persistence.Data.SeedData.MatchCoachSeedData.GetMatchCoaches();
+            await context.MatchCoaches.AddRangeAsync(matchCoaches);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping match coaches: {ex.InnerException?.Message ?? ex.Message}");
     }
     
     try
@@ -537,13 +627,19 @@ try
     Console.WriteLine($"  Formations: {await context.Formations.CountAsync()}");
     Console.WriteLine($"  Formation Positions: {await context.FormationPositions.CountAsync()}");
     Console.WriteLine($"  Drills: {await context.Drills.CountAsync()}");
+    Console.WriteLine($"  Drill Links: {await context.DrillLinks.CountAsync()}");
     Console.WriteLine($"  Drill Templates: {await context.DrillTemplates.CountAsync()}");
     Console.WriteLine($"  Template Drills: {await context.TemplateDrills.CountAsync()}");
     Console.WriteLine($"  Training Sessions: {await context.TrainingSessions.CountAsync()}");
     Console.WriteLine($"  Session Drills: {await context.SessionDrills.CountAsync()}");
     Console.WriteLine($"  Session Attendance: {await context.SessionAttendances.CountAsync()}");
+    Console.WriteLine($"  Applied Templates: {await context.AppliedTemplates.CountAsync()}");
+    Console.WriteLine($"  Age Group Coordinators: {await context.AgeGroupCoordinators.CountAsync()}");
+    Console.WriteLine($"  Player Images: {await context.PlayerImages.CountAsync()}");
+    Console.WriteLine($"  Player Parents: {await context.PlayerParents.CountAsync()}");
     Console.WriteLine($"  Matches: {await context.Matches.CountAsync()}");
     Console.WriteLine($"  Match Lineups: {await context.MatchLineups.CountAsync()}");
+    Console.WriteLine($"  Match Coaches: {await context.MatchCoaches.CountAsync()}");
     Console.WriteLine($"  Lineup Players: {await context.LineupPlayers.CountAsync()}");
     Console.WriteLine($"  Match Reports: {await context.MatchReports.CountAsync()}");
     Console.WriteLine($"  Goals: {await context.Goals.CountAsync()}");
