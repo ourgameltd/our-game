@@ -66,6 +66,11 @@ try
         var tactics = OurGame.Persistence.Data.SeedData.TacticPrincipleSeedData.GetTacticPrinciples();
         await context.TacticPrinciples.AddRangeAsync(tactics);
         await context.SaveChangesAsync();
+        
+        // Add additional tactic principles
+        var extraTactics = OurGame.Persistence.Data.SeedData.TacticPrincipleExtraSeedData.GetAdditionalTacticPrinciples();
+        await context.TacticPrinciples.AddRangeAsync(extraTactics);
+        await context.SaveChangesAsync();
     }
     
     if (!await context.Drills.AnyAsync())
@@ -368,6 +373,96 @@ try
     
     try
     {
+        if (!await context.TrainingPlans.AnyAsync())
+        {
+            Console.WriteLine("  📋 Seeding training plans...");
+            var plans = OurGame.Persistence.Data.SeedData.TrainingPlanSeedData.GetTrainingPlans();
+            await context.TrainingPlans.AddRangeAsync(plans);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping training plans: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.TrainingObjectives.AnyAsync())
+        {
+            Console.WriteLine("  🎯 Seeding training objectives...");
+            var objectives = OurGame.Persistence.Data.SeedData.TrainingObjectiveSeedData.GetTrainingObjectives();
+            await context.TrainingObjectives.AddRangeAsync(objectives);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping training objectives: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.ProgressNotes.AnyAsync())
+        {
+            Console.WriteLine("  📝 Seeding progress notes...");
+            var notes = OurGame.Persistence.Data.SeedData.ProgressNoteSeedData.GetProgressNotes();
+            await context.ProgressNotes.AddRangeAsync(notes);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping progress notes: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.PlayerReports.AnyAsync())
+        {
+            Console.WriteLine("  📝 Seeding player reports...");
+            var playerReports = OurGame.Persistence.Data.SeedData.PlayerReportSeedData.GetPlayerReports();
+            await context.PlayerReports.AddRangeAsync(playerReports);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping player reports: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.ReportDevelopmentActions.AnyAsync())
+        {
+            Console.WriteLine("  📋 Seeding report development actions...");
+            var actions = OurGame.Persistence.Data.SeedData.ReportDevelopmentActionSeedData.GetReportDevelopmentActions();
+            await context.ReportDevelopmentActions.AddRangeAsync(actions);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping report development actions: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
+        if (!await context.SimilarProfessionals.AnyAsync())
+        {
+            Console.WriteLine("  ⚽ Seeding similar professionals...");
+            var professionals = OurGame.Persistence.Data.SeedData.SimilarProfessionalSeedData.GetSimilarProfessionals();
+            await context.SimilarProfessionals.AddRangeAsync(professionals);
+            await context.SaveChangesAsync();
+        }
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"  ⚠️  Skipping similar professionals: {ex.InnerException?.Message ?? ex.Message}");
+    }
+    
+    try
+    {
         if (!await context.PerformanceRatings.AnyAsync())
         {
             Console.WriteLine("  ⭐ Seeding performance ratings...");
@@ -394,21 +489,6 @@ try
     catch (Exception ex)
     {
         Console.WriteLine($"  ⚠️  Skipping match substitutions: {ex.InnerException?.Message ?? ex.Message}");
-    }
-    
-    try
-    {
-        if (!await context.PlayerReports.AnyAsync())
-        {
-            Console.WriteLine("  📝 Seeding player reports...");
-            var playerReports = OurGame.Persistence.Data.SeedData.PlayerReportSeedData.GetPlayerReports();
-            await context.PlayerReports.AddRangeAsync(playerReports);
-            await context.SaveChangesAsync();
-        }
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"  ⚠️  Skipping player reports: {ex.InnerException?.Message ?? ex.Message}");
     }
     
     try
@@ -475,6 +555,12 @@ try
     Console.WriteLine($"  Attribute Evaluations: {await context.AttributeEvaluations.CountAsync()}");
     Console.WriteLine($"  Evaluation Attributes: {await context.EvaluationAttributes.CountAsync()}");
     Console.WriteLine($"  Position Overrides: {await context.PositionOverrides.CountAsync()}");
+    Console.WriteLine($"  Training Plans: {await context.TrainingPlans.CountAsync()}");
+    Console.WriteLine($"  Training Objectives: {await context.TrainingObjectives.CountAsync()}");
+    Console.WriteLine($"  Progress Notes: {await context.ProgressNotes.CountAsync()}");
+    Console.WriteLine($"  Report Development Actions: {await context.ReportDevelopmentActions.CountAsync()}");
+    Console.WriteLine($"  Similar Professionals: {await context.SimilarProfessionals.CountAsync()}");
+    Console.WriteLine($"  Tactic Principles: {await context.TacticPrinciples.CountAsync()}");
     Console.WriteLine($"  Match Substitutions: {await context.MatchSubstitutions.CountAsync()}");
     Console.WriteLine($"  Player Reports: {await context.PlayerReports.CountAsync()}");
     Console.WriteLine($"  Development Plans: {await context.DevelopmentPlans.CountAsync()}");
