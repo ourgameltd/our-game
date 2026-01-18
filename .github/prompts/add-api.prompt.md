@@ -13,7 +13,7 @@ I want you to start from where we left off and create the code implementation fo
 
 There is a list of implementations for endpoitns in the #file:../../docs/api/endpoints/ folder, please refer to it for guidance on how to structure the new endpoints that you are implementing as part of this task.
 
-All APIs build built should used Open API attributes as per existing APIs to allow for the code generation of the client code.
+All APIs build built should used Open API attributes as per existing APIs..
 
 ## Client Implementation
 

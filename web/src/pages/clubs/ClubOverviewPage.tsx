@@ -1,9 +1,11 @@
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { getClubById } from '@data/clubs';
 import { getAgeGroupsByClubId, getAgeGroupById } from '@data/ageGroups';
 import { getClubStatistics, getAgeGroupStatistics } from '@data/statistics';
-import { getTeamById, getTeamsByAgeGroupId } from '@data/teams';
+import { getTeamById } from '@data/teams';
+import { apiClient, type TeamListItemDto } from '@/api';
 import StatsGrid from '@components/stats/StatsGrid';
 import MatchesCard from '@components/matches/MatchesCard';
 import AgeGroupListCard from '@components/ageGroup/AgeGroupListCard';
@@ -18,6 +20,31 @@ export default function ClubOverviewPage() {
     .filter(ag => !ag.isArchived)
     .sort((a, b) => a.name.localeCompare(b.name));
   const stats = getClubStatistics(clubId!);
+  
+  // Fetch teams from API
+  const [clubTeams, setClubTeams] = useState<TeamListItemDto[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+  const [teamsError, setTeamsError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!clubId) return;
+    
+    setTeamsLoading(true);
+    apiClient.clubs.getTeams(clubId, undefined, false)
+      .then(response => {
+        if (response.success && response.data) {
+          setClubTeams(response.data);
+          setTeamsError(null);
+        } else {
+          setTeamsError(response.error?.message || 'Failed to load teams');
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch teams:', err);
+        setTeamsError('Failed to load teams from API');
+      })
+      .finally(() => setTeamsLoading(false));
+  }, [clubId]);
 
   if (!club) {
     return <div>Club not found</div>;
@@ -59,33 +86,44 @@ export default function ClubOverviewPage() {
           
           {ageGroups.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-              {ageGroups.map(ageGroup => {
-                const ageGroupStats = getAgeGroupStatistics(ageGroup.id);
-                const ageGroupTeams = getTeamsByAgeGroupId(ageGroup.id);
-                
-                return (
-                  <Link
-                    key={ageGroup.id}
-                    to={Routes.ageGroup(clubId!, ageGroup.id)}
-                    className="block"
-                  >
-                    <AgeGroupListCard
-                      ageGroup={ageGroup}
-                      club={club}
-                      stats={{
-                        teamCount: ageGroupTeams.length,
-                        playerCount: ageGroupStats.playerCount,
-                        matchesPlayed: ageGroupStats.matchesPlayed,
-                        wins: ageGroupStats.wins,
-                        draws: ageGroupStats.draws,
-                        losses: ageGroupStats.losses,
-                        winRate: ageGroupStats.winRate,
-                        goalDifference: ageGroupStats.goalDifference
-                      }}
-                    />
-                  </Link>
-                );
-              })}
+              {teamsLoading ? (
+                <div className="p-8 text-center text-gray-600 dark:text-gray-400">
+                  Loading teams...
+                </div>
+              ) : teamsError ? (
+                <div className="p-8 text-center text-red-600 dark:text-red-400">
+                  {teamsError}
+                </div>
+              ) : (
+                ageGroups.map(ageGroup => {
+                  const ageGroupStats = getAgeGroupStatistics(ageGroup.id);
+                  // Filter teams from API data by age group
+                  const ageGroupTeams = clubTeams.filter(t => t.ageGroupId === ageGroup.id);
+                  
+                  return (
+                    <Link
+                      key={ageGroup.id}
+                      to={Routes.ageGroup(clubId!, ageGroup.id)}
+                      className="block"
+                    >
+                      <AgeGroupListCard
+                        ageGroup={ageGroup}
+                        club={club}
+                        stats={{
+                          teamCount: ageGroupTeams.length,
+                          playerCount: ageGroupStats.playerCount,
+                          matchesPlayed: ageGroupStats.matchesPlayed,
+                          wins: ageGroupStats.wins,
+                          draws: ageGroupStats.draws,
+                          losses: ageGroupStats.losses,
+                          winRate: ageGroupStats.winRate,
+                          goalDifference: ageGroupStats.goalDifference
+                        }}
+                      />
+                    </Link>
+                  );
+                })
+              )}
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">

@@ -10,6 +10,7 @@ using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Clubs.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries;
 using System.Net;
+using System.Web;
 
 namespace OurGame.Api.Functions;
 
@@ -101,6 +102,70 @@ public class ClubFunctions
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
             await response.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ErrorResponse(
                 "An error occurred while retrieving the club", 500));
+            return response;
+        }
+    }
+
+    /// <summary>
+    /// Get all teams for a club
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="clubId">The club ID (GUID)</param>
+    /// <returns>List of teams within the club</returns>
+    [Function("GetClubTeams")]
+    [OpenApiOperation(operationId: "GetClubTeams", tags: new[] { "Clubs" }, Summary = "Get club teams", Description = "Retrieves a list of all teams within a club, organized by age groups")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The club ID (GUID)")]
+    [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by age group ID (GUID)")]
+    [OpenApiParameter(name: "includeArchived", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Include archived teams (default: false)")]
+    [OpenApiParameter(name: "season", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by season (e.g., '2024/25')")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamListItemDto>>), Description = "Teams retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamListItemDto>>), Description = "Invalid club ID or age group ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamListItemDto>>), Description = "Club not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamListItemDto>>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetClubTeams(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/clubs/{clubId}/teams")] HttpRequestData req,
+        string clubId)
+    {
+        try
+        {
+            if (!Guid.TryParse(clubId, out var clubGuid))
+            {
+                var badResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badResponse.WriteAsJsonAsync(ApiResponse<List<TeamListItemDto>>.ValidationErrorResponse("Invalid club ID format"));
+                return badResponse;
+            }
+
+            // Parse query parameters
+            var query = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
+            
+            Guid? ageGroupId = null;
+            if (!string.IsNullOrEmpty(query["ageGroupId"]) && Guid.TryParse(query["ageGroupId"], out var parsedAgeGroupId))
+            {
+                ageGroupId = parsedAgeGroupId;
+            }
+
+            var includeArchived = bool.TryParse(query["includeArchived"], out var includeArchivedValue) && includeArchivedValue;
+            var season = query["season"];
+
+            var teams = await _mediator.Send(new GetClubTeamsQuery(clubGuid, ageGroupId, includeArchived, season));
+            
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(ApiResponse<List<TeamListItemDto>>.SuccessResponse(teams));
+            return response;
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Club not found: {ClubId}", clubId);
+            var response = req.CreateResponse(HttpStatusCode.NotFound);
+            await response.WriteAsJsonAsync(ApiResponse<List<TeamListItemDto>>.NotFoundResponse(ex.Message));
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving teams for club: {ClubId}", clubId);
+            var response = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await response.WriteAsJsonAsync(ApiResponse<List<TeamListItemDto>>.ErrorResponse(
+                "An error occurred while retrieving club teams", 500));
             return response;
         }
     }

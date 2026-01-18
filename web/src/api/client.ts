@@ -53,6 +53,35 @@ export interface ClubSummaryDto {
   secondaryColor?: string;
 }
 
+// Team colors DTO
+export interface TeamColorsDto {
+  primary?: string;
+  secondary?: string;
+}
+
+// Team coach DTO
+export interface TeamCoachDto {
+  id?: string;
+  firstName?: string;
+  lastName?: string;
+  role?: string;
+}
+
+// Team list item DTO for club teams endpoint
+export interface TeamListItemDto {
+  id?: string;
+  clubId?: string;
+  ageGroupId?: string;
+  ageGroupName?: string;
+  name?: string;
+  colors?: TeamColorsDto;
+  season?: string;
+  squadSize?: number;
+  coaches?: TeamCoachDto[];
+  playerCount?: number;
+  isArchived?: boolean;
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -107,6 +136,16 @@ export const apiClient = {
       const queryString = params.toString();
       return fetchApi<ApiResponse<AgeGroupListItemDto[]>>(
         `/v1/clubs/${clubId}/age-groups${queryString ? `?${queryString}` : ''}`
+      );
+    },
+    getTeams: (clubId: string, ageGroupId?: string, includeArchived?: boolean, season?: string) => {
+      const params = new URLSearchParams();
+      if (ageGroupId) params.append('ageGroupId', ageGroupId);
+      if (includeArchived !== undefined) params.append('includeArchived', String(includeArchived));
+      if (season) params.append('season', season);
+      const queryString = params.toString();
+      return fetchApi<ApiResponse<TeamListItemDto[]>>(
+        `/v1/clubs/${clubId}/teams${queryString ? `?${queryString}` : ''}`
       );
     },
   },

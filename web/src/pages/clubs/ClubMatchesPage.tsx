@@ -1,8 +1,9 @@
 import { useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { sampleMatches } from '@/data/matches';
 import { sampleClubs } from '@/data/clubs';
-import { sampleTeams } from '@/data/teams';
 import { getAgeGroupById } from '@/data/ageGroups';
+import { apiClient, type TeamListItemDto } from '@/api';
 import PageTitle from '@components/common/PageTitle';
 import MatchesListContent from '@/components/matches/MatchesListContent';
 
@@ -10,6 +11,26 @@ export default function ClubMatchesPage() {
   const { clubId } = useParams();
   
   const club = sampleClubs.find(c => c.id === clubId);
+  
+  // Fetch teams from API
+  const [clubTeams, setClubTeams] = useState<TeamListItemDto[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!clubId) return;
+    
+    setTeamsLoading(true);
+    apiClient.clubs.getTeams(clubId, undefined, false)
+      .then(response => {
+        if (response.success && response.data) {
+          setClubTeams(response.data);
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch teams:', err);
+      })
+      .finally(() => setTeamsLoading(false));
+  }, [clubId]);
   
   if (!club) {
     return (
@@ -23,19 +44,17 @@ export default function ClubMatchesPage() {
     );
   }
 
-  // Get all teams for this club
-  const clubTeams = sampleTeams.filter(t => t.clubId === clubId);
+  // Get team IDs from API data
   const clubTeamIds = clubTeams.map(t => t.id);
 
   // Filter matches for all teams in this club
-  const clubMatches = sampleMatches.filter(m => clubTeamIds.includes(m.teamId));
+  const clubMatches = sampleMatches.filter(m => clubTeamIds.includes(m!));
 
   const getTeamName = (teamId: string): string => {
-    const team = sampleTeams.find(t => t.id === teamId);
+    const team = clubTeams.find(t => t.id === teamId);
     if (!team) return 'Unknown Team';
     
-    const ageGroup = getAgeGroupById(team.ageGroupId);
-    return `${ageGroup?.name || 'Unknown'} - ${team.name}`;
+    return `${team.ageGroupName || 'Unknown'} - ${team.name}`;
   };
 
   return (
@@ -52,12 +71,18 @@ export default function ClubMatchesPage() {
           </p>
         </div>
 
-        <MatchesListContent
-          matches={clubMatches}
-          clubId={clubId!}
-          showTeamInfo={true}
-          getTeamName={getTeamName}
-        />
+        {teamsLoading ? (
+          <div className="card p-8 text-center text-gray-600 dark:text-gray-400">
+            Loading teams...
+          </div>
+        ) : (
+          <MatchesListContent
+            matches={clubMatches}
+            clubId={clubId!}
+            showTeamInfo={true}
+            getTeamName={getTeamName}
+          />
+        )}
       </main>
     </div>
   );
