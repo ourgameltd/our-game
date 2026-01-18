@@ -1,5 +1,6 @@
 /* eslint-disable */
 /* tslint:disable */
+// @ts-nocheck
 /*
  * ---------------------------------------------------------------
  * ## THIS FILE WAS GENERATED VIA SWAGGER-TYPESCRIPT-API        ##
@@ -9,7 +10,7 @@
  * ---------------------------------------------------------------
  */
 
-export interface AgeGroupDto {
+export interface AgeGroupListItemDto {
   /** @format uuid */
   id?: string;
   /** @format uuid */
@@ -17,16 +18,17 @@ export interface AgeGroupDto {
   name?: string;
   code?: string;
   level?: string;
+  season?: string;
   seasons?: string[];
-  defaultSquadSize?: string;
+  /** @format int32 */
+  defaultSquadSize?: number;
+  description?: string;
+  coordinators?: CoordinatorDto[];
   /** @format int32 */
   teamCount?: number;
   /** @format int32 */
   playerCount?: number;
-  /** @format date-time */
-  createdAt?: string;
-  /** @format date-time */
-  updatedAt?: string;
+  isArchived?: boolean;
 }
 
 export interface ApiResponseClubDetailDto {
@@ -123,6 +125,13 @@ export interface ClubStatisticsDto {
   goalsScored?: number;
   /** @format int32 */
   goalsConceded?: number;
+}
+
+export interface CoordinatorDto {
+  /** @format uuid */
+  id?: string;
+  firstName?: string;
+  lastName?: string;
 }
 
 export interface DateOnly {
@@ -368,7 +377,7 @@ export interface TeamStatisticsDto {
 
 export interface ApiResponseList1 {
   success?: boolean;
-  data?: AgeGroupDto[];
+  data?: AgeGroupListItemDto[];
   error?: ErrorResponse;
   /** @format int32 */
   statusCode?: number;

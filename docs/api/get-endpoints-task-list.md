@@ -5,17 +5,17 @@ This document tracks all GET endpoints required to support the OurGame applicati
 ## Progress Overview
 
 - **Total Endpoints**: 85
-- **Completed**: 0
+- **Completed**: 3
 - **In Progress**: 0
-- **Not Started**: 85
+- **Not Started**: 82
 
 ---
 
 ## 1. Clubs Management (8 endpoints)
 
-- [ ] `GET /api/clubs` - List all clubs
-- [ ] `GET /api/clubs/{clubId}` - Get club details by ID
-- [ ] `GET /api/clubs/{clubId}/age-groups` - List age groups for a club
+- [x] `GET /api/clubs` - List all clubs
+- [x] `GET /api/clubs/{clubId}` - Get club details by ID
+- [x] `GET /api/clubs/{clubId}/age-groups` - List age groups for a club
 - [ ] `GET /api/clubs/{clubId}/teams` - List all teams for a club
 - [ ] `GET /api/clubs/{clubId}/players` - List all players for a club
 - [ ] `GET /api/clubs/{clubId}/coaches` - List all coaches for a club

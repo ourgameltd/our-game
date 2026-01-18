@@ -14,7 +14,7 @@ import type {
   PlayerAttributesDto,
   MatchDto,
   MatchLineupDto,
-  AgeGroupDto,
+  AgeGroupListItemDto,
   ClubSummaryDto,
 } from './client';
 
@@ -88,20 +88,47 @@ export function useClub(clubId: string | undefined): UseApiState<ClubDetailDto> 
   );
 }
 
+/**
+ * Hook to fetch age groups for a club (using clubs.getAgeGroups)
+ * @param clubId - The club ID
+ * @param includeArchived - Whether to include archived age groups (default: false)
+ * @param season - Optional season filter (e.g., "2024/25")
+ */
+export function useClubAgeGroups(
+  clubId: string | undefined,
+  includeArchived?: boolean,
+  season?: string
+): UseApiState<AgeGroupListItemDto[]> {
+  return useApiCall<AgeGroupListItemDto[]>(
+    () => {
+      if (!clubId) return Promise.resolve({ success: false, data: undefined });
+      return apiClient.clubs.getAgeGroups(clubId, includeArchived, season);
+    },
+    [clubId, includeArchived, season]
+  );
+}
+
 // ============================================================
 // Age Group Hooks
 // ============================================================
 
 /**
  * Hook to fetch age groups for a club
+ * @param clubId - The club ID
+ * @param includeArchived - Whether to include archived age groups (default: false)
+ * @param season - Optional season filter (e.g., "2024/25")
  */
-export function useAgeGroups(clubId: string | undefined): UseApiState<AgeGroupDto[]> {
-  return useApiCall<AgeGroupDto[]>(
+export function useAgeGroups(
+  clubId: string | undefined,
+  includeArchived?: boolean,
+  season?: string
+): UseApiState<AgeGroupListItemDto[]> {
+  return useApiCall<AgeGroupListItemDto[]>(
     () => {
       if (!clubId) return Promise.resolve({ success: false, data: undefined });
-      return apiClient.ageGroups.getByClub(clubId);
+      return apiClient.ageGroups.getByClub(clubId, includeArchived, season);
     },
-    [clubId]
+    [clubId, includeArchived, season]
   );
 }
 

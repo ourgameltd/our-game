@@ -18,7 +18,8 @@ export type {
   PlayerAttributesDto,
   MatchDto,
   MatchLineupDto,
-  AgeGroupDto,
+  AgeGroupListItemDto,
+  CoordinatorDto,
   ClubSummaryDto,
   ApiResponse,
 } from './client';
@@ -27,6 +28,7 @@ export type {
 export {
   useClubs,
   useClub,
+  useClubAgeGroups,
   useAgeGroups,
   useTeam,
   useTeamSquad,

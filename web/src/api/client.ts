@@ -12,14 +12,14 @@ import type {
   ApiResponsePlayerAttributesDto,
   ApiResponseMatchDto,
   ApiResponseMatchLineupDto,
-  ApiResponseList1,
   ClubDetailDto,
   TeamDetailDto,
   PlayerProfileDto,
   PlayerAttributesDto,
   MatchDto,
   MatchLineupDto,
-  AgeGroupDto,
+  AgeGroupListItemDto,
+  CoordinatorDto,
   ErrorResponse,
 } from './generated';
 
@@ -31,7 +31,8 @@ export type {
   PlayerAttributesDto,
   MatchDto,
   MatchLineupDto,
-  AgeGroupDto,
+  AgeGroupListItemDto,
+  CoordinatorDto,
 };
 
 // Generic API response type for endpoints not yet in generated types
@@ -50,7 +51,9 @@ export interface ClubSummaryDto {
   logo?: string;
   primaryColor?: string;
   secondaryColor?: string;
-}/**
+}
+
+/**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
  */
@@ -97,6 +100,15 @@ export const apiClient = {
       fetchApi<ApiResponse<ClubSummaryDto[]>>(`/v1/clubs`),
     getById: (clubId: string) => 
       fetchApi<ApiResponseClubDetailDto>(`/v1/clubs/${clubId}`),
+    getAgeGroups: (clubId: string, includeArchived?: boolean, season?: string) => {
+      const params = new URLSearchParams();
+      if (includeArchived !== undefined) params.append('includeArchived', String(includeArchived));
+      if (season) params.append('season', season);
+      const queryString = params.toString();
+      return fetchApi<ApiResponse<AgeGroupListItemDto[]>>(
+        `/v1/clubs/${clubId}/age-groups${queryString ? `?${queryString}` : ''}`
+      );
+    },
   },
 
   teams: {
@@ -114,8 +126,15 @@ export const apiClient = {
   },
 
   ageGroups: {
-    getByClub: (clubId: string) => 
-      fetchApi<ApiResponseList1>(`/v1/clubs/${clubId}/age-groups`),
+    getByClub: (clubId: string, includeArchived?: boolean, season?: string) => {
+      const params = new URLSearchParams();
+      if (includeArchived !== undefined) params.append('includeArchived', String(includeArchived));
+      if (season) params.append('season', season);
+      const queryString = params.toString();
+      return fetchApi<ApiResponse<AgeGroupListItemDto[]>>(
+        `/v1/clubs/${clubId}/age-groups${queryString ? `?${queryString}` : ''}`
+      );
+    },
   },
 
   matches: {
