@@ -108,6 +108,36 @@ export function useClubAgeGroups(
   );
 }
 
+/**
+ * Hook to fetch players for a club with pagination and filtering
+ * @param clubId - The club ID
+ * @param page - Page number (default: 1)
+ * @param pageSize - Items per page (default: 30)
+ * @param ageGroupId - Filter by age group ID
+ * @param teamId - Filter by team ID
+ * @param position - Filter by position
+ * @param search - Search by player name
+ * @param includeArchived - Include archived players (default: false)
+ */
+export function useClubPlayers(
+  clubId: string | undefined,
+  page?: number,
+  pageSize?: number,
+  ageGroupId?: string,
+  teamId?: string,
+  position?: string,
+  search?: string,
+  includeArchived?: boolean
+): UseApiState<import('./client').PagedResponse<import('./client').PlayerListItemDto>> {
+  return useApiCall<import('./client').PagedResponse<import('./client').PlayerListItemDto>>(
+    () => {
+      if (!clubId) return Promise.resolve({ success: false, data: undefined });
+      return apiClient.clubs.getPlayers(clubId, page, pageSize, ageGroupId, teamId, position, search, includeArchived);
+    },
+    [clubId, page, pageSize, ageGroupId, teamId, position, search, includeArchived]
+  );
+}
+
 // ============================================================
 // Age Group Hooks
 // ============================================================

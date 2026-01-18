@@ -82,6 +82,33 @@ export interface TeamListItemDto {
   isArchived?: boolean;
 }
 
+// Player list item DTO for club players endpoint
+export interface PlayerListItemDto {
+  id?: string;
+  clubId?: string;
+  firstName?: string;
+  lastName?: string;
+  dateOfBirth?: string;
+  age?: number;
+  photo?: string;
+  preferredPositions?: string[];
+  ageGroups?: string[];
+  teams?: string[];
+  overallRating?: number;
+  isArchived?: boolean;
+}
+
+// Paginated response wrapper
+export interface PagedResponse<T> {
+  items?: T[];
+  pageNumber?: number;
+  pageSize?: number;
+  totalCount?: number;
+  totalPages?: number;
+  hasPreviousPage?: boolean;
+  hasNextPage?: boolean;
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -146,6 +173,29 @@ export const apiClient = {
       const queryString = params.toString();
       return fetchApi<ApiResponse<TeamListItemDto[]>>(
         `/v1/clubs/${clubId}/teams${queryString ? `?${queryString}` : ''}`
+      );
+    },
+    getPlayers: (
+      clubId: string, 
+      page?: number, 
+      pageSize?: number, 
+      ageGroupId?: string, 
+      teamId?: string, 
+      position?: string, 
+      search?: string, 
+      includeArchived?: boolean
+    ) => {
+      const params = new URLSearchParams();
+      if (page !== undefined) params.append('page', String(page));
+      if (pageSize !== undefined) params.append('pageSize', String(pageSize));
+      if (ageGroupId) params.append('ageGroupId', ageGroupId);
+      if (teamId) params.append('teamId', teamId);
+      if (position) params.append('position', position);
+      if (search) params.append('search', search);
+      if (includeArchived !== undefined) params.append('includeArchived', String(includeArchived));
+      const queryString = params.toString();
+      return fetchApi<ApiResponse<PagedResponse<PlayerListItemDto>>>(
+        `/v1/clubs/${clubId}/players${queryString ? `?${queryString}` : ''}`
       );
     },
   },

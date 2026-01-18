@@ -9,6 +9,7 @@ using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Clubs.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries;
+using OurGame.Application.UseCases.Players.DTOs;
 using System.Net;
 using System.Web;
 
@@ -166,6 +167,92 @@ public class ClubFunctions
             var response = req.CreateResponse(HttpStatusCode.InternalServerError);
             await response.WriteAsJsonAsync(ApiResponse<List<TeamListItemDto>>.ErrorResponse(
                 "An error occurred while retrieving club teams", 500));
+            return response;
+        }
+    }
+
+    /// <summary>
+    /// Get all players for a club
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="clubId">The club ID (GUID)</param>
+    /// <returns>Paginated list of players within the club</returns>
+    [Function("GetClubPlayers")]
+    [OpenApiOperation(operationId: "GetClubPlayers", tags: new[] { "Clubs" }, Summary = "Get club players", Description = "Retrieves a paginated list of all players within a club with filtering options")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The club ID (GUID)")]
+    [OpenApiParameter(name: "page", In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "Page number (default: 1)")]
+    [OpenApiParameter(name: "pageSize", In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "Items per page (default: 30, max: 100)")]
+    [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by age group ID (GUID)")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by team ID (GUID)")]
+    [OpenApiParameter(name: "position", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by position (e.g., 'GK', 'CB')")]
+    [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search by player name")]
+    [OpenApiParameter(name: "includeArchived", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Include archived players (default: false)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<PlayerListItemDto>>), Description = "Players retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<PlayerListItemDto>>), Description = "Invalid club ID or filter parameters")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<PlayerListItemDto>>), Description = "Club not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<PlayerListItemDto>>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetClubPlayers(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/clubs/{clubId}/players")] HttpRequestData req,
+        string clubId)
+    {
+        try
+        {
+            if (!Guid.TryParse(clubId, out var clubGuid))
+            {
+                var badResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badResponse.WriteAsJsonAsync(ApiResponse<PagedResponse<PlayerListItemDto>>.ValidationErrorResponse("Invalid club ID format"));
+                return badResponse;
+            }
+
+            // Parse query parameters
+            var query = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
+            
+            var page = int.TryParse(query["page"], out var parsedPage) ? parsedPage : 1;
+            var pageSize = int.TryParse(query["pageSize"], out var parsedPageSize) ? parsedPageSize : 30;
+            
+            Guid? ageGroupId = null;
+            if (!string.IsNullOrEmpty(query["ageGroupId"]) && Guid.TryParse(query["ageGroupId"], out var parsedAgeGroupId))
+            {
+                ageGroupId = parsedAgeGroupId;
+            }
+
+            Guid? teamId = null;
+            if (!string.IsNullOrEmpty(query["teamId"]) && Guid.TryParse(query["teamId"], out var parsedTeamId))
+            {
+                teamId = parsedTeamId;
+            }
+
+            var position = query["position"];
+            var search = query["search"];
+            var includeArchived = bool.TryParse(query["includeArchived"], out var includeArchivedValue) && includeArchivedValue;
+
+            var players = await _mediator.Send(new GetClubPlayersQuery(
+                clubGuid, 
+                page, 
+                pageSize, 
+                ageGroupId, 
+                teamId, 
+                position, 
+                search, 
+                includeArchived));
+            
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(ApiResponse<PagedResponse<PlayerListItemDto>>.SuccessResponse(players));
+            return response;
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Club not found: {ClubId}", clubId);
+            var response = req.CreateResponse(HttpStatusCode.NotFound);
+            await response.WriteAsJsonAsync(ApiResponse<PagedResponse<PlayerListItemDto>>.NotFoundResponse(ex.Message));
+            return response;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error retrieving players for club: {ClubId}", clubId);
+            var response = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await response.WriteAsJsonAsync(ApiResponse<PagedResponse<PlayerListItemDto>>.ErrorResponse(
+                "An error occurred while retrieving club players", 500));
             return response;
         }
     }
