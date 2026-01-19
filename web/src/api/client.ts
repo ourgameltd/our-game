@@ -51,6 +51,10 @@ export interface ClubSummaryDto {
   logo?: string;
   primaryColor?: string;
   secondaryColor?: string;
+  accentColor?: string;
+  city?: string;
+  country?: string;
+  foundedYear?: number;
 }
 
 // Team colors DTO

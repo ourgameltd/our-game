@@ -1,30 +1,14 @@
-import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { sampleClubs } from '@data/clubs';
 import { sampleTeams } from '@data/teams';
 import { samplePlayers } from '@data/players';
 import { currentUser } from '@data/currentUser';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
-import { apiClient } from '@/api';
+import { useClubs } from '@/api/hooks';
 
 export default function ClubsListPage() {
-  // Test API call on page load
-  useEffect(() => {
-    console.log('🔌 Testing API connection...');
-    apiClient.clubs.getAll()
-      .then(response => {
-        if (response.success) {
-          console.log('✅ API connection successful!', response.data);
-        } else {
-          console.warn('⚠️ API returned error:', response.error);
-        }
-      })
-      .catch(err => {
-        console.error('❌ API connection failed:', err.message);
-        console.info('💡 Make sure Azure Functions is running: cd api/OurGame.Api && func start');
-      });
-  }, []);
+  // Fetch clubs from API
+  const { data: apiClubs, isLoading, error } = useClubs();
 
   // Get teams assigned to the current user (if they are a coach/staff)
   const myTeams = currentUser.staffId 
@@ -61,7 +45,7 @@ export default function ClubsListPage() {
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myChildren.map((player) => {
-                    const club = sampleClubs.find(c => c.id === player.clubId);
+                    const club = apiClubs?.find(c => c.id === player.clubId);
                     
                     return (
                       <Link
@@ -105,7 +89,7 @@ export default function ClubsListPage() {
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myProfile.map((player) => {
-                    const club = sampleClubs.find(c => c.id === player.clubId);
+                    const club = apiClubs?.find(c => c.id === player.clubId);
                     
                     return (
                       <Link
@@ -151,7 +135,7 @@ export default function ClubsListPage() {
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-4">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myTeams.map((team) => {
-                    const club = sampleClubs.find(c => c.id === team.clubId);
+                    const club = apiClubs?.find(c => c.id === team.clubId);
                     
                     return (
                       <Link
@@ -168,7 +152,7 @@ export default function ClubsListPage() {
                         ) : (
                           <div 
                             className="w-12 h-12 rounded flex items-center justify-center text-sm font-bold text-white"
-                            style={{ backgroundColor: team.colors?.primary || club?.colors.primary }}
+                            style={{ backgroundColor: team.colors?.primary || club?.primaryColor || '#3b82f6' }}
                           >
                             {team.shortName || team.name.substring(0, 2)}
                           </div>
@@ -194,45 +178,73 @@ export default function ClubsListPage() {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
             My Clubs
           </h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {sampleClubs.map((club) => (
-              <Link
-                key={club.id}
-                to={Routes.club(club.id)}
-                className="card-hover group"
-              >
-                <div className="flex items-center gap-4 mb-4">
-                  {club.logo ? (
-                    <img 
-                      src={club.logo} 
-                      alt={`${club.name} logo`}
-                      className="w-20 h-20 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-700"
-                    />
-                  ) : (
-                    <div 
-                      className="w-20 h-20 rounded-lg flex items-center justify-center text-3xl font-bold text-white"
-                      style={{ backgroundColor: club.colors.primary }}
-                    >
-                      {club.shortName}
+          
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-red-800 dark:text-red-200 font-medium">Failed to load clubs</p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error.message}</p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-2">
+                💡 Make sure Azure Functions is running: <code className="bg-red-100 dark:bg-red-900/40 px-2 py-1 rounded">cd api/OurGame.Api && func start</code>
+              </p>
+            </div>
+          )}
+
+          {/* Clubs Grid - API data only */}
+          {!isLoading && !error && apiClubs && (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {apiClubs.map((club) => (
+                <Link
+                  key={club.id}
+                  to={Routes.club(club.id!)}
+                  className="card-hover group"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    {club.logo ? (
+                      <img 
+                        src={club.logo} 
+                        alt={`${club.name} logo`}
+                        className="w-20 h-20 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-700"
+                      />
+                    ) : (
+                      <div 
+                        className="w-20 h-20 rounded-lg flex items-center justify-center text-3xl font-bold text-white"
+                        style={{ backgroundColor: club.primaryColor || '#3b82f6' }}
+                      >
+                        {club.shortName}
+                      </div>
+                    )}
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                        {club.name}
+                      </h3>
+                      {club.city && club.country && (
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {club.city}, {club.country}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {club.foundedYear && (
+                    <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-600 dark:text-gray-400">Founded</span>
+                        <span className="font-medium text-gray-900 dark:text-white">{club.foundedYear}</span>
+                      </div>
                     </div>
                   )}
-                  <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                      {club.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">{club.location.city}, {club.location.country}</p>
-                  </div>
-                </div>
-                
-                <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-600 dark:text-gray-400">Founded</span>
-                    <span className="font-medium text-gray-900 dark:text-white">{club.founded}</span>
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </main>
     </div>

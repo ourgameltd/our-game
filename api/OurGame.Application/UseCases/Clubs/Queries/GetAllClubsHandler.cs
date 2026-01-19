@@ -34,7 +34,8 @@ public class GetAllClubsHandler : IRequestHandler<GetAllClubsQuery, List<ClubSum
             SecondaryColor = c.SecondaryColor,
             AccentColor = c.AccentColor,
             City = c.City,
-            Country = c.Country
+            Country = c.Country,
+            FoundedYear = c.FoundedYear
         }).ToList();
     }
 }
