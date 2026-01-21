@@ -21,6 +21,22 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/@vite/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/@react-refresh",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/src/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/node_modules/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/*",
       "allowedRoles": ["authenticated"]
     },

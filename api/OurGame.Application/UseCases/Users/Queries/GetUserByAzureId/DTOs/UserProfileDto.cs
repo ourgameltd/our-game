@@ -1,4 +1,4 @@
-namespace OurGame.Application.UseCases.Users.DTOs;
+namespace OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
 
 /// <summary>
 /// User profile information

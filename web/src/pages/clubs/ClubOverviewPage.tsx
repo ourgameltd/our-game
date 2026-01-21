@@ -5,7 +5,7 @@ import { getClubById } from '@data/clubs';
 import { getAgeGroupsByClubId, getAgeGroupById } from '@data/ageGroups';
 import { getClubStatistics, getAgeGroupStatistics } from '@data/statistics';
 import { getTeamById } from '@data/teams';
-import { apiClient, type TeamListItemDto } from '@/api';
+import type { TeamListItemDto } from '@/api';
 import StatsGrid from '@components/stats/StatsGrid';
 import MatchesCard from '@components/matches/MatchesCard';
 import AgeGroupListCard from '@components/ageGroup/AgeGroupListCard';
@@ -22,28 +22,30 @@ export default function ClubOverviewPage() {
   const stats = getClubStatistics(clubId!);
   
   // Fetch teams from API
-  const [clubTeams, setClubTeams] = useState<TeamListItemDto[]>([]);
+  const [clubTeams] = useState<TeamListItemDto[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
-  const [teamsError, setTeamsError] = useState<string | null>(null);
+  const [teamsError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!clubId) return;
     
     setTeamsLoading(true);
-    apiClient.clubs.getTeams(clubId, undefined, false)
-      .then(response => {
-        if (response.success && response.data) {
-          setClubTeams(response.data);
-          setTeamsError(null);
-        } else {
-          setTeamsError(response.error?.message || 'Failed to load teams');
-        }
-      })
-      .catch(err => {
-        console.error('Failed to fetch teams:', err);
-        setTeamsError('Failed to load teams from API');
-      })
-      .finally(() => setTeamsLoading(false));
+    // TODO: Re-enable when clubs.getTeams endpoint is implemented
+    // apiClient.clubs.getTeams(clubId, undefined, false)
+    //   .then((response: any) => {
+    //     if (response.success && response.data) {
+    //       setClubTeams(response.data);
+    //       setTeamsError(null);
+    //     } else {
+    //       setTeamsError(response.error?.message || 'Failed to load teams');
+    //     }
+    //   })
+    //   .catch((err: any) => {
+    //     console.error('Failed to fetch teams:', err);
+    //     setTeamsError('Failed to load teams from API');
+    //   })
+    //   .finally(() => setTeamsLoading(false));
+    setTeamsLoading(false);
   }, [clubId]);
 
   if (!club) {

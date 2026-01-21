@@ -30,7 +30,7 @@ import { getCoachById } from '@data/coaches';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCurrentUser, UserProfile } from '@/api/users';
+import type { UserProfile } from '@/api/users';
 
 export default function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,9 +39,9 @@ export default function MobileNavigation() {
   const [isSchedulingExpanded, setIsSchedulingExpanded] = useState(false);
   const [isManagementExpanded, setIsManagementExpanded] = useState(false);
   const [isTacticsExpanded, setIsTacticsExpanded] = useState(false);
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [userProfile] = useState<UserProfile | null>(null);
   const { isDesktopOpen, toggleDesktopNav } = useNavigation();
-  const { isAuthenticated, isLoading, displayName } = useAuth();
+  const { displayName } = useAuth();
   const location = useLocation();
   const { theme, setTheme, actualTheme } = useTheme();
   
@@ -1115,7 +1115,7 @@ export default function MobileNavigation() {
 
             <li className="mobile-nav-item">
               <Link 
-                to="/login" 
+                to="/.auth/logout" 
                 className="mobile-nav-link text-red-600 dark:text-red-400"
               >
                 <LogOut className="mobile-nav-icon" />

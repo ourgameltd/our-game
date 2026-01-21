@@ -5,36 +5,26 @@
  * 
  * Usage:
  * ```typescript
- * import { apiClient, useClub, useTeam } from '@/api';
+ * import { apiClient, useMyTeams } from '@/api';
  * ```
  */
 
 // Client and types
 export { apiClient, getApiBaseUrl } from './client';
 export type {
-  ClubDetailDto,
-  TeamDetailDto,
-  PlayerProfileDto,
-  PlayerAttributesDto,
-  MatchDto,
-  MatchLineupDto,
-  AgeGroupListItemDto,
-  CoordinatorDto,
-  ClubSummaryDto,
   ApiResponse,
+  UserProfile,
+  TeamListItemDto,
+  TeamColorsDto,
+  TeamClubDto,
+  TeamCoachDto,
 } from './client';
 
 // React hooks
 export {
-  useClubs,
-  useClub,
-  useClubAgeGroups,
-  useAgeGroups,
-  useTeam,
-  useTeamSquad,
   useMyTeams,
-  usePlayer,
-  usePlayerAttributes,
-  useMatch,
-  useMatchLineup,
 } from './hooks';
+
+// User API
+export { getCurrentUser } from './users';
+export type { UserProfile as UserProfileType } from './users';

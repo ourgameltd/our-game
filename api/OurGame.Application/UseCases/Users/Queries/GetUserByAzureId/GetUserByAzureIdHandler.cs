@@ -1,32 +1,38 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using OurGame.Application.Abstractions;
 using OurGame.Application.Abstractions.Exceptions;
-using OurGame.Application.UseCases.Users.DTOs;
+using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
 using OurGame.Persistence.Models;
 
-namespace OurGame.Application.UseCases.Users.Queries;
+namespace OurGame.Application.UseCases.Users.Queries.GetUserByAzureId;
 
 /// <summary>
-/// Handler for GetUserByIdQuery
+/// Query to get a user by Azure Static Web Apps user ID
 /// </summary>
-public class GetUserByIdHandler : IRequestHandler<GetUserByIdQuery, UserProfileDto>
+public record GetUserByAzureIdQuery(string AzureUserId) : IQuery<UserProfileDto>;
+
+/// <summary>
+/// Handler for GetUserByAzureIdQuery
+/// </summary>
+public class GetUserByAzureIdHandler : IRequestHandler<GetUserByAzureIdQuery, UserProfileDto>
 {
     private readonly OurGameContext _db;
 
-    public GetUserByIdHandler(OurGameContext db)
+    public GetUserByAzureIdHandler(OurGameContext db)
     {
         _db = db;
     }
 
-    public async Task<UserProfileDto> Handle(GetUserByIdQuery query, CancellationToken cancellationToken)
+    public async Task<UserProfileDto> Handle(GetUserByAzureIdQuery query, CancellationToken cancellationToken)
     {
         var user = await _db.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.Id == query.UserId, cancellationToken);
+            .FirstOrDefaultAsync(u => u.AzureUserId == query.AzureUserId, cancellationToken);
 
         if (user == null)
         {
-            throw new NotFoundException("User", query.UserId);
+            throw new NotFoundException("User", query.AzureUserId);
         }
 
         // Check if user is associated with a player or coach

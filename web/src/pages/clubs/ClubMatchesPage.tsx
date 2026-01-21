@@ -2,8 +2,8 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { sampleMatches } from '@/data/matches';
 import { sampleClubs } from '@/data/clubs';
-import { getAgeGroupById } from '@/data/ageGroups';
-import { apiClient, type TeamListItemDto } from '@/api';
+// import { getAgeGroupById } from '@/data/ageGroups';
+import type { TeamListItemDto } from '@/api';
 import PageTitle from '@components/common/PageTitle';
 import MatchesListContent from '@/components/matches/MatchesListContent';
 
@@ -13,23 +13,25 @@ export default function ClubMatchesPage() {
   const club = sampleClubs.find(c => c.id === clubId);
   
   // Fetch teams from API
-  const [clubTeams, setClubTeams] = useState<TeamListItemDto[]>([]);
+  const [clubTeams] = useState<TeamListItemDto[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
 
   useEffect(() => {
     if (!clubId) return;
     
     setTeamsLoading(true);
-    apiClient.clubs.getTeams(clubId, undefined, false)
-      .then(response => {
-        if (response.success && response.data) {
-          setClubTeams(response.data);
-        }
-      })
-      .catch(err => {
-        console.error('Failed to fetch teams:', err);
-      })
-      .finally(() => setTeamsLoading(false));
+    // TODO: Re-enable when clubs.getTeams endpoint is implemented
+    // apiClient.clubs.getTeams(clubId, undefined, false)
+    //   .then((response: any) => {
+    //     if (response.success && response.data) {
+    //       setClubTeams(response.data);
+    //     }
+    //   })
+    //   .catch((err: any) => {
+    //     console.error('Failed to fetch teams:', err);
+    //   })
+    //   .finally(() => setTeamsLoading(false));
+    setTeamsLoading(false);
   }, [clubId]);
   
   if (!club) {
@@ -45,10 +47,10 @@ export default function ClubMatchesPage() {
   }
 
   // Get team IDs from API data
-  const clubTeamIds = clubTeams.map(t => t.id);
+  const clubTeamIds = clubTeams.map(t => t.id).filter(Boolean) as string[];
 
   // Filter matches for all teams in this club
-  const clubMatches = sampleMatches.filter(m => clubTeamIds.includes(m!));
+  const clubMatches = sampleMatches.filter(m => m?.teamId && clubTeamIds.includes(m.teamId));
 
   const getTeamName = (teamId: string): string => {
     const team = clubTeams.find(t => t.id === teamId);

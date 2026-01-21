@@ -1,23 +1,29 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
-using OurGame.Application.UseCases.Clubs.DTOs;
+using OurGame.Application.Abstractions;
+using OurGame.Application.UseCases.Teams.Queries.GetMyTeamsAndClubs.DTOs;
 using OurGame.Persistence.Models;
 
-namespace OurGame.Application.UseCases.Teams.Queries;
+namespace OurGame.Application.UseCases.Teams.Queries.GetMyTeamsAndClubs;
+
+/// <summary>
+/// Query to get teams accessible for the current user (coach assignments)
+/// </summary>
+public record GetMyTeamsAndClubsQuery(string AzureUserId) : IQuery<List<TeamAndClubsListItemDto>>;
 
 /// <summary>
 /// Handler for GetMyTeamsQuery
 /// </summary>
-public class GetMyTeamsHandler : IRequestHandler<GetMyTeamsQuery, List<TeamListItemDto>>
+public class GetMyTeamsAndClubsHandler : IRequestHandler<GetMyTeamsAndClubsQuery, List<TeamAndClubsListItemDto>>
 {
     private readonly OurGameContext _db;
 
-    public GetMyTeamsHandler(OurGameContext db)
+    public GetMyTeamsAndClubsHandler(OurGameContext db)
     {
         _db = db;
     }
 
-    public async Task<List<TeamListItemDto>> Handle(GetMyTeamsQuery query, CancellationToken cancellationToken)
+    public async Task<List<TeamAndClubsListItemDto>> Handle(GetMyTeamsAndClubsQuery query, CancellationToken cancellationToken)
     {
         // Raw SQL query to get teams for the current user via coach assignments
         var sql = @"
@@ -38,11 +44,7 @@ public class GetMyTeamsHandler : IRequestHandler<GetMyTeamsQuery, List<TeamListI
                 cl.PrimaryColor AS ClubPrimaryColor,
                 cl.SecondaryColor AS ClubSecondaryColor,
                 cl.AccentColor AS ClubAccentColor,
-                cl.FoundedYear AS ClubFoundedYear,
-                (SELECT COUNT(*) 
-                 FROM player_teams pt 
-                 INNER JOIN players p ON pt.PlayerId = p.Id 
-                 WHERE pt.TeamId = t.Id AND p.IsArchived = 0) AS PlayerCount
+                cl.FoundedYear AS ClubFoundedYear
             FROM users u
             INNER JOIN coaches c ON c.user_id = u.Id
             INNER JOIN team_coaches tc ON tc.CoachId = c.Id
@@ -59,35 +61,11 @@ public class GetMyTeamsHandler : IRequestHandler<GetMyTeamsQuery, List<TeamListI
 
         if (teamData.Count == 0)
         {
-            return new List<TeamListItemDto>();
+            return new List<TeamAndClubsListItemDto>();
         }
 
-        // Get team IDs
-        var teamIds = teamData.Select(t => t.Id).ToList();
-
-        // Get coaches for all teams
-        var coaches = await _db.TeamCoaches
-            .AsNoTracking()
-            .Where(tc => teamIds.Contains(tc.TeamId))
-            .Select(tc => new
-            {
-                TeamId = tc.TeamId,
-                Coach = new TeamCoachDto
-                {
-                    Id = tc.Coach.Id,
-                    FirstName = tc.Coach.FirstName,
-                    LastName = tc.Coach.LastName,
-                    Role = "coach"
-                }
-            })
-            .ToListAsync(cancellationToken);
-
-        var coachesByTeam = coaches
-            .GroupBy(c => c.TeamId)
-            .ToDictionary(g => g.Key, g => g.Select(x => x.Coach).ToList());
-
         return teamData
-            .Select(t => new TeamListItemDto
+            .Select(t => new TeamAndClubsListItemDto
             {
                 Id = t.Id,
                 ClubId = t.ClubId,
@@ -101,8 +79,6 @@ public class GetMyTeamsHandler : IRequestHandler<GetMyTeamsQuery, List<TeamListI
                 },
                 Season = t.Season ?? string.Empty,
                 SquadSize = t.DefaultSquadSize,
-                Coaches = coachesByTeam.GetValueOrDefault(t.Id, new List<TeamCoachDto>()),
-                PlayerCount = t.PlayerCount,
                 IsArchived = t.IsArchived,
                 Club = new TeamClubDto
                 {
@@ -122,7 +98,7 @@ public class GetMyTeamsHandler : IRequestHandler<GetMyTeamsQuery, List<TeamListI
 /// <summary>
 /// DTO for raw SQL query result
 /// </summary>
-internal class TeamRawDto
+class TeamRawDto
 {
     public Guid Id { get; set; }
     public Guid ClubId { get; set; }
@@ -134,7 +110,6 @@ internal class TeamRawDto
     public bool IsArchived { get; set; }
     public string? AgeGroupName { get; set; }
     public int DefaultSquadSize { get; set; }
-    public int PlayerCount { get; set; }
     public string? ClubName { get; set; }
     public string? ClubShortName { get; set; }
     public string? ClubLogo { get; set; }

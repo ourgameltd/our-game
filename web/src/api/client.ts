@@ -1,60 +1,36 @@
 /**
  * OurGame API Client
  * 
- * Type-safe client for the OurGame API.
- * Types are auto-generated - run `npm run generate:api` to update.
+ * Simple axios-based client for the OurGame API.
  */
 
-import type {
-  ApiResponseClubDetailDto,
-  ApiResponseTeamDetailDto,
-  ApiResponsePlayerProfileDto,
-  ApiResponsePlayerAttributesDto,
-  ApiResponseMatchDto,
-  ApiResponseMatchLineupDto,
-  ClubDetailDto,
-  TeamDetailDto,
-  PlayerProfileDto,
-  PlayerAttributesDto,
-  MatchDto,
-  MatchLineupDto,
-  AgeGroupListItemDto,
-  CoordinatorDto,
-  ErrorResponse,
-} from './generated';
+import axios, { AxiosInstance } from 'axios';
 
-// Re-export types for convenience
-export type {
-  ClubDetailDto,
-  TeamDetailDto,
-  PlayerProfileDto,
-  PlayerAttributesDto,
-  MatchDto,
-  MatchLineupDto,
-  AgeGroupListItemDto,
-  CoordinatorDto,
-};
-
-// Generic API response type for endpoints not yet in generated types
+// Generic API response type
 export interface ApiResponse<T> {
   success?: boolean;
   data?: T;
-  error?: ErrorResponse;
+  error?: {
+    message?: string;
+    statusCode?: number;
+  };
   statusCode?: number;
 }
 
-// Club summary for list endpoint (subset of ClubDetailDto)
-export interface ClubSummaryDto {
-  id?: string;
-  name?: string;
-  shortName?: string;
-  logo?: string;
-  primaryColor?: string;
-  secondaryColor?: string;
-  accentColor?: string;
-  city?: string;
-  country?: string;
-  foundedYear?: number;
+// User Profile
+export interface UserProfile {
+  id: string;
+  azureUserId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  photo: string;
+  preferences: string;
+  createdAt: string;
+  updatedAt: string;
+  playerId?: string;
+  coachId?: string;
 }
 
 // Team colors DTO
@@ -82,7 +58,7 @@ export interface TeamCoachDto {
   role?: string;
 }
 
-// Team list item DTO for club teams endpoint
+// Team list item DTO
 export interface TeamListItemDto {
   id?: string;
   clubId?: string;
@@ -98,33 +74,6 @@ export interface TeamListItemDto {
   club?: TeamClubDto;
 }
 
-// Player list item DTO for club players endpoint
-export interface PlayerListItemDto {
-  id?: string;
-  clubId?: string;
-  firstName?: string;
-  lastName?: string;
-  dateOfBirth?: string;
-  age?: number;
-  photo?: string;
-  preferredPositions?: string[];
-  ageGroups?: string[];
-  teams?: string[];
-  overallRating?: number;
-  isArchived?: boolean;
-}
-
-// Paginated response wrapper
-export interface PagedResponse<T> {
-  items?: T[];
-  pageNumber?: number;
-  pageSize?: number;
-  totalCount?: number;
-  totalPages?: number;
-  hasPreviousPage?: boolean;
-  hasNextPage?: boolean;
-}
-
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -133,27 +82,14 @@ export function getApiBaseUrl(): string {
   return import.meta.env.VITE_API_BASE_URL || '/api';
 }
 
-const baseUrl = getApiBaseUrl();
-
-/**
- * Generic fetch wrapper with error handling
- */
-async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(`${baseUrl}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      'api-version': '1.0',
-      ...options?.headers,
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error(`API error: ${response.status} ${response.statusText}`);
-  }
-
-  return response.json();
-}
+// Create axios instance
+const axiosInstance: AxiosInstance = axios.create({
+  baseURL: getApiBaseUrl(),
+  headers: {
+    'Content-Type': 'application/json',
+    'api-version': '1.0',
+  },
+});
 
 /**
  * OurGame API Client
@@ -162,92 +98,28 @@ async function fetchApi<T>(endpoint: string, options?: RequestInit): Promise<T> 
  * ```typescript
  * import { apiClient } from '@/api/client';
  * 
- * const club = await apiClient.clubs.getById('club-id');
- * const teams = await apiClient.teams.getByClub('club-id');
+ * const user = await apiClient.users.getCurrentUser();
+ * const teams = await apiClient.teams.getMyTeams();
  * ```
  */
 export const apiClient = {
-  clubs: {
-    getAll: () => 
-      fetchApi<ApiResponse<ClubSummaryDto[]>>(`/v1/clubs`),
-    getById: (clubId: string) => 
-      fetchApi<ApiResponseClubDetailDto>(`/v1/clubs/${clubId}`),
-    getAgeGroups: (clubId: string, includeArchived?: boolean, season?: string) => {
-      const params = new URLSearchParams();
-      if (includeArchived !== undefined) params.append('includeArchived', String(includeArchived));
-      if (season) params.append('season', season);
-      const queryString = params.toString();
-      return fetchApi<ApiResponse<AgeGroupListItemDto[]>>(
-        `/v1/clubs/${clubId}/age-groups${queryString ? `?${queryString}` : ''}`
-      );
-    },
-    getTeams: (clubId: string, ageGroupId?: string, includeArchived?: boolean, season?: string) => {
-      const params = new URLSearchParams();
-      if (ageGroupId) params.append('ageGroupId', ageGroupId);
-      if (includeArchived !== undefined) params.append('includeArchived', String(includeArchived));
-      if (season) params.append('season', season);
-      const queryString = params.toString();
-      return fetchApi<ApiResponse<TeamListItemDto[]>>(
-        `/v1/clubs/${clubId}/teams${queryString ? `?${queryString}` : ''}`
-      );
-    },
-    getPlayers: (
-      clubId: string, 
-      page?: number, 
-      pageSize?: number, 
-      ageGroupId?: string, 
-      teamId?: string, 
-      position?: string, 
-      search?: string, 
-      includeArchived?: boolean
-    ) => {
-      const params = new URLSearchParams();
-      if (page !== undefined) params.append('page', String(page));
-      if (pageSize !== undefined) params.append('pageSize', String(pageSize));
-      if (ageGroupId) params.append('ageGroupId', ageGroupId);
-      if (teamId) params.append('teamId', teamId);
-      if (position) params.append('position', position);
-      if (search) params.append('search', search);
-      if (includeArchived !== undefined) params.append('includeArchived', String(includeArchived));
-      const queryString = params.toString();
-      return fetchApi<ApiResponse<PagedResponse<PlayerListItemDto>>>(
-        `/v1/clubs/${clubId}/players${queryString ? `?${queryString}` : ''}`
-      );
+  users: {
+    /**
+     * Get current authenticated user's profile
+     */
+    getCurrentUser: async (): Promise<ApiResponse<UserProfile>> => {
+      const response = await axiosInstance.get<ApiResponse<UserProfile>>('/v1/users/me');
+      return response.data;
     },
   },
 
   teams: {
-    getById: (teamId: string) => 
-      fetchApi<ApiResponseTeamDetailDto>(`/v1/teams/${teamId}`),
-    getSquad: (teamId: string) =>
-      fetchApi<ApiResponse<PlayerProfileDto[]>>(`/v1/teams/${teamId}/squad`),
-    getMyTeams: () =>
-      fetchApi<ApiResponse<TeamListItemDto[]>>(`/v1/teams/my`),
-  },
-
-  players: {
-    getById: (playerId: string) => 
-      fetchApi<ApiResponsePlayerProfileDto>(`/v1/players/${playerId}`),
-    getAttributes: (playerId: string) => 
-      fetchApi<ApiResponsePlayerAttributesDto>(`/v1/players/${playerId}/attributes`),
-  },
-
-  ageGroups: {
-    getByClub: (clubId: string, includeArchived?: boolean, season?: string) => {
-      const params = new URLSearchParams();
-      if (includeArchived !== undefined) params.append('includeArchived', String(includeArchived));
-      if (season) params.append('season', season);
-      const queryString = params.toString();
-      return fetchApi<ApiResponse<AgeGroupListItemDto[]>>(
-        `/v1/clubs/${clubId}/age-groups${queryString ? `?${queryString}` : ''}`
-      );
+    /**
+     * Get teams for the current authenticated user
+     */
+    getMyTeams: async (): Promise<ApiResponse<TeamListItemDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<TeamListItemDto[]>>('/v1/teams/me');
+      return response.data;
     },
-  },
-
-  matches: {
-    getById: (matchId: string) => 
-      fetchApi<ApiResponseMatchDto>(`/v1/matches/${matchId}`),
-    getLineup: (matchId: string) => 
-      fetchApi<ApiResponseMatchLineupDto>(`/v1/matches/${matchId}/lineup`),
   },
 };

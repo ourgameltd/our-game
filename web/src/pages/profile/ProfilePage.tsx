@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Phone, MapPin, Calendar, Shield, Save, Moon, Sun, Monitor } from 'lucide-react';
+import { User, Mail, Calendar, Shield, Save, Moon, Sun, Monitor } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentUser, UserProfile } from '@/api/users';

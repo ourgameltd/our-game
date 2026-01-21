@@ -9,7 +9,7 @@ import { useMemo } from 'react';
 
 export default function ClubsListPage() {
   // Get authenticated user information
-  const { displayName, isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading } = useAuth();
 
   // Fetch teams the current user has access to
   const { data: myTeams, isLoading: myTeamsLoading, error: myTeamsError } = useMyTeams();
