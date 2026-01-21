@@ -8,7 +8,7 @@ public class AgeGroupConfiguration : IEntityTypeConfiguration<AgeGroup>
 {
     public void Configure(EntityTypeBuilder<AgeGroup> builder)
     {
-        builder.ToTable("age_groups");
+        builder.ToTable("AgeGroups");
         builder.HasKey(ag => ag.Id);
     }
 }

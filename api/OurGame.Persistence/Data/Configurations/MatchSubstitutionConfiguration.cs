@@ -9,7 +9,7 @@ public class MatchSubstitutionConfiguration : IEntityTypeConfiguration<MatchSubs
 {
     public void Configure(EntityTypeBuilder<MatchSubstitution> builder)
     {
-        builder.ToTable("match_substitutions");
+        builder.ToTable("MatchSubstitutions");
 
         builder.HasKey(e => e.Id);
 

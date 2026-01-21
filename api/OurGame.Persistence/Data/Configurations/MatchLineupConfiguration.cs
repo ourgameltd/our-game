@@ -9,7 +9,7 @@ public class MatchLineupConfiguration : IEntityTypeConfiguration<MatchLineup>
 {
     public void Configure(EntityTypeBuilder<MatchLineup> builder)
     {
-        builder.ToTable("match_lineups");
+        builder.ToTable("MatchLineups");
 
         builder.HasKey(e => e.Id);
 

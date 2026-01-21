@@ -8,7 +8,7 @@ public class ClubConfiguration : IEntityTypeConfiguration<Club>
 {
     public void Configure(EntityTypeBuilder<Club> builder)
     {
-        builder.ToTable("clubs");
+        builder.ToTable("Clubs");
         builder.HasKey(c => c.Id);
     }
 }

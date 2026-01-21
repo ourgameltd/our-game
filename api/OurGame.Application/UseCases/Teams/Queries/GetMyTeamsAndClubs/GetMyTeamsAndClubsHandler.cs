@@ -9,7 +9,7 @@ namespace OurGame.Application.UseCases.Teams.Queries.GetMyTeamsAndClubs;
 /// <summary>
 /// Query to get teams accessible for the current user (coach assignments)
 /// </summary>
-public record GetMyTeamsAndClubsQuery(string AzureUserId) : IQuery<List<TeamAndClubsListItemDto>>;
+public record GetMyTeamsAndClubsQuery(string AuthId) : IQuery<List<TeamAndClubsListItemDto>>;
 
 /// <summary>
 /// Handler for GetMyTeamsQuery
@@ -45,18 +45,18 @@ public class GetMyTeamsAndClubsHandler : IRequestHandler<GetMyTeamsAndClubsQuery
                 cl.SecondaryColor AS ClubSecondaryColor,
                 cl.AccentColor AS ClubAccentColor,
                 cl.FoundedYear AS ClubFoundedYear
-            FROM users u
-            INNER JOIN coaches c ON c.user_id = u.Id
-            INNER JOIN team_coaches tc ON tc.CoachId = c.Id
-            INNER JOIN teams t ON tc.TeamId = t.Id
-            LEFT JOIN age_groups ag ON t.AgeGroupId = ag.Id
-            LEFT JOIN clubs cl ON t.ClubId = cl.Id
-            WHERE u.AzureUserId = {0}
+            FROM Users u
+            INNER JOIN Coaches c ON c.UserId = u.Id
+            INNER JOIN TeamCoaches tc ON tc.CoachId = c.Id
+            INNER JOIN Teams t ON tc.TeamId = t.Id
+            LEFT JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
+            LEFT JOIN Clubs cl ON t.ClubId = cl.Id
+            WHERE u.AuthId = {0}
               AND t.IsArchived = 0
             ORDER BY ag.Name DESC, t.Name";
 
         var teamData = await _db.Database
-            .SqlQueryRaw<TeamRawDto>(sql, query.AzureUserId)
+            .SqlQueryRaw<TeamRawDto>(sql, query.AuthId)
             .ToListAsync(cancellationToken);
 
         if (teamData.Count == 0)

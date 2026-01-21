@@ -88,10 +88,7 @@ public class UserFunctions
 
         if (string.IsNullOrEmpty(azureUserId))
         {
-            _logger.LogWarning("Unauthorized request to /me/children endpoint");
             var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
-            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<List<ChildPlayerDto>>.ErrorResponse(
-                "User not authenticated", 401));
             return unauthorizedResponse;
         }
 

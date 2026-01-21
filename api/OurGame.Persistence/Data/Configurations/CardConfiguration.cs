@@ -9,7 +9,7 @@ public class CardConfiguration : IEntityTypeConfiguration<Card>
 {
     public void Configure(EntityTypeBuilder<Card> builder)
     {
-        builder.ToTable("cards");
+        builder.ToTable("Cards");
 
         builder.HasKey(e => e.Id);
 

@@ -9,7 +9,7 @@ public class DrillConfiguration : IEntityTypeConfiguration<Drill>
 {
     public void Configure(EntityTypeBuilder<Drill> builder)
     {
-        builder.ToTable("drills");
+        builder.ToTable("Drills");
         builder.HasKey(d => d.Id);
 
         // Seed data

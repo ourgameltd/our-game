@@ -8,19 +8,16 @@ public class PlayerConfiguration : IEntityTypeConfiguration<Player>
 {
     public void Configure(EntityTypeBuilder<Player> builder)
     {
-        builder.ToTable("players");
+        builder.ToTable("Players");
         builder.HasKey(p => p.Id);
         
-        builder.Property(p => p.UserId)
-            .HasColumnName("user_id");
-            
         builder.HasOne(p => p.User)
             .WithMany()
             .HasForeignKey(p => p.UserId)
-            .HasConstraintName("FK_players_users")
+            .HasConstraintName("FK_Players_Users")
             .OnDelete(DeleteBehavior.Restrict);
             
         builder.HasIndex(p => p.UserId)
-            .HasDatabaseName("IX_players_user_id");
+            .HasDatabaseName("IX_Players_UserId");
     }
 }

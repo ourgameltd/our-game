@@ -9,7 +9,7 @@ public class LineupPlayerConfiguration : IEntityTypeConfiguration<LineupPlayer>
 {
     public void Configure(EntityTypeBuilder<LineupPlayer> builder)
     {
-        builder.ToTable("lineup_players");
+        builder.ToTable("LineupPlayers");
 
         builder.HasKey(e => e.Id);
 

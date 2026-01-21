@@ -8,7 +8,7 @@ public class PlayerAttributeConfiguration : IEntityTypeConfiguration<PlayerAttri
 {
     public void Configure(EntityTypeBuilder<PlayerAttribute> builder)
     {
-        builder.ToTable("player_attributes");
+        builder.ToTable("PlayerAttributes");
         builder.HasKey(pa => pa.Id);
     }
 }

@@ -6,11 +6,10 @@ namespace OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
 public class UserProfileDto
 {
     public Guid Id { get; set; }
-    public string AzureUserId { get; set; } = string.Empty;
+    public string AuthId { get; set; } = string.Empty;
     public string Email { get; set; } = string.Empty;
     public string FirstName { get; set; } = string.Empty;
     public string LastName { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty;
     public string Photo { get; set; } = string.Empty;
     public string Preferences { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }

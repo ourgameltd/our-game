@@ -22,6 +22,13 @@ public static class PlayerParentSeedData
                 Id = Guid.NewGuid(),
                 PlayerId = PlayerSeedData.JamesWilson_Id,
                 ParentUserId = UserSeedData.DemoUser_Id
+            },
+            // Michael Law - parent of Oliver Thompson
+            new PlayerParent
+            {
+                Id = Guid.NewGuid(),
+                PlayerId = PlayerSeedData.OliverThompson_Id,
+                ParentUserId = UserSeedData.MichaelLaw_Id
             }
         };
     }

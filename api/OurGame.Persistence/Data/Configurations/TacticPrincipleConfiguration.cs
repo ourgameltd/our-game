@@ -9,7 +9,7 @@ public class TacticPrincipleConfiguration : IEntityTypeConfiguration<TacticPrinc
 {
     public void Configure(EntityTypeBuilder<TacticPrinciple> builder)
     {
-        builder.ToTable("tactic_principles");
+        builder.ToTable("TacticPrinciples");
 
         builder.HasKey(e => e.Id);
 

@@ -2,7 +2,6 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Models;
 
@@ -10,15 +9,13 @@ public partial class User
 {
     public Guid Id { get; set; }
 
-    public string AzureUserId { get; set; }
+    public string AuthId { get; set; }
 
     public string Email { get; set; }
 
     public string FirstName { get; set; }
 
     public string LastName { get; set; }
-
-    public UserRole Role { get; set; }
 
     public string Photo { get; set; }
 

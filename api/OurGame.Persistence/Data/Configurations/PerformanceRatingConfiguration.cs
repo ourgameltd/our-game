@@ -9,7 +9,7 @@ public class PerformanceRatingConfiguration : IEntityTypeConfiguration<Performan
 {
     public void Configure(EntityTypeBuilder<PerformanceRating> builder)
     {
-        builder.ToTable("performance_ratings");
+        builder.ToTable("PerformanceRatings");
 
         builder.HasKey(e => e.Id);
 

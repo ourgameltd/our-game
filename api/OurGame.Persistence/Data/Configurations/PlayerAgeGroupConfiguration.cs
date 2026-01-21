@@ -8,7 +8,7 @@ public class PlayerAgeGroupConfiguration : IEntityTypeConfiguration<PlayerAgeGro
 {
     public void Configure(EntityTypeBuilder<PlayerAgeGroup> builder)
     {
-        builder.ToTable("player_age_groups");
+        builder.ToTable("PlayerAgeGroups");
         builder.HasKey(pag => new { pag.PlayerId, pag.AgeGroupId });
     }
 }

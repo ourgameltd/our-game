@@ -44,10 +44,7 @@ public class TeamFunctions
 
             if (string.IsNullOrEmpty(azureUserId))
             {
-                _logger.LogWarning("Unauthorized request to /teams/my endpoint");
                 var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
-                await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<List<TeamAndClubsListItemDto>>.ErrorResponse(
-                    "User not authenticated", 401));
                 return unauthorizedResponse;
             }
 

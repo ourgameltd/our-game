@@ -9,7 +9,7 @@ public class DevelopmentPlanConfiguration : IEntityTypeConfiguration<Development
 {
     public void Configure(EntityTypeBuilder<DevelopmentPlan> builder)
     {
-        builder.ToTable("development_plans");
+        builder.ToTable("DevelopmentPlans");
         builder.HasKey(d => d.Id);
 
         // Seed data

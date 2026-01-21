@@ -8,7 +8,7 @@ public class FormationConfiguration : IEntityTypeConfiguration<Formation>
 {
     public void Configure(EntityTypeBuilder<Formation> builder)
     {
-        builder.ToTable("formations");
+        builder.ToTable("Formations");
         builder.HasKey(f => f.Id);
 
         // Self-referencing relationships

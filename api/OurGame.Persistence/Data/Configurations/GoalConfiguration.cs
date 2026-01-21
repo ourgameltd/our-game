@@ -9,7 +9,7 @@ public class GoalConfiguration : IEntityTypeConfiguration<Goal>
 {
     public void Configure(EntityTypeBuilder<Goal> builder)
     {
-        builder.ToTable("goals");
+        builder.ToTable("Goals");
 
         builder.HasKey(e => e.Id);
 

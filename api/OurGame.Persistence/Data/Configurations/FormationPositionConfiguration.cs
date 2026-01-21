@@ -9,7 +9,7 @@ public class FormationPositionConfiguration : IEntityTypeConfiguration<Formation
 {
     public void Configure(EntityTypeBuilder<FormationPosition> builder)
     {
-        builder.ToTable("formation_positions");
+        builder.ToTable("FormationPositions");
 
         builder.HasKey(e => e.Id);
 

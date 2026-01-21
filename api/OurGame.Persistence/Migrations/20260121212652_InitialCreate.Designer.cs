@@ -12,8 +12,8 @@ using OurGame.Persistence.Models;
 namespace OurGame.Persistence.Migrations
 {
     [DbContext(typeof(OurGameContext))]
-    [Migration("20260119231335_AddAzureUserIdToUsers")]
-    partial class AddAzureUserIdToUsers
+    [Migration("20260121212652_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -71,7 +71,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("ClubId");
 
-                    b.ToTable("age_groups", (string)null);
+                    b.ToTable("AgeGroups", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.AgeGroupCoordinator", b =>
@@ -190,7 +190,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlayerId1");
 
-                    b.ToTable("cards", (string)null);
+                    b.ToTable("Cards", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Club", b =>
@@ -249,7 +249,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("clubs", (string)null);
+                    b.ToTable("Clubs", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Coach", b =>
@@ -304,17 +304,16 @@ namespace OurGame.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("user_id");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClubId");
 
                     b.HasIndex("UserId")
-                        .HasDatabaseName("IX_coaches_user_id");
+                        .HasDatabaseName("IX_Coaches_UserId");
 
-                    b.ToTable("coaches", (string)null);
+                    b.ToTable("Coaches", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.DevelopmentGoal", b =>
@@ -351,7 +350,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlanId");
 
-                    b.ToTable("development_goals", (string)null);
+                    b.ToTable("DevelopmentGoals", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.DevelopmentPlan", b =>
@@ -404,7 +403,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("development_plans", (string)null);
+                    b.ToTable("DevelopmentPlans", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Drill", b =>
@@ -464,7 +463,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("CreatedByNavigationId");
 
-                    b.ToTable("drills", (string)null);
+                    b.ToTable("Drills", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.DrillLink", b =>
@@ -660,7 +659,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("ScopeClubId");
 
-                    b.ToTable("formations", (string)null);
+                    b.ToTable("Formations", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.FormationPosition", b =>
@@ -691,7 +690,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("FormationId");
 
-                    b.ToTable("formation_positions", (string)null);
+                    b.ToTable("FormationPositions", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Goal", b =>
@@ -730,7 +729,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlayerId2");
 
-                    b.ToTable("goals", (string)null);
+                    b.ToTable("Goals", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Injury", b =>
@@ -805,7 +804,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("kits", (string)null);
+                    b.ToTable("Kits", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.KitOrder", b =>
@@ -906,7 +905,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlayerId1");
 
-                    b.ToTable("lineup_players", (string)null);
+                    b.ToTable("LineupPlayers", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Match", b =>
@@ -991,7 +990,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("matches", (string)null);
+                    b.ToTable("Matches", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.MatchCoach", b =>
@@ -1048,7 +1047,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("TacticId");
 
-                    b.ToTable("match_lineups", (string)null);
+                    b.ToTable("MatchLineups", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.MatchReport", b =>
@@ -1090,7 +1089,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlayerOfMatchId");
 
-                    b.ToTable("match_reports", (string)null);
+                    b.ToTable("MatchReports", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.MatchSubstitution", b =>
@@ -1129,7 +1128,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlayerOutId");
 
-                    b.ToTable("match_substitutions", (string)null);
+                    b.ToTable("MatchSubstitutions", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.PerformanceRating", b =>
@@ -1158,7 +1157,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlayerId1");
 
-                    b.ToTable("performance_ratings", (string)null);
+                    b.ToTable("PerformanceRatings", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.PersonalSession", b =>
@@ -1262,17 +1261,16 @@ namespace OurGame.Persistence.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<Guid?>("UserId")
-                        .HasColumnType("uniqueidentifier")
-                        .HasColumnName("user_id");
+                        .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
 
                     b.HasIndex("ClubId");
 
                     b.HasIndex("UserId")
-                        .HasDatabaseName("IX_players_user_id");
+                        .HasDatabaseName("IX_Players_UserId");
 
-                    b.ToTable("players", (string)null);
+                    b.ToTable("Players", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.PlayerAgeGroup", b =>
@@ -1290,7 +1288,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("AgeGroupId");
 
-                    b.ToTable("player_age_groups", (string)null);
+                    b.ToTable("PlayerAgeGroups", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.PlayerAttribute", b =>
@@ -1415,7 +1413,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasIndex("PlayerId")
                         .IsUnique();
 
-                    b.ToTable("player_attributes", (string)null);
+                    b.ToTable("PlayerAttributes", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.PlayerImage", b =>
@@ -1520,7 +1518,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("PlayerId");
 
-                    b.ToTable("player_reports", (string)null);
+                    b.ToTable("PlayerReports", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.PlayerTeam", b =>
@@ -1544,7 +1542,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("TeamId");
 
-                    b.ToTable("player_teams", (string)null);
+                    b.ToTable("PlayerTeams", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.PositionOverride", b =>
@@ -1668,7 +1666,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("SessionId");
 
-                    b.ToTable("session_attendance", (string)null);
+                    b.ToTable("SessionAttendances", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.SessionCoach", b =>
@@ -1726,7 +1724,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("TemplateId");
 
-                    b.ToTable("session_drills", (string)null);
+                    b.ToTable("SessionDrills", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.SimilarProfessional", b =>
@@ -1784,7 +1782,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("FormationId1");
 
-                    b.ToTable("tactic_principles", (string)null);
+                    b.ToTable("TacticPrinciples", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Team", b =>
@@ -1837,7 +1835,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("FormationId");
 
-                    b.ToTable("teams", (string)null);
+                    b.ToTable("Teams", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.TeamCoach", b =>
@@ -1858,7 +1856,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("CoachId");
 
-                    b.ToTable("team_coaches", (string)null);
+                    b.ToTable("TeamCoaches", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.TemplateDrill", b =>
@@ -1887,7 +1885,7 @@ namespace OurGame.Persistence.Migrations
 
                     b.HasIndex("TemplateId");
 
-                    b.ToTable("template_drills", (string)null);
+                    b.ToTable("TemplateDrills", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.TrainingObjective", b =>
@@ -2025,52 +2023,38 @@ namespace OurGame.Persistence.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
-                        .HasColumnName("id")
                         .HasDefaultValueSql("NEWID()");
 
-                    b.Property<string>("AzureUserId")
+                    b.Property<string>("AuthId")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasColumnName("created_at")
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)")
-                        .HasColumnName("email");
+                        .HasColumnType("nvarchar(255)");
 
                     b.Property<string>("FirstName")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("first_name");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("LastName")
                         .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("last_name");
+                        .HasColumnType("nvarchar(100)");
 
                     b.Property<string>("Photo")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("photo");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Preferences")
-                        .HasColumnType("nvarchar(max)")
-                        .HasColumnName("preferences");
-
-                    b.Property<string>("Role")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)")
-                        .HasColumnName("role");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
-                        .HasColumnName("updated_at")
                         .HasDefaultValueSql("GETUTCDATE()");
 
                     b.HasKey("Id");
@@ -2078,7 +2062,7 @@ namespace OurGame.Persistence.Migrations
                     b.HasIndex("Email")
                         .IsUnique();
 
-                    b.ToTable("users", (string)null);
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.AgeGroup", b =>
@@ -2184,7 +2168,7 @@ namespace OurGame.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_coaches_users");
+                        .HasConstraintName("FK_Coaches_Users");
 
                     b.Navigation("Club");
 
@@ -2694,7 +2678,7 @@ namespace OurGame.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_players_users");
+                        .HasConstraintName("FK_Players_Users");
 
                     b.Navigation("Club");
 

@@ -8,9 +8,9 @@ using OurGame.Persistence.Models;
 namespace OurGame.Application.UseCases.Users.Queries.GetUserByAzureId;
 
 /// <summary>
-/// Query to get a user by Azure Static Web Apps user ID
+/// Query to get a user by Auth ID (Azure, Auth0, etc.)
 /// </summary>
-public record GetUserByAzureIdQuery(string AzureUserId) : IQuery<UserProfileDto>;
+public record GetUserByAzureIdQuery(string AuthId) : IQuery<UserProfileDto>;
 
 /// <summary>
 /// Handler for GetUserByAzureIdQuery
@@ -28,11 +28,11 @@ public class GetUserByAzureIdHandler : IRequestHandler<GetUserByAzureIdQuery, Us
     {
         var user = await _db.Users
             .AsNoTracking()
-            .FirstOrDefaultAsync(u => u.AzureUserId == query.AzureUserId, cancellationToken);
+            .FirstOrDefaultAsync(u => u.AuthId == query.AuthId, cancellationToken);
 
         if (user == null)
         {
-            throw new NotFoundException("User", query.AzureUserId);
+            throw new NotFoundException("User", query.AuthId);
         }
 
         // Check if user is associated with a player or coach
@@ -47,11 +47,10 @@ public class GetUserByAzureIdHandler : IRequestHandler<GetUserByAzureIdQuery, Us
         return new UserProfileDto
         {
             Id = user.Id,
-            AzureUserId = user.AzureUserId,
+            AuthId = user.AuthId,
             Email = user.Email,
             FirstName = user.FirstName,
             LastName = user.LastName,
-            Role = user.Role.ToString(),
             Photo = user.Photo ?? string.Empty,
             Preferences = user.Preferences ?? string.Empty,
             CreatedAt = user.CreatedAt,

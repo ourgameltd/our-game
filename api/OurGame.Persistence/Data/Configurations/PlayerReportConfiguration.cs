@@ -9,7 +9,7 @@ public class PlayerReportConfiguration : IEntityTypeConfiguration<PlayerReport>
 {
     public void Configure(EntityTypeBuilder<PlayerReport> builder)
     {
-        builder.ToTable("player_reports");
+        builder.ToTable("PlayerReports");
         builder.HasKey(p => p.Id);
 
         // Seed data

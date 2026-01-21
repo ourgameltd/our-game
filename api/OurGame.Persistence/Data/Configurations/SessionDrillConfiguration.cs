@@ -9,7 +9,7 @@ public class SessionDrillConfiguration : IEntityTypeConfiguration<SessionDrill>
 {
     public void Configure(EntityTypeBuilder<SessionDrill> builder)
     {
-        builder.ToTable("session_drills");
+        builder.ToTable("SessionDrills");
 
         builder.HasKey(e => e.Id);
 

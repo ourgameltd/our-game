@@ -12,7 +12,7 @@ namespace OurGame.Persistence.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "clubs",
+                name: "Clubs",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -35,11 +35,30 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_clubs", x => x.Id);
+                    table.PrimaryKey("PK_Clubs", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
-                name: "age_groups",
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWID()"),
+                    AuthId = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
+                    FirstName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    LastName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Photo = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    Preferences = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AgeGroups",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -58,17 +77,17 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_age_groups", x => x.Id);
+                    table.PrimaryKey("PK_AgeGroups", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_age_groups_clubs_ClubId",
+                        name: "FK_AgeGroups_Clubs_ClubId",
                         column: x => x.ClubId,
-                        principalTable: "clubs",
+                        principalTable: "Clubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "coaches",
+                name: "Coaches",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -84,23 +103,30 @@ namespace OurGame.Persistence.Migrations
                     Role = table.Column<int>(type: "int", nullable: false),
                     Biography = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     Specializations = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     IsArchived = table.Column<bool>(type: "bit", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_coaches", x => x.Id);
+                    table.PrimaryKey("PK_Coaches", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_coaches_clubs_ClubId",
+                        name: "FK_Coaches_Clubs_ClubId",
                         column: x => x.ClubId,
-                        principalTable: "clubs",
+                        principalTable: "Clubs",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_Coaches_Users",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "players",
+                name: "Players",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -113,6 +139,7 @@ namespace OurGame.Persistence.Migrations
                     AssociationId = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     PreferredPositions = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     OverallRating = table.Column<int>(type: "int", nullable: true),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
                     Allergies = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     MedicalConditions = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     IsArchived = table.Column<bool>(type: "bit", nullable: false),
@@ -121,39 +148,17 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_players", x => x.Id);
+                    table.PrimaryKey("PK_Players", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_players_clubs_ClubId",
+                        name: "FK_Players_Clubs_ClubId",
                         column: x => x.ClubId,
-                        principalTable: "clubs",
+                        principalTable: "Clubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "users",
-                columns: table => new
-                {
-                    id = table.Column<Guid>(type: "uniqueidentifier", nullable: false, defaultValueSql: "NEWID()"),
-                    email = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: false),
-                    first_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    last_name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    role = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    club_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    player_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    staff_id = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    photo = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    preferences = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    created_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()"),
-                    updated_at = table.Column<DateTime>(type: "datetime2", nullable: false, defaultValueSql: "GETUTCDATE()")
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_users", x => x.id);
                     table.ForeignKey(
-                        name: "FK_users_clubs",
-                        column: x => x.club_id,
-                        principalTable: "clubs",
+                        name: "FK_Players_Users",
+                        column: x => x.UserId,
+                        principalTable: "Users",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -170,21 +175,21 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_AgeGroupCoordinators", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AgeGroupCoordinators_age_groups_AgeGroupId",
+                        name: "FK_AgeGroupCoordinators_AgeGroups_AgeGroupId",
                         column: x => x.AgeGroupId,
-                        principalTable: "age_groups",
+                        principalTable: "AgeGroups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_AgeGroupCoordinators_coaches_CoachId",
+                        name: "FK_AgeGroupCoordinators_Coaches_CoachId",
                         column: x => x.CoachId,
-                        principalTable: "coaches",
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "drills",
+                name: "Drills",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -206,17 +211,17 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_drills", x => x.Id);
+                    table.PrimaryKey("PK_Drills", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_drills_clubs_ClubId",
+                        name: "FK_Drills_Clubs_ClubId",
                         column: x => x.ClubId,
-                        principalTable: "clubs",
+                        principalTable: "Clubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_drills_coaches_CreatedByNavigationId",
+                        name: "FK_Drills_Coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
-                        principalTable: "coaches",
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -241,21 +246,21 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_DrillTemplates", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DrillTemplates_clubs_ClubId",
+                        name: "FK_DrillTemplates_Clubs_ClubId",
                         column: x => x.ClubId,
-                        principalTable: "clubs",
+                        principalTable: "Clubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_DrillTemplates_coaches_CreatedByNavigationId",
+                        name: "FK_DrillTemplates_Coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
-                        principalTable: "coaches",
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "formations",
+                name: "Formations",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -280,29 +285,29 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_formations", x => x.Id);
+                    table.PrimaryKey("PK_Formations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_formations_clubs_ScopeClubId",
+                        name: "FK_Formations_Clubs_ScopeClubId",
                         column: x => x.ScopeClubId,
-                        principalTable: "clubs",
+                        principalTable: "Clubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_formations_coaches_CreatedByNavigationId",
+                        name: "FK_Formations_Coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
-                        principalTable: "coaches",
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_formations_formations_ParentFormationId",
+                        name: "FK_Formations_Formations_ParentFormationId",
                         column: x => x.ParentFormationId,
-                        principalTable: "formations",
+                        principalTable: "Formations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_formations_formations_ParentTacticId",
+                        name: "FK_Formations_Formations_ParentTacticId",
                         column: x => x.ParentTacticId,
-                        principalTable: "formations",
+                        principalTable: "Formations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -325,15 +330,15 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_AttributeEvaluations", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_AttributeEvaluations_coaches_EvaluatedByNavigationId",
+                        name: "FK_AttributeEvaluations_Coaches_EvaluatedByNavigationId",
                         column: x => x.EvaluatedByNavigationId,
-                        principalTable: "coaches",
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_AttributeEvaluations_players_PlayerId",
+                        name: "FK_AttributeEvaluations_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -353,15 +358,15 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_EmergencyContacts", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_EmergencyContacts_players_PlayerId",
+                        name: "FK_EmergencyContacts_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "player_age_groups",
+                name: "PlayerAgeGroups",
                 columns: table => new
                 {
                     PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -370,23 +375,23 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_player_age_groups", x => new { x.PlayerId, x.AgeGroupId });
+                    table.PrimaryKey("PK_PlayerAgeGroups", x => new { x.PlayerId, x.AgeGroupId });
                     table.ForeignKey(
-                        name: "FK_player_age_groups_age_groups_AgeGroupId",
+                        name: "FK_PlayerAgeGroups_AgeGroups_AgeGroupId",
                         column: x => x.AgeGroupId,
-                        principalTable: "age_groups",
+                        principalTable: "AgeGroups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_player_age_groups_players_PlayerId",
+                        name: "FK_PlayerAgeGroups_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "player_attributes",
+                name: "PlayerAttributes",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -430,75 +435,11 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_player_attributes", x => x.Id);
+                    table.PrimaryKey("PK_PlayerAttributes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_player_attributes_players_PlayerId",
+                        name: "FK_PlayerAttributes_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "player_reports",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PeriodStart = table.Column<DateOnly>(type: "date", nullable: true),
-                    PeriodEnd = table.Column<DateOnly>(type: "date", nullable: true),
-                    OverallRating = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
-                    Strengths = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    AreasForImprovement = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CoachComments = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByNavigationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_player_reports", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_player_reports_coaches_CreatedByNavigationId",
-                        column: x => x.CreatedByNavigationId,
-                        principalTable: "coaches",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_player_reports_players_PlayerId",
-                        column: x => x.PlayerId,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "TrainingPlans",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    PeriodStart = table.Column<DateOnly>(type: "date", nullable: true),
-                    PeriodEnd = table.Column<DateOnly>(type: "date", nullable: true),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    CreatedByNavigationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_TrainingPlans", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_TrainingPlans_coaches_CreatedByNavigationId",
-                        column: x => x.CreatedByNavigationId,
-                        principalTable: "coaches",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_TrainingPlans_players_PlayerId",
-                        column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -521,16 +462,16 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_PlayerImages", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PlayerImages_players_PlayerId",
+                        name: "FK_PlayerImages_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_PlayerImages_users_UploadedByNavigationId",
+                        name: "FK_PlayerImages_Users_UploadedByNavigationId",
                         column: x => x.UploadedByNavigationId,
-                        principalTable: "users",
-                        principalColumn: "id",
+                        principalTable: "Users",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -546,16 +487,80 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_PlayerParents", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PlayerParents_players_PlayerId",
+                        name: "FK_PlayerParents_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_PlayerParents_users_ParentUserId",
+                        name: "FK_PlayerParents_Users_ParentUserId",
                         column: x => x.ParentUserId,
-                        principalTable: "users",
-                        principalColumn: "id",
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "PlayerReports",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PeriodStart = table.Column<DateOnly>(type: "date", nullable: true),
+                    PeriodEnd = table.Column<DateOnly>(type: "date", nullable: true),
+                    OverallRating = table.Column<decimal>(type: "decimal(18,2)", nullable: true),
+                    Strengths = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    AreasForImprovement = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CoachComments = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedByNavigationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_PlayerReports", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_PlayerReports_Coaches_CreatedByNavigationId",
+                        column: x => x.CreatedByNavigationId,
+                        principalTable: "Coaches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_PlayerReports_Players_PlayerId",
+                        column: x => x.PlayerId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "TrainingPlans",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    CreatedBy = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    PeriodStart = table.Column<DateOnly>(type: "date", nullable: true),
+                    PeriodEnd = table.Column<DateOnly>(type: "date", nullable: true),
+                    Status = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedByNavigationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_TrainingPlans", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_TrainingPlans_Coaches_CreatedByNavigationId",
+                        column: x => x.CreatedByNavigationId,
+                        principalTable: "Coaches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_TrainingPlans_Players_PlayerId",
+                        column: x => x.PlayerId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
@@ -573,15 +578,15 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_DrillLinks", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_DrillLinks_drills_DrillId",
+                        name: "FK_DrillLinks_Drills_DrillId",
                         column: x => x.DrillId,
-                        principalTable: "drills",
+                        principalTable: "Drills",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "template_drills",
+                name: "TemplateDrills",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -592,29 +597,29 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_template_drills", x => x.Id);
+                    table.PrimaryKey("PK_TemplateDrills", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_template_drills_DrillTemplates_TemplateId",
+                        name: "FK_TemplateDrills_DrillTemplates_TemplateId",
                         column: x => x.TemplateId,
                         principalTable: "DrillTemplates",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_template_drills_drills_DrillId",
+                        name: "FK_TemplateDrills_Drills_DrillId",
                         column: x => x.DrillId,
-                        principalTable: "drills",
+                        principalTable: "Drills",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_template_drills_drills_DrillId1",
+                        name: "FK_TemplateDrills_Drills_DrillId1",
                         column: x => x.DrillId1,
-                        principalTable: "drills",
+                        principalTable: "Drills",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "formation_positions",
+                name: "FormationPositions",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -627,11 +632,11 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_formation_positions", x => x.Id);
+                    table.PrimaryKey("PK_FormationPositions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_formation_positions_formations_FormationId",
+                        name: "FK_FormationPositions_Formations_FormationId",
                         column: x => x.FormationId,
-                        principalTable: "formations",
+                        principalTable: "Formations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -651,15 +656,15 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_PositionOverrides", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PositionOverrides_formations_FormationId",
+                        name: "FK_PositionOverrides_Formations_FormationId",
                         column: x => x.FormationId,
-                        principalTable: "formations",
+                        principalTable: "Formations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "tactic_principles",
+                name: "TacticPrinciples",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -671,23 +676,23 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_tactic_principles", x => x.Id);
+                    table.PrimaryKey("PK_TacticPrinciples", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_tactic_principles_formations_FormationId",
+                        name: "FK_TacticPrinciples_Formations_FormationId",
                         column: x => x.FormationId,
-                        principalTable: "formations",
+                        principalTable: "Formations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_tactic_principles_formations_FormationId1",
+                        name: "FK_TacticPrinciples_Formations_FormationId1",
                         column: x => x.FormationId1,
-                        principalTable: "formations",
+                        principalTable: "Formations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "teams",
+                name: "Teams",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -706,23 +711,23 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_teams", x => x.Id);
+                    table.PrimaryKey("PK_Teams", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_teams_age_groups_AgeGroupId",
+                        name: "FK_Teams_AgeGroups_AgeGroupId",
                         column: x => x.AgeGroupId,
-                        principalTable: "age_groups",
+                        principalTable: "AgeGroups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_teams_clubs_ClubId",
+                        name: "FK_Teams_Clubs_ClubId",
                         column: x => x.ClubId,
-                        principalTable: "clubs",
+                        principalTable: "Clubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_teams_formations_FormationId",
+                        name: "FK_Teams_Formations_FormationId",
                         column: x => x.FormationId,
-                        principalTable: "formations",
+                        principalTable: "Formations",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -749,7 +754,7 @@ namespace OurGame.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "development_plans",
+                name: "DevelopmentPlans",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -768,23 +773,23 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_development_plans", x => x.Id);
+                    table.PrimaryKey("PK_DevelopmentPlans", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_development_plans_coaches_CreatedByNavigationId",
+                        name: "FK_DevelopmentPlans_Coaches_CreatedByNavigationId",
                         column: x => x.CreatedByNavigationId,
-                        principalTable: "coaches",
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_development_plans_player_reports_LinkedReportId",
+                        name: "FK_DevelopmentPlans_PlayerReports_LinkedReportId",
                         column: x => x.LinkedReportId,
-                        principalTable: "player_reports",
+                        principalTable: "PlayerReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_development_plans_players_PlayerId",
+                        name: "FK_DevelopmentPlans_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -806,9 +811,9 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_ReportDevelopmentActions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ReportDevelopmentActions_player_reports_ReportId",
+                        name: "FK_ReportDevelopmentActions_PlayerReports_ReportId",
                         column: x => x.ReportId,
-                        principalTable: "player_reports",
+                        principalTable: "PlayerReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -828,9 +833,9 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_SimilarProfessionals", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SimilarProfessionals_player_reports_ReportId",
+                        name: "FK_SimilarProfessionals_PlayerReports_ReportId",
                         column: x => x.ReportId,
-                        principalTable: "player_reports",
+                        principalTable: "PlayerReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -873,15 +878,15 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_ProgressNotes", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_ProgressNotes_TrainingPlans_PlanId",
-                        column: x => x.PlanId,
-                        principalTable: "TrainingPlans",
+                        name: "FK_ProgressNotes_Coaches_AddedByNavigationId",
+                        column: x => x.AddedByNavigationId,
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_ProgressNotes_coaches_AddedByNavigationId",
-                        column: x => x.AddedByNavigationId,
-                        principalTable: "coaches",
+                        name: "FK_ProgressNotes_TrainingPlans_PlanId",
+                        column: x => x.PlanId,
+                        principalTable: "TrainingPlans",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -929,27 +934,27 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_KitOrders", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_KitOrders_players_PlayerId",
+                        name: "FK_KitOrders_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_KitOrders_teams_TeamId",
+                        name: "FK_KitOrders_Teams_TeamId",
                         column: x => x.TeamId,
-                        principalTable: "teams",
+                        principalTable: "Teams",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_KitOrders_users_OrderedByNavigationId",
+                        name: "FK_KitOrders_Users_OrderedByNavigationId",
                         column: x => x.OrderedByNavigationId,
-                        principalTable: "users",
-                        principalColumn: "id",
+                        principalTable: "Users",
+                        principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "kits",
+                name: "Kits",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -966,23 +971,23 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_kits", x => x.Id);
+                    table.PrimaryKey("PK_Kits", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_kits_clubs_ClubId",
+                        name: "FK_Kits_Clubs_ClubId",
                         column: x => x.ClubId,
-                        principalTable: "clubs",
+                        principalTable: "Clubs",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_kits_teams_TeamId",
+                        name: "FK_Kits_Teams_TeamId",
                         column: x => x.TeamId,
-                        principalTable: "teams",
+                        principalTable: "Teams",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "player_teams",
+                name: "PlayerTeams",
                 columns: table => new
                 {
                     PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -993,23 +998,23 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_player_teams", x => new { x.PlayerId, x.TeamId });
+                    table.PrimaryKey("PK_PlayerTeams", x => new { x.PlayerId, x.TeamId });
                     table.ForeignKey(
-                        name: "FK_player_teams_players_PlayerId",
+                        name: "FK_PlayerTeams_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_player_teams_teams_TeamId",
+                        name: "FK_PlayerTeams_Teams_TeamId",
                         column: x => x.TeamId,
-                        principalTable: "teams",
+                        principalTable: "Teams",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "team_coaches",
+                name: "TeamCoaches",
                 columns: table => new
                 {
                     TeamId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1019,17 +1024,17 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_team_coaches", x => new { x.TeamId, x.CoachId });
+                    table.PrimaryKey("PK_TeamCoaches", x => new { x.TeamId, x.CoachId });
                     table.ForeignKey(
-                        name: "FK_team_coaches_coaches_CoachId",
+                        name: "FK_TeamCoaches_Coaches_CoachId",
                         column: x => x.CoachId,
-                        principalTable: "coaches",
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_team_coaches_teams_TeamId",
+                        name: "FK_TeamCoaches_Teams_TeamId",
                         column: x => x.TeamId,
-                        principalTable: "teams",
+                        principalTable: "Teams",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -1062,15 +1067,15 @@ namespace OurGame.Persistence.Migrations
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_TrainingSessions_teams_TeamId",
+                        name: "FK_TrainingSessions_Teams_TeamId",
                         column: x => x.TeamId,
-                        principalTable: "teams",
+                        principalTable: "Teams",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "development_goals",
+                name: "DevelopmentGoals",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1085,11 +1090,11 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_development_goals", x => x.Id);
+                    table.PrimaryKey("PK_DevelopmentGoals", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_development_goals_development_plans_PlanId",
+                        name: "FK_DevelopmentGoals_DevelopmentPlans_PlanId",
                         column: x => x.PlanId,
-                        principalTable: "development_plans",
+                        principalTable: "DevelopmentPlans",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -1106,15 +1111,15 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_PersonalSessionDrills", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_PersonalSessionDrills_PersonalSessions_PersonalSessionId",
-                        column: x => x.PersonalSessionId,
-                        principalTable: "PersonalSessions",
+                        name: "FK_PersonalSessionDrills_Drills_DrillId",
+                        column: x => x.DrillId,
+                        principalTable: "Drills",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_PersonalSessionDrills_drills_DrillId",
-                        column: x => x.DrillId,
-                        principalTable: "drills",
+                        name: "FK_PersonalSessionDrills_PersonalSessions_PersonalSessionId",
+                        column: x => x.PersonalSessionId,
+                        principalTable: "PersonalSessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -1142,7 +1147,7 @@ namespace OurGame.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "matches",
+                name: "Matches",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1171,29 +1176,29 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_matches", x => x.Id);
+                    table.PrimaryKey("PK_Matches", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_matches_kits_GoalkeeperKitId",
+                        name: "FK_Matches_Kits_GoalkeeperKitId",
                         column: x => x.GoalkeeperKitId,
-                        principalTable: "kits",
+                        principalTable: "Kits",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_matches_kits_PrimaryKitId",
+                        name: "FK_Matches_Kits_PrimaryKitId",
                         column: x => x.PrimaryKitId,
-                        principalTable: "kits",
+                        principalTable: "Kits",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_matches_kits_SecondaryKitId",
+                        name: "FK_Matches_Kits_SecondaryKitId",
                         column: x => x.SecondaryKitId,
-                        principalTable: "kits",
+                        principalTable: "Kits",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_matches_teams_TeamId",
+                        name: "FK_Matches_Teams_TeamId",
                         column: x => x.TeamId,
-                        principalTable: "teams",
+                        principalTable: "Teams",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -1225,7 +1230,7 @@ namespace OurGame.Persistence.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "session_attendance",
+                name: "SessionAttendances",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1237,64 +1242,23 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_session_attendance", x => x.Id);
+                    table.PrimaryKey("PK_SessionAttendances", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_session_attendance_TrainingSessions_SessionId",
-                        column: x => x.SessionId,
-                        principalTable: "TrainingSessions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_session_attendance_players_PlayerId",
+                        name: "FK_SessionAttendances_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_session_attendance_players_PlayerId1",
+                        name: "FK_SessionAttendances_Players_PlayerId1",
                         column: x => x.PlayerId1,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "session_drills",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    SessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    DrillId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Source = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    TemplateId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    DrillOrder = table.Column<int>(type: "int", nullable: false),
-                    DrillId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_session_drills", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_session_drills_DrillTemplates_TemplateId",
-                        column: x => x.TemplateId,
-                        principalTable: "DrillTemplates",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_session_drills_TrainingSessions_SessionId",
+                        name: "FK_SessionAttendances_TrainingSessions_SessionId",
                         column: x => x.SessionId,
                         principalTable: "TrainingSessions",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_session_drills_drills_DrillId",
-                        column: x => x.DrillId,
-                        principalTable: "drills",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_session_drills_drills_DrillId1",
-                        column: x => x.DrillId1,
-                        principalTable: "drills",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -1311,156 +1275,56 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_SessionCoaches", x => x.Id);
                     table.ForeignKey(
+                        name: "FK_SessionCoaches_Coaches_CoachId",
+                        column: x => x.CoachId,
+                        principalTable: "Coaches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
                         name: "FK_SessionCoaches_TrainingSessions_SessionId",
                         column: x => x.SessionId,
                         principalTable: "TrainingSessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_SessionCoaches_coaches_CoachId",
-                        column: x => x.CoachId,
-                        principalTable: "coaches",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "match_lineups",
+                name: "SessionDrills",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    FormationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    TacticId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    FormationId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    FormationId2 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                    SessionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    DrillId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Source = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    TemplateId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    DrillOrder = table.Column<int>(type: "int", nullable: false),
+                    DrillId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_match_lineups", x => x.Id);
+                    table.PrimaryKey("PK_SessionDrills", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_match_lineups_formations_FormationId",
-                        column: x => x.FormationId,
-                        principalTable: "formations",
+                        name: "FK_SessionDrills_DrillTemplates_TemplateId",
+                        column: x => x.TemplateId,
+                        principalTable: "DrillTemplates",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_match_lineups_formations_FormationId1",
-                        column: x => x.FormationId1,
-                        principalTable: "formations",
+                        name: "FK_SessionDrills_Drills_DrillId",
+                        column: x => x.DrillId,
+                        principalTable: "Drills",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_match_lineups_formations_FormationId2",
-                        column: x => x.FormationId2,
-                        principalTable: "formations",
+                        name: "FK_SessionDrills_Drills_DrillId1",
+                        column: x => x.DrillId1,
+                        principalTable: "Drills",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_match_lineups_formations_TacticId",
-                        column: x => x.TacticId,
-                        principalTable: "formations",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_lineups_matches_MatchId",
-                        column: x => x.MatchId,
-                        principalTable: "matches",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "match_reports",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Summary = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    CaptainId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    PlayerOfMatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    PlayerId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_match_reports", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_match_reports_matches_MatchId",
-                        column: x => x.MatchId,
-                        principalTable: "matches",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_reports_players_CaptainId",
-                        column: x => x.CaptainId,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_reports_players_PlayerId",
-                        column: x => x.PlayerId,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_reports_players_PlayerId1",
-                        column: x => x.PlayerId1,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_reports_players_PlayerOfMatchId",
-                        column: x => x.PlayerOfMatchId,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "match_substitutions",
-                columns: table => new
-                {
-                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    Minute = table.Column<int>(type: "int", nullable: false),
-                    PlayerOutId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PlayerInId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    PlayerId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_match_substitutions", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_match_substitutions_matches_MatchId",
-                        column: x => x.MatchId,
-                        principalTable: "matches",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_substitutions_players_PlayerId",
-                        column: x => x.PlayerId,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_substitutions_players_PlayerId1",
-                        column: x => x.PlayerId1,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_substitutions_players_PlayerInId",
-                        column: x => x.PlayerInId,
-                        principalTable: "players",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                    table.ForeignKey(
-                        name: "FK_match_substitutions_players_PlayerOutId",
-                        column: x => x.PlayerOutId,
-                        principalTable: "players",
+                        name: "FK_SessionDrills_TrainingSessions_SessionId",
+                        column: x => x.SessionId,
+                        principalTable: "TrainingSessions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -1477,21 +1341,162 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_MatchCoaches", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_MatchCoaches_coaches_CoachId",
+                        name: "FK_MatchCoaches_Coaches_CoachId",
                         column: x => x.CoachId,
-                        principalTable: "coaches",
+                        principalTable: "Coaches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_MatchCoaches_matches_MatchId",
+                        name: "FK_MatchCoaches_Matches_MatchId",
                         column: x => x.MatchId,
-                        principalTable: "matches",
+                        principalTable: "Matches",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "lineup_players",
+                name: "MatchLineups",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    FormationId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    TacticId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    FormationId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    FormationId2 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MatchLineups", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MatchLineups_Formations_FormationId",
+                        column: x => x.FormationId,
+                        principalTable: "Formations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchLineups_Formations_FormationId1",
+                        column: x => x.FormationId1,
+                        principalTable: "Formations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchLineups_Formations_FormationId2",
+                        column: x => x.FormationId2,
+                        principalTable: "Formations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchLineups_Formations_TacticId",
+                        column: x => x.TacticId,
+                        principalTable: "Formations",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchLineups_Matches_MatchId",
+                        column: x => x.MatchId,
+                        principalTable: "Matches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MatchReports",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Summary = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    CaptainId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    PlayerOfMatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    PlayerId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MatchReports", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MatchReports_Matches_MatchId",
+                        column: x => x.MatchId,
+                        principalTable: "Matches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchReports_Players_CaptainId",
+                        column: x => x.CaptainId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchReports_Players_PlayerId",
+                        column: x => x.PlayerId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchReports_Players_PlayerId1",
+                        column: x => x.PlayerId1,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchReports_Players_PlayerOfMatchId",
+                        column: x => x.PlayerOfMatchId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "MatchSubstitutions",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MatchId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    Minute = table.Column<int>(type: "int", nullable: false),
+                    PlayerOutId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PlayerInId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    PlayerId1 = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_MatchSubstitutions", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_MatchSubstitutions_Matches_MatchId",
+                        column: x => x.MatchId,
+                        principalTable: "Matches",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchSubstitutions_Players_PlayerId",
+                        column: x => x.PlayerId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchSubstitutions_Players_PlayerId1",
+                        column: x => x.PlayerId1,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchSubstitutions_Players_PlayerInId",
+                        column: x => x.PlayerInId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_MatchSubstitutions_Players_PlayerOutId",
+                        column: x => x.PlayerOutId,
+                        principalTable: "Players",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "LineupPlayers",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1504,29 +1509,29 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_lineup_players", x => x.Id);
+                    table.PrimaryKey("PK_LineupPlayers", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_lineup_players_match_lineups_LineupId",
+                        name: "FK_LineupPlayers_MatchLineups_LineupId",
                         column: x => x.LineupId,
-                        principalTable: "match_lineups",
+                        principalTable: "MatchLineups",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_lineup_players_players_PlayerId",
+                        name: "FK_LineupPlayers_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_lineup_players_players_PlayerId1",
+                        name: "FK_LineupPlayers_Players_PlayerId1",
                         column: x => x.PlayerId1,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "cards",
+                name: "Cards",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1539,29 +1544,29 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_cards", x => x.Id);
+                    table.PrimaryKey("PK_Cards", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_cards_match_reports_MatchReportId",
+                        name: "FK_Cards_MatchReports_MatchReportId",
                         column: x => x.MatchReportId,
-                        principalTable: "match_reports",
+                        principalTable: "MatchReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_cards_players_PlayerId",
+                        name: "FK_Cards_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_cards_players_PlayerId1",
+                        name: "FK_Cards_Players_PlayerId1",
                         column: x => x.PlayerId1,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "goals",
+                name: "Goals",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1574,35 +1579,35 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_goals", x => x.Id);
+                    table.PrimaryKey("PK_Goals", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_goals_match_reports_MatchReportId",
+                        name: "FK_Goals_MatchReports_MatchReportId",
                         column: x => x.MatchReportId,
-                        principalTable: "match_reports",
+                        principalTable: "MatchReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_goals_players_AssistPlayerId",
+                        name: "FK_Goals_Players_AssistPlayerId",
                         column: x => x.AssistPlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_goals_players_PlayerId",
+                        name: "FK_Goals_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_goals_players_PlayerId1",
+                        name: "FK_Goals_Players_PlayerId1",
                         column: x => x.PlayerId1,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_goals_players_PlayerId2",
+                        name: "FK_Goals_Players_PlayerId2",
                         column: x => x.PlayerId2,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -1622,21 +1627,21 @@ namespace OurGame.Persistence.Migrations
                 {
                     table.PrimaryKey("PK_Injuries", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Injuries_match_reports_MatchReportId",
+                        name: "FK_Injuries_MatchReports_MatchReportId",
                         column: x => x.MatchReportId,
-                        principalTable: "match_reports",
+                        principalTable: "MatchReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_Injuries_players_PlayerId",
+                        name: "FK_Injuries_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "performance_ratings",
+                name: "PerformanceRatings",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -1647,31 +1652,26 @@ namespace OurGame.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_performance_ratings", x => x.Id);
+                    table.PrimaryKey("PK_PerformanceRatings", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_performance_ratings_match_reports_MatchReportId",
+                        name: "FK_PerformanceRatings_MatchReports_MatchReportId",
                         column: x => x.MatchReportId,
-                        principalTable: "match_reports",
+                        principalTable: "MatchReports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_performance_ratings_players_PlayerId",
+                        name: "FK_PerformanceRatings_Players_PlayerId",
                         column: x => x.PlayerId,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_performance_ratings_players_PlayerId1",
+                        name: "FK_PerformanceRatings_Players_PlayerId1",
                         column: x => x.PlayerId1,
-                        principalTable: "players",
+                        principalTable: "Players",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_age_groups_ClubId",
-                table: "age_groups",
-                column: "ClubId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AgeGroupCoordinators_AgeGroupId",
@@ -1682,6 +1682,11 @@ namespace OurGame.Persistence.Migrations
                 name: "IX_AgeGroupCoordinators_CoachId",
                 table: "AgeGroupCoordinators",
                 column: "CoachId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_AgeGroups_ClubId",
+                table: "AgeGroups",
+                column: "ClubId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_AppliedTemplates_SessionId",
@@ -1704,43 +1709,48 @@ namespace OurGame.Persistence.Migrations
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_cards_MatchReportId",
-                table: "cards",
+                name: "IX_Cards_MatchReportId",
+                table: "Cards",
                 column: "MatchReportId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_cards_PlayerId",
-                table: "cards",
+                name: "IX_Cards_PlayerId",
+                table: "Cards",
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_cards_PlayerId1",
-                table: "cards",
+                name: "IX_Cards_PlayerId1",
+                table: "Cards",
                 column: "PlayerId1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_coaches_ClubId",
-                table: "coaches",
+                name: "IX_Coaches_ClubId",
+                table: "Coaches",
                 column: "ClubId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_development_goals_PlanId",
-                table: "development_goals",
+                name: "IX_Coaches_UserId",
+                table: "Coaches",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_DevelopmentGoals_PlanId",
+                table: "DevelopmentGoals",
                 column: "PlanId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_development_plans_CreatedByNavigationId",
-                table: "development_plans",
+                name: "IX_DevelopmentPlans_CreatedByNavigationId",
+                table: "DevelopmentPlans",
                 column: "CreatedByNavigationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_development_plans_LinkedReportId",
-                table: "development_plans",
+                name: "IX_DevelopmentPlans_LinkedReportId",
+                table: "DevelopmentPlans",
                 column: "LinkedReportId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_development_plans_PlayerId",
-                table: "development_plans",
+                name: "IX_DevelopmentPlans_PlayerId",
+                table: "DevelopmentPlans",
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
@@ -1749,13 +1759,13 @@ namespace OurGame.Persistence.Migrations
                 column: "DrillId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_drills_ClubId",
-                table: "drills",
+                name: "IX_Drills_ClubId",
+                table: "Drills",
                 column: "ClubId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_drills_CreatedByNavigationId",
-                table: "drills",
+                name: "IX_Drills_CreatedByNavigationId",
+                table: "Drills",
                 column: "CreatedByNavigationId");
 
             migrationBuilder.CreateIndex(
@@ -1779,53 +1789,53 @@ namespace OurGame.Persistence.Migrations
                 column: "EvaluationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_formation_positions_FormationId",
-                table: "formation_positions",
+                name: "IX_FormationPositions_FormationId",
+                table: "FormationPositions",
                 column: "FormationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_formations_CreatedByNavigationId",
-                table: "formations",
+                name: "IX_Formations_CreatedByNavigationId",
+                table: "Formations",
                 column: "CreatedByNavigationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_formations_ParentFormationId",
-                table: "formations",
+                name: "IX_Formations_ParentFormationId",
+                table: "Formations",
                 column: "ParentFormationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_formations_ParentTacticId",
-                table: "formations",
+                name: "IX_Formations_ParentTacticId",
+                table: "Formations",
                 column: "ParentTacticId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_formations_ScopeClubId",
-                table: "formations",
+                name: "IX_Formations_ScopeClubId",
+                table: "Formations",
                 column: "ScopeClubId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_goals_AssistPlayerId",
-                table: "goals",
+                name: "IX_Goals_AssistPlayerId",
+                table: "Goals",
                 column: "AssistPlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_goals_MatchReportId",
-                table: "goals",
+                name: "IX_Goals_MatchReportId",
+                table: "Goals",
                 column: "MatchReportId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_goals_PlayerId",
-                table: "goals",
+                name: "IX_Goals_PlayerId",
+                table: "Goals",
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_goals_PlayerId1",
-                table: "goals",
+                name: "IX_Goals_PlayerId1",
+                table: "Goals",
                 column: "PlayerId1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_goals_PlayerId2",
-                table: "goals",
+                name: "IX_Goals_PlayerId2",
+                table: "Goals",
                 column: "PlayerId2");
 
             migrationBuilder.CreateIndex(
@@ -1859,104 +1869,29 @@ namespace OurGame.Persistence.Migrations
                 column: "TeamId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_kits_ClubId",
-                table: "kits",
+                name: "IX_Kits_ClubId",
+                table: "Kits",
                 column: "ClubId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_kits_TeamId",
-                table: "kits",
+                name: "IX_Kits_TeamId",
+                table: "Kits",
                 column: "TeamId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_lineup_players_LineupId",
-                table: "lineup_players",
+                name: "IX_LineupPlayers_LineupId",
+                table: "LineupPlayers",
                 column: "LineupId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_lineup_players_PlayerId",
-                table: "lineup_players",
+                name: "IX_LineupPlayers_PlayerId",
+                table: "LineupPlayers",
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_lineup_players_PlayerId1",
-                table: "lineup_players",
+                name: "IX_LineupPlayers_PlayerId1",
+                table: "LineupPlayers",
                 column: "PlayerId1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_lineups_FormationId",
-                table: "match_lineups",
-                column: "FormationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_lineups_FormationId1",
-                table: "match_lineups",
-                column: "FormationId1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_lineups_FormationId2",
-                table: "match_lineups",
-                column: "FormationId2");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_lineups_MatchId",
-                table: "match_lineups",
-                column: "MatchId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_lineups_TacticId",
-                table: "match_lineups",
-                column: "TacticId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_reports_CaptainId",
-                table: "match_reports",
-                column: "CaptainId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_reports_MatchId",
-                table: "match_reports",
-                column: "MatchId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_reports_PlayerId",
-                table: "match_reports",
-                column: "PlayerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_reports_PlayerId1",
-                table: "match_reports",
-                column: "PlayerId1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_reports_PlayerOfMatchId",
-                table: "match_reports",
-                column: "PlayerOfMatchId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_substitutions_MatchId",
-                table: "match_substitutions",
-                column: "MatchId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_substitutions_PlayerId",
-                table: "match_substitutions",
-                column: "PlayerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_substitutions_PlayerId1",
-                table: "match_substitutions",
-                column: "PlayerId1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_substitutions_PlayerInId",
-                table: "match_substitutions",
-                column: "PlayerInId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_match_substitutions_PlayerOutId",
-                table: "match_substitutions",
-                column: "PlayerOutId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_MatchCoaches_CoachId",
@@ -1969,38 +1904,113 @@ namespace OurGame.Persistence.Migrations
                 column: "MatchId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_matches_GoalkeeperKitId",
-                table: "matches",
+                name: "IX_Matches_GoalkeeperKitId",
+                table: "Matches",
                 column: "GoalkeeperKitId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_matches_PrimaryKitId",
-                table: "matches",
+                name: "IX_Matches_PrimaryKitId",
+                table: "Matches",
                 column: "PrimaryKitId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_matches_SecondaryKitId",
-                table: "matches",
+                name: "IX_Matches_SecondaryKitId",
+                table: "Matches",
                 column: "SecondaryKitId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_matches_TeamId",
-                table: "matches",
+                name: "IX_Matches_TeamId",
+                table: "Matches",
                 column: "TeamId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_performance_ratings_MatchReportId",
-                table: "performance_ratings",
-                column: "MatchReportId");
+                name: "IX_MatchLineups_FormationId",
+                table: "MatchLineups",
+                column: "FormationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_performance_ratings_PlayerId",
-                table: "performance_ratings",
+                name: "IX_MatchLineups_FormationId1",
+                table: "MatchLineups",
+                column: "FormationId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchLineups_FormationId2",
+                table: "MatchLineups",
+                column: "FormationId2");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchLineups_MatchId",
+                table: "MatchLineups",
+                column: "MatchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchLineups_TacticId",
+                table: "MatchLineups",
+                column: "TacticId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchReports_CaptainId",
+                table: "MatchReports",
+                column: "CaptainId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchReports_MatchId",
+                table: "MatchReports",
+                column: "MatchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchReports_PlayerId",
+                table: "MatchReports",
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_performance_ratings_PlayerId1",
-                table: "performance_ratings",
+                name: "IX_MatchReports_PlayerId1",
+                table: "MatchReports",
+                column: "PlayerId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchReports_PlayerOfMatchId",
+                table: "MatchReports",
+                column: "PlayerOfMatchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchSubstitutions_MatchId",
+                table: "MatchSubstitutions",
+                column: "MatchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchSubstitutions_PlayerId",
+                table: "MatchSubstitutions",
+                column: "PlayerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchSubstitutions_PlayerId1",
+                table: "MatchSubstitutions",
+                column: "PlayerId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchSubstitutions_PlayerInId",
+                table: "MatchSubstitutions",
+                column: "PlayerInId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MatchSubstitutions_PlayerOutId",
+                table: "MatchSubstitutions",
+                column: "PlayerOutId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PerformanceRatings_MatchReportId",
+                table: "PerformanceRatings",
+                column: "MatchReportId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PerformanceRatings_PlayerId",
+                table: "PerformanceRatings",
+                column: "PlayerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PerformanceRatings_PlayerId1",
+                table: "PerformanceRatings",
                 column: "PlayerId1");
 
             migrationBuilder.CreateIndex(
@@ -2019,30 +2029,15 @@ namespace OurGame.Persistence.Migrations
                 column: "PlanId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_player_age_groups_AgeGroupId",
-                table: "player_age_groups",
+                name: "IX_PlayerAgeGroups_AgeGroupId",
+                table: "PlayerAgeGroups",
                 column: "AgeGroupId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_player_attributes_PlayerId",
-                table: "player_attributes",
+                name: "IX_PlayerAttributes_PlayerId",
+                table: "PlayerAttributes",
                 column: "PlayerId",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_player_reports_CreatedByNavigationId",
-                table: "player_reports",
-                column: "CreatedByNavigationId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_player_reports_PlayerId",
-                table: "player_reports",
-                column: "PlayerId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_player_teams_TeamId",
-                table: "player_teams",
-                column: "TeamId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PlayerImages_PlayerId",
@@ -2065,9 +2060,29 @@ namespace OurGame.Persistence.Migrations
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_players_ClubId",
-                table: "players",
+                name: "IX_PlayerReports_CreatedByNavigationId",
+                table: "PlayerReports",
+                column: "CreatedByNavigationId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PlayerReports_PlayerId",
+                table: "PlayerReports",
+                column: "PlayerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Players_ClubId",
+                table: "Players",
                 column: "ClubId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Players_UserId",
+                table: "Players",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_PlayerTeams_TeamId",
+                table: "PlayerTeams",
+                column: "TeamId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_PositionOverrides_FormationId",
@@ -2090,39 +2105,19 @@ namespace OurGame.Persistence.Migrations
                 column: "ReportId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_session_attendance_PlayerId",
-                table: "session_attendance",
+                name: "IX_SessionAttendances_PlayerId",
+                table: "SessionAttendances",
                 column: "PlayerId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_session_attendance_PlayerId1",
-                table: "session_attendance",
+                name: "IX_SessionAttendances_PlayerId1",
+                table: "SessionAttendances",
                 column: "PlayerId1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_session_attendance_SessionId",
-                table: "session_attendance",
+                name: "IX_SessionAttendances_SessionId",
+                table: "SessionAttendances",
                 column: "SessionId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_session_drills_DrillId",
-                table: "session_drills",
-                column: "DrillId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_session_drills_DrillId1",
-                table: "session_drills",
-                column: "DrillId1");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_session_drills_SessionId",
-                table: "session_drills",
-                column: "SessionId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_session_drills_TemplateId",
-                table: "session_drills",
-                column: "TemplateId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_SessionCoaches_CoachId",
@@ -2135,53 +2130,73 @@ namespace OurGame.Persistence.Migrations
                 column: "SessionId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_SessionDrills_DrillId",
+                table: "SessionDrills",
+                column: "DrillId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SessionDrills_DrillId1",
+                table: "SessionDrills",
+                column: "DrillId1");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SessionDrills_SessionId",
+                table: "SessionDrills",
+                column: "SessionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SessionDrills_TemplateId",
+                table: "SessionDrills",
+                column: "TemplateId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_SimilarProfessionals_ReportId",
                 table: "SimilarProfessionals",
                 column: "ReportId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tactic_principles_FormationId",
-                table: "tactic_principles",
+                name: "IX_TacticPrinciples_FormationId",
+                table: "TacticPrinciples",
                 column: "FormationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_tactic_principles_FormationId1",
-                table: "tactic_principles",
+                name: "IX_TacticPrinciples_FormationId1",
+                table: "TacticPrinciples",
                 column: "FormationId1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_team_coaches_CoachId",
-                table: "team_coaches",
+                name: "IX_TeamCoaches_CoachId",
+                table: "TeamCoaches",
                 column: "CoachId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_teams_AgeGroupId",
-                table: "teams",
+                name: "IX_Teams_AgeGroupId",
+                table: "Teams",
                 column: "AgeGroupId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_teams_ClubId",
-                table: "teams",
+                name: "IX_Teams_ClubId",
+                table: "Teams",
                 column: "ClubId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_teams_FormationId",
-                table: "teams",
+                name: "IX_Teams_FormationId",
+                table: "Teams",
                 column: "FormationId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_template_drills_DrillId",
-                table: "template_drills",
+                name: "IX_TemplateDrills_DrillId",
+                table: "TemplateDrills",
                 column: "DrillId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_template_drills_DrillId1",
-                table: "template_drills",
+                name: "IX_TemplateDrills_DrillId1",
+                table: "TemplateDrills",
                 column: "DrillId1");
 
             migrationBuilder.CreateIndex(
-                name: "IX_template_drills_TemplateId",
-                table: "template_drills",
+                name: "IX_TemplateDrills_TemplateId",
+                table: "TemplateDrills",
                 column: "TemplateId");
 
             migrationBuilder.CreateIndex(
@@ -2210,25 +2225,10 @@ namespace OurGame.Persistence.Migrations
                 column: "TemplateId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_users_club_id",
-                table: "users",
-                column: "club_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_users_email",
-                table: "users",
-                column: "email",
+                name: "IX_Users_Email",
+                table: "Users",
+                column: "Email",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_users_player_id",
-                table: "users",
-                column: "player_id");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_users_staff_id",
-                table: "users",
-                column: "staff_id");
         }
 
         /// <inheritdoc />
@@ -2241,10 +2241,10 @@ namespace OurGame.Persistence.Migrations
                 name: "AppliedTemplates");
 
             migrationBuilder.DropTable(
-                name: "cards");
+                name: "Cards");
 
             migrationBuilder.DropTable(
-                name: "development_goals");
+                name: "DevelopmentGoals");
 
             migrationBuilder.DropTable(
                 name: "DrillLinks");
@@ -2256,10 +2256,10 @@ namespace OurGame.Persistence.Migrations
                 name: "EvaluationAttributes");
 
             migrationBuilder.DropTable(
-                name: "formation_positions");
+                name: "FormationPositions");
 
             migrationBuilder.DropTable(
-                name: "goals");
+                name: "Goals");
 
             migrationBuilder.DropTable(
                 name: "Injuries");
@@ -2268,34 +2268,34 @@ namespace OurGame.Persistence.Migrations
                 name: "KitOrderItems");
 
             migrationBuilder.DropTable(
-                name: "lineup_players");
-
-            migrationBuilder.DropTable(
-                name: "match_substitutions");
+                name: "LineupPlayers");
 
             migrationBuilder.DropTable(
                 name: "MatchCoaches");
 
             migrationBuilder.DropTable(
-                name: "performance_ratings");
+                name: "MatchSubstitutions");
+
+            migrationBuilder.DropTable(
+                name: "PerformanceRatings");
 
             migrationBuilder.DropTable(
                 name: "PersonalSessionDrills");
 
             migrationBuilder.DropTable(
-                name: "player_age_groups");
+                name: "PlayerAgeGroups");
 
             migrationBuilder.DropTable(
-                name: "player_attributes");
-
-            migrationBuilder.DropTable(
-                name: "player_teams");
+                name: "PlayerAttributes");
 
             migrationBuilder.DropTable(
                 name: "PlayerImages");
 
             migrationBuilder.DropTable(
                 name: "PlayerParents");
+
+            migrationBuilder.DropTable(
+                name: "PlayerTeams");
 
             migrationBuilder.DropTable(
                 name: "PositionOverrides");
@@ -2307,31 +2307,31 @@ namespace OurGame.Persistence.Migrations
                 name: "ReportDevelopmentActions");
 
             migrationBuilder.DropTable(
-                name: "session_attendance");
-
-            migrationBuilder.DropTable(
-                name: "session_drills");
+                name: "SessionAttendances");
 
             migrationBuilder.DropTable(
                 name: "SessionCoaches");
 
             migrationBuilder.DropTable(
+                name: "SessionDrills");
+
+            migrationBuilder.DropTable(
                 name: "SimilarProfessionals");
 
             migrationBuilder.DropTable(
-                name: "tactic_principles");
+                name: "TacticPrinciples");
 
             migrationBuilder.DropTable(
-                name: "team_coaches");
+                name: "TeamCoaches");
 
             migrationBuilder.DropTable(
-                name: "template_drills");
+                name: "TemplateDrills");
 
             migrationBuilder.DropTable(
                 name: "TrainingObjectives");
 
             migrationBuilder.DropTable(
-                name: "development_plans");
+                name: "DevelopmentPlans");
 
             migrationBuilder.DropTable(
                 name: "AttributeEvaluations");
@@ -2340,10 +2340,10 @@ namespace OurGame.Persistence.Migrations
                 name: "KitOrders");
 
             migrationBuilder.DropTable(
-                name: "match_lineups");
+                name: "MatchLineups");
 
             migrationBuilder.DropTable(
-                name: "match_reports");
+                name: "MatchReports");
 
             migrationBuilder.DropTable(
                 name: "PersonalSessions");
@@ -2352,16 +2352,13 @@ namespace OurGame.Persistence.Migrations
                 name: "TrainingSessions");
 
             migrationBuilder.DropTable(
-                name: "drills");
+                name: "Drills");
 
             migrationBuilder.DropTable(
-                name: "player_reports");
+                name: "PlayerReports");
 
             migrationBuilder.DropTable(
-                name: "users");
-
-            migrationBuilder.DropTable(
-                name: "matches");
+                name: "Matches");
 
             migrationBuilder.DropTable(
                 name: "TrainingPlans");
@@ -2370,25 +2367,28 @@ namespace OurGame.Persistence.Migrations
                 name: "DrillTemplates");
 
             migrationBuilder.DropTable(
-                name: "kits");
+                name: "Kits");
 
             migrationBuilder.DropTable(
-                name: "players");
+                name: "Players");
 
             migrationBuilder.DropTable(
-                name: "teams");
+                name: "Teams");
 
             migrationBuilder.DropTable(
-                name: "age_groups");
+                name: "AgeGroups");
 
             migrationBuilder.DropTable(
-                name: "formations");
+                name: "Formations");
 
             migrationBuilder.DropTable(
-                name: "coaches");
+                name: "Coaches");
 
             migrationBuilder.DropTable(
-                name: "clubs");
+                name: "Clubs");
+
+            migrationBuilder.DropTable(
+                name: "Users");
         }
     }
 }

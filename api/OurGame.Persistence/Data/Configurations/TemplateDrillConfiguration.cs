@@ -9,7 +9,7 @@ public class TemplateDrillConfiguration : IEntityTypeConfiguration<TemplateDrill
 {
     public void Configure(EntityTypeBuilder<TemplateDrill> builder)
     {
-        builder.ToTable("template_drills");
+        builder.ToTable("TemplateDrills");
 
         builder.HasKey(e => e.Id);
 

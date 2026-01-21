@@ -9,7 +9,7 @@ public class SessionAttendanceConfiguration : IEntityTypeConfiguration<SessionAt
 {
     public void Configure(EntityTypeBuilder<SessionAttendance> builder)
     {
-        builder.ToTable("session_attendance");
+        builder.ToTable("SessionAttendances");
 
         builder.HasKey(e => e.Id);
 

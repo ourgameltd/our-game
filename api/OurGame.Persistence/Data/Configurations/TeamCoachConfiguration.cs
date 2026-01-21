@@ -8,7 +8,7 @@ public class TeamCoachConfiguration : IEntityTypeConfiguration<TeamCoach>
 {
     public void Configure(EntityTypeBuilder<TeamCoach> builder)
     {
-        builder.ToTable("team_coaches");
+        builder.ToTable("TeamCoaches");
         builder.HasKey(tc => new { tc.TeamId, tc.CoachId });
     }
 }

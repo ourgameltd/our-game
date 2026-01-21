@@ -9,7 +9,7 @@ public class MatchReportConfiguration : IEntityTypeConfiguration<MatchReport>
 {
     public void Configure(EntityTypeBuilder<MatchReport> builder)
     {
-        builder.ToTable("match_reports");
+        builder.ToTable("MatchReports");
 
         builder.HasKey(e => e.Id);
 

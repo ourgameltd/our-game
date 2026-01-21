@@ -9,7 +9,7 @@ namespace OurGame.Application.UseCases.Players.Queries.GetMyChildren;
 /// <summary>
 /// Query to get child players for the current authenticated parent user
 /// </summary>
-public record GetMyChildrenQuery(string AzureUserId) : IQuery<List<ChildPlayerDto>>;
+public record GetMyChildrenQuery(string AuthId) : IQuery<List<ChildPlayerDto>>;
 
 /// <summary>
 /// Handler for GetMyChildrenQuery
@@ -45,16 +45,16 @@ public class GetMyChildrenHandler : IRequestHandler<GetMyChildrenQuery, List<Chi
                 c.PrimaryColor AS ClubPrimaryColor,
                 c.SecondaryColor AS ClubSecondaryColor,
                 c.AccentColor AS ClubAccentColor
-            FROM users u
+            FROM Users u
             INNER JOIN PlayerParents pp ON pp.ParentUserId = u.Id
-            INNER JOIN players p ON pp.PlayerId = p.Id
-            LEFT JOIN clubs c ON p.ClubId = c.Id
-            WHERE u.AzureUserId = {0}
+            INNER JOIN Players p ON pp.PlayerId = p.Id
+            LEFT JOIN Clubs c ON p.ClubId = c.Id
+            WHERE u.AuthId = {0}
               AND p.IsArchived = 0
             ORDER BY p.FirstName, p.LastName";
 
         var playerData = await _db.Database
-            .SqlQueryRaw<PlayerRawDto>(sql, query.AzureUserId)
+            .SqlQueryRaw<PlayerRawDto>(sql, query.AuthId)
             .ToListAsync(cancellationToken);
 
         if (playerData.Count == 0)
