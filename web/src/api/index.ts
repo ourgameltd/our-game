@@ -30,11 +30,18 @@ export type {
   AgeGroupPerformerDto,
   TeamWithStatsDto,
   TeamStatsDto,
+  TeamOverviewDto,
+  TeamOverviewTeamDto,
+  TeamOverviewStatisticsDto,
+  TeamMatchSummaryDto,
+  TeamPerformerDto,
+  TeamTrainingSessionDto,
 } from './client';
 
 // React hooks
 export {
   useMyTeams,
+  useTeamOverview,
   useMyChildren,
   useClubById,
   useClubStatistics,

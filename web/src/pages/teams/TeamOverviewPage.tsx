@@ -1,72 +1,89 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getTeamById } from '@data/teams';
-import { getPlayersByTeamId } from '@data/players';
-import { getTrainingSessionsByTeamId } from '@data/training';
-import { getTeamStatistics } from '@data/statistics';
+import { useTeamOverview } from '@/api/hooks';
+import { TeamMatchSummaryDto } from '@/api';
 import StatsGrid from '@components/stats/StatsGrid';
 import MatchesCard from '@components/matches/MatchesCard';
 import TopPerformersCard from '@components/players/TopPerformersCard';
 import NeedsSupportCard from '@components/players/NeedsSupportCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
+import { Match } from '@/types';
 
 export default function TeamOverviewPage() {
   const { clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
-  const team = getTeamById(teamId!);
-  const players = getPlayersByTeamId(teamId!);
-  const stats = getTeamStatistics(teamId!);
-  
-  const trainingSessions = getTrainingSessionsByTeamId(teamId!);
-  const upcomingTrainingSessions = trainingSessions.filter(s => new Date(s.date) > new Date()).slice(0, 3);
+  const { data: overview, isLoading, error } = useTeamOverview(teamId);
 
-  if (!team) {
-    return <div>Team not found</div>;
-  }
+  const team = overview?.team ?? null;
+  const stats = overview?.statistics ?? null;
+  const upcomingTrainingSessions = overview?.upcomingTrainingSessions ?? [];
 
-  // Mock performance data - map to correct format
-  const topPerformersData = players.slice(0, 3).map(p => ({
-    playerId: p.id,
-    firstName: p.firstName,
-    lastName: p.lastName,
-    averageRating: 7.5 + Math.random() * 1.5,
-    matchesPlayed: Math.floor(Math.random() * 15) + 5
-  }));
-  
-  const needsAttentionData = players.slice(-2).map(p => ({
-    playerId: p.id,
-    firstName: p.firstName,
-    lastName: p.lastName,
-    averageRating: 5.0 + Math.random() * 1.0,
-    matchesPlayed: Math.floor(Math.random() * 15) + 5
-  }));
+  const mapMatchSummary = (matches: TeamMatchSummaryDto[], status: Match['status']): Match[] => {
+    return matches.map(match => ({
+      id: match.id,
+      teamId: match.teamId,
+      opposition: match.opposition,
+      date: new Date(match.date),
+      meetTime: match.meetTime ? new Date(match.meetTime) : undefined,
+      kickOffTime: match.kickOffTime ? new Date(match.kickOffTime) : new Date(match.date),
+      location: match.location,
+      isHome: match.isHome,
+      competition: match.competition ?? '',
+      score: match.score,
+      status
+    }));
+  };
+
+  const upcomingMatches = stats ? mapMatchSummary(stats.upcomingMatches, 'scheduled') : [];
+  const previousResults = stats ? mapMatchSummary(stats.previousResults, 'completed') : [];
+
+  const topPerformersData = stats?.topPerformers ?? [];
+  const needsAttentionData = stats?.underperforming ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         <div className="flex items-center gap-2 mb-4">
           <div className="flex-grow">
-            <PageTitle
-              title={team.name}
-              subtitle="Team Overview"
-              action={{
-                label: 'Settings',
-                icon: 'settings',
-                title: 'Settings',
-                onClick: () => navigate(Routes.teamSettings(clubId!, ageGroupId!, teamId!)),
-                variant: 'primary'
-              }}
-            />
+            {isLoading ? (
+              <div className="animate-pulse">
+                <div className="h-7 w-56 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+                <div className="h-4 w-36 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+            ) : team ? (
+              <PageTitle
+                title={team.name}
+                subtitle="Team Overview"
+                action={{
+                  label: 'Settings',
+                  icon: 'settings',
+                  title: 'Settings',
+                  onClick: () => navigate(Routes.teamSettings(clubId!, ageGroupId!, teamId!)),
+                  variant: 'primary'
+                }}
+              />
+            ) : (
+              <div className="text-red-600 dark:text-red-400">
+                {error?.message || 'Team not found'}
+              </div>
+            )}
           </div>
-          {team.isArchived && (
+          {team?.isArchived && (
             <span className="badge bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 self-start">
               🗄️ Archived
             </span>
           )}
         </div>
 
+        {error && (
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-800 dark:text-red-200 font-medium">Failed to load team overview</p>
+            <p className="text-red-600 dark:text-red-300 text-sm mt-1">{error.message}</p>
+          </div>
+        )}
+
         {/* Archived Notice */}
-        {team.isArchived && (
+        {team?.isArchived && (
           <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
             <p className="text-sm text-orange-800 dark:text-orange-300">
               ⚠️ This team is archived. Modifications are restricted. Go to Settings to unarchive.
@@ -75,23 +92,39 @@ export default function TeamOverviewPage() {
         )}
 
         {/* Stats Grid */}
-        <StatsGrid stats={stats} />
+        {isLoading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 animate-pulse">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+            ))}
+          </div>
+        ) : stats ? (
+          <StatsGrid stats={stats} />
+        ) : null}
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
-          <MatchesCard 
-            type="upcoming"
-            matches={stats.upcomingMatches}
-            limit={3}
-            viewAllLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
-            getMatchLink={(matchId) => Routes.matchReport(clubId!, ageGroupId!, teamId!, matchId)}
-          />
-          <MatchesCard 
-            type="results"
-            matches={stats.previousResults}
-            limit={3}
-            viewAllLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
-            getMatchLink={(matchId) => Routes.matchReport(clubId!, ageGroupId!, teamId!, matchId)}
-          />
+          {isLoading ? (
+            Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+            ))
+          ) : (
+            <>
+              <MatchesCard 
+                type="upcoming"
+                matches={upcomingMatches}
+                limit={3}
+                viewAllLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
+                getMatchLink={(matchId) => Routes.matchReport(clubId!, ageGroupId!, teamId!, matchId)}
+              />
+              <MatchesCard 
+                type="results"
+                matches={previousResults}
+                limit={3}
+                viewAllLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
+                getMatchLink={(matchId) => Routes.matchReport(clubId!, ageGroupId!, teamId!, matchId)}
+              />
+            </>
+          )}
         </div>
 
         {/* Upcoming Training Sessions */}
@@ -100,7 +133,13 @@ export default function TeamOverviewPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Upcoming Training Sessions</h3>
           </div>
           <div className="space-y-2">
-            {upcomingTrainingSessions.length > 0 ? (
+            {isLoading ? (
+              <div className="space-y-3 animate-pulse">
+                {Array.from({ length: 2 }).map((_, index) => (
+                  <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                ))}
+              </div>
+            ) : upcomingTrainingSessions.length > 0 ? (
               upcomingTrainingSessions.map((session) => (
                 <Link
                   key={session.id}
@@ -117,7 +156,7 @@ export default function TeamOverviewPage() {
                         })}
                       </div>
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {new Date(session.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} • {session.duration} minutes
+                        {new Date(session.date).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} • {session.durationMinutes ?? 0} minutes
                       </div>
                     </div>
                     <span className="badge bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">
@@ -143,14 +182,22 @@ export default function TeamOverviewPage() {
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <TopPerformersCard 
-            performers={topPerformersData}
-            getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
-          />
-          <NeedsSupportCard 
-            performers={needsAttentionData}
-            getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
-          />
+          {isLoading ? (
+            Array.from({ length: 2 }).map((_, index) => (
+              <div key={index} className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+            ))
+          ) : (
+            <>
+              <TopPerformersCard 
+                performers={topPerformersData}
+                getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
+              />
+              <NeedsSupportCard 
+                performers={needsAttentionData}
+                getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
+              />
+            </>
+          )}
         </div>
       </main>
     </div>

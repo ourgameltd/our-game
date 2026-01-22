@@ -11,6 +11,8 @@ using OurGame.Application.UseCases.Teams.Queries.GetMyTeamsAndClubs.DTOs;
 using OurGame.Application.UseCases.Teams.Queries.GetMyTeamsAndClubs;
 using OurGame.Application.UseCases.Teams.Queries.GetTeamsByAgeGroupId;
 using OurGame.Application.UseCases.Teams.Queries.GetTeamsByAgeGroupId.DTOs;
+using OurGame.Application.UseCases.Teams.Queries.GetTeamOverview;
+using OurGame.Application.UseCases.Teams.Queries.GetTeamOverview.DTOs;
 
 namespace OurGame.Api.Functions;
 
@@ -94,6 +96,55 @@ public class TeamFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<TeamWithStatsDto>>.SuccessResponse(teams));
+        return response;
+    }
+
+    /// <summary>
+    /// Get overview data for a specific team
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>Team overview data</returns>
+    [Function("GetTeamOverview")]
+    [OpenApiOperation(operationId: "GetTeamOverview", tags: new[] { "Teams" }, Summary = "Get team overview", Description = "Retrieves team overview data including statistics, matches, and upcoming training sessions")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewDto>), Description = "Team overview retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewDto>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewDto>), Description = "Team not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewDto>), Description = "Invalid team ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetTeamOverview(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/teams/{teamId}/overview")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamOverviewDto>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        var overview = await _mediator.Send(new GetTeamOverviewQuery(teamGuid));
+
+        if (overview == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<TeamOverviewDto>.ErrorResponse(
+                "Team not found", 404));
+            return notFoundResponse;
+        }
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<TeamOverviewDto>.SuccessResponse(overview));
         return response;
     }
 }

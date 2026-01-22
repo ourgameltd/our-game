@@ -245,6 +245,70 @@ export interface TeamStatsDto {
   goalDifference: number;
 }
 
+export interface TeamOverviewDto {
+  team: TeamOverviewTeamDto;
+  statistics: TeamOverviewStatisticsDto;
+  upcomingTrainingSessions: TeamTrainingSessionDto[];
+}
+
+export interface TeamOverviewTeamDto {
+  id: string;
+  clubId: string;
+  ageGroupId: string;
+  name: string;
+  shortName: string;
+  level: string;
+  season: string;
+  colors: TeamColorsDto;
+  isArchived: boolean;
+}
+
+export interface TeamOverviewStatisticsDto {
+  playerCount: number;
+  matchesPlayed: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  winRate: number;
+  goalDifference: number;
+  upcomingMatches: TeamMatchSummaryDto[];
+  previousResults: TeamMatchSummaryDto[];
+  topPerformers: TeamPerformerDto[];
+  underperforming: TeamPerformerDto[];
+}
+
+export interface TeamMatchSummaryDto {
+  id: string;
+  teamId: string;
+  ageGroupId: string;
+  opposition: string;
+  date: string;
+  meetTime?: string;
+  kickOffTime?: string;
+  location: string;
+  isHome: boolean;
+  competition?: string;
+  score?: MatchScoreDto;
+}
+
+export interface TeamPerformerDto {
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  averageRating: number;
+  matchesPlayed: number;
+}
+
+export interface TeamTrainingSessionDto {
+  id: string;
+  teamId: string;
+  date: string;
+  meetTime?: string;
+  durationMinutes?: number;
+  location: string;
+  focusAreas: string[];
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -306,6 +370,14 @@ export const apiClient = {
      */
     getByAgeGroupId: async (ageGroupId: string): Promise<ApiResponse<TeamWithStatsDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<TeamWithStatsDto[]>>(`/v1/age-groups/${ageGroupId}/teams`);
+      return response.data;
+    },
+
+    /**
+     * Get overview data for a team
+     */
+    getOverview: async (teamId: string): Promise<ApiResponse<TeamOverviewDto>> => {
+      const response = await axiosInstance.get<ApiResponse<TeamOverviewDto>>(`/v1/teams/${teamId}/overview`);
       return response.data;
     },
   },

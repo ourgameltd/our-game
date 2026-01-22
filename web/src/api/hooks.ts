@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   apiClient,
   TeamListItemDto,
+  TeamOverviewDto,
   ChildPlayerDto,
   ClubDetailDto,
   ClubStatisticsDto,
@@ -70,6 +71,16 @@ export function useMyTeams(): UseApiState<TeamListItemDto[]> {
   return useApiCall<TeamListItemDto[]>(
     () => apiClient.teams.getMyTeams(),
     []
+  );
+}
+
+/**
+ * Hook to fetch team overview data
+ */
+export function useTeamOverview(teamId: string | undefined): UseApiState<TeamOverviewDto> {
+  return useApiCall<TeamOverviewDto>(
+    () => apiClient.teams.getOverview(teamId!),
+    [teamId]
   );
 }
 
