@@ -185,8 +185,58 @@ export interface AgeGroupListDto {
   teamCount: number;
 }
 
+export interface AgeGroupDetailDto {
+  id: string;
+  clubId: string;
+  name: string;
+  code: string;
+  level: string;
+  season: string;
+  seasons: string[];
+  defaultSeason: string;
+  defaultSquadSize: number;
+  description?: string;
+  isArchived: boolean;
+}
+
 export interface AgeGroupStatisticsDto {
   playerCount: number;
+  matchesPlayed: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  winRate: number;
+  goalDifference: number;
+  upcomingMatches: MatchSummaryDto[];
+  previousResults: MatchSummaryDto[];
+  topPerformers: AgeGroupPerformerDto[];
+  underperforming: AgeGroupPerformerDto[];
+}
+
+export interface AgeGroupPerformerDto {
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  averageRating: number;
+  matchesPlayed: number;
+}
+
+export interface TeamWithStatsDto {
+  id: string;
+  clubId: string;
+  ageGroupId: string;
+  name: string;
+  shortName: string;
+  level: string;
+  season: string;
+  colors: TeamColorsDto;
+  isArchived: boolean;
+  stats: TeamStatsDto;
+}
+
+export interface TeamStatsDto {
+  playerCount: number;
+  coachCount: number;
   matchesPlayed: number;
   wins: number;
   draws: number;
@@ -250,6 +300,14 @@ export const apiClient = {
       const response = await axiosInstance.get<ApiResponse<TeamListItemDto[]>>('/v1/teams/me');
       return response.data;
     },
+
+    /**
+     * Get teams by age group ID
+     */
+    getByAgeGroupId: async (ageGroupId: string): Promise<ApiResponse<TeamWithStatsDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<TeamWithStatsDto[]>>(`/v1/age-groups/${ageGroupId}/teams`);
+      return response.data;
+    },
   },
 
   clubs: {
@@ -280,6 +338,14 @@ export const apiClient = {
   },
 
   ageGroups: {
+    /**
+     * Get age group by ID
+     */
+    getById: async (ageGroupId: string): Promise<ApiResponse<AgeGroupDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<AgeGroupDetailDto>>(`/v1/age-groups/${ageGroupId}`);
+      return response.data;
+    },
+
     /**
      * Get age group statistics
      */

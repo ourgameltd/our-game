@@ -9,6 +9,8 @@ using OurGame.Api.Extensions;
 using System.Net;
 using OurGame.Application.UseCases.Teams.Queries.GetMyTeamsAndClubs.DTOs;
 using OurGame.Application.UseCases.Teams.Queries.GetMyTeamsAndClubs;
+using OurGame.Application.UseCases.Teams.Queries.GetTeamsByAgeGroupId;
+using OurGame.Application.UseCases.Teams.Queries.GetTeamsByAgeGroupId.DTOs;
 
 namespace OurGame.Api.Functions;
 
@@ -53,5 +55,45 @@ public class TeamFunctions
             var response = req.CreateResponse(HttpStatusCode.OK);
             await response.WriteAsJsonAsync(ApiResponse<List<TeamAndClubsListItemDto>>.SuccessResponse(teams));
             return response;
+    }
+
+    /// <summary>
+    /// Get teams for a specific age group
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="ageGroupId">The age group ID</param>
+    /// <returns>List of teams in the age group</returns>
+    [Function("GetTeamsByAgeGroupId")]
+    [OpenApiOperation(operationId: "GetTeamsByAgeGroupId", tags: new[] { "Teams" }, Summary = "Get teams by age group", Description = "Retrieves teams for a specific age group with summary stats")]
+    [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The age group ID")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamWithStatsDto>>), Description = "Teams retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamWithStatsDto>>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamWithStatsDto>>), Description = "Invalid age group ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamWithStatsDto>>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetTeamsByAgeGroupId(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/age-groups/{ageGroupId}/teams")] HttpRequestData req,
+        string ageGroupId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(ageGroupId, out var ageGroupGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<List<TeamWithStatsDto>>.ErrorResponse(
+                "Invalid age group ID format", 400));
+            return badRequestResponse;
+        }
+
+        var teams = await _mediator.Send(new GetTeamsByAgeGroupIdQuery(ageGroupGuid));
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<List<TeamWithStatsDto>>.SuccessResponse(teams));
+        return response;
     }
 }

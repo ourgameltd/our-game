@@ -25,7 +25,11 @@ export type {
   MatchSummaryDto,
   MatchScoreDto,
   AgeGroupListDto,
+  AgeGroupDetailDto,
   AgeGroupStatisticsDto,
+  AgeGroupPerformerDto,
+  TeamWithStatsDto,
+  TeamStatsDto,
 } from './client';
 
 // React hooks

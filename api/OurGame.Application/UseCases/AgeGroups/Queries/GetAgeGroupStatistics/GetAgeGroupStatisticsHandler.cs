@@ -55,6 +55,111 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             .SqlQueryRaw<MatchStatsRawDto>(matchStatsSql, query.AgeGroupId)
             .FirstOrDefaultAsync(cancellationToken);
 
+        var upcomingMatchesSql = @"
+            SELECT TOP 5
+                m.Id,
+                m.TeamId,
+                t.AgeGroupId,
+                t.Name AS TeamName,
+                ag.Name AS AgeGroupName,
+                m.Opposition,
+                m.MatchDate,
+                m.MeetTime,
+                m.KickOffTime,
+                m.Location,
+                m.IsHome,
+                m.Competition,
+                NULL AS HomeScore,
+                NULL AS AwayScore
+            FROM Matches m
+            INNER JOIN Teams t ON m.TeamId = t.Id
+            INNER JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
+            WHERE t.AgeGroupId = {0}
+                AND m.Status = 0
+                AND m.MatchDate >= GETUTCDATE()
+                AND t.IsArchived = 0
+            ORDER BY m.MatchDate ASC";
+
+        var upcomingMatches = await _db.Database
+            .SqlQueryRaw<AgeGroupMatchRawDto>(upcomingMatchesSql, query.AgeGroupId)
+            .ToListAsync(cancellationToken);
+
+        var recentResultsSql = @"
+            SELECT TOP 5
+                m.Id,
+                m.TeamId,
+                t.AgeGroupId,
+                t.Name AS TeamName,
+                ag.Name AS AgeGroupName,
+                m.Opposition,
+                m.MatchDate,
+                m.MeetTime,
+                m.KickOffTime,
+                m.Location,
+                m.IsHome,
+                m.Competition,
+                m.HomeScore,
+                m.AwayScore
+            FROM Matches m
+            INNER JOIN Teams t ON m.TeamId = t.Id
+            INNER JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
+            WHERE t.AgeGroupId = {0}
+                AND m.Status = 2
+                AND t.IsArchived = 0
+            ORDER BY m.MatchDate DESC";
+
+        var recentResults = await _db.Database
+            .SqlQueryRaw<AgeGroupMatchRawDto>(recentResultsSql, query.AgeGroupId)
+            .ToListAsync(cancellationToken);
+
+        var topPerformersSql = @"
+            SELECT TOP 5
+                pr.PlayerId,
+                p.FirstName,
+                p.LastName,
+                CAST(AVG(CAST(pr.Rating AS decimal(5,2))) AS decimal(5,2)) AS AverageRating,
+                COUNT(pr.Id) AS MatchesPlayed
+            FROM PerformanceRatings pr
+            INNER JOIN MatchReports mr ON pr.MatchReportId = mr.Id
+            INNER JOIN Matches m ON mr.MatchId = m.Id
+            INNER JOIN Teams t ON m.TeamId = t.Id
+            INNER JOIN Players p ON pr.PlayerId = p.Id
+            WHERE t.AgeGroupId = {0}
+                AND m.Status = 2
+                AND pr.Rating IS NOT NULL
+                AND p.IsArchived = 0
+            GROUP BY pr.PlayerId, p.FirstName, p.LastName
+            HAVING COUNT(pr.Id) >= 3
+            ORDER BY AverageRating DESC";
+
+        var topPerformers = await _db.Database
+            .SqlQueryRaw<AgeGroupPerformerRawDto>(topPerformersSql, query.AgeGroupId)
+            .ToListAsync(cancellationToken);
+
+        var underperformingSql = @"
+            SELECT TOP 5
+                pr.PlayerId,
+                p.FirstName,
+                p.LastName,
+                CAST(AVG(CAST(pr.Rating AS decimal(5,2))) AS decimal(5,2)) AS AverageRating,
+                COUNT(pr.Id) AS MatchesPlayed
+            FROM PerformanceRatings pr
+            INNER JOIN MatchReports mr ON pr.MatchReportId = mr.Id
+            INNER JOIN Matches m ON mr.MatchId = m.Id
+            INNER JOIN Teams t ON m.TeamId = t.Id
+            INNER JOIN Players p ON pr.PlayerId = p.Id
+            WHERE t.AgeGroupId = {0}
+                AND m.Status = 2
+                AND pr.Rating IS NOT NULL
+                AND p.IsArchived = 0
+            GROUP BY pr.PlayerId, p.FirstName, p.LastName
+            HAVING COUNT(pr.Id) >= 3 AND AVG(CAST(pr.Rating AS decimal(5,2))) < 6.0
+            ORDER BY AverageRating ASC";
+
+        var underperforming = await _db.Database
+            .SqlQueryRaw<AgeGroupPerformerRawDto>(underperformingSql, query.AgeGroupId)
+            .ToListAsync(cancellationToken);
+
         var wins = matchStats?.Wins ?? 0;
         var draws = matchStats?.Draws ?? 0;
         var losses = matchStats?.Losses ?? 0;
@@ -70,7 +175,57 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             Draws = draws,
             Losses = losses,
             WinRate = matchesPlayed > 0 ? Math.Round((decimal)wins / matchesPlayed * 100, 1) : 0,
-            GoalDifference = goalsFor - goalsAgainst
+            GoalDifference = goalsFor - goalsAgainst,
+            UpcomingMatches = upcomingMatches.Select(m => new AgeGroupMatchSummaryDto
+            {
+                Id = m.Id,
+                TeamId = m.TeamId,
+                AgeGroupId = m.AgeGroupId,
+                TeamName = m.TeamName ?? string.Empty,
+                AgeGroupName = m.AgeGroupName ?? string.Empty,
+                Opposition = m.Opposition ?? string.Empty,
+                Date = m.MatchDate,
+                MeetTime = m.MeetTime,
+                KickOffTime = m.KickOffTime,
+                Location = m.Location ?? string.Empty,
+                IsHome = m.IsHome,
+                Competition = m.Competition,
+                Score = null
+            }).ToList(),
+            PreviousResults = recentResults.Select(m => new AgeGroupMatchSummaryDto
+            {
+                Id = m.Id,
+                TeamId = m.TeamId,
+                AgeGroupId = m.AgeGroupId,
+                TeamName = m.TeamName ?? string.Empty,
+                AgeGroupName = m.AgeGroupName ?? string.Empty,
+                Opposition = m.Opposition ?? string.Empty,
+                Date = m.MatchDate,
+                MeetTime = m.MeetTime,
+                KickOffTime = m.KickOffTime,
+                Location = m.Location ?? string.Empty,
+                IsHome = m.IsHome,
+                Competition = m.Competition,
+                Score = m.HomeScore.HasValue && m.AwayScore.HasValue
+                    ? new MatchScoreDto { Home = m.HomeScore.Value, Away = m.AwayScore.Value }
+                    : null
+            }).ToList(),
+            TopPerformers = topPerformers.Select(p => new AgeGroupPerformerDto
+            {
+                PlayerId = p.PlayerId,
+                FirstName = p.FirstName ?? string.Empty,
+                LastName = p.LastName ?? string.Empty,
+                AverageRating = p.AverageRating,
+                MatchesPlayed = p.MatchesPlayed
+            }).ToList(),
+            Underperforming = underperforming.Select(p => new AgeGroupPerformerDto
+            {
+                PlayerId = p.PlayerId,
+                FirstName = p.FirstName ?? string.Empty,
+                LastName = p.LastName ?? string.Empty,
+                AverageRating = p.AverageRating,
+                MatchesPlayed = p.MatchesPlayed
+            }).ToList()
         };
     }
 }
@@ -94,4 +249,37 @@ public class MatchStatsRawDto
     public int Losses { get; set; }
     public int GoalsFor { get; set; }
     public int GoalsAgainst { get; set; }
+}
+
+/// <summary>
+/// DTO for match summary raw SQL result
+/// </summary>
+public class AgeGroupMatchRawDto
+{
+    public Guid Id { get; set; }
+    public Guid TeamId { get; set; }
+    public Guid AgeGroupId { get; set; }
+    public string? TeamName { get; set; }
+    public string? AgeGroupName { get; set; }
+    public string? Opposition { get; set; }
+    public DateTime MatchDate { get; set; }
+    public DateTime? MeetTime { get; set; }
+    public DateTime? KickOffTime { get; set; }
+    public string? Location { get; set; }
+    public bool IsHome { get; set; }
+    public string? Competition { get; set; }
+    public int? HomeScore { get; set; }
+    public int? AwayScore { get; set; }
+}
+
+/// <summary>
+/// DTO for performer raw SQL result
+/// </summary>
+public class AgeGroupPerformerRawDto
+{
+    public Guid PlayerId { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public decimal AverageRating { get; set; }
+    public int MatchesPlayed { get; set; }
 }
