@@ -107,6 +107,94 @@ export interface ChildPlayerDto {
   ageGroups: ChildPlayerAgeGroupDto[];
 }
 
+// Club DTOs
+export interface ClubColorsDto {
+  primary: string;
+  secondary: string;
+  accent: string;
+}
+
+export interface ClubLocationDto {
+  city: string;
+  country: string;
+  venue: string;
+  address: string;
+}
+
+export interface ClubDetailDto {
+  id: string;
+  name: string;
+  shortName: string;
+  logo?: string;
+  colors: ClubColorsDto;
+  location: ClubLocationDto;
+  founded?: number;
+  history?: string;
+  ethos?: string;
+  principles: string[];
+}
+
+export interface MatchScoreDto {
+  home: number;
+  away: number;
+}
+
+export interface MatchSummaryDto {
+  id: string;
+  teamId: string;
+  ageGroupId: string;
+  teamName: string;
+  ageGroupName: string;
+  opposition: string;
+  date: string;
+  meetTime?: string;
+  kickOffTime?: string;
+  location: string;
+  isHome: boolean;
+  competition?: string;
+  score?: MatchScoreDto;
+}
+
+export interface ClubStatisticsDto {
+  playerCount: number;
+  teamCount: number;
+  ageGroupCount: number;
+  matchesPlayed: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  winRate: number;
+  goalDifference: number;
+  upcomingMatches: MatchSummaryDto[];
+  previousResults: MatchSummaryDto[];
+}
+
+// Age Group DTOs
+export interface AgeGroupListDto {
+  id: string;
+  clubId: string;
+  name: string;
+  code: string;
+  level: string;
+  season: string;
+  seasons: string[];
+  defaultSeason: string;
+  defaultSquadSize: number;
+  description?: string;
+  isArchived: boolean;
+  teamCount: number;
+}
+
+export interface AgeGroupStatisticsDto {
+  playerCount: number;
+  matchesPlayed: number;
+  wins: number;
+  draws: number;
+  losses: number;
+  winRate: number;
+  goalDifference: number;
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -160,6 +248,43 @@ export const apiClient = {
      */
     getMyTeams: async (): Promise<ApiResponse<TeamListItemDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<TeamListItemDto[]>>('/v1/teams/me');
+      return response.data;
+    },
+  },
+
+  clubs: {
+    /**
+     * Get club details by ID
+     */
+    getClubById: async (clubId: string): Promise<ApiResponse<ClubDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<ClubDetailDto>>(`/v1/clubs/${clubId}`);
+      return response.data;
+    },
+
+    /**
+     * Get club statistics
+     */
+    getClubStatistics: async (clubId: string): Promise<ApiResponse<ClubStatisticsDto>> => {
+      const response = await axiosInstance.get<ApiResponse<ClubStatisticsDto>>(`/v1/clubs/${clubId}/statistics`);
+      return response.data;
+    },
+
+    /**
+     * Get age groups by club ID
+     */
+    getAgeGroups: async (clubId: string, includeArchived: boolean = false): Promise<ApiResponse<AgeGroupListDto[]>> => {
+      const params = includeArchived ? '?includeArchived=true' : '';
+      const response = await axiosInstance.get<ApiResponse<AgeGroupListDto[]>>(`/v1/clubs/${clubId}/age-groups${params}`);
+      return response.data;
+    },
+  },
+
+  ageGroups: {
+    /**
+     * Get age group statistics
+     */
+    getStatistics: async (ageGroupId: string): Promise<ApiResponse<AgeGroupStatisticsDto>> => {
+      const response = await axiosInstance.get<ApiResponse<AgeGroupStatisticsDto>>(`/v1/age-groups/${ageGroupId}/statistics`);
       return response.data;
     },
   },

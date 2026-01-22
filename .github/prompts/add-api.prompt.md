@@ -25,4 +25,7 @@ This should include:
 - The web project should then use these APIs for the consumption of the data instead of static data files.
 - Models should be created or updated as necessary to support the new API data structures.
 - Ensure that loading states and error handling are properly managed in the UI.
+- When components are loading data from the API, ensure that appropriate loading indicators are shown in the relevant panel.
+- Do not take over the whole page when loading.
+- Standardize per-page loading UX across all pages: use skeleton placeholders within each section (e.g., title, stats, lists, cards) rather than global spinners or full-page loaders.
 

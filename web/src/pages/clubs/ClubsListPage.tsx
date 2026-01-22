@@ -52,18 +52,6 @@ export default function ClubsListPage() {
     ? samplePlayers.filter(p => p.id === currentUser.playerId) 
     : [];
 
-  // Show loading state while authentication is loading
-  if (authLoading) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-400">Loading user information...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -74,7 +62,7 @@ export default function ClubsListPage() {
         />
 
         {/* Quick Access Section */}
-        {(hasMyTeams || myProfile.length > 0 || myChildrenLoading || hasMyChildren) && (
+        {(hasMyTeams || myProfile.length > 0 || myChildrenLoading || hasMyChildren || authLoading) && (
           <div className="mb-4 space-y-2">
             {/* My Children */}
             {(myChildrenLoading || myChildrenError || hasMyChildren) && (
@@ -84,8 +72,10 @@ export default function ClubsListPage() {
                 </h2>
                 <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                   {myChildrenLoading && (
-                    <div className="flex items-center justify-center py-6">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                    <div className="animate-pulse space-y-3">
+                      {Array.from({ length: 3 }).map((_, index) => (
+                        <div key={index} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                      ))}
                     </div>
                   )}
 
@@ -142,45 +132,53 @@ export default function ClubsListPage() {
             )}
 
             {/* My Profile */}
-            {myProfile.length > 0 && (
+            {(myProfile.length > 0 || authLoading) && (
               <>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   My Profile
                 </h2>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {myProfile.map((player) => {
-                    const club = myClubs.find(c => c.id === player.clubId);
-                    
-                    return (
-                      <Link
-                        key={player.id}
-                        to={Routes.player(player.clubId, player.ageGroupIds[0], player.id)}
-                        className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
-                      >
-                        {player.photo ? (
-                          <img 
-                            src={player.photo} 
-                            alt={`${player.firstName} ${player.lastName}`}
-                            className="w-12 h-12 rounded-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold">
-                            {player.firstName[0]}{player.lastName[0]}
+                {authLoading ? (
+                  <div className="animate-pulse grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {Array.from({ length: 3 }).map((_, index) => (
+                      <div key={index} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {myProfile.map((player) => {
+                      const club = myClubs.find(c => c.id === player.clubId);
+                      
+                      return (
+                        <Link
+                          key={player.id}
+                          to={Routes.player(player.clubId, player.ageGroupIds[0], player.id)}
+                          className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
+                        >
+                          {player.photo ? (
+                            <img 
+                              src={player.photo} 
+                              alt={`${player.firstName} ${player.lastName}`}
+                              className="w-12 h-12 rounded-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold">
+                              {player.firstName[0]}{player.lastName[0]}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-900 dark:text-white truncate">
+                              {player.firstName} {player.lastName}
+                            </p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
+                              {club?.shortName} • {player.preferredPositions.join(', ')}
+                            </p>
                           </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 dark:text-white truncate">
-                            {player.firstName} {player.lastName}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                            {club?.shortName} • {player.preferredPositions.join(', ')}
-                          </p>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               </>
             )}
@@ -195,8 +193,10 @@ export default function ClubsListPage() {
             </h2>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-4">
               {myTeamsLoading && (
-                <div className="flex items-center justify-center py-6">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+                <div className="animate-pulse grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {Array.from({ length: 3 }).map((_, index) => (
+                    <div key={index} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                  ))}
                 </div>
               )}
 
@@ -259,8 +259,10 @@ export default function ClubsListPage() {
           
           {/* Loading State */}
           {myTeamsLoading && (
-            <div className="flex items-center justify-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
+            <div className="animate-pulse grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {Array.from({ length: 3 }).map((_, index) => (
+                <div key={index} className="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              ))}
             </div>
           )}
 

@@ -18,11 +18,24 @@ export type {
   TeamColorsDto,
   TeamClubDto,
   TeamCoachDto,
+  ClubDetailDto,
+  ClubColorsDto,
+  ClubLocationDto,
+  ClubStatisticsDto,
+  MatchSummaryDto,
+  MatchScoreDto,
+  AgeGroupListDto,
+  AgeGroupStatisticsDto,
 } from './client';
 
 // React hooks
 export {
   useMyTeams,
+  useMyChildren,
+  useClubById,
+  useClubStatistics,
+  useAgeGroupsByClubId,
+  useAgeGroupStatistics,
 } from './hooks';
 
 // User API

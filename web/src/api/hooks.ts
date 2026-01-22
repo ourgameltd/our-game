@@ -6,7 +6,15 @@
  */
 
 import { useState, useEffect, useCallback } from 'react';
-import { apiClient, TeamListItemDto, ChildPlayerDto } from './client';
+import {
+  apiClient,
+  TeamListItemDto,
+  ChildPlayerDto,
+  ClubDetailDto,
+  ClubStatisticsDto,
+  AgeGroupListDto,
+  AgeGroupStatisticsDto
+} from './client';
 
 // Generic hook state
 interface UseApiState<T> {
@@ -76,5 +84,56 @@ export function useMyChildren(): UseApiState<ChildPlayerDto[]> {
   return useApiCall<ChildPlayerDto[]>(
     () => apiClient.users.getMyChildren(),
     []
+  );
+}
+
+// ============================================================
+// Club Hooks
+// ============================================================
+
+/**
+ * Hook to fetch club details by ID
+ */
+export function useClubById(clubId: string | undefined): UseApiState<ClubDetailDto> {
+  return useApiCall<ClubDetailDto>(
+    () => apiClient.clubs.getClubById(clubId!),
+    [clubId]
+  );
+}
+
+/**
+ * Hook to fetch club statistics
+ */
+export function useClubStatistics(clubId: string | undefined): UseApiState<ClubStatisticsDto> {
+  return useApiCall<ClubStatisticsDto>(
+    () => apiClient.clubs.getClubStatistics(clubId!),
+    [clubId]
+  );
+}
+
+/**
+ * Hook to fetch age groups by club ID
+ */
+export function useAgeGroupsByClubId(
+  clubId: string | undefined,
+  includeArchived: boolean = false
+): UseApiState<AgeGroupListDto[]> {
+  return useApiCall<AgeGroupListDto[]>(
+    () => apiClient.clubs.getAgeGroups(clubId!, includeArchived),
+    [clubId, includeArchived]
+  );
+}
+
+// ============================================================
+// Age Group Hooks
+// ============================================================
+
+/**
+ * Hook to fetch age group statistics
+ */
+export function useAgeGroupStatistics(ageGroupId: string | undefined): UseApiState<AgeGroupStatisticsDto> {
+  return useApiCall<AgeGroupStatisticsDto>(
+    () => apiClient.ageGroups.getStatistics(ageGroupId!),
+    [ageGroupId]
   );
 }
