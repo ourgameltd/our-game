@@ -460,6 +460,37 @@ export interface TacticsByScopeResponseDto {
   inheritedTactics: TacticListDto[];
 }
 
+// Drill DTOs
+export interface DrillLinkDto {
+  url: string;
+  title: string;
+  type: string;
+}
+
+export interface DrillListDto {
+  id: string;
+  name: string;
+  description: string;
+  duration: number;
+  category: string;
+  attributes: string[];
+  equipment: string[];
+  diagram?: string;
+  instructions: string[];
+  variations: string[];
+  links: DrillLinkDto[];
+  scopeType: string;
+  isPublic: boolean;
+  createdBy?: string;
+  createdAt: string;
+}
+
+export interface DrillsByScopeResponseDto {
+  drills: DrillListDto[];
+  inheritedDrills: DrillListDto[];
+  totalCount: number;
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -659,6 +690,56 @@ export const apiClient = {
      */
     getByTeam: async (clubId: string, ageGroupId: string, teamId: string): Promise<ApiResponse<TacticsByScopeResponseDto>> => {
       const response = await axiosInstance.get<ApiResponse<TacticsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`);
+      return response.data;
+    },
+  },
+
+  drills: {
+    /**
+     * Get drills at club level
+     */
+    getByClub: async (
+      clubId: string,
+      options?: { category?: string; search?: string }
+    ): Promise<ApiResponse<DrillsByScopeResponseDto>> => {
+      const params = new URLSearchParams();
+      if (options?.category) params.append('category', options.category);
+      if (options?.search) params.append('search', options.search);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<DrillsByScopeResponseDto>>(`/v1/clubs/${clubId}/drills${queryString}`);
+      return response.data;
+    },
+
+    /**
+     * Get drills at age group level (includes inherited club drills)
+     */
+    getByAgeGroup: async (
+      clubId: string,
+      ageGroupId: string,
+      options?: { category?: string; search?: string }
+    ): Promise<ApiResponse<DrillsByScopeResponseDto>> => {
+      const params = new URLSearchParams();
+      if (options?.category) params.append('category', options.category);
+      if (options?.search) params.append('search', options.search);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<DrillsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/drills${queryString}`);
+      return response.data;
+    },
+
+    /**
+     * Get drills at team level (includes inherited club and age group drills)
+     */
+    getByTeam: async (
+      clubId: string,
+      ageGroupId: string,
+      teamId: string,
+      options?: { category?: string; search?: string }
+    ): Promise<ApiResponse<DrillsByScopeResponseDto>> => {
+      const params = new URLSearchParams();
+      if (options?.category) params.append('category', options.category);
+      if (options?.search) params.append('search', options.search);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<DrillsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills${queryString}`);
       return response.data;
     },
   },

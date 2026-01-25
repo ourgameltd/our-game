@@ -50,6 +50,9 @@ export type {
   TacticScopeDto,
   TacticListDto,
   TacticsByScopeResponseDto,
+  DrillLinkDto,
+  DrillListDto,
+  DrillsByScopeResponseDto,
 } from './client';
 
 // React hooks
@@ -67,6 +70,7 @@ export {
   useClubTrainingSessions,
   useClubMatches,
   useTacticsByScope,
+  useDrillsByScope,
 } from './hooks';
 
 // User API
