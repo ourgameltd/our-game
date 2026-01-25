@@ -47,6 +47,9 @@ export type {
   ClubTrainingSessionsDto,
   ClubMatchDto,
   ClubMatchesDto,
+  TacticScopeDto,
+  TacticListDto,
+  TacticsByScopeResponseDto,
 } from './client';
 
 // React hooks
@@ -63,6 +66,7 @@ export {
   useClubCoaches,
   useClubTrainingSessions,
   useClubMatches,
+  useTacticsByScope,
 } from './hooks';
 
 // User API

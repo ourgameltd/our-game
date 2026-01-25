@@ -433,6 +433,33 @@ export interface ClubMatchesDto {
   totalCount: number;
 }
 
+// Tactics DTOs
+export interface TacticScopeDto {
+  type: string;
+  clubId?: string;
+  ageGroupId?: string;
+  teamId?: string;
+}
+
+export interface TacticListDto {
+  id: string;
+  name: string;
+  summary?: string;
+  style?: string;
+  squadSize: number;
+  parentFormationId?: string;
+  parentFormationName?: string;
+  scope: TacticScopeDto;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TacticsByScopeResponseDto {
+  scopeTactics: TacticListDto[];
+  inheritedTactics: TacticListDto[];
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -606,6 +633,32 @@ export const apiClient = {
      */
     getStatistics: async (ageGroupId: string): Promise<ApiResponse<AgeGroupStatisticsDto>> => {
       const response = await axiosInstance.get<ApiResponse<AgeGroupStatisticsDto>>(`/v1/age-groups/${ageGroupId}/statistics`);
+      return response.data;
+    },
+  },
+
+  tactics: {
+    /**
+     * Get tactics at club level
+     */
+    getByClub: async (clubId: string): Promise<ApiResponse<TacticsByScopeResponseDto>> => {
+      const response = await axiosInstance.get<ApiResponse<TacticsByScopeResponseDto>>(`/v1/clubs/${clubId}/tactics`);
+      return response.data;
+    },
+
+    /**
+     * Get tactics at age group level (includes inherited club tactics)
+     */
+    getByAgeGroup: async (clubId: string, ageGroupId: string): Promise<ApiResponse<TacticsByScopeResponseDto>> => {
+      const response = await axiosInstance.get<ApiResponse<TacticsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/tactics`);
+      return response.data;
+    },
+
+    /**
+     * Get tactics at team level (includes inherited club and age group tactics)
+     */
+    getByTeam: async (clubId: string, ageGroupId: string, teamId: string): Promise<ApiResponse<TacticsByScopeResponseDto>> => {
+      const response = await axiosInstance.get<ApiResponse<TacticsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`);
       return response.data;
     },
   },

@@ -19,7 +19,8 @@ import {
   ClubTeamDto,
   ClubCoachDto,
   ClubTrainingSessionsDto,
-  ClubMatchesDto
+  ClubMatchesDto,
+  TacticsByScopeResponseDto
 } from './client';
 
 // Generic hook state
@@ -220,5 +221,35 @@ export function useClubMatches(
   return useApiCall<ClubMatchesDto>(
     () => apiClient.clubs.getMatches(clubId!, options),
     [clubId, options?.ageGroupId, options?.teamId, options?.status]
+  );
+}
+
+// ============================================================
+// Tactics Hooks
+// ============================================================
+
+/**
+ * Hook to fetch tactics by scope (club, age group, or team level)
+ * Automatically determines the appropriate API call based on provided IDs
+ */
+export function useTacticsByScope(
+  clubId: string | undefined,
+  ageGroupId?: string,
+  teamId?: string
+): UseApiState<TacticsByScopeResponseDto> {
+  return useApiCall<TacticsByScopeResponseDto>(
+    () => {
+      if (!clubId) {
+        return Promise.resolve({ success: false, error: { message: 'Club ID is required' } });
+      }
+      if (teamId && ageGroupId) {
+        return apiClient.tactics.getByTeam(clubId, ageGroupId, teamId);
+      }
+      if (ageGroupId) {
+        return apiClient.tactics.getByAgeGroup(clubId, ageGroupId);
+      }
+      return apiClient.tactics.getByClub(clubId);
+    },
+    [clubId, ageGroupId, teamId]
   );
 }
