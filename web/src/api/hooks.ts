@@ -21,7 +21,8 @@ import {
   ClubTrainingSessionsDto,
   ClubMatchesDto,
   TacticsByScopeResponseDto,
-  DrillsByScopeResponseDto
+  DrillsByScopeResponseDto,
+  DrillTemplatesByScopeResponseDto
 } from './client';
 
 // Generic hook state
@@ -283,5 +284,36 @@ export function useDrillsByScope(
       return apiClient.drills.getByClub(clubId, options);
     },
     [clubId, ageGroupId, teamId, options?.category, options?.search]
+  );
+}
+
+// ============================================================
+// Drill Templates Hooks
+// ============================================================
+
+/**
+ * Hook to fetch drill templates by scope (club, age group, or team level)
+ * Automatically determines the appropriate API call based on provided IDs
+ */
+export function useDrillTemplatesByScope(
+  clubId: string | undefined,
+  ageGroupId?: string,
+  teamId?: string,
+  options?: { category?: string; search?: string; attributes?: string[] }
+): UseApiState<DrillTemplatesByScopeResponseDto> {
+  return useApiCall<DrillTemplatesByScopeResponseDto>(
+    () => {
+      if (!clubId) {
+        return Promise.resolve({ success: false, error: { message: 'Club ID is required' } });
+      }
+      if (teamId && ageGroupId) {
+        return apiClient.drillTemplates.getByTeam(clubId, ageGroupId, teamId, options);
+      }
+      if (ageGroupId) {
+        return apiClient.drillTemplates.getByAgeGroup(clubId, ageGroupId, options);
+      }
+      return apiClient.drillTemplates.getByClub(clubId, options);
+    },
+    [clubId, ageGroupId, teamId, options?.category, options?.search, options?.attributes?.join(',')]
   );
 }

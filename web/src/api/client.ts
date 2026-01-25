@@ -491,6 +491,28 @@ export interface DrillsByScopeResponseDto {
   totalCount: number;
 }
 
+// Drill Template DTOs
+export interface DrillTemplateListDto {
+  id: string;
+  name: string;
+  description: string;
+  drillIds: string[];
+  totalDuration: number;
+  category?: string;
+  attributes: string[];
+  scopeType: string;
+  isPublic: boolean;
+  createdBy?: string;
+  createdAt: string;
+}
+
+export interface DrillTemplatesByScopeResponseDto {
+  templates: DrillTemplateListDto[];
+  inheritedTemplates: DrillTemplateListDto[];
+  totalCount: number;
+  availableAttributes: string[];
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -740,6 +762,59 @@ export const apiClient = {
       if (options?.search) params.append('search', options.search);
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills${queryString}`);
+      return response.data;
+    },
+  },
+
+  drillTemplates: {
+    /**
+     * Get drill templates at club level
+     */
+    getByClub: async (
+      clubId: string,
+      options?: { category?: string; search?: string; attributes?: string[] }
+    ): Promise<ApiResponse<DrillTemplatesByScopeResponseDto>> => {
+      const params = new URLSearchParams();
+      if (options?.category) params.append('category', options.category);
+      if (options?.search) params.append('search', options.search);
+      if (options?.attributes && options.attributes.length > 0) params.append('attributes', options.attributes.join(','));
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<DrillTemplatesByScopeResponseDto>>(`/v1/clubs/${clubId}/drill-templates${queryString}`);
+      return response.data;
+    },
+
+    /**
+     * Get drill templates at age group level (includes inherited club templates)
+     */
+    getByAgeGroup: async (
+      clubId: string,
+      ageGroupId: string,
+      options?: { category?: string; search?: string; attributes?: string[] }
+    ): Promise<ApiResponse<DrillTemplatesByScopeResponseDto>> => {
+      const params = new URLSearchParams();
+      if (options?.category) params.append('category', options.category);
+      if (options?.search) params.append('search', options.search);
+      if (options?.attributes && options.attributes.length > 0) params.append('attributes', options.attributes.join(','));
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<DrillTemplatesByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/drill-templates${queryString}`);
+      return response.data;
+    },
+
+    /**
+     * Get drill templates at team level (includes inherited club and age group templates)
+     */
+    getByTeam: async (
+      clubId: string,
+      ageGroupId: string,
+      teamId: string,
+      options?: { category?: string; search?: string; attributes?: string[] }
+    ): Promise<ApiResponse<DrillTemplatesByScopeResponseDto>> => {
+      const params = new URLSearchParams();
+      if (options?.category) params.append('category', options.category);
+      if (options?.search) params.append('search', options.search);
+      if (options?.attributes && options.attributes.length > 0) params.append('attributes', options.attributes.join(','));
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<DrillTemplatesByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates${queryString}`);
       return response.data;
     },
   },

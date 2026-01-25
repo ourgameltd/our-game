@@ -53,6 +53,8 @@ export type {
   DrillLinkDto,
   DrillListDto,
   DrillsByScopeResponseDto,
+  DrillTemplateListDto,
+  DrillTemplatesByScopeResponseDto,
 } from './client';
 
 // React hooks
@@ -71,6 +73,7 @@ export {
   useClubMatches,
   useTacticsByScope,
   useDrillsByScope,
+  useDrillTemplatesByScope,
 } from './hooks';
 
 // User API
