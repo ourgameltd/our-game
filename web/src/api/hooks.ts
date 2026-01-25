@@ -16,7 +16,8 @@ import {
   AgeGroupListDto,
   AgeGroupStatisticsDto,
   ClubPlayerDto,
-  ClubTeamDto
+  ClubTeamDto,
+  ClubCoachDto
 } from './client';
 
 // Generic hook state
@@ -177,6 +178,19 @@ export function useClubTeams(
 ): UseApiState<ClubTeamDto[]> {
   return useApiCall<ClubTeamDto[]>(
     () => apiClient.clubs.getTeams(clubId!, includeArchived),
+    [clubId, includeArchived]
+  );
+}
+
+/**
+ * Hook to fetch all coaches for a club
+ */
+export function useClubCoaches(
+  clubId: string | undefined,
+  includeArchived: boolean = false
+): UseApiState<ClubCoachDto[]> {
+  return useApiCall<ClubCoachDto[]>(
+    () => apiClient.clubs.getCoaches(clubId!, includeArchived),
     [clubId, includeArchived]
   );
 }

@@ -1,22 +1,80 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
-import { useState, useMemo } from 'react';
-import { getClubById } from '@data/clubs';
-import { getCoachesByClub } from '@data/coaches';
-import { getTeamsByClubId } from '@data/teams';
-import { getAgeGroupById } from '@data/ageGroups';
+import { useState, useMemo, useEffect } from 'react';
+import { apiClient } from '@/api';
+import type { ClubCoachDto, ClubTeamDto } from '@/api';
 import { coachRoleDisplay } from '@/data/referenceData';
 import { Routes } from '@utils/routes';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
+import type { Coach } from '@/types';
+
+// Skeleton component for coach card loading state
+function CoachCardSkeleton() {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 md:rounded-none md:shadow-none md:p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b flex flex-col md:flex-row md:items-center md:gap-4 animate-pulse">
+      <div className="flex items-center gap-3 mb-3 md:mb-0 md:flex-shrink-0 md:order-1">
+        <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-700" />
+        <div className="flex-1 min-w-0 md:hidden">
+          <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+      </div>
+      <div className="hidden md:flex md:items-baseline md:gap-2 md:min-w-48 md:flex-shrink-0 md:order-2">
+        <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+      </div>
+      <div className="hidden md:block md:w-24 md:flex-shrink-0 md:order-3">
+        <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+      </div>
+      <div className="mb-3 md:mb-0 md:w-32 md:flex-shrink-0 md:order-4">
+        <div className="flex flex-wrap gap-1">
+          <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+      </div>
+      <div className="md:flex-1 md:order-5">
+        <div className="hidden md:flex md:gap-4 md:justify-end">
+          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper to map API DTO to Coach type for CoachCard compatibility
+function mapApiCoachToCoach(apiCoach: ClubCoachDto): Coach {
+  return {
+    id: apiCoach.id,
+    clubId: apiCoach.clubId,
+    firstName: apiCoach.firstName,
+    lastName: apiCoach.lastName,
+    dateOfBirth: apiCoach.dateOfBirth ? new Date(apiCoach.dateOfBirth) : new Date(),
+    photo: apiCoach.photo,
+    email: apiCoach.email || '',
+    phone: apiCoach.phone || '',
+    associationId: apiCoach.associationId,
+    hasAccount: apiCoach.hasAccount,
+    role: apiCoach.role as Coach['role'],
+    biography: apiCoach.biography,
+    specializations: apiCoach.specializations,
+    teamIds: apiCoach.teams.map(t => t.id),
+    isArchived: apiCoach.isArchived
+  };
+}
 
 export default function ClubCoachesPage() {
   const { clubId } = useParams();
   const navigate = useNavigate();
-  const club = getClubById(clubId!);
-  const allCoaches = getCoachesByClub(clubId!);
-  const teams = getTeamsByClubId(clubId!);
 
+  // API state
+  const [apiCoaches, setApiCoaches] = useState<ClubCoachDto[]>([]);
+  const [coachesLoading, setCoachesLoading] = useState(true);
+  const [coachesError, setCoachesError] = useState<string | null>(null);
+
+  const [teams, setTeams] = useState<ClubTeamDto[]>([]);
+  const [teamsLoading, setTeamsLoading] = useState(true);
+
+  // Filter state
   const [searchName, setSearchName] = useState('');
   const [filterRole, setFilterRole] = useState('');
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
@@ -24,9 +82,45 @@ export default function ClubCoachesPage() {
   const [showArchived, setShowArchived] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
-  if (!club) {
-    return <div>Club not found</div>;
-  }
+  // Fetch data from API
+  useEffect(() => {
+    if (!clubId) return;
+
+    // Fetch coaches (always include archived, filter client-side)
+    setCoachesLoading(true);
+    apiClient.clubs.getCoaches(clubId, true)
+      .then((response) => {
+        if (response.success && response.data) {
+          setApiCoaches(response.data);
+          setCoachesError(null);
+        } else {
+          setCoachesError(response.error?.message || 'Failed to load coaches');
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch coaches:', err);
+        setCoachesError('Failed to load coaches from API');
+      })
+      .finally(() => setCoachesLoading(false));
+
+    // Fetch teams
+    setTeamsLoading(true);
+    apiClient.clubs.getTeams(clubId, true)
+      .then((response) => {
+        if (response.success && response.data) {
+          setTeams(response.data);
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch teams:', err);
+      })
+      .finally(() => setTeamsLoading(false));
+  }, [clubId]);
+
+  // Map API coaches to Coach type for compatibility with existing components
+  const allCoaches = useMemo(() => {
+    return apiCoaches.map(mapApiCoachToCoach);
+  }, [apiCoaches]);
 
   // Get unique roles from all coaches
   const allRoles = useMemo(() => {
@@ -37,25 +131,20 @@ export default function ClubCoachesPage() {
     return Array.from(roles).sort();
   }, [allCoaches]);
 
-  // Get unique age groups from coaches' team assignments
+  // Get unique age groups from coaches' team assignments (using API data directly)
   const allAgeGroups = useMemo(() => {
-    const ageGroupIds = new Set<string>();
-    allCoaches.forEach(coach => {
-      coach.teamIds.forEach(teamId => {
-        const team = teams.find(t => t.id === teamId);
-        if (team) {
-          ageGroupIds.add(team.ageGroupId);
+    const ageGroupMap = new Map<string, string>();
+    apiCoaches.forEach(coach => {
+      coach.teams.forEach(team => {
+        if (team.ageGroupName && !ageGroupMap.has(team.ageGroupId)) {
+          ageGroupMap.set(team.ageGroupId, team.ageGroupName);
         }
       });
     });
-    return Array.from(ageGroupIds)
-      .map(id => {
-        const ageGroup = getAgeGroupById(id);
-        return ageGroup ? { id, name: ageGroup.name } : null;
-      })
-      .filter((ag): ag is { id: string; name: string } => ag !== null)
+    return Array.from(ageGroupMap.entries())
+      .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [allCoaches, teams]);
+  }, [apiCoaches]);
 
   // Filter coaches based on search and filters
   const filteredCoaches = useMemo(() => {
@@ -97,7 +186,7 @@ export default function ClubCoachesPage() {
 
       return true;
     });
-  }, [allCoaches, searchName, filterRole, filterTeam, showArchived]);
+  }, [allCoaches, searchName, filterRole, filterAgeGroup, filterTeam, showArchived, teams]);
 
   // Filter teams by age group for the team dropdown
   const filteredTeams = useMemo(() => {
@@ -108,26 +197,51 @@ export default function ClubCoachesPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
-        <PageTitle
-          title="All Club Coaches"
-          badge={allCoaches.filter(c => !c.isArchived).length}
-          subtitle={
-            filteredCoaches.length !== allCoaches.length 
-              ? `Showing ${filteredCoaches.length} of ${allCoaches.length} coaches${allCoaches.filter(c => c.isArchived).length > 0 ? ` (${allCoaches.filter(c => c.isArchived).length} archived)` : ''}`
-              : `View and manage coaches at the club${allCoaches.filter(c => c.isArchived).length > 0 ? ` (${allCoaches.filter(c => c.isArchived).length} archived)` : ''}`
-          }
-          action={{
-            label: 'Add New Coach',
-            icon: 'plus',
-            title: 'Add New Coach',
-            onClick: () => navigate(Routes.coachSettings(clubId!, 'new')),
-            variant: 'success'
-          }}
-        />
+        {/* Page Title with loading state */}
+        {coachesLoading ? (
+          <div className="animate-pulse mb-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="h-7 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-6 w-8 bg-gray-200 dark:bg-gray-700 rounded-full" />
+            </div>
+            <div className="h-4 w-72 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        ) : coachesError ? (
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-800 dark:text-red-200 font-medium">Failed to load coaches</p>
+            <p className="text-red-600 dark:text-red-300 text-sm mt-1">{coachesError}</p>
+          </div>
+        ) : (
+          <PageTitle
+            title="All Club Coaches"
+            badge={allCoaches.filter(c => !c.isArchived).length}
+            subtitle={
+              filteredCoaches.length !== allCoaches.length 
+                ? `Showing ${filteredCoaches.length} of ${allCoaches.length} coaches${allCoaches.filter(c => c.isArchived).length > 0 ? ` (${allCoaches.filter(c => c.isArchived).length} archived)` : ''}`
+                : `View and manage coaches at the club${allCoaches.filter(c => c.isArchived).length > 0 ? ` (${allCoaches.filter(c => c.isArchived).length} archived)` : ''}`
+            }
+            action={{
+              label: 'Add New Coach',
+              icon: 'plus',
+              title: 'Add New Coach',
+              onClick: () => navigate(Routes.coachSettings(clubId!, 'new')),
+              variant: 'success'
+            }}
+          />
+        )}
 
         {/* Search and Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
           {/* Show Archived Toggle */}
+          {coachesLoading ? (
+            <div className="flex items-center justify-between gap-4 mb-4 animate-pulse">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-4 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+            </div>
+          ) : (
           <div className="flex items-center justify-between gap-4 mb-4">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -158,8 +272,9 @@ export default function ClubCoachesPage() {
               )}
             </button>
           </div>
+          )}
           
-          {showFilters && (
+          {showFilters && !coachesLoading && (
             <>
               <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -195,16 +310,14 @@ export default function ClubCoachesPage() {
                 value={filterTeam}
                 onChange={(e) => setFilterTeam(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-secondary-500"
+                disabled={teamsLoading}
               >
                 <option value="">All Teams</option>
-                {filteredTeams.map(team => {
-                  const ageGroup = getAgeGroupById(team.ageGroupId);
-                  return (
+                {filteredTeams.map(team => (
                     <option key={team.id} value={team.id}>
-                      {ageGroup?.name || ''} - {team.name}
+                      {team.ageGroupName} - {team.name}
                     </option>
-                  );
-                })}
+                ))}
               </select>
             </div>
             <div>
@@ -268,8 +381,17 @@ export default function ClubCoachesPage() {
           )}
         </div>
 
+        {/* Loading skeleton for coaches list */}
+        {coachesLoading && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <CoachCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
         {/* Coaches List */}
-        {filteredCoaches.length > 0 && (
+        {!coachesLoading && filteredCoaches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {filteredCoaches.map((coach) => (
               <Link key={coach.id} to={Routes.coach(clubId!, coach.id)}>
@@ -295,18 +417,23 @@ export default function ClubCoachesPage() {
           </div>
         )}
 
-        {filteredCoaches.length === 0 && allCoaches.length === 0 && (
+        {!coachesLoading && filteredCoaches.length === 0 && allCoaches.length === 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">👨‍🏫</div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No coaches yet</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">Get started by adding your first coach to the club</p>
-            <button className="btn-success btn-md flex items-center gap-2" title="Add First Coach">
+            <button 
+              onClick={() => navigate(Routes.coachSettings(clubId!, 'new'))}
+              className="btn-success btn-md flex items-center gap-2 mx-auto" 
+              title="Add First Coach"
+            >
               <Plus className="w-5 h-5" />
+              Add First Coach
             </button>
           </div>
         )}
 
-        {filteredCoaches.length === 0 && allCoaches.length > 0 && (
+        {!coachesLoading && filteredCoaches.length === 0 && allCoaches.length > 0 && (
           <div className="text-center py-12">
             <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">🔍</div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No coaches found</h3>
@@ -315,6 +442,7 @@ export default function ClubCoachesPage() {
               onClick={() => {
                 setSearchName('');
                 setFilterRole('');
+                setFilterAgeGroup('');
                 setFilterTeam('');
               }}
               className="btn-secondary btn-md"

@@ -358,6 +358,32 @@ export interface ClubTeamDto {
   playerCount: number;
 }
 
+// Club Coach DTOs
+export interface ClubCoachTeamDto {
+  id: string;
+  ageGroupId: string;
+  name: string;
+  ageGroupName?: string;
+}
+
+export interface ClubCoachDto {
+  id: string;
+  clubId: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth?: string;
+  photo?: string;
+  email?: string;
+  phone?: string;
+  associationId?: string;
+  hasAccount: boolean;
+  role: string;
+  biography?: string;
+  specializations: string[];
+  isArchived: boolean;
+  teams: ClubCoachTeamDto[];
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -472,6 +498,15 @@ export const apiClient = {
     getTeams: async (clubId: string, includeArchived: boolean = false): Promise<ApiResponse<ClubTeamDto[]>> => {
       const params = includeArchived ? '?includeArchived=true' : '';
       const response = await axiosInstance.get<ApiResponse<ClubTeamDto[]>>(`/v1/clubs/${clubId}/teams${params}`);
+      return response.data;
+    },
+
+    /**
+     * Get all coaches for a club
+     */
+    getCoaches: async (clubId: string, includeArchived: boolean = false): Promise<ApiResponse<ClubCoachDto[]>> => {
+      const params = includeArchived ? '?includeArchived=true' : '';
+      const response = await axiosInstance.get<ApiResponse<ClubCoachDto[]>>(`/v1/clubs/${clubId}/coaches${params}`);
       return response.data;
     },
   },

@@ -28,4 +28,5 @@ This should include:
 - When components are loading data from the API, ensure that appropriate loading indicators are shown in the relevant panel.
 - Do not take over the whole page when loading.
 - Standardize per-page loading UX across all pages: use skeleton placeholders within each section (e.g., title, stats, lists, cards) rather than global spinners or full-page loaders.
+- DO NOt create new versions of existing pages or controls, simply map the data from the APO to the existing controls, I dont mind the types being changed but the controls should remain the same.
 
