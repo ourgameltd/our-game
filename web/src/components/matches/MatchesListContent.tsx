@@ -1,13 +1,13 @@
 import { Link } from 'react-router-dom';
 import { Match } from '@/types';
 import { Routes } from '@utils/routes';
-import { sampleTeams } from '@/data/teams';
 
 interface MatchesListContentProps {
   matches: Match[];
   clubId: string;
   ageGroupId?: string;
   getTeamName?: (teamId: string) => string;
+  getAgeGroupId?: (teamId: string) => string;
   showTeamInfo?: boolean;
 }
 
@@ -16,6 +16,7 @@ export default function MatchesListContent({
   clubId,
   ageGroupId,
   getTeamName,
+  getAgeGroupId,
   showTeamInfo = false
 }: MatchesListContentProps) {
   
@@ -43,9 +44,8 @@ export default function MatchesListContent({
   };
 
   const getMatchLink = (match: Match) => {
-    // Get the team to find its age group ID
-    const team = sampleTeams.find(t => t.id === match.teamId);
-    const matchAgeGroupId = team?.ageGroupId || ageGroupId || '';
+    // Get the age group ID from callback or prop fallback
+    const matchAgeGroupId = getAgeGroupId ? getAgeGroupId(match.teamId) : (ageGroupId || '');
     
     return Routes.matchReport(clubId, matchAgeGroupId, match.teamId, match.id);
   };

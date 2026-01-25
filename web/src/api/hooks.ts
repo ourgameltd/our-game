@@ -18,7 +18,8 @@ import {
   ClubPlayerDto,
   ClubTeamDto,
   ClubCoachDto,
-  ClubTrainingSessionsDto
+  ClubTrainingSessionsDto,
+  ClubMatchesDto
 } from './client';
 
 // Generic hook state
@@ -205,6 +206,19 @@ export function useClubTrainingSessions(
 ): UseApiState<ClubTrainingSessionsDto> {
   return useApiCall<ClubTrainingSessionsDto>(
     () => apiClient.clubs.getTrainingSessions(clubId!, options),
+    [clubId, options?.ageGroupId, options?.teamId, options?.status]
+  );
+}
+
+/**
+ * Hook to fetch matches for a club with optional filtering
+ */
+export function useClubMatches(
+  clubId: string | undefined,
+  options?: { ageGroupId?: string; teamId?: string; status?: 'upcoming' | 'past' | 'scheduled' | 'completed' | 'cancelled' | 'all' }
+): UseApiState<ClubMatchesDto> {
+  return useApiCall<ClubMatchesDto>(
+    () => apiClient.clubs.getMatches(clubId!, options),
     [clubId, options?.ageGroupId, options?.teamId, options?.status]
   );
 }
