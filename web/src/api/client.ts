@@ -440,6 +440,18 @@ export interface ClubMatchesDto {
   totalCount: number;
 }
 
+// Club Kit DTOs
+export interface ClubKitDto {
+  id: string;
+  name: string;
+  type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
+  shirtColor: string;
+  shortsColor: string;
+  socksColor: string;
+  season?: string;
+  isActive: boolean;
+}
+
 // Tactics DTOs
 export interface TacticScopeDto {
   type: string;
@@ -675,6 +687,14 @@ export const apiClient = {
       if (options?.status) params.append('status', options.status);
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<ClubMatchesDto>>(`/v1/clubs/${clubId}/matches${queryString}`);
+      return response.data;
+    },
+
+    /**
+     * Get all kits for a club
+     */
+    getKits: async (clubId: string): Promise<ApiResponse<ClubKitDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<ClubKitDto[]>>(`/v1/clubs/${clubId}/kits`);
       return response.data;
     },
   },
