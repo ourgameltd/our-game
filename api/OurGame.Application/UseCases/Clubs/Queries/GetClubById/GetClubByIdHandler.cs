@@ -1,3 +1,4 @@
+using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
@@ -76,13 +77,39 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
             Founded = club.FoundedYear,
             History = club.History,
             Ethos = club.Ethos,
-            Principles = club.Principles != null 
-                ? club.Principles.Split(new[] { '\n', '|' }, StringSplitOptions.RemoveEmptyEntries)
-                    .Select(p => p.Trim())
-                    .Where(p => !string.IsNullOrWhiteSpace(p))
-                    .ToList()
-                : new List<string>()
+            Principles = ParsePrinciples(club.Principles)
         };
+    }
+
+    /// <summary>
+    /// Parse principles from JSON array string or delimited string
+    /// </summary>
+    private static List<string> ParsePrinciples(string? principles)
+    {
+        if (string.IsNullOrWhiteSpace(principles))
+        {
+            return new List<string>();
+        }
+
+        // Try to parse as JSON array first
+        if (principles.TrimStart().StartsWith("["))
+        {
+            try
+            {
+                var parsed = JsonSerializer.Deserialize<List<string>>(principles);
+                return parsed ?? new List<string>();
+            }
+            catch (JsonException)
+            {
+                // Fall through to delimiter parsing
+            }
+        }
+
+        // Fall back to delimiter-based parsing
+        return principles.Split(new[] { '\n', '|' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .ToList();
     }
 }
 
