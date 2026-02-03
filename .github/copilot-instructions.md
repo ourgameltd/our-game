@@ -7,12 +7,12 @@ OurGame is a comprehensive, responsive, mobile-first web portal for football clu
 ## Technology Stack
 
 ### Frontend (`/web`)
-- **Framework**: Next.js 14+ (App Router) with TypeScript
-- **Rendering**: Static Site Generation (SSG) for clubs/formations/tactics, client-side rendering for dynamic content
+- **Framework**: React 18 + Vite + TypeScript
+- **Routing**: React Router 6
 - **Styling**: Tailwind CSS 3.4+
 - **State Management**: Zustand 4.5+ with React Context
 - **UI Components**: React 18+ with Lucide icons, Recharts for visualizations
-- **Build Configuration**: Next.js with SWA-optimized static export
+- **Build Configuration**: Vite build output for Azure Static Web Apps
 
 ### Backend (`/api`)
 - **Runtime**: Azure Functions v4 with .NET 8 Isolated Worker Model
@@ -27,26 +27,25 @@ OurGame is a comprehensive, responsive, mobile-first web portal for football clu
 ### Database
 - **Production**: Azure SQL Server Serverless (deployed via Bicep)
 - **Local Development**: SQL Server in Docker container
-- **ORM**: Entity Framework Core 8
-- **Schema Management**: SQL Database Project (`.sqlproj`) as source of truth
-- **Migrations**: EF Core Power Tools to sync DbContext with database project schema
-- **Seed Data**: Populated from existing `/web/src/data/*.ts` TypeScript sample files
+- **ORM**: Entity Framework Core 9
+- **Migrations**: EF Core migrations in `OurGame.Persistence/Migrations`
+- **Seed Data**: Seeded via `OurGame.Seeder` using `OurGame.Persistence.Data.SeedData`
 
 ### Infrastructure (`/infrastructure`)
 - **IaC Tool**: Azure Bicep
 - **Deployment**: Single production environment (future: multi-environment)
 - **Resources**:
-  - Azure Static Web App (Standard tier) hosting Next.js build output
+    - Azure Static Web App (Standard tier) hosting Vite build output
   - Azure Functions (Consumption Y1) as linked SWA backend
   - Azure SQL Server Serverless with SQL Database
   - Application Insights and Log Analytics
   - Storage Account for function app diagnostics
 
 ### Development Tools
-- **SWA CLI**: Links Next.js dev server with local Azure Functions
+- **SWA CLI**: Links Vite dev server with local Azure Functions
 - **EF Core CLI**: Database migrations and scaffolding
 - **Docker**: Local SQL Server container
-- **Storybook**: Component development and visual testing
+- **Storybook**: Component development
 
 ## Application Structure
 
@@ -118,32 +117,12 @@ Dashboard
 
 ## Database Architecture
 
-### Schema Overview
-The database follows the comprehensive schema documented in `/docs/database/erd-diagrams.md` (50+ tables):
-
-**Core Entities**: `users`, `clubs`, `age_groups`, `teams`, `coaches`, `players`
-
-**Player Management**: `player_attributes` (35 EA FC metrics), `player_teams`, `player_age_groups`, `player_images`, `emergency_contacts`
-
-**Formations & Tactics**: `formations`, `formation_positions`, `position_overrides`, `tactic_principles` (inheritance system)
-
-**Matches**: `matches`, `match_lineups`, `goals`, `assists`, `cards`, `injuries`, `performance_ratings`, `substitutions`
-
-**Training**: `training_sessions`, `drills`, `drill_templates`, `attendance`, `session_drills`
-
-**Development**: `development_plans`, `player_reports`, `training_plans`, `focus_areas`
-
-**Administrative**: `kits`, `kit_orders`, `certifications`, `roles`, `notifications`
-
-**Junction Tables**: `team_coaches`, `age_group_coordinators`, various many-to-many relationships
-
 ### Development Workflow
 
-1. **Schema Changes**: Make changes in SQL Database Project (`.sqlproj`)
+1. **Schema Changes**: Schema changes are code first in EF Core models
 2. **Database Update**: Apply changes to local Docker SQL Server or Azure SQL
-3. **EF Core Sync**: Use EF Core Power Tools to reverse-engineer DbContext from database
-4. **Code Generation**: Update repositories, services, and DTOs based on new schema
-5. **Seed Data**: Populate database using transformed TypeScript files from `/web/src/data/`
+3. **Code Generation**: Update repositories, services, and DTOs based on new schema
+4. **Seed Data**: Populate database using transformed TypeScript files from seed data project
 
 ### Data Seeding Strategy
 - Source sample data from existing TypeScript files: `clubs.ts`, `teams.ts`, `players.ts`, `matches.ts`, `formations.ts`, `tactics.ts`, `training.ts`, etc.
@@ -162,7 +141,7 @@ The database follows the comprehensive schema documented in `/docs/database/erd-
 
 ### OpenAPI Specification
 - **Documentation**: All endpoints must have OpenAPI/Swagger documentation
-- **NSwag Integration**: Generate TypeScript clients for Next.js frontend
+- **NSwag Integration**: Generate TypeScript clients for the React frontend
 - **Schema Validation**: Request/response models documented with examples
 - **Endpoint Grouping**: Tag endpoints by domain (Clubs, Players, Matches, Formations, etc.)
 
@@ -178,17 +157,17 @@ The database follows the comprehensive schema documented in `/docs/database/erd-
 
 ## Frontend Development Guidelines
 
-### Next.js Migration Path
-1. **Preserve Structure**: Maintain existing 60+ pages and 15+ component folders
-2. **Routing Conversion**: Convert React Router routes to Next.js App Router file-based routing
-3. **SSG Pages**: Use `generateStaticParams` for clubs, formations, tactics pages
-4. **Client Components**: Mark interactive components with `'use client'` directive
+### React Router Routing
+1. **Preserve Structure**: Maintain existing pages and component folders
+2. **Route Definitions**: Keep all routes in React Router config (no file-based routing)
+3. **Dynamic Segments**: Use route params for clubs, teams, formations, tactics, and players
+4. **Nested Layouts**: Use nested routes and shared layout components
 5. **API Integration**: Replace mock data with calls to Azure Functions via NSwag-generated client
 
 ### Component Architecture
 - **Feature Folders**: Maintain existing structure (`components/ageGroup`, `components/coach`, `components/formation`, etc.)
 - **Reusable Components**: Keep common components in `components/common`
-- **Layout Components**: Use Next.js layout.tsx for shared navigation/header/footer
+- **Layout Components**: Use shared layout components for navigation/header/footer
 - **Contexts**: Preserve ThemeContext, NavigationContext, UserPreferencesContext
 
 ### State Management
@@ -198,13 +177,9 @@ The database follows the comprehensive schema documented in `/docs/database/erd-
 
 ### Styling
 - **Tailwind CSS**: Continue using Tailwind 3.4+ with mobile-first approach
-- **Club Branding**: Dynamic color schemes based on club colors (Vale FC example in `/docs/images/vale-crest.jpg`)
+- **Club Branding**: Dynamic color schemes based on club colors
 - **Accessibility**: WCAG 2.1 AA compliance, keyboard navigation, ARIA labels
 
-### Visual Testing
-- **Storybook**: Maintain component stories for isolated testing
-- **Route Testing**: Use `/docs/all-routes.md` checklist (60+ routes)
-- **Playwright**: Screenshot capture script for visual regression
 
 ## Infrastructure Development
 
@@ -213,10 +188,10 @@ The database follows the comprehensive schema documented in `/docs/database/erd-
    ```bash
    docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong@Passw0rd" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
    ```
-2. **Database Project**: Open `.sqlproj` in Visual Studio or Azure Data Studio
-3. **EF Core**: Run migrations to local database
+2. **EF Core**: Run migrations from `OurGame.Persistence/Migrations` to local database
+3. **Seed Data**: Run `OurGame.Seeder` to populate data from `OurGame.Persistence.Data.SeedData`
 4. **Azure Functions**: Run with `func start` in `/api/OurGame.Api`
-5. **Next.js**: Run with `npm run dev` in `/web`
+5. **Vite**: Run with `npm run dev` in `/web`
 6. **SWA CLI**: Use `swa start` to link frontend and backend locally
 
 ### Bicep Infrastructure
@@ -227,10 +202,10 @@ The database follows the comprehensive schema documented in `/docs/database/erd-
 - **Environment**: Single production environment (future: dev, staging, prod)
 
 ### Deployment Pipeline
-1. **Database**: Apply database project to Azure SQL Server
+1. **Database**: Apply EF Core migrations from `OurGame.Persistence/Migrations` to Azure SQL Server
 2. **Backend**: Deploy Azure Functions via GitHub Actions or Azure CLI
-3. **Frontend**: Build Next.js static export, deploy to SWA
-4. **Seed Data**: Run EF Core seeding script on first deployment
+3. **Frontend**: Build Vite output, deploy to SWA
+4. **Seed Data**: Run `OurGame.Seeder` on first deployment
 
 ## Design Principles
 
@@ -243,7 +218,7 @@ The database follows the comprehensive schema documented in `/docs/database/erd-
 ### Club Customization
 - **Branding**: Dynamic color schemes based on club colors (e.g., Vale FC: red/white)
 - **Logos**: Club crests displayed throughout the interface
-- **Ethos**: Display club constitution and principles (see `/docs/club-consitituion.md`)
+- **Ethos**: Display club constitution and principles
 - **Inclusive Language**: Welcoming tone for community club supporting all ages and abilities
 
 ### Content Guidelines
@@ -268,18 +243,8 @@ The database follows the comprehensive schema documented in `/docs/database/erd-
 - **Integration Tests**: Test Azure Functions endpoints
 - **E2E Tests**: Playwright tests for critical user journeys
 
-## Documentation References
-
-- **All Routes**: `/docs/all-routes.md` - 60+ route definitions for visual testing
-- **Database ERD**: `/docs/database/erd-diagrams.md` - Complete schema documentation (905 lines)
-- **Age Group Hierarchy**: `/docs/age-group-hierarchy.md` - 3-level club structure
-- **Formation System**: `/docs/tactics-data-layer.md` - Inheritance and overrides
-- **Kit Management**: `/docs/kit-management-system.md` - Kit builder system
-- **Squad Sizes**: `/docs/squad-size-feature.md` - Support for 4v4 through 11v11
-- **Club Constitution**: `/docs/club-consitituion.md` - Vale FC ethos and principles
-
 ---
 
-**Repository**: Monorepo structure with `/web` (Next.js), `/api` (.NET), `/infrastructure` (Bicep), and `/docs`
+**Repository**: Monorepo structure with `/web` (React + Vite), `/api` (.NET), and `/infrastructure` (Bicep)
 
 **Development Focus**: Full-stack development with production-ready backend, database layer, and API integration replacing frontend-only demonstrations.
