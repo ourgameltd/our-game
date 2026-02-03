@@ -73,6 +73,7 @@ export {
   useClubById,
   useClubStatistics,
   useAgeGroupsByClubId,
+  useAgeGroupById,
   useAgeGroupStatistics,
   useClubPlayers,
   useClubTeams,

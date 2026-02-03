@@ -169,6 +169,13 @@ export function useAgeGroup(ageGroupId: string | undefined): UseApiState<AgeGrou
 }
 
 /**
+ * Alias for useAgeGroup for backward compatibility
+ */
+export function useAgeGroupById(ageGroupId: string | undefined): UseApiState<AgeGroupDetailDto> {
+  return useAgeGroup(ageGroupId);
+}
+
+/**
  * Hook to fetch age group statistics
  */
 export function useAgeGroupStatistics(ageGroupId: string | undefined): UseApiState<AgeGroupStatisticsDto> {
