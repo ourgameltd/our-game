@@ -1,16 +1,26 @@
 import { Link } from 'react-router-dom';
-import { PlayerReport, Player } from '@/types';
+import { PlayerReport } from '@/types';
 import { TrendingUp, Calendar, FileText } from 'lucide-react';
+
+type PlayerInfo = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  photo?: string;
+  preferredPositions?: string[];
+};
 
 interface ReportCardListCardProps {
   report: PlayerReport;
-  player: Player;
+  player: PlayerInfo;
   linkTo: string;
 }
 
 export default function ReportCardListCard({ report, player, linkTo }: ReportCardListCardProps) {
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return 'N/A';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   return (

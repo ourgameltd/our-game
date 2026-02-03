@@ -10,6 +10,7 @@ import {
   apiClient,
   TeamListItemDto,
   TeamOverviewDto,
+  TeamWithStatsDto,
   ChildPlayerDto,
   ClubDetailDto,
   ClubStatisticsDto,
@@ -95,6 +96,16 @@ export function useTeamOverview(teamId: string | undefined): UseApiState<TeamOve
   return useApiCall<TeamOverviewDto>(
     () => apiClient.teams.getOverview(teamId!),
     [teamId]
+  );
+}
+
+/**
+ * Hook to fetch teams by age group ID with statistics
+ */
+export function useTeamsByAgeGroupId(ageGroupId: string | undefined): UseApiState<TeamWithStatsDto[]> {
+  return useApiCall<TeamWithStatsDto[]>(
+    () => apiClient.teams.getByAgeGroupId(ageGroupId!),
+    [ageGroupId]
   );
 }
 
@@ -195,6 +206,16 @@ export function useAgeGroupPlayers(
   return useApiCall<AgeGroupPlayerDto[]>(
     () => apiClient.ageGroups.getPlayers(ageGroupId!, includeArchived),
     [ageGroupId, includeArchived]
+  );
+}
+
+/**
+ * Hook to fetch report cards for an age group
+ */
+export function useAgeGroupReportCards(ageGroupId: string | undefined): UseApiState<ClubReportCardDto[]> {
+  return useApiCall<ClubReportCardDto[]>(
+    () => apiClient.ageGroups.getReportCards(ageGroupId!),
+    [ageGroupId]
   );
 }
 

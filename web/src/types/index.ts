@@ -615,9 +615,18 @@ export interface DevelopmentPlan {
 export interface PlayerReport {
   id: string;
   playerId: string;
+  player?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    nickname?: string;
+    photo?: string;
+    preferredPositions: string[];
+    ageGroupIds: string[];
+  };
   period: {
-    start: Date;
-    end: Date;
+    start?: Date | string;
+    end?: Date | string;
   };
   overallRating: number;
   strengths: string[];
@@ -626,14 +635,14 @@ export interface PlayerReport {
     id: string;
     goal: string;
     actions: string[];
-    startDate: Date;
-    targetDate: Date;
+    startDate?: Date | string;
+    targetDate?: Date | string;
     completed: boolean;
-    completedDate?: Date;
+    completedDate?: Date | string;
   }[];
   coachComments: string;
-  createdBy: string;
-  createdAt: Date;
+  createdBy?: string;
+  createdAt: Date | string;
   similarProfessionalPlayers?: {
     name: string;
     team: string;

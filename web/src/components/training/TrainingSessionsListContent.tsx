@@ -119,7 +119,7 @@ export default function TrainingSessionsListContent({
 
           {/* Desktop-only: Location */}
           <div className="hidden md:block md:order-4 md:flex-shrink-0 md:w-[140px]">
-            <span className="text-xs text-gray-600 dark:text-gray-400 truncate block flex items-center gap-1">
+            <span className="text-xs text-gray-600 dark:text-gray-400 truncate flex items-center gap-1">
               <MapPin className="w-3 h-3 inline" />
               {session.location}
             </span>

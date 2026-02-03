@@ -899,6 +899,14 @@ export const apiClient = {
       const response = await axiosInstance.get<ApiResponse<AgeGroupCoachDto[]>>(`/v1/age-groups/${ageGroupId}/coaches`);
       return response.data;
     },
+
+    /**
+     * Get report cards for a specific age group
+     */
+    getReportCards: async (ageGroupId: string): Promise<ApiResponse<ClubReportCardDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<ClubReportCardDto[]>>(`/v1/age-groups/${ageGroupId}/report-cards`);
+      return response.data;
+    },
   },
 
   tactics: {

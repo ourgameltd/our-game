@@ -16,6 +16,8 @@ using OurGame.Application.UseCases.AgeGroups.Queries.GetPlayersByAgeGroupId;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetPlayersByAgeGroupId.DTOs;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetCoachesByAgeGroupId;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetCoachesByAgeGroupId.DTOs;
+using OurGame.Application.UseCases.AgeGroups.Queries.GetReportCardsByAgeGroupId;
+using OurGame.Application.UseCases.Clubs.Queries.GetReportCardsByClubId.DTOs;
 using System.Net;
 
 namespace OurGame.Api.Functions;
@@ -257,6 +259,46 @@ public class AgeGroupFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<AgeGroupCoachDto>>.SuccessResponse(coaches));
+        return response;
+    }
+
+    /// <summary>
+    /// Get report cards for a specific age group
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="ageGroupId">The age group ID</param>
+    /// <returns>List of report cards with player details</returns>
+    [Function("GetAgeGroupReportCards")]
+    [OpenApiOperation(operationId: "GetAgeGroupReportCards", tags: new[] { "AgeGroups", "ReportCards" }, Summary = "Get report cards by age group", Description = "Retrieves all report cards for players in a specific age group")]
+    [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The age group ID")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubReportCardDto>>), Description = "Report cards retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubReportCardDto>>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubReportCardDto>>), Description = "Invalid age group ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubReportCardDto>>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetAgeGroupReportCards(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/age-groups/{ageGroupId}/report-cards")] HttpRequestData req,
+        string ageGroupId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(ageGroupId, out var ageGroupGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<List<ClubReportCardDto>>.ErrorResponse(
+                "Invalid age group ID format", 400));
+            return badRequestResponse;
+        }
+
+        var reportCards = await _mediator.Send(new GetReportCardsByAgeGroupIdQuery(ageGroupGuid));
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<List<ClubReportCardDto>>.SuccessResponse(reportCards));
         return response;
     }
 }

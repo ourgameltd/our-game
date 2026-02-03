@@ -69,6 +69,7 @@ export type {
 export {
   useMyTeams,
   useTeamOverview,
+  useTeamsByAgeGroupId,
   useMyChildren,
   useClubById,
   useClubStatistics,

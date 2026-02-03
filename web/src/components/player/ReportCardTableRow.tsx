@@ -1,16 +1,26 @@
 import { Link } from 'react-router-dom';
-import { PlayerReport, Player } from '@/types';
+import { PlayerReport } from '@/types';
 import { Calendar } from 'lucide-react';
+
+type PlayerInfo = {
+  id: string;
+  firstName: string;
+  lastName: string;
+  photo?: string;
+  preferredPositions?: string[];
+};
 
 interface ReportCardTableRowProps {
   report: PlayerReport;
-  player: Player;
+  player: PlayerInfo;
   linkTo: string;
 }
 
 export default function ReportCardTableRow({ report, player, linkTo }: ReportCardTableRowProps) {
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+  const formatDate = (date: Date | string | null | undefined) => {
+    if (!date) return 'N/A';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
   return (
@@ -38,7 +48,7 @@ export default function ReportCardTableRow({ report, player, linkTo }: ReportCar
             {player.firstName} {player.lastName}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
-            {player.preferredPositions[0] || 'N/A'}
+            {player.preferredPositions?.[0] || 'N/A'}
           </div>
         </div>
       </div>
