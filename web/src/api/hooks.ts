@@ -15,6 +15,7 @@ import {
   ClubStatisticsDto,
   AgeGroupListDto,
   AgeGroupStatisticsDto,
+  AgeGroupPlayerDto,
   ClubPlayerDto,
   ClubTeamDto,
   ClubCoachDto,
@@ -156,6 +157,19 @@ export function useAgeGroupStatistics(ageGroupId: string | undefined): UseApiSta
   return useApiCall<AgeGroupStatisticsDto>(
     () => apiClient.ageGroups.getStatistics(ageGroupId!),
     [ageGroupId]
+  );
+}
+
+/**
+ * Hook to fetch players for an age group
+ */
+export function useAgeGroupPlayers(
+  ageGroupId: string | undefined,
+  includeArchived: boolean = false
+): UseApiState<AgeGroupPlayerDto[]> {
+  return useApiCall<AgeGroupPlayerDto[]>(
+    () => apiClient.ageGroups.getPlayers(ageGroupId!, includeArchived),
+    [ageGroupId, includeArchived]
   );
 }
 

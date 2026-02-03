@@ -228,6 +228,84 @@ export interface AgeGroupPerformerDto {
   matchesPlayed: number;
 }
 
+export interface AgeGroupPlayerAttributesDto {
+  // Skills
+  ballControl?: number;
+  crossing?: number;
+  weakFoot?: number;
+  dribbling?: number;
+  finishing?: number;
+  freeKick?: number;
+  heading?: number;
+  longPassing?: number;
+  longShot?: number;
+  penalties?: number;
+  shortPassing?: number;
+  shotPower?: number;
+  slidingTackle?: number;
+  standingTackle?: number;
+  volleys?: number;
+  // Physical
+  acceleration?: number;
+  agility?: number;
+  balance?: number;
+  jumping?: number;
+  pace?: number;
+  reactions?: number;
+  sprintSpeed?: number;
+  stamina?: number;
+  strength?: number;
+  // Mental
+  aggression?: number;
+  attackingPosition?: number;
+  awareness?: number;
+  communication?: number;
+  composure?: number;
+  defensivePositioning?: number;
+  interceptions?: number;
+  marking?: number;
+  positivity?: number;
+  positioning?: number;
+  vision?: number;
+}
+
+export interface AgeGroupPlayerEvaluationAttributeDto {
+  attributeName: string;
+  rating: number;
+  notes?: string;
+}
+
+export interface AgeGroupPlayerEvaluationDto {
+  id: string;
+  playerId: string;
+  evaluatedBy?: string;
+  evaluatedAt: string;
+  overallRating: number;
+  coachNotes?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  attributes: AgeGroupPlayerEvaluationAttributeDto[];
+}
+
+export interface AgeGroupPlayerDto {
+  id: string;
+  clubId: string;
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  dateOfBirth?: string;
+  photo?: string;
+  associationId?: string;
+  preferredPositions: string[];
+  attributes?: AgeGroupPlayerAttributesDto;
+  overallRating?: number;
+  evaluations?: AgeGroupPlayerEvaluationDto[];
+  ageGroupIds: string[];
+  teamIds: string[];
+  parentIds: string[];
+  isArchived: boolean;
+}
+
 export interface TeamWithStatsDto {
   id: string;
   clubId: string;
@@ -389,6 +467,32 @@ export interface ClubCoachDto {
   specializations: string[];
   isArchived: boolean;
   teams: ClubCoachTeamDto[];
+}
+
+// Age Group Coach DTOs
+export interface AgeGroupCoachTeamDto {
+  id: string;
+  ageGroupId: string;
+  name: string;
+  ageGroupName?: string;
+}
+
+export interface AgeGroupCoachDto {
+  id: string;
+  clubId: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth?: string;
+  photo?: string;
+  email?: string;
+  phone?: string;
+  associationId?: string;
+  hasAccount: boolean;
+  role: string;
+  biography?: string;
+  specializations: string[];
+  isArchived: boolean;
+  teams: AgeGroupCoachTeamDto[];
 }
 
 // Club Training Session DTOs
@@ -769,6 +873,23 @@ export const apiClient = {
      */
     getStatistics: async (ageGroupId: string): Promise<ApiResponse<AgeGroupStatisticsDto>> => {
       const response = await axiosInstance.get<ApiResponse<AgeGroupStatisticsDto>>(`/v1/age-groups/${ageGroupId}/statistics`);
+      return response.data;
+    },
+
+    /**
+     * Get players for an age group
+     */
+    getPlayers: async (ageGroupId: string, includeArchived: boolean = false): Promise<ApiResponse<AgeGroupPlayerDto[]>> => {
+      const params = includeArchived ? '?includeArchived=true' : '';
+      const response = await axiosInstance.get<ApiResponse<AgeGroupPlayerDto[]>>(`/v1/age-groups/${ageGroupId}/players${params}`);
+      return response.data;
+    },
+
+    /**
+     * Get coaches for a specific age group
+     */
+    getCoachesByAgeGroupId: async (ageGroupId: string): Promise<ApiResponse<AgeGroupCoachDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<AgeGroupCoachDto[]>>(`/v1/age-groups/${ageGroupId}/coaches`);
       return response.data;
     },
   },

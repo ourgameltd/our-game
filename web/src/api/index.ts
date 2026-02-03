@@ -28,6 +28,8 @@ export type {
   AgeGroupDetailDto,
   AgeGroupStatisticsDto,
   AgeGroupPerformerDto,
+  AgeGroupCoachDto,
+  AgeGroupCoachTeamDto,
   TeamWithStatsDto,
   TeamStatsDto,
   TeamOverviewDto,
