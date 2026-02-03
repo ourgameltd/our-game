@@ -14,12 +14,14 @@ import {
   ClubDetailDto,
   ClubStatisticsDto,
   AgeGroupListDto,
+  AgeGroupDetailDto,
   AgeGroupStatisticsDto,
   AgeGroupPlayerDto,
   ClubPlayerDto,
   ClubTeamDto,
   ClubCoachDto,
   ClubTrainingSessionsDto,
+  ClubTrainingSessionDto,
   ClubMatchesDto,
   ClubKitDto,
   ClubReportCardDto,
@@ -27,6 +29,7 @@ import {
   DrillsByScopeResponseDto,
   DrillTemplatesByScopeResponseDto
 } from './client';
+import { TrainingSession } from '@/types';
 
 // Generic hook state
 interface UseApiState<T> {
@@ -123,8 +126,13 @@ export function useClubById(clubId: string | undefined): UseApiState<ClubDetailD
   );
 }
 
-/**
- * Hook to fetch club statistics
+/** * Alias for useClubById for backward compatibility
+ */
+export function useClub(clubId: string | undefined): UseApiState<ClubDetailDto> {
+  return useClubById(clubId);
+}
+
+/** * Hook to fetch club statistics
  */
 export function useClubStatistics(clubId: string | undefined): UseApiState<ClubStatisticsDto> {
   return useApiCall<ClubStatisticsDto>(
@@ -149,6 +157,16 @@ export function useAgeGroupsByClubId(
 // ============================================================
 // Age Group Hooks
 // ============================================================
+
+/**
+ * Hook to fetch age group details by ID
+ */
+export function useAgeGroup(ageGroupId: string | undefined): UseApiState<AgeGroupDetailDto> {
+  return useApiCall<AgeGroupDetailDto>(
+    () => apiClient.ageGroups.getById(ageGroupId!),
+    [ageGroupId]
+  );
+}
 
 /**
  * Hook to fetch age group statistics
@@ -222,11 +240,48 @@ export function useClubCoaches(
 export function useClubTrainingSessions(
   clubId: string | undefined,
   options?: { ageGroupId?: string; teamId?: string; status?: 'upcoming' | 'past' | 'all' }
-): UseApiState<ClubTrainingSessionsDto> {
-  return useApiCall<ClubTrainingSessionsDto>(
-    () => apiClient.clubs.getTrainingSessions(clubId!, options),
+): UseApiState<{ sessions: TrainingSession[]; totalCount: number }> {
+  return useApiCall<{ sessions: TrainingSession[]; totalCount: number }>(
+    async () => {
+      const response = await apiClient.clubs.getTrainingSessions(clubId!, options);
+      if (response.success && response.data) {
+        // Map API DTOs to UI TrainingSession model
+        const mappedSessions = response.data.sessions.map(mapApiSessionToUiSession);
+        return {
+          success: true,
+          data: {
+            sessions: mappedSessions,
+            totalCount: response.data.totalCount
+          }
+        };
+      }
+      return response;
+    },
     [clubId, options?.ageGroupId, options?.teamId, options?.status]
   );
+}
+
+/**
+ * Helper function to map API DTO to UI TrainingSession model
+ */
+function mapApiSessionToUiSession(apiSession: ClubTrainingSessionDto): TrainingSession {
+  return {
+    id: apiSession.id,
+    teamId: apiSession.teamId,
+    date: new Date(apiSession.date),
+    meetTime: apiSession.meetTime ? new Date(apiSession.meetTime) : undefined,
+    duration: apiSession.durationMinutes || 0,
+    location: apiSession.location || '',
+    focusAreas: apiSession.focusAreas || [],
+    drillIds: apiSession.drillIds || [],
+    attendance: (apiSession.attendance || []).map((att) => ({
+      playerId: att.playerId,
+      status: att.status as 'confirmed' | 'declined' | 'maybe' | 'pending',
+      notes: att.notes || undefined
+    })),
+    status: apiSession.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled',
+    isLocked: apiSession.isLocked || false
+  };
 }
 
 /**

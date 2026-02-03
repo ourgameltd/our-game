@@ -229,44 +229,45 @@ export interface AgeGroupPerformerDto {
 }
 
 export interface AgeGroupPlayerAttributesDto {
-  // Skills
-  ballControl?: number;
+  acceleration?: number;
+  agility?: number;
+  aggression?: number;
+  anticipation?: number;
+  balance?: number;
+  composure?: number;
+  concentration?: number;
   crossing?: number;
-  weakFoot?: number;
+  curve?: number;
+  defensiveAwareness?: number;
   dribbling?: number;
   finishing?: number;
-  freeKick?: number;
+  flair?: number;
   heading?: number;
+  interceptions?: number;
+  jumping?: number;
+  leadership?: number;
   longPassing?: number;
-  longShot?: number;
+  longShots?: number;
+  longThrows?: number;
+  marking?: number;
+  offensiveAwareness?: number;
+  oneOnOne?: number;
+  pace?: number;
+  passing?: number;
   penalties?: number;
+  physicalStrength?: number;
+  positioning?: number;
+  reactions?: number;
   shortPassing?: number;
   shotPower?: number;
   slidingTackle?: number;
-  standingTackle?: number;
-  volleys?: number;
-  // Physical
-  acceleration?: number;
-  agility?: number;
-  balance?: number;
-  jumping?: number;
-  pace?: number;
-  reactions?: number;
   sprintSpeed?: number;
   stamina?: number;
-  strength?: number;
-  // Mental
-  aggression?: number;
-  attackingPosition?: number;
-  awareness?: number;
-  communication?: number;
-  composure?: number;
-  defensivePositioning?: number;
-  interceptions?: number;
-  marking?: number;
-  positivity?: number;
-  positioning?: number;
+  standingTackle?: number;
   vision?: number;
+  volleys?: number;
+  weakFoot?: number;
+  workRate?: number;
 }
 
 export interface AgeGroupPlayerEvaluationAttributeDto {
@@ -507,6 +508,12 @@ export interface ClubTrainingSessionDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
+  drillIds: string[];
+  attendance: {
+    playerId: string;
+    status: string;
+    notes?: string;
+  }[];
   status: string;
   isLocked: boolean;
 }

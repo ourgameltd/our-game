@@ -15,8 +15,20 @@ public class ClubTrainingSessionDto
     public int? DurationMinutes { get; set; }
     public string Location { get; set; } = string.Empty;
     public List<string> FocusAreas { get; set; } = new();
+    public List<Guid> DrillIds { get; set; } = new();
+    public List<AttendanceDto> Attendance { get; set; } = new();
     public string Status { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
+}
+
+/// <summary>
+/// DTO for training session attendance
+/// </summary>
+public class AttendanceDto
+{
+    public Guid PlayerId { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string? Notes { get; set; }
 }
 
 /// <summary>

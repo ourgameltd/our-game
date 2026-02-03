@@ -43,7 +43,17 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
                 ts.Location,
                 ts.FocusAreas,
                 ts.Status,
-                ts.IsLocked
+                ts.IsLocked,
+                (SELECT STRING_AGG(CAST(sd.DrillId AS VARCHAR(36)), ',') 
+                 FROM SessionDrills sd 
+                 WHERE sd.SessionId = ts.Id) AS DrillIdsString,
+                (SELECT STRING_AGG(
+                    CAST(sa.PlayerId AS VARCHAR(36)) + '|' + 
+                    CAST(sa.Present AS VARCHAR(5)) + '|' + 
+                    ISNULL(sa.Notes, ''), 
+                    ';') 
+                 FROM SessionAttendances sa 
+                 WHERE sa.SessionId = ts.Id) AS AttendanceString
             FROM TrainingSessions ts
             INNER JOIN Teams t ON ts.TeamId = t.Id
             INNER JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
@@ -111,6 +121,8 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
             DurationMinutes = s.DurationMinutes,
             Location = s.Location ?? string.Empty,
             FocusAreas = ParseFocusAreas(s.FocusAreas),
+            DrillIds = ParseDrillIds(s.DrillIdsString),
+            Attendance = ParseAttendance(s.AttendanceString),
             Status = MapStatusToString(s.Status),
             IsLocked = s.IsLocked
         }).ToList();
@@ -145,6 +157,45 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
             .ToList();
     }
 
+    private static List<Guid> ParseDrillIds(string? drillIdsString)
+    {
+        if (string.IsNullOrWhiteSpace(drillIdsString))
+            return new List<Guid>();
+
+        return drillIdsString.Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => Guid.TryParse(s.Trim(), out var guid) ? guid : Guid.Empty)
+            .Where(g => g != Guid.Empty)
+            .ToList();
+    }
+
+    private static List<AttendanceDto> ParseAttendance(string? attendanceString)
+    {
+        if (string.IsNullOrWhiteSpace(attendanceString))
+            return new List<AttendanceDto>();
+
+        var result = new List<AttendanceDto>();
+        var entries = attendanceString.Split(';', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var entry in entries)
+        {
+            var parts = entry.Split('|');
+            if (parts.Length >= 2 && Guid.TryParse(parts[0], out var playerId))
+            {
+                var isPresent = bool.TryParse(parts[1], out var present) && present;
+                var notes = parts.Length > 2 ? parts[2] : null;
+
+                result.Add(new AttendanceDto
+                {
+                    PlayerId = playerId,
+                    Status = isPresent ? "confirmed" : "declined",
+                    Notes = string.IsNullOrWhiteSpace(notes) ? null : notes
+                });
+            }
+        }
+
+        return result;
+    }
+
     private static string MapStatusToString(int status)
     {
         return status switch
@@ -175,4 +226,6 @@ public class TrainingSessionRawDto
     public string? FocusAreas { get; set; }
     public int Status { get; set; }
     public bool IsLocked { get; set; }
+    public string? DrillIdsString { get; set; }
+    public string? AttendanceString { get; set; }
 }
