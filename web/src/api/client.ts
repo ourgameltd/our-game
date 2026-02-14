@@ -520,6 +520,49 @@ export interface ClubCoachDto {
   teams: ClubCoachTeamDto[];
 }
 
+// Coach Detail DTOs
+export interface CoachTeamAssignmentDto {
+  teamId: string;
+  teamName: string;
+  ageGroupId: string;
+  ageGroupName: string;
+  role: string;
+  roleDisplay: string;
+}
+
+export interface CoachAgeGroupCoordinatorDto {
+  ageGroupId: string;
+  ageGroupName: string;
+}
+
+export interface CoachDetailDto {
+  id: string;
+  clubId: string;
+  clubName: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth?: string;
+  photo?: string;
+  email?: string;
+  phone?: string;
+  associationId?: string;
+  hasAccount: boolean;
+  role: string;
+  roleDisplay: string;
+  biography?: string;
+  specializations: string[];
+  certifications: {
+    name: string;
+    issuer?: string;
+    dateObtained?: string;
+    expiryDate?: string;
+  }[];
+  yearsExperience?: number;
+  isArchived: boolean;
+  teams: CoachTeamAssignmentDto[];
+  ageGroupCoordinatorRoles: CoachAgeGroupCoordinatorDto[];
+}
+
 // Age Group Coach DTOs
 export interface AgeGroupCoachTeamDto {
   id: string;
@@ -2216,6 +2259,16 @@ export const apiClient = {
       } catch (error) {
         return handleApiError(error);
       }
+    },
+  },
+
+  coaches: {
+    /**
+     * Get a coach by ID with full profile details
+     */
+    getById: async (coachId: string): Promise<ApiResponse<CoachDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<CoachDetailDto>>(`/v1/coaches/${coachId}`);
+      return response.data;
     },
   },
 

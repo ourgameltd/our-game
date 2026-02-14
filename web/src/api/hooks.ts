@@ -35,6 +35,7 @@ import {
   DrillsByScopeResponseDto,
   DrillTemplatesByScopeResponseDto,
   PlayerDto,
+  CoachDetailDto,
   DevelopmentPlanDto,
   MatchDetailDto,
   TeamPlayerDto,
@@ -567,6 +568,26 @@ export function usePlayer(playerId: string | undefined): UseApiState<PlayerDto> 
       return apiClient.players.getById(playerId);
     },
     [playerId]
+  );
+}
+
+// ============================================================
+// Coach Hooks
+// ============================================================
+
+/**
+ * Hook to fetch a coach by ID with full profile details.
+ * Only fetches if coachId is defined.
+ */
+export function useCoach(coachId: string | undefined): UseApiState<CoachDetailDto> {
+  return useApiCall<CoachDetailDto>(
+    () => {
+      if (!coachId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.coaches.getById(coachId);
+    },
+    [coachId]
   );
 }
 
