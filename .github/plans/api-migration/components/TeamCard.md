@@ -37,6 +37,13 @@ Ensure the team list API responses include `ageGroupName` and `clubName`/`clubCo
 - [ ] Remove `getAgeGroupById` and `getClubById` imports
 - [ ] Test team card grid renders correctly with all styling
 
+
+## Backend Implementation Standards
+
+**NOTE**: This component does not require new API endpoints. It receives all data via props from parent pages. The parent pages are responsible for API calls following the backend standards documented in their migration plans.
+
+If the component's parent pages require API endpoint changes, refer to those page migration plans for backend implementation requirements.
+
 ## Data Mapping
 
 | Current (Static) | Target (API) | Notes |
@@ -54,3 +61,16 @@ Ensure the team list API responses include `ageGroupName` and `clubName`/`clubCo
 - Option A is preferred to avoid N+1 API calls when rendering multiple team cards
 - The existing `TeamWithStatsDto` likely already contains the needed fields — verify
 - Club color theming is important for the visual design of team cards
+
+## Database / API Considerations
+
+**SQL Requirements**:
+- Team list endpoints must JOIN with AgeGroup and Club tables
+- Include `ageGroupName`, `clubName`, `clubPrimaryColor`, `clubSecondaryColor` in SELECT
+- Single query returns all needed display data
+
+**Migration Check**:
+- Verify Club table has `primaryColor` and `secondaryColor` columns
+- Verify denormalized fields in TeamListItemDto/TeamWithStatsDto
+
+**No client-side reference data needed** - all data from database

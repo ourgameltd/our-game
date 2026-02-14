@@ -61,6 +61,62 @@ useCoach(coachId: string): UseApiState<CoachDetailDto>
 - [ ] Add loading/error states
 - [ ] Test profile display, certifications, team assignments
 
+
+## Backend Implementation Standards
+
+### API Function Structure
+- [ ] Create Azure Function in `api/OurGame.Api/Functions/[Area]/[ActionName]Function.cs`
+  - Example: `api/OurGame.Api/Functions/Players/GetPlayerAbilitiesFunction.cs`
+- [ ] Annotate with OpenAPI attributes for Swagger documentation:
+  - `[OpenApiOperation]` with operationId, summary, description
+  - `[OpenApiParameter]` for route/query parameters
+  - `[OpenApiResponseWithBody]` for success responses (200, 201)
+  - `[OpenApiResponseWithoutBody]` for 404, 400 responses
+- [ ] Apply `[Function("FunctionName")]` attribute
+- [ ] Keep function lean - inject `IMediator` and send command/query
+
+### Handler Implementation  
+- [ ] Create handler in `api/OurGame.Application/[Area]/[ActionName]/[ActionName]Handler.cs`
+  - Example: `api/OurGame.Application/Players/GetPlayerAbilities/GetPlayerAbilitiesHandler.cs`
+- [ ] Implement `IRequestHandler<TRequest, TResponse>` from MediatR
+- [ ] Include all query models and DB query classes in same file as handler
+- [ ] Execute SQL by sending command strings to DbContext, map results to DTOs
+- [ ] Use parameterized queries (`@parametername`) to prevent SQL injection
+
+### DTOs Organization
+- [ ] Create DTOs in `api/OurGame.Application/[Area]/[ActionName]/DTOs/[DtoName].cs`
+- [ ] All DTOs for an action in single folder
+- [ ] Use records for immutable DTOs: `public record PlayerAbilitiesDto(...)`
+- [ ] Include XML documentation comments for OpenAPI schema
+
+### Authentication & Authorization
+- [ ] Verify function has authentication enabled per project conventions
+- [ ] Apply authorization policies if endpoint requires specific roles
+- [ ] Check user has access to requested resources (club/team/player)
+
+### Error Handling
+- [ ] Do NOT use try-catch unless specific error handling required
+- [ ] Let global exception handler manage unhandled exceptions  
+- [ ] Return `Results.NotFound()` for missing resources (404)
+- [ ] Return `Results.BadRequest()` for validation failures (400)
+- [ ] Return `Results.Problem()` for business rule violations
+
+### RESTful Conventions
+- [ ] Use appropriate HTTP methods:
+  - GET for retrieving data (idempotent, cacheable)
+  - POST for creating resources
+  - PUT for full updates
+  - PATCH for partial updates (if needed)
+  - DELETE for removing resources
+- [ ] Return correct status codes:
+  - 200 OK for successful GET/PUT
+  - 201 Created for successful POST (include Location header)
+  - 204 No Content for successful DELETE
+  - 400 Bad Request for validation errors
+  - 404 Not Found for missing resources
+  - 401 Unauthorized for auth failures
+  - 403 Forbidden for insufficient permissions
+
 ## Data Mapping
 
 | Current (Static) | Target (API) | Notes |
@@ -80,3 +136,75 @@ useCoach(coachId: string): UseApiState<CoachDetailDto>
 - Five data imports — API response should be comprehensive with resolved names
 - Coach certifications need a clear schema in the DTO
 - The `coachRoleDisplay` can be resolved server-side (`roleDisplay` field) or kept client-side
+
+## Database / API Considerations
+
+**SQL Requirements for `GET /api/coaches/{id}`**:
+```sql
+SELECT c.Id as CoachId,
+       c.FirstName + ' ' + c.LastName as Name,
+       c.Email,
+       c.PhotoUrl,
+       c.PhoneNumber,
+       c.Qualifications,
+       c.Specializations,
+       c.YearsExperience,
+       cl.Id as ClubId,
+       cl.Name as ClubName
+FROM Coach c
+LEFT JOIN TeamCoach tc ON c.Id = tc.CoachId
+LEFT JOIN Team t ON tc.TeamId = t.Id
+LEFT JOIN AgeGroup ag ON t.AgeGroupId = ag.Id
+LEFT JOIN Club cl ON ag.ClubId = cl.Id
+WHERE c.Id = @coachId
+GROUP BY c.Id, cl.Id
+
+-- Get team assignments
+SELECT t.Id as TeamId,
+       t.Name as TeamName,
+       tc.Role,
+       ag.Name as AgeGroupName
+FROM TeamCoach tc
+JOIN Team t ON tc.TeamId = t.Id
+JOIN AgeGroup ag ON t.AgeGroupId = ag.Id
+WHERE tc.CoachId = @coachId
+
+-- Get age group coordinator roles (if applicable)
+SELECT agc.AgeGroupId,
+       ag.Name as AgeGroupName
+FROM AgeGroupCoordinator agc
+JOIN AgeGroup ag ON agc.AgeGroupId = ag.Id
+WHERE agc.CoachId = @coachId
+```
+
+**Migration Check**:
+- Verify Coach table has: FirstName, LastName, Email, PhotoUrl, PhoneNumber
+- Check Qualifications column type (JSON array or separate table?)
+- Check Specializations column type (JSON array or separate table?)
+- Verify TeamCoach join table with Role column (CoachRole enum)
+- Verify AgeGroupCoordinator table exists (for coordinator assignments)
+
+**Certifications/Qualifications Schema**:
+```json
+[
+  {
+    "name": "UEFA B License",
+    "issuer": "UEFA",
+    "dateObtained": "2020-06-15",
+    "expiryDate": "2025-06-15"
+  }
+]
+```
+
+**Navigation Store Population**:
+```typescript
+if (coach) {
+  setEntityName('coach', coachId, coach.name);
+  setEntityName('club', coach.clubId, coach.clubName);
+  // Teams set when viewing team-specific coach info
+}
+```
+
+**Reference Data**:
+- `coachRoleDisplay` — client-side mapping for CoachRole enum
+- OR include `roleDisplay` in API response for each team assignment

@@ -63,6 +63,62 @@ usePlayerAbilities(playerId: string): UseApiState<PlayerAbilitiesDto>
 - [ ] Test attribute display, charts, and category breakdowns
 - [ ] Verify attribute labels still resolve correctly (from referenceData `playerAttributes`)
 
+
+## Backend Implementation Standards
+
+### API Function Structure
+- [ ] Create Azure Function in `api/OurGame.Api/Functions/[Area]/[ActionName]Function.cs`
+  - Example: `api/OurGame.Api/Functions/Players/GetPlayerAbilitiesFunction.cs`
+- [ ] Annotate with OpenAPI attributes for Swagger documentation:
+  - `[OpenApiOperation]` with operationId, summary, description
+  - `[OpenApiParameter]` for route/query parameters
+  - `[OpenApiResponseWithBody]` for success responses (200, 201)
+  - `[OpenApiResponseWithoutBody]` for 404, 400 responses
+- [ ] Apply `[Function("FunctionName")]` attribute
+- [ ] Keep function lean - inject `IMediator` and send command/query
+
+### Handler Implementation  
+- [ ] Create handler in `api/OurGame.Application/[Area]/[ActionName]/[ActionName]Handler.cs`
+  - Example: `api/OurGame.Application/Players/GetPlayerAbilities/GetPlayerAbilitiesHandler.cs`
+- [ ] Implement `IRequestHandler<TRequest, TResponse>` from MediatR
+- [ ] Include all query models and DB query classes in same file as handler
+- [ ] Execute SQL by sending command strings to DbContext, map results to DTOs
+- [ ] Use parameterized queries (`@parametername`) to prevent SQL injection
+
+### DTOs Organization
+- [ ] Create DTOs in `api/OurGame.Application/[Area]/[ActionName]/DTOs/[DtoName].cs`
+- [ ] All DTOs for an action in single folder
+- [ ] Use records for immutable DTOs: `public record PlayerAbilitiesDto(...)`
+- [ ] Include XML documentation comments for OpenAPI schema
+
+### Authentication & Authorization
+- [ ] Verify function has authentication enabled per project conventions
+- [ ] Apply authorization policies if endpoint requires specific roles
+- [ ] Check user has access to requested resources (club/team/player)
+
+### Error Handling
+- [ ] Do NOT use try-catch unless specific error handling required
+- [ ] Let global exception handler manage unhandled exceptions  
+- [ ] Return `Results.NotFound()` for missing resources (404)
+- [ ] Return `Results.BadRequest()` for validation failures (400)
+- [ ] Return `Results.Problem()` for business rule violations
+
+### RESTful Conventions
+- [ ] Use appropriate HTTP methods:
+  - GET for retrieving data (idempotent, cacheable)
+  - POST for creating resources
+  - PUT for full updates
+  - PATCH for partial updates (if needed)
+  - DELETE for removing resources
+- [ ] Return correct status codes:
+  - 200 OK for successful GET/PUT
+  - 201 Created for successful POST (include Location header)
+  - 204 No Content for successful DELETE
+  - 400 Bad Request for validation errors
+  - 404 Not Found for missing resources
+  - 401 Unauthorized for auth failures
+  - 403 Forbidden for insufficient permissions
+
 ## Data Mapping
 
 | Current (Static) | Target (API) | Notes |
@@ -81,3 +137,51 @@ usePlayerAbilities(playerId: string): UseApiState<PlayerAbilitiesDto>
 - Consider including ability history for growth tracking charts
 - Attribute labels (e.g., "Sprint Speed", "Finishing") should remain in referenceData as client-side constants
 - Heavy chart rendering — loading state is important
+
+## Database / API Considerations
+
+**SQL Requirements for `GET /api/players/{id}/abilities`**:
+```sql
+SELECT pa.AttributeName, pa.Value, pa.LastUpdated
+FROM PlayerAttribute pa
+WHERE pa.PlayerId = @playerId
+ORDER BY pa.AttributeName
+
+-- For history/growth tracking
+SELECT h.RecordedDate, AVG(h.Value) as OverallRating
+FROM PlayerAttributeHistory h
+WHERE h.PlayerId = @playerId
+GROUP BY h.RecordedDate
+ORDER BY h.RecordedDate DESC
+LIMIT 12  -- Last 12 recordings
+```
+
+**Migration Check**:
+- Verify PlayerAttribute table has: PlayerId, AttributeName, Value (0-99), LastUpdated
+- Check if AttributeName is VARCHAR or foreign key to AttributeDefinition table
+- Verify all 35 EA FC attributes are seeded/supported:
+  - Pace: Acceleration, SprintSpeed
+  - Shooting: Positioning, Finishing, ShotPower, LongShots, Volleys, Penalties
+  - Passing: ShortPassing, Vision, Crossing, LongPassing, Curve, FreeKickAccuracy
+  - Dribbling: BallControl, Dribbling, Agility, Balance, Reactions, Composure
+  - Defending: Interceptions, HeadingAccuracy, DefensiveAwareness, StandingTackle, SlidingTackle
+  - Physical: Jumping, Stamina, Strength, Aggression
+  - Mental: Positioning, Vision, Composure, Reactions
+  - Technical: BallControl, Technique
+- Consider PlayerAttributeHistory table for growth tracking (optional)
+
+**Overall Rating Calculation**:
+- Computed server-side as weighted average based on position
+- Example: ST = (Shooting * 0.3 + Pace * 0.25 + Dribbling * 0.25 + Physical * 0.2)
+- Store formula or compute dynamically
+
+**Navigation Store Population**:
+```typescript
+if (abilities) {
+  setEntityName('player', playerId, abilities.playerName);
+}
+```
+
+**Reference Data**:
+- `playerAttributes` labels — client-side constants for i18n
+- Attribute category colors — client-side for chart rendering

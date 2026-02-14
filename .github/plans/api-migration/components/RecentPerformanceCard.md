@@ -53,6 +53,13 @@ Response should include resolved match/team data:
 - [ ] Remove `getMatchById` and `getTeamById` imports
 - [ ] Handle loading/error states in parent
 
+
+## Backend Implementation Standards
+
+**NOTE**: This component does not require new API endpoints. It receives all data via props from parent pages. The parent pages are responsible for API calls following the backend standards documented in their migration plans.
+
+If the component's parent pages require API endpoint changes, refer to those page migration plans for backend implementation requirements.
+
 ## Data Mapping
 
 | Current (Static) | Target (API) | Notes |
@@ -69,3 +76,34 @@ Response should include resolved match/team data:
 - Prefer Option A (parent passes data) to keep the component pure/reusable
 - The API should resolve team/match names server-side to avoid N+1 queries in the frontend
 - Current static implementation does individual lookups per performance entry — the API should return a flat list
+
+## Database / API Considerations
+
+**SQL Requirements** (in parent endpoint `GET /api/players/{id}/recent-performances`):
+```sql
+SELECT 
+  m.Id as MatchId,
+  m.Date,
+  CASE WHEN m.HomeTeamId = pt.TeamId THEN at.Name ELSE ht.Name END as Opponent,
+  pr.Rating,
+  COUNT(g.Id) as Goals,
+  COUNT(DISTINCT g2.AssistPlayerId) as Assists,
+  t.Name as TeamName
+FROM PerformanceRating pr
+JOIN Match m ON pr.MatchId = m.Id
+JOIN PlayerTeam pt ON pr.PlayerId = pt.PlayerId
+JOIN Team t ON pt.TeamId = t.Id
+JOIN Team ht ON m.HomeTeamId = ht.Id
+JOIN Team at ON m.AwayTeamId = at.Id
+LEFT JOIN Goal g ON g.ScorerId = pr.PlayerId AND g.MatchId = m.Id
+LEFT JOIN Goal g2 ON g2.AssistPlayerId = pr.PlayerId AND g2.MatchId = m.Id
+WHERE pr.PlayerId = @playerId
+ORDER BY m.Date DESC
+LIMIT 5
+```
+
+**Migration Check**:
+- Verify `PerformanceRating` table exists with `Rating`, `PlayerId`, `MatchId`
+- Verify `Goal` table has `ScorerId` and `AssistPlayerId` columns
+
+**No client-side reference data needed** - all data resolved server-side

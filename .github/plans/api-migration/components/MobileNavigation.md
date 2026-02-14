@@ -18,45 +18,105 @@
 
 ## Proposed API Changes
 
-### Option A: Dedicated Breadcrumb/Navigation API (Recommended)
-New endpoint that accepts entity IDs and returns display names in a single call:
+### **RECOMMENDED: Option C - Navigation Context/Cache (No Additional API Calls)**
 
-```
-GET /api/navigation/resolve?clubId={id}&teamId={id}&ageGroupId={id}&playerId={id}&coachId={id}
-```
+**DO NOT create additional API endpoints for navigation breadcrumbs.** Parent pages already fetch entity data, so use React state management to populate navigation.
 
-Response:
-```json
-{
-  "clubName": "Vale FC",
-  "teamName": "Blues",
-  "ageGroupName": "2015",
-  "playerName": "James Wilson",
-  "coachName": "Mike Smith"
+### Implementation Strategy
+
+1. **Create/Extend Navigation Store** (Zustand or Context):
+```typescript
+// web/src/stores/navigationStore.ts
+interface NavigationStore {
+  entityNames: Record<string, string>;  // Key format: "club:uuid" → "Vale FC"
+  setEntityName: (type: string, id: string, name: string) => void;
+  getEntityName: (type: string, id: string) => string | undefined;
+  clearEntity: (type: string, id: string) => void;
 }
 ```
 
-### Option B: Use Existing Detail Endpoints
-Use existing API endpoints to resolve each entity name individually:
-- `apiClient.clubs.getClubById(clubId)` → extract `.name`
-- `apiClient.teams.getTeamOverview(teamId)` → extract `.name` (or create lightweight endpoint)  
-- `apiClient.ageGroups.getById(ageGroupId)` → extract `.name`
-- Player detail endpoint (needs creation) → extract `.name`
-- Coach detail endpoint (needs creation) → extract `.name`
+2. **Pages Populate Store When Loading Data**:
+```typescript
+// In PlayerProfilePage.tsx
+const { data: player } = usePlayer(playerId);
+const { setEntityName } = useNavigationStore();
 
-### Option C: Navigation Context/Cache
-Pass entity names down through route context or use a Zustand navigation store that pages populate as they load their data. Navigation component reads from store instead of fetching.
+useEffect(() => {
+  if (player) {
+    setEntityName('player', playerId, player.name);
+    setEntityName('team', player.teamId, player.teamName); // from denormalized data
+    setEntityName('ageGroup', player.ageGroupId, player.ageGroupName);
+    setEntityName('club', player.clubId, player.clubName);
+  }
+}, [player]);
+```
+
+3. **MobileNavigation Reads from Store**:
+```typescript
+// In MobileNavigation.tsx
+const { getEntityName } = useNavigationStore();
+const { clubId, teamId, playerId } = useParams();
+
+const clubName = getEntityName('club', clubId) || 'Loading...';
+const teamName = getEntityName('team', teamId);
+const playerName = getEntityName('player', playerId);
+```
+
+### Why This Approach?
+
+- ✅ **No redundant API calls** - pages already fetch entity data
+- ✅ **Better performance** - synchronous reads from store
+- ✅ **Simpler architecture** - no dedicated breadcrumb endpoints
+- ✅ **Works offline** - store can persist to localStorage
+- ✅ **Scales well** - handles any entity type without new endpoints
+
+### Alternative Options (NOT RECOMMENDED)
+
+#### Option A: Dedicated Breadcrumb/Navigation API
+❌ **DO NOT USE** - Adds unnecessary API calls when pages already fetch entity data
+
+#### Option B: Use Existing Detail Endpoints
+❌ **DO NOT USE** - Creates redundant API calls in navigation component
 
 ## Implementation Checklist
 
-- [ ] Decide on approach (A, B, or C) — Option C recommended for performance
-- [ ] If Option C: Create `useNavigationStore` Zustand store or extend existing `NavigationContext`
-- [ ] If Option C: Update page components to populate store with entity names on load
-- [ ] Update `MobileNavigation.tsx` to read entity names from store/context instead of static data
-- [ ] Remove all 5 data imports
-- [ ] Test breadcrumb display with API data across all routes
-- [ ] Handle loading states (entity names may not be available immediately)
-- [ ] Handle error states (entity not found)
+- [ ] Create `navigationStore.ts` with Zustand or extend existing `NavigationContext`
+- [ ] Define entity name storage interface (`type:id` → `name`)
+- [ ] Add `setEntityName()`, `getEntityName()`, `clearEntity()` methods
+- [ ] **CRITICAL**: Update ALL entity detail pages to populate store:
+  - [ ] Club pages → set club name
+  - [ ] Age group pages → set age group name + club name
+  - [ ] Team pages → set team name + age group name + club name
+  - [ ] Player pages → set player name + team/age-group/club names (from denormalized response)
+  - [ ] Coach pages → set coach name + team/age-group names
+  - [ ] Development plan pages → set all context names
+  - [ ] Report card pages → set all context names
+- [ ] Update `MobileNavigation.tsx` to read from store instead of static data functions
+- [ ] Remove all data imports from `MobileNavigation.tsx`
+- [ ] Handle loading state (show skeleton or placeholder when name not yet in store)
+- [ ] Add localStorage persistence for navigation store (optional)
+- [ ] Test breadcrumb display across all routes
+
+## Database / API Considerations
+
+**No database migrations needed** - this is purely a frontend state management change.
+
+**No new API endpoints needed** - parent pages already fetch all required data.
+
+**API Response Requirements**:
+- All detail endpoints MUST include denormalized entity names:
+  - Player responses: include `teamName`, `ageGroupName`, `clubName`
+  - Team responses: include `ageGroupName`, `clubName`
+  - Age group responses: include `clubName`
+  - Match responses: include `homeTeamName`, `awayTeamName`, `clubName`
+  - Report/Plan responses: include `playerName`, `teamName`, `ageGroupName`, `clubName`
+
+
+## Backend Implementation Standards
+
+**NOTE**: This component does not require new API endpoints. It uses a navigation store pattern (Zustand/Context) populated by parent pages. No API calls are made from this component.
+
+Parent pages should follow backend implementation standards when fetching entity data and populate the navigation store with entity names for breadcrumb display.
 
 ## Data Mapping
 

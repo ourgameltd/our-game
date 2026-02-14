@@ -28,6 +28,13 @@ Move `coachRoleDisplay` to a shared constants/reference module (e.g., `web/src/c
 - [ ] Verify component renders correctly with updated import
 - [ ] Remove `coachRoleDisplay` from `data/referenceData.ts` once all consumers migrated
 
+
+## Backend Implementation Standards
+
+**NOTE**: This component does not require new API endpoints. It receives all data via props from parent pages. The parent pages are responsible for API calls following the backend standards documented in their migration plans.
+
+If the component's parent pages require API endpoint changes, refer to those page migration plans for backend implementation requirements.
+
 ## Data Mapping
 
 | Current (Static) | Target | Notes |
@@ -43,3 +50,18 @@ Move `coachRoleDisplay` to a shared constants/reference module (e.g., `web/src/c
 - This is a reusable component — coach data comes from parent via props
 - No direct API integration needed in this component
 - Migration is a simple import path change, no logic changes
+
+## Database / API Considerations
+
+**Reference Data Strategy**:
+- `coachRoleDisplay` mapping should move to **client-side constants**
+- Database uses `CoachRole` enum (already exists in OurGame.Persistence.Enums)
+- UI display labels stay in frontend for i18n readiness
+
+**Migration Check**:
+- Verify Coach table uses `CoachRole` enum (not VARCHAR)
+- Verify TeamCoach join table includes RoleId column
+
+**Parent API Response Requirements**:
+- Coach list responses should include: `id`, `name`, `role` (from CoachRole enum), `photo`, `email`
+- Denormalize team/age-group names in coach list responses to avoid additional lookups

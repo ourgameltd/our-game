@@ -27,6 +27,13 @@ Move the `ResolvedPosition` type definition to `web/src/types/` and update the i
 - [ ] Verify TypeScript compilation passes
 - [ ] Verify tactic pitch rendering still works
 
+
+## Backend Implementation Standards
+
+**NOTE**: This component does not require new API endpoints. It receives all data via props from parent pages. The parent pages are responsible for API calls following the backend standards documented in their migration plans.
+
+If the component's parent pages require API endpoint changes, refer to those page migration plans for backend implementation requirements.
+
 ## Data Mapping
 
 | Current (Static) | Target | Notes |

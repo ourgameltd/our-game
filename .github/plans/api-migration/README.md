@@ -157,66 +157,189 @@ Contains 30+ system-standard formations (4v4, 5v5, 7v7, 9v9, 11v11) with positio
 ### Current User
 `currentUser.ts` provides a hardcoded demo user. `apiClient.users.getCurrentUser()` already exists. Files importing `currentUser` just need to switch to using the API hook/call.
 
+## Database & Reference Data Strategy
+
+### Database Migrations Required
+
+The following database considerations must be addressed:
+
+1. **Existing Enums** - Already in database (verify usage):
+   - `CardType`, `CoachRole`, `Direction`, `DrillCategory`, `KitType`, `LinkType`
+   - `MatchStatus`, `PlayerPosition`, `SquadSize`, `Severity`, `UserRole`, `Level`
+   - `DrillSource`, `KitItemType`, `OrderStatus`, `PlanStatus`, `ObjectiveStatus`, `SessionStatus`, `ScopeType`
+
+2. **Potential New Enums/Lookup Tables** (evaluate if needed):
+   - Weather conditions for matches - consider adding `WeatherCondition` enum
+   - Team/Age group levels - already exists as `Level` enum
+   - Image tags - consider `ImageTag` enum or table
+
+3. **Denormalized Fields for Performance**:
+   - API responses should include resolved names to avoid N+1 queries:
+     - Team responses: include `clubName`, `ageGroupName`, `clubPrimaryColor`, `clubSecondaryColor`
+     - Player responses: include `teamName`, `ageGroupName`
+     - Match responses: include `homeTeamName`, `awayTeamName`, `clubName`
+     - Performance responses: include `playerName`, `matchOpponent`, `teamName`
+   - Use SQL JOINs to resolve these server-side, not multiple API calls
+
+4. **Complex Queries** - Custom SQL allowed for:
+   - Statistics calculations (team/age-group/club level)
+   - Performance aggregations (recent form, ratings)
+   - Tactic inheritance resolution (parent → child overrides)
+   - Match report compilation (lineup + events + ratings)
+
+### Reference Data Guidelines
+
+**Keep Client-Side** (as TypeScript constants):
+- UI label mappings (e.g., `coachRoleDisplay`, `playerAttributeLabels`)
+- Display formatters and helpers
+- Color schemes and styling constants
+- Icon mappings
+- Formation position templates (30+ formations with coordinates)
+
+**Fetch from Database** (via API or seed data):
+- All enum values that appear in dropdowns (controlled vocabularies)
+- Dynamic reference data that may change (club-specific configurations)
+- User-created templates (formations, tactics, drill templates)
+
+**Hybrid Approach**:
+- Enum values come from database/DTOs
+- Display labels stay client-side for i18n readiness
+- Example: `CardType` enum in DB, `cardTypeDisplay` mapping in frontend
+
+### State Management Strategy
+
+**React State/Context for Navigation** (NOT API calls):
+- `MobileNavigation` and breadcrumbs should use React Context or Zustand store
+- Parent pages populate navigation store when loading entity data
+- Avoids redundant API calls since pages already fetch entity details
+- Pattern: `useNavigationStore().setEntityName(id, name)` in page components
+
+**Example Navigation Store**:
+```typescript
+// Zustand store
+interface NavigationStore {
+  entityNames: Record<string, string>; // { clubId: "Vale FC", playerId: "James Wilson" }
+  setEntityName: (key: string, name: string) => void;
+  getEntityName: (key: string) => string | undefined;
+}
+```
+
+**Usage in Pages**:
+```typescript
+// In PlayerProfilePage
+const { data: player } = usePlayer(playerId);
+const { setEntityName } = useNavigationStore();
+
+useEffect(() => {
+  if (player) {
+    setEntityName(`player:${playerId}`, player.name);
+    setEntityName(`team:${player.teamId}`, player.teamName); // from denormalized data
+  }
+}, [player]);
+```
+
 ## New API Endpoints Needed
 
 Based on analysis of all files, these new endpoints are required:
 
 ### Players
 - `GET /api/players/{id}` — Player detail (profile, attributes, medical, album)
+  - **SQL**: JOIN Team, AgeGroup for denormalized names
+  - **Migration**: Verify `PlayerAttribute` table has all 35 EA FC attributes
 - `GET /api/players/{id}/abilities` — Player abilities/attributes
+  - **SQL**: Query `PlayerAttribute` table, grouped by category
 - `GET /api/players/{id}/album` — Player photo album
+  - **SQL**: Query `PlayerImage` table with tags
 - `GET /api/players/{id}/reports` — Player report cards
+  - **SQL**: Query `PlayerReport` with coach names resolved
 - `GET /api/players/{id}/development-plans` — Player development plans
+  - **SQL**: Query `DevelopmentPlan` + `DevelopmentGoal` + `ProgressNote`
 - `GET /api/players/{id}/recent-performances` — Recent match performances
+  - **SQL**: Complex query joining Match, MatchLineup, PerformanceRating, Team
+  - **Performance**: Consider materialized view or cached aggregation
 - `PUT /api/players/{id}` — Update player settings
+  - **SQL**: Update Player table + PlayerAttribute records
 - `GET /api/teams/{teamId}/players` — Players by team with squad numbers
+  - **SQL**: JOIN PlayerTeam for squad numbers, include position and ratings
 
 ### Matches
 - `GET /api/matches` — Matches list (filterable by team/club/age-group)
+  - **SQL**: JOIN Team for home/away team names, filter by status
+  - **Migration**: Verify `MatchStatus` enum used (not string field)
 - `GET /api/matches/{id}` — Match detail with report
+  - **SQL**: Complex query joining MatchReport, MatchLineup, Goal, Card, MatchSubstitution, PerformanceRating
+  - **SQL**: Resolve all player names, coach names, team names in single query (avoid N+1)
 - `POST /api/matches` — Create match
+  - **SQL**: Insert Match, MatchLineup (many), MatchCoach (many) in transaction
+  - **Migration**: Verify weather condition field type (enum vs string)
 - `PUT /api/matches/{id}` — Update match
+  - **SQL**: Update Match + MatchReport + events (Goals, Cards, Subs) in transaction
 - `GET /api/teams/{teamId}/matches` — Matches by team
+  - **SQL**: Query matches where homeTeamId OR awayTeamId = teamId
 
 ### Coaches
 - `GET /api/coaches/{id}` — Coach detail profile
+  - **SQL**: JOIN Coach with TeamCoach, Team, AgeGroup, AgeGroupCoordinator
+  - **SQL**: Include team names, age group names, certifications
 - `PUT /api/coaches/{id}` — Update coach settings
+  - **SQL**: Update Coach table + certifications
 - `GET /api/teams/{teamId}/coaches` — Team coaches
+  - **SQL**: Query TeamCoach JOIN Coach, include roles from enum
 
 ### Reports & Development Plans
 - `GET /api/reports/{id}` — Report card detail
+  - **SQL**: Query PlayerReport with resolved player/team/age-group names
+  - **SQL**: Include ReportDevelopmentAction items
 - `POST /api/reports` — Create report card
+  - **SQL**: Insert PlayerReport + development actions in transaction
 - `PUT /api/reports/{id}` — Update report card
 - `GET /api/development-plans/{id}` — Development plan detail
+  - **SQL**: Query DevelopmentPlan + DevelopmentGoal + ProgressNote + TrainingObjective
 - `POST /api/development-plans` — Create development plan
+  - **SQL**: Insert plan + goals + objectives in transaction
 - `PUT /api/development-plans/{id}` — Update development plan
 - `GET /api/teams/{teamId}/development-plans` — Team development plans
 - `GET /api/teams/{teamId}/reports` — Team report cards
 
 ### Training
 - `GET /api/training-sessions` — Training sessions list
+  - **SQL**: Query TrainingSession with scope filters (club/age-group/team)
 - `GET /api/training-sessions/{id}` — Training session detail
+  - **SQL**: JOIN SessionDrill, SessionCoach, SessionAttendance
+  - **SQL**: Resolve drill names, coach names, player attendance in single query
 - `POST /api/training-sessions` — Create training session
+  - **SQL**: Insert TrainingSession + drills + coaches + attendance in transaction
 - `PUT /api/training-sessions/{id}` — Update training session
 
 ### Tactics & Formations
 - `GET /api/tactics/{id}` — Tactic detail with resolved positions
+  - **SQL**: Complex query resolving tactic inheritance (parent → child overrides)
+  - **SQL**: Use recursive CTE or custom logic to compute final positions
+  - **Migration**: Verify `TacticPrinciple` and `PositionOverride` tables
 - `POST /api/tactics` — Create tactic
 - `PUT /api/tactics/{id}` — Update tactic
 - `GET /api/formations` — All formations (reference data)
+  - **SQL**: Query Formation + FormationPosition for coordinates
+  - **Note**: Consider keeping formations as seeded reference data
 - `GET /api/formations/{id}` — Formation detail
 
 ### Teams
 - `PUT /api/teams/{id}` — Update team settings
+  - **SQL**: Update Team table
 - `POST /api/teams` — Create team
+  - **SQL**: Insert Team, assign to AgeGroup
 - `GET /api/teams/{teamId}/statistics` — Team statistics
+  - **SQL**: Aggregate from Match results, PerformanceRating
+  - **Performance**: Consider computed/cached fields
 
 ### Age Groups
 - `POST /api/age-groups` — Create age group
+  - **SQL**: Insert AgeGroup, assign to Club
 - `PUT /api/age-groups/{id}` — Update age group settings
 
 ### Clubs
 - `PUT /api/clubs/{id}` — Update club settings
+  - **SQL**: Update Club table (name, colors, logo, location, ethos)
 
 ## Migration Order (Recommended)
 
