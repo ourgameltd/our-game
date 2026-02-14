@@ -13,6 +13,7 @@
 export { apiClient, getApiBaseUrl } from './client';
 export type {
   ApiResponse,
+  UpdateAgeGroupRequest,
   UserProfile,
   TeamListItemDto,
   TeamColorsDto,
@@ -105,7 +106,9 @@ export {
   useDrillTemplatesByScope,
   usePlayer,
   useDevelopmentPlan,
+  useUpdateAgeGroup,
 } from './hooks';
+export type { ApiError, UseMutationState } from './hooks';
 
 // User API
 export { getCurrentUser } from './users';

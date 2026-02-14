@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   apiClient,
+  ApiResponse,
   TeamListItemDto,
   TeamOverviewDto,
   TeamWithStatsDto,
@@ -33,7 +34,7 @@ import {
   DrillTemplatesByScopeResponseDto,
   PlayerDto,
   DevelopmentPlanDto,
-  AgeGroupDevelopmentPlanSummaryDto
+  UpdateAgeGroupRequest,
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -43,6 +44,20 @@ interface UseApiState<T> {
   isLoading: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
+}
+
+// Mutation error with validation details
+export interface ApiError {
+  message: string;
+  statusCode?: number;
+  validationErrors?: Record<string, string[]>;
+}
+
+// Generic mutation hook state
+export interface UseMutationState<TData> {
+  data: TData | null;
+  isSubmitting: boolean;
+  error: ApiError | null;
 }
 
 /**
@@ -488,4 +503,47 @@ export function useDevelopmentPlan(planId: string | undefined): UseApiState<Deve
     () => apiClient.developmentPlans.getById(planId!),
     [planId]
   );
+}
+
+// ============================================================
+// Mutation Hooks
+// ============================================================
+
+/**
+ * Hook to update an age group.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateAgeGroup(ageGroupId: string): UseMutationState<AgeGroupDetailDto> & {
+  updateAgeGroup: (request: UpdateAgeGroupRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<AgeGroupDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updateAgeGroup = useCallback(async (request: UpdateAgeGroupRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<AgeGroupDetailDto> = await apiClient.ageGroups.update(ageGroupId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update age group',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [ageGroupId]);
+
+  return { updateAgeGroup, isSubmitting, data, error };
 }

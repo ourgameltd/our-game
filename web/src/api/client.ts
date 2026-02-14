@@ -223,6 +223,8 @@ export interface UpdateAgeGroupRequest {
   code: string;
   level: string; // 'youth' | 'amateur' | 'reserve' | 'senior'
   season: string;
+  seasons?: string[];
+  defaultSeason?: string;
   defaultSquadSize: number;
   description?: string;
 }
