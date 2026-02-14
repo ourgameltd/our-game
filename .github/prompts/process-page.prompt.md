@@ -32,4 +32,4 @@ This should include:
 
 ## Finishing
 
-- When compoeted mark the plan as done/completed and rename the filename to be prefixed with '_complete-'
+- When completed mark the plan as done/completed inside the text and rename the .md referenced in the prompt to be prefixed with '_complete-'. You must do this.
