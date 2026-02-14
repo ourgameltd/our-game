@@ -9,6 +9,8 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   apiClient,
   ApiResponse,
+  UserProfile,
+  MyClubListItemDto,
   TeamListItemDto,
   TeamOverviewDto,
   TeamOverviewTeamDto,
@@ -183,6 +185,26 @@ export function useTeamsByAgeGroupId(ageGroupId: string | undefined): UseApiStat
 // ============================================================
 // User Hooks
 // ============================================================
+
+/**
+ * Hook to fetch the current authenticated user's profile
+ */
+export function useCurrentUser(): UseApiState<UserProfile> {
+  return useApiCall<UserProfile>(
+    () => apiClient.users.getCurrentUser(),
+    []
+  );
+}
+
+/**
+ * Hook to fetch clubs for the current authenticated user
+ */
+export function useMyClubs(): UseApiState<MyClubListItemDto[]> {
+  return useApiCall<MyClubListItemDto[]>(
+    () => apiClient.users.getMyClubs(),
+    []
+  );
+}
 
 /**
  * Hook to fetch children players for the current authenticated parent user
@@ -533,11 +555,17 @@ export function useDrillTemplatesByScope(
 // ============================================================
 
 /**
- * Hook to fetch a player by ID
+ * Hook to fetch a player by ID.
+ * Only fetches if playerId is defined.
  */
 export function usePlayer(playerId: string | undefined): UseApiState<PlayerDto> {
   return useApiCall<PlayerDto>(
-    () => apiClient.players.getById(playerId!),
+    () => {
+      if (!playerId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.players.getById(playerId);
+    },
     [playerId]
   );
 }

@@ -1,15 +1,21 @@
 import { Link } from 'react-router-dom';
-import { samplePlayers } from '@data/players';
-import { currentUser } from '@data/currentUser';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
-import { useMyTeams, useMyChildren } from '@/api/hooks';
+import { useMyTeams, useMyChildren, useCurrentUser, useMyClubs, usePlayer } from '@/api/hooks';
 import { useAuth } from '@/contexts/AuthContext';
-import { useMemo } from 'react';
 
 export default function ClubsListPage() {
   // Get authenticated user information
   const { isLoading: authLoading } = useAuth();
+
+  // Fetch current user profile
+  const { data: currentUser, isLoading: currentUserLoading, error: currentUserError } = useCurrentUser();
+
+  // Fetch clubs the current user has access to
+  const { data: myClubs, isLoading: myClubsLoading, error: myClubsError } = useMyClubs();
+
+  // Fetch the current user's own player profile (if they are a player)
+  const { data: myPlayer, isLoading: myPlayerLoading, error: myPlayerError } = usePlayer(currentUser?.playerId);
 
   // Fetch teams the current user has access to
   const { data: myTeams, isLoading: myTeamsLoading, error: myTeamsError } = useMyTeams();
@@ -23,34 +29,11 @@ export default function ClubsListPage() {
   const myChildrenList = myChildren ?? [];
   const hasMyChildren = myChildrenList.length > 0;
 
-  // Extract unique clubs from teams data
-  const myClubs = useMemo(() => {
-    if (!myTeams || myTeams.length === 0) return [];
-    
-    const clubMap = new Map();
-    myTeams.forEach(team => {
-      if (team.club && team.clubId && !clubMap.has(team.clubId)) {
-        clubMap.set(team.clubId, {
-          id: team.clubId,
-          name: team.club.name,
-          shortName: team.club.shortName,
-          logo: team.club.logo,
-          primaryColor: team.club.primaryColor,
-          secondaryColor: team.club.secondaryColor,
-          accentColor: team.club.accentColor,
-          foundedYear: team.club.foundedYear,
-        });
-      }
-    });
-    return Array.from(clubMap.values());
-  }, [myTeams]);
+  const myClubsList = myClubs ?? [];
+  const hasClubs = myClubsList.length > 0;
 
-  const hasClubs = myClubs.length > 0;
-
-  // Get the current user's own player profile (if they are a player)
-  const myProfile = currentUser.playerId 
-    ? samplePlayers.filter(p => p.id === currentUser.playerId) 
-    : [];
+  // Build profile array from API player data
+  const myProfile = myPlayer && currentUser?.playerId ? [myPlayer] : [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -62,7 +45,7 @@ export default function ClubsListPage() {
         />
 
         {/* Quick Access Section */}
-        {(hasMyTeams || myProfile.length > 0 || myChildrenLoading || hasMyChildren || authLoading) && (
+        {(hasMyTeams || myProfile.length > 0 || myChildrenLoading || hasMyChildren || authLoading || currentUserLoading || myPlayerLoading) && (
           <div className="mb-4 space-y-2">
             {/* My Children */}
             {(myChildrenLoading || myChildrenError || hasMyChildren) && (
@@ -132,13 +115,13 @@ export default function ClubsListPage() {
             )}
 
             {/* My Profile */}
-            {(myProfile.length > 0 || authLoading) && (
+            {(myProfile.length > 0 || currentUserLoading || myPlayerLoading || authLoading) && (
               <>
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
                   My Profile
                 </h2>
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                {authLoading ? (
+                {(currentUserLoading || myPlayerLoading || authLoading) ? (
                   <div className="animate-pulse grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {Array.from({ length: 3 }).map((_, index) => (
                       <div key={index} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg" />
@@ -147,17 +130,17 @@ export default function ClubsListPage() {
                 ) : (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {myProfile.map((player) => {
-                      const club = myClubs.find(c => c.id === player.clubId);
+                      const club = myClubsList.find(c => c.id === player.clubId);
                       
                       return (
                         <Link
                           key={player.id}
-                          to={Routes.player(player.clubId, player.ageGroupIds[0], player.id)}
+                          to={Routes.player(player.clubId ?? '', player.ageGroupIds[0], player.id)}
                           className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
                         >
-                          {player.photo ? (
+                          {player.photoUrl ? (
                             <img 
-                              src={player.photo} 
+                              src={player.photoUrl} 
                               alt={`${player.firstName} ${player.lastName}`}
                               className="w-12 h-12 rounded-full object-cover"
                             />
@@ -258,7 +241,7 @@ export default function ClubsListPage() {
           </h2>
           
           {/* Loading State */}
-          {myTeamsLoading && (
+          {myClubsLoading && (
             <div className="animate-pulse grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {Array.from({ length: 3 }).map((_, index) => (
                 <div key={index} className="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg" />
@@ -267,20 +250,20 @@ export default function ClubsListPage() {
           )}
 
           {/* Error State */}
-          {myTeamsError && (
+          {myClubsError && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
               <p className="text-red-800 dark:text-red-200 font-medium">Failed to load clubs</p>
-              <p className="text-red-600 dark:text-red-300 text-sm mt-1">{myTeamsError.message}</p>
+              <p className="text-red-600 dark:text-red-300 text-sm mt-1">{myClubsError.message}</p>
               <p className="text-red-600 dark:text-red-300 text-sm mt-2">
                 💡 Make sure Azure Functions is running: <code className="bg-red-100 dark:bg-red-900/40 px-2 py-1 rounded">cd api/OurGame.Api && func start</code>
               </p>
             </div>
           )}
 
-          {/* Clubs Grid - Derived from teams data */}
-          {!myTeamsLoading && !myTeamsError && hasClubs && (
+          {/* Clubs Grid - From API */}
+          {!myClubsLoading && !myClubsError && hasClubs && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myClubs.map((club) => (
+              {myClubsList.map((club) => (
                 <Link
                   key={club.id}
                   to={Routes.club(club.id!)}

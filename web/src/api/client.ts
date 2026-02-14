@@ -121,6 +121,20 @@ export interface ChildPlayerDto {
   ageGroups: ChildPlayerAgeGroupDto[];
 }
 
+// My Club List Item DTO (for user's clubs)
+export interface MyClubListItemDto {
+  id: string;
+  name: string;
+  shortName: string;
+  logo: string | null;
+  primaryColor: string | null;
+  secondaryColor: string | null;
+  accentColor: string | null;
+  foundedYear: number | null;
+  teamCount: number;
+  playerCount: number;
+}
+
 // Club DTOs
 export interface ClubColorsDto {
   primary: string;
@@ -1603,6 +1617,14 @@ export const apiClient = {
      */
     getMyChildren: async (): Promise<ApiResponse<ChildPlayerDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<ChildPlayerDto[]>>('/v1/users/me/children');
+      return response.data;
+    },
+
+    /**
+     * Get clubs for the current authenticated user
+     */
+    getMyClubs: async (): Promise<ApiResponse<MyClubListItemDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<MyClubListItemDto[]>>('/v1/users/me/clubs');
       return response.data;
     },
   },

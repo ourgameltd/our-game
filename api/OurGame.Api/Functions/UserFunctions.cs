@@ -10,6 +10,8 @@ using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
 using OurGame.Application.UseCases.Players.Queries.GetMyChildren;
 using OurGame.Application.UseCases.Players.Queries.GetMyChildren.DTOs;
+using OurGame.Application.UseCases.Users.Queries.GetMyClubs;
+using OurGame.Application.UseCases.Users.Queries.GetMyClubs.DTOs;
 using System.Net;
 
 namespace OurGame.Api.Functions;
@@ -96,6 +98,33 @@ public class UserFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<ChildPlayerDto>>.SuccessResponse(children));
+        return response;
+    }
+
+    /// <summary>
+    /// Get clubs for the current authenticated user
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <returns>List of clubs the authenticated user has access to</returns>
+    [Function("GetMyClubs")]
+    [OpenApiOperation(operationId: "GetMyClubs", tags: new[] { "Users", "Clubs" }, Summary = "Get clubs for current user", Description = "Returns all clubs the authenticated user has access to with team and player counts")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<MyClubListItemDto>>), Description = "Successfully retrieved user's clubs")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    public async Task<HttpResponseData> GetMyClubs(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/users/me/clubs")] HttpRequestData req)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        var result = await _mediator.Send(new GetMyClubsQuery(azureUserId));
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<List<MyClubListItemDto>>.SuccessResponse(result));
         return response;
     }
 }
