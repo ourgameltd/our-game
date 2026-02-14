@@ -632,6 +632,46 @@ export interface ClubReportCardDto {
   similarProfessionalPlayers: ClubReportCardSimilarProfessionalDto[];
 }
 
+// Club Development Plan DTOs
+export interface ClubDevelopmentPlanPeriodDto {
+  start?: string;
+  end?: string;
+}
+
+export interface ClubDevelopmentPlanPlayerDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  photo?: string;
+  preferredPositions: string[];
+  ageGroupIds: string[];
+}
+
+export interface ClubDevelopmentPlanGoalDto {
+  id: string;
+  goal: string;
+  actions: string[];
+  startDate?: string;
+  targetDate?: string;
+  progress: number;
+  completed: boolean;
+  completedDate?: string;
+}
+
+export interface ClubDevelopmentPlanDto {
+  id: string;
+  playerId: string;
+  title: string;
+  description?: string;
+  status: string;
+  createdAt: string;
+  createdBy?: string;
+  period: ClubDevelopmentPlanPeriodDto;
+  goals: ClubDevelopmentPlanGoalDto[];
+  player: ClubDevelopmentPlanPlayerDto;
+}
+
 // Tactics DTOs
 export interface TacticScopeDto {
   type: string;
@@ -989,6 +1029,14 @@ export const apiClient = {
      */
     getReportCards: async (clubId: string): Promise<ApiResponse<ClubReportCardDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<ClubReportCardDto[]>>(`/v1/clubs/${clubId}/report-cards`);
+      return response.data;
+    },
+
+    /**
+     * Get all development plans for a club
+     */
+    getDevelopmentPlans: async (clubId: string): Promise<ApiResponse<ClubDevelopmentPlanDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<ClubDevelopmentPlanDto[]>>(`/v1/clubs/${clubId}/development-plans`);
       return response.data;
     },
   },

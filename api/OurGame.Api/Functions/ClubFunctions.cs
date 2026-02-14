@@ -24,6 +24,8 @@ using OurGame.Application.UseCases.Clubs.Queries.GetKitsByClubId;
 using OurGame.Application.UseCases.Clubs.Queries.GetKitsByClubId.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries.GetReportCardsByClubId;
 using OurGame.Application.UseCases.Clubs.Queries.GetReportCardsByClubId.DTOs;
+using OurGame.Application.UseCases.Clubs.Queries.GetDevelopmentPlansByClubId;
+using OurGame.Application.UseCases.Clubs.Queries.GetDevelopmentPlansByClubId.DTOs;
 using System.Net;
 
 namespace OurGame.Api.Functions;
@@ -460,6 +462,46 @@ public class ClubFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<ClubReportCardDto>>.SuccessResponse(reportCards));
+        return response;
+    }
+
+    /// <summary>
+    /// Get all development plans for a specific club
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="clubId">The club ID</param>
+    /// <returns>List of development plans for players in the club</returns>
+    [Function("GetClubDevelopmentPlans")]
+    [OpenApiOperation(operationId: "GetClubDevelopmentPlans", tags: new[] { "Clubs", "DevelopmentPlans" }, Summary = "Get all development plans for a club", Description = "Returns all development plans for the specified club with player details and goals")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club identifier")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubDevelopmentPlanDto>>), Description = "Successfully retrieved development plans")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.BadRequest, Description = "Invalid club ID format")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.InternalServerError, Description = "Internal server error")]
+    public async Task<HttpResponseData> GetClubDevelopmentPlans(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/clubs/{clubId}/development-plans")] HttpRequestData req,
+        string clubId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(clubId, out var clubGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<List<ClubDevelopmentPlanDto>>.ErrorResponse(
+                "Invalid club ID format", 400));
+            return badRequestResponse;
+        }
+
+        var developmentPlans = await _mediator.Send(new GetDevelopmentPlansByClubIdQuery(clubGuid));
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<List<ClubDevelopmentPlanDto>>.SuccessResponse(developmentPlans));
         return response;
     }
 }
