@@ -13,6 +13,7 @@ export interface ApiResponse<T> {
   error?: {
     message?: string;
     statusCode?: number;
+    validationErrors?: Record<string, string[]>;
   };
   statusCode?: number;
 }
@@ -204,6 +205,26 @@ export interface AgeGroupDetailDto {
   defaultSquadSize: number;
   description?: string;
   isArchived: boolean;
+}
+
+export interface CreateAgeGroupRequest {
+  clubId: string;
+  name: string;
+  code: string;
+  level: string; // 'youth' | 'amateur' | 'reserve' | 'senior'
+  season: string;
+  defaultSquadSize: number;
+  description?: string;
+}
+
+export interface UpdateAgeGroupRequest {
+  clubId: string;
+  name: string;
+  code: string;
+  level: string; // 'youth' | 'amateur' | 'reserve' | 'senior'
+  season: string;
+  defaultSquadSize: number;
+  description?: string;
 }
 
 export interface AgeGroupStatisticsDto {
@@ -709,6 +730,30 @@ const axiosInstance: AxiosInstance = axios.create({
 });
 
 /**
+ * Handle API errors and return a typed ApiResponse with error details
+ */
+function handleApiError<T>(error: unknown): ApiResponse<T> {
+  if (axios.isAxiosError(error) && error.response) {
+    const data = error.response.data;
+    return {
+      success: false,
+      statusCode: error.response.status,
+      error: {
+        message: data?.error?.message || data?.message || error.message,
+        statusCode: error.response.status,
+        validationErrors: data?.error?.validationErrors || data?.validationErrors,
+      },
+    };
+  }
+  return {
+    success: false,
+    error: {
+      message: error instanceof Error ? error.message : 'An unexpected error occurred',
+    },
+  };
+}
+
+/**
  * OurGame API Client
  * 
  * Usage:
@@ -906,6 +951,36 @@ export const apiClient = {
     getReportCards: async (ageGroupId: string): Promise<ApiResponse<ClubReportCardDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<ClubReportCardDto[]>>(`/v1/age-groups/${ageGroupId}/report-cards`);
       return response.data;
+    },
+
+    /**
+     * Create a new age group
+     */
+    create: async (request: CreateAgeGroupRequest): Promise<ApiResponse<AgeGroupDetailDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<AgeGroupDetailDto>>(
+          `/v1/clubs/${request.clubId}/age-groups`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing age group
+     */
+    update: async (ageGroupId: string, request: UpdateAgeGroupRequest): Promise<ApiResponse<AgeGroupDetailDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<AgeGroupDetailDto>>(
+          `/v1/age-groups/${ageGroupId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 

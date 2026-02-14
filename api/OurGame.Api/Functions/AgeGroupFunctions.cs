@@ -18,6 +18,11 @@ using OurGame.Application.UseCases.AgeGroups.Queries.GetCoachesByAgeGroupId;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetCoachesByAgeGroupId.DTOs;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetReportCardsByAgeGroupId;
 using OurGame.Application.UseCases.Clubs.Queries.GetReportCardsByClubId.DTOs;
+using OurGame.Application.UseCases.AgeGroups.Commands.CreateAgeGroup;
+using OurGame.Application.UseCases.AgeGroups.Commands.CreateAgeGroup.DTOs;
+using OurGame.Application.UseCases.AgeGroups.Commands.UpdateAgeGroup;
+using OurGame.Application.UseCases.AgeGroups.Commands.UpdateAgeGroup.DTOs;
+using OurGame.Application.Abstractions.Exceptions;
 using System.Net;
 
 namespace OurGame.Api.Functions;
@@ -300,5 +305,237 @@ public class AgeGroupFunctions
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<ClubReportCardDto>>.SuccessResponse(reportCards));
         return response;
+    }
+
+    /// <summary>
+    /// Create a new age group for a club
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="clubId">The club ID</param>
+    /// <returns>The created age group</returns>
+    [Function("CreateAgeGroup")]
+    [OpenApiOperation(
+        operationId: "CreateAgeGroup",
+        tags: new[] { "AgeGroups" },
+        Summary = "Create a new age group",
+        Description = "Creates a new age group for a club.")]
+    [OpenApiRequestBody(
+        contentType: "application/json",
+        bodyType: typeof(CreateAgeGroupDto),
+        Required = true,
+        Description = "Age group details")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.Created,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<AgeGroupDetailDto>),
+        Description = "Age group created successfully")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.BadRequest,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<AgeGroupDetailDto>),
+        Description = "Invalid request data")]
+    [OpenApiResponseWithoutBody(
+        statusCode: HttpStatusCode.Unauthorized,
+        Description = "Unauthorized - authentication required")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<AgeGroupDetailDto>),
+        Description = "Club not found")]
+    public async Task<HttpResponseData> CreateAgeGroup(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/clubs/{clubId}/age-groups")] HttpRequestData req,
+        string clubId)
+    {
+        var userId = req.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning("Unauthorized access attempt to CreateAgeGroup");
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                "Authentication required",
+                (int)HttpStatusCode.Unauthorized));
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(clubId, out var clubGuid))
+        {
+            _logger.LogWarning("Invalid clubId format: {ClubId}", clubId);
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                "Invalid club ID format",
+                (int)HttpStatusCode.BadRequest));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<CreateAgeGroupDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize CreateAgeGroupDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            if (dto.ClubId != clubGuid)
+            {
+                _logger.LogWarning("ClubId mismatch: route={RouteClubId}, body={BodyClubId}", clubGuid, dto.ClubId);
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                    "Club ID in URL does not match request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new CreateAgeGroupCommand(dto);
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Age group created successfully: {AgeGroupId}", result.Id);
+            var successResponse = req.CreateResponse(HttpStatusCode.Created);
+            await successResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.SuccessResponse(result, (int)HttpStatusCode.Created));
+            return successResponse;
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during CreateAgeGroup");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error during CreateAgeGroup");
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ValidationErrorResponse(
+                "Validation failed",
+                ex.Errors));
+            return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating age group");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                "An error occurred while creating the age group",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Update an existing age group
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="ageGroupId">The age group ID</param>
+    /// <returns>The updated age group</returns>
+    [Function("UpdateAgeGroup")]
+    [OpenApiOperation(
+        operationId: "UpdateAgeGroup",
+        tags: new[] { "AgeGroups" },
+        Summary = "Update an age group",
+        Description = "Updates an existing age group.")]
+    [OpenApiParameter(
+        name: "ageGroupId",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(string),
+        Description = "The age group ID")]
+    [OpenApiRequestBody(
+        contentType: "application/json",
+        bodyType: typeof(UpdateAgeGroupDto),
+        Required = true,
+        Description = "Updated age group details")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.OK,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<AgeGroupDetailDto>),
+        Description = "Age group updated successfully")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.BadRequest,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<AgeGroupDetailDto>),
+        Description = "Invalid request data")]
+    [OpenApiResponseWithoutBody(
+        statusCode: HttpStatusCode.Unauthorized,
+        Description = "Unauthorized - authentication required")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<AgeGroupDetailDto>),
+        Description = "Age group not found")]
+    public async Task<HttpResponseData> UpdateAgeGroup(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "v1/age-groups/{ageGroupId}")] HttpRequestData req,
+        string ageGroupId)
+    {
+        var userId = req.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            _logger.LogWarning("Unauthorized access attempt to UpdateAgeGroup");
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                "Authentication required",
+                (int)HttpStatusCode.Unauthorized));
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(ageGroupId, out var ageGroupGuid))
+        {
+            _logger.LogWarning("Invalid ageGroupId format: {AgeGroupId}", ageGroupId);
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                "Invalid age group ID format",
+                (int)HttpStatusCode.BadRequest));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<UpdateAgeGroupDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize UpdateAgeGroupDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new UpdateAgeGroupCommand(ageGroupGuid, dto);
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Age group updated successfully: {AgeGroupId}", result.Id);
+            var successResponse = req.CreateResponse(HttpStatusCode.OK);
+            await successResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.SuccessResponse(result));
+            return successResponse;
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during UpdateAgeGroup");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error during UpdateAgeGroup");
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ValidationErrorResponse(
+                "Validation failed",
+                ex.Errors));
+            return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating age group");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<AgeGroupDetailDto>.ErrorResponse(
+                "An error occurred while updating the age group",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
     }
 }
