@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, Youtube, Instagram, Globe, BookOpen, FileText } from 'lucide-react';
 import { sampleDrills, sampleDrillTemplates } from '@/data/training';
-import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview } from '@/api/hooks';
+import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById } from '@/api/hooks';
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest } from '@/api/client';
 import { sessionDurations, drillCategories, getDrillCategoryColors } from '@/data/referenceData';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
@@ -15,16 +15,110 @@ export default function AddEditTrainingSessionPage() {
   const isEditing = sessionId && sessionId !== 'new';
 
   // Fetch data from API
-  const { data: team, isLoading: teamLoading, error: teamError } = useTeamOverview(teamId);
+  const { data: overview, isLoading: teamLoading, error: teamError } = useTeamOverview(teamId);
   const { data: existingSession, isLoading: sessionLoading } = useTrainingSession(isEditing ? sessionId : undefined);
-  const { data: teamPlayers = [], isLoading: playersLoading } = useTeamPlayers(teamId);
-  const { data: teamCoaches = [], isLoading: coachesLoading } = useTeamCoaches(teamId);
+  const { data: playersData, isLoading: playersLoading } = useTeamPlayers(teamId);
+  const { data: coachesData, isLoading: coachesLoading } = useTeamCoaches(teamId);
+  const { data: club, isLoading: clubLoading } = useClubById(clubId);
 
-  const club = team?.club;
+  const team = overview?.team ?? null;
+  const teamPlayers = playersData ?? [];
+  const teamCoaches = coachesData ?? [];
 
   // Loading and error states
-  const isLoading = teamLoading || (isEditing && sessionLoading) || playersLoading || coachesLoading;
+  const isLoading = teamLoading || clubLoading || (isEditing && sessionLoading) || playersLoading || coachesLoading;
   const hasError = teamError;
+
+  // --- ALL hooks must be called before any conditional returns ---
+
+  // Form state (initialized with fallback values, populated via useEffect when data loads)
+  const [sessionDate, setSessionDate] = useState('');
+  const [meetTime, setMeetTime] = useState('');
+  const [duration, setDuration] = useState('60');
+  const [location, setLocation] = useState('');
+  const [focusAreas, setFocusAreas] = useState<string[]>([]);
+  const [focusAreaInput, setFocusAreaInput] = useState('');
+  const [sessionDrills, setSessionDrills] = useState<SessionDrill[]>([]);
+  const [appliedTemplates, setAppliedTemplates] = useState<{ templateId: string; appliedAt: Date; drillIds: string[] }[]>([]);
+  const [notes, setNotes] = useState('');
+  const [isLocked, setIsLocked] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Coach assignment state
+  const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>([]);
+  const [showCoachModal, setShowCoachModal] = useState(false);
+  
+  // Drill selection modal
+  const [showDrillModal, setShowDrillModal] = useState(false);
+  const [drillSearchTerm, setDrillSearchTerm] = useState('');
+  const [drillCategoryFilter, setDrillCategoryFilter] = useState<string>('all');
+  const [previewDrill, setPreviewDrill] = useState<Drill | null>(null);
+  
+  // Template selection modal
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateSearchTerm, setTemplateSearchTerm] = useState('');
+
+  const [activeTab, setActiveTab] = useState<'details' | 'drills' | 'attendance'>('details');
+  
+  // Attendance state
+  const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>([]);
+
+  // Populate form state when existing session data loads
+  useEffect(() => {
+    if (!existingSession) return;
+    
+    setSessionDate(existingSession.date ? existingSession.date.toISOString().slice(0, 16) : '');
+    setMeetTime(existingSession.meetTime ? existingSession.meetTime.toISOString().slice(0, 16) : '');
+    setDuration(existingSession.duration?.toString() || '60');
+    setLocation(existingSession.location || '');
+    setFocusAreas(existingSession.focusAreas || []);
+    setNotes(existingSession.notes || '');
+    setIsLocked(existingSession.isLocked || false);
+    setAssignedCoachIds(existingSession.coachIds || []);
+    setAppliedTemplates(existingSession.appliedTemplates || []);
+    
+    // Initialize session drills (prefer sessionDrills, fallback to drillIds)
+    if (existingSession.sessionDrills && existingSession.sessionDrills.length > 0) {
+      setSessionDrills(existingSession.sessionDrills);
+    } else if (existingSession.drillIds) {
+      setSessionDrills(existingSession.drillIds.map((drillId, index) => ({
+        drillId,
+        source: 'adhoc' as const,
+        order: index + 1
+      })));
+    }
+    
+    if (existingSession.attendance) {
+      setAttendance(existingSession.attendance);
+    }
+  }, [existingSession]);
+
+  // Initialize attendance from team players when players load (for new sessions or when no existing attendance)
+  useEffect(() => {
+    if (teamPlayers.length > 0 && attendance.length === 0 && !existingSession?.attendance) {
+      setAttendance(teamPlayers.map(p => ({ playerId: p.id, status: 'pending' as const })));
+    }
+  }, [teamPlayers, attendance.length, existingSession?.attendance]);
+
+  // Legacy: keep selectedDrillIds for backward compatibility (computed from sessionDrills)
+  const selectedDrillIds = sessionDrills.map(sd => sd.drillId);
+  
+  // Get coaches that can be added (team coaches not yet assigned)
+  const availableCoachesForSession = teamCoaches.filter(
+    coach => !assignedCoachIds.includes(coach.id!)
+  );
+  
+  // Get assigned coach details
+  const assignedCoaches = teamCoaches.filter(coach => assignedCoachIds.includes(coach.id!));
+  
+  // Auto-assign team coaches for new sessions
+  useEffect(() => {
+    if (!isEditing && teamCoaches.length > 0 && assignedCoachIds.length === 0) {
+      setAssignedCoachIds(teamCoaches.map(c => c.id).filter((id): id is string => !!id));
+    }
+  }, [isEditing, teamCoaches.length]);
+
+  // --- Conditional returns AFTER all hooks ---
 
   if (hasError) {
     return (
@@ -35,7 +129,7 @@ export default function AddEditTrainingSessionPage() {
               Error Loading Data
             </h2>
             <p className="text-red-700 dark:text-red-400 mb-4">
-              {hasError}
+              {hasError?.message ?? 'An unexpected error occurred.'}
             </p>
             <button
               onClick={() => navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!))}
@@ -64,7 +158,7 @@ export default function AddEditTrainingSessionPage() {
   }
 
   // Check if team is archived
-  if (team?.isArchived && sessionId === 'new') {
+  if (team?.isArchived === true && sessionId === 'new') {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -86,82 +180,6 @@ export default function AddEditTrainingSessionPage() {
       </div>
     );
   }
-
-  // Form state
-  const [sessionDate, setSessionDate] = useState(
-    existingSession?.date ? existingSession.date.toISOString().slice(0, 16) : ''
-  );
-  const [meetTime, setMeetTime] = useState(
-    existingSession?.meetTime ? existingSession.meetTime.toISOString().slice(0, 16) : ''
-  );
-  const [duration, setDuration] = useState(existingSession?.duration?.toString() || '60');
-  const [location, setLocation] = useState(existingSession?.location || '');
-  const [focusAreas, setFocusAreas] = useState<string[]>(existingSession?.focusAreas || []);
-  const [focusAreaInput, setFocusAreaInput] = useState('');
-  
-  // Initialize session drills from existing session (prefer sessionDrills, fallback to drillIds)
-  const initSessionDrills = (): SessionDrill[] => {
-    if (existingSession?.sessionDrills && existingSession.sessionDrills.length > 0) {
-      return existingSession.sessionDrills;
-    }
-    // Convert legacy drillIds to SessionDrill format (all as ad-hoc)
-    if (existingSession?.drillIds) {
-      return existingSession.drillIds.map((drillId, index) => ({
-        drillId,
-        source: 'adhoc' as const,
-        order: index + 1
-      }));
-    }
-    return [];
-  };
-  
-  const [sessionDrills, setSessionDrills] = useState<SessionDrill[]>(initSessionDrills());
-  const [appliedTemplates, setAppliedTemplates] = useState<{ templateId: string; appliedAt: Date; drillIds: string[] }[]>(
-    existingSession?.appliedTemplates || []
-  );
-  
-  // Legacy: keep selectedDrillIds for backward compatibility (computed from sessionDrills)
-  const selectedDrillIds = sessionDrills.map(sd => sd.drillId);
-  
-  const [notes, setNotes] = useState(existingSession?.notes || '');
-  const [isLocked, setIsLocked] = useState(existingSession?.isLocked || false);
-  const [isSaving, setIsSaving] = useState(false);
-  
-  // Coach assignment state
-  const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>(existingSession?.coachIds || []);
-  const [showCoachModal, setShowCoachModal] = useState(false);
-  
-  // Drill selection modal
-  const [showDrillModal, setShowDrillModal] = useState(false);
-  const [drillSearchTerm, setDrillSearchTerm] = useState('');
-  const [drillCategoryFilter, setDrillCategoryFilter] = useState<string>('all');
-  const [previewDrill, setPreviewDrill] = useState<Drill | null>(null);
-  
-  // Template selection modal
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
-  const [templateSearchTerm, setTemplateSearchTerm] = useState('');
-
-  const [activeTab, setActiveTab] = useState<'details' | 'drills' | 'attendance'>('details');
-  
-  // Attendance state
-  const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>(
-    existingSession?.attendance || teamPlayers.map(p => ({ playerId: p.id, status: 'pending' as const }))
-  );
-  
-  // Get coaches that can be added (team coaches not yet assigned)
-  const availableCoachesForSession = teamCoaches.filter(
-    coach => !assignedCoachIds.includes(coach.id!)
-  );
-  
-  // Get assigned coach details
-  const assignedCoaches = teamCoaches.filter(coach => assignedCoachIds.includes(coach.id!));
-  
-  // Auto-assign team coaches for new sessions
-  useEffect(() => {
-    if (!isEditing && teamCoaches.length > 0 && assignedCoachIds.length === 0) {
-      setAssignedCoachIds(teamCoaches.map(c => c.id).filter((id): id is string => !!id));
-    }
-  }, [isEditing, teamCoaches.length]);
 
   if (!team || !club) {
     return (
