@@ -34,9 +34,14 @@ import {
   DrillTemplatesByScopeResponseDto,
   PlayerDto,
   DevelopmentPlanDto,
+  MatchDetailDto,
+  TeamPlayerDto,
+  TeamCoachDto,
   UpdateAgeGroupRequest,
   UpdatePlayerRequest,
   UpdateClubRequest,
+  CreateMatchRequest,
+  UpdateMatchRequest,
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -108,6 +113,36 @@ export function useMyTeams(): UseApiState<TeamListItemDto[]> {
   return useApiCall<TeamListItemDto[]>(
     () => apiClient.teams.getMyTeams(),
     []
+  );
+}
+
+/**
+ * Hook to fetch team players
+ */
+export function useTeamPlayers(teamId: string | undefined): UseApiState<TeamPlayerDto[]> {
+  return useApiCall<TeamPlayerDto[]>(
+    () => {
+      if (!teamId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.teams.getPlayers(teamId);
+    },
+    [teamId]
+  );
+}
+
+/**
+ * Hook to fetch team coaches
+ */
+export function useTeamCoaches(teamId: string | undefined): UseApiState<TeamCoachDto[]> {
+  return useApiCall<TeamCoachDto[]>(
+    () => {
+      if (!teamId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.teams.getCoaches(teamId);
+    },
+    [teamId]
   );
 }
 
@@ -508,6 +543,26 @@ export function useDevelopmentPlan(planId: string | undefined): UseApiState<Deve
 }
 
 // ============================================================
+// Match Hooks
+// ============================================================
+
+/**
+ * Hook to fetch a match by ID.
+ * Only fetches if matchId is defined and not "new".
+ */
+export function useMatch(matchId: string | undefined): UseApiState<MatchDetailDto> {
+  return useApiCall<MatchDetailDto>(
+    () => {
+      if (!matchId || matchId === 'new') {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.matches.getById(matchId);
+    },
+    [matchId]
+  );
+}
+
+// ============================================================
 // Mutation Hooks
 // ============================================================
 
@@ -626,4 +681,82 @@ export function useUpdateClub(clubId: string): UseMutationState<ClubDetailDto> &
   }, [clubId]);
 
   return { updateClub, isSubmitting, data, error };
+}
+
+/**
+ * Hook to create a match.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useCreateMatch(): UseMutationState<MatchDetailDto> & {
+  createMatch: (request: CreateMatchRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<MatchDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const createMatch = useCallback(async (request: CreateMatchRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<MatchDetailDto> = await apiClient.matches.create(request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create match',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return { createMatch, isSubmitting, data, error };
+}
+
+/**
+ * Hook to update a match.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateMatch(matchId: string): UseMutationState<MatchDetailDto> & {
+  updateMatch: (request: UpdateMatchRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<MatchDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updateMatch = useCallback(async (request: UpdateMatchRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<MatchDetailDto> = await apiClient.matches.update(matchId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update match',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [matchId]);
+
+  return { updateMatch, isSubmitting, data, error };
 }

@@ -5,18 +5,9 @@
  * for consistency across the application and eventual API migration.
  */
 
-// Weather conditions for matches
-export const weatherConditions = [
-  { value: 'clear', label: 'Clear' },
-  { value: 'partly-cloudy', label: 'Partly Cloudy' },
-  { value: 'cloudy', label: 'Cloudy' },
-  { value: 'rainy', label: 'Rainy' },
-  { value: 'heavy-rain', label: 'Heavy Rain' },
-  { value: 'windy', label: 'Windy' },
-  { value: 'snowy', label: 'Snowy' },
-] as const;
-
-export type WeatherCondition = typeof weatherConditions[number]['value'];
+// Weather conditions, card types, injury severities - re-exported from shared constants
+export { weatherConditions, cardTypes, injurySeverities } from '../constants/referenceData';
+export type { WeatherCondition, CardType, InjurySeverity } from '../constants/referenceData';
 
 // Team/Age Group levels & Squad sizes - re-exported from shared constants
 export { teamLevels, squadSizes } from '../constants/referenceData';
@@ -32,23 +23,6 @@ export const kitTypes = [
 ] as const;
 
 export type KitTypeValue = typeof kitTypes[number]['value'];
-
-// Card types for match events
-export const cardTypes = [
-  { value: 'yellow', label: 'Yellow' },
-  { value: 'red', label: 'Red' },
-] as const;
-
-export type CardType = typeof cardTypes[number]['value'];
-
-// Injury severity levels
-export const injurySeverities = [
-  { value: 'minor', label: 'Minor' },
-  { value: 'moderate', label: 'Moderate' },
-  { value: 'serious', label: 'Serious' },
-] as const;
-
-export type InjurySeverity = typeof injurySeverities[number]['value'];
 
 // Image/Album tags
 export const imageTags = [

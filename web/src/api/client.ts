@@ -56,7 +56,20 @@ export interface TeamCoachDto {
   id?: string;
   firstName?: string;
   lastName?: string;
+  photoUrl?: string;
   role?: string;
+  isArchived?: boolean;
+}
+
+// Team player DTO (squad member)
+export interface TeamPlayerDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  photoUrl?: string;
+  preferredPositions: string[];
+  overallRating?: number;
+  squadNumber?: number;
 }
 
 // Team list item DTO
@@ -918,6 +931,287 @@ export interface UpdateClubRequest {
   principles: string[];
 }
 
+// Match Detail DTOs
+
+export interface MatchDetailDto {
+  id: string;
+  teamId: string;
+  ageGroupId: string;
+  teamName: string;
+  ageGroupName: string;
+  seasonId: string;
+  squadSize: number;
+  opposition: string;
+  matchDate: string;
+  meetTime?: string;
+  kickOffTime?: string;
+  location: string;
+  isHome: boolean;
+  competition: string;
+  primaryKitId?: string;
+  secondaryKitId?: string;
+  goalkeeperKitId?: string;
+  homeScore?: number;
+  awayScore?: number;
+  status: string;
+  isLocked: boolean;
+  notes?: string;
+  weatherCondition?: string;
+  weatherTemperature?: number;
+  createdAt: string;
+  updatedAt: string;
+  lineup?: MatchLineupDto;
+  report?: MatchReportDetailDto;
+  coaches: MatchCoachDetailDto[];
+  substitutions: MatchSubstitutionDetailDto[];
+}
+
+export interface MatchLineupDto {
+  id: string;
+  formationId?: string;
+  formationName?: string;
+  tacticId?: string;
+  tacticName?: string;
+  players: LineupPlayerDto[];
+}
+
+export interface LineupPlayerDto {
+  id: string;
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  position?: string;
+  squadNumber?: number;
+  isStarting: boolean;
+}
+
+export interface MatchReportDetailDto {
+  id: string;
+  summary?: string;
+  captainId?: string;
+  captainName?: string;
+  playerOfMatchId?: string;
+  playerOfMatchName?: string;
+  goals: GoalDetailDto[];
+  cards: CardDetailDto[];
+  injuries: InjuryDetailDto[];
+  performanceRatings: PerformanceRatingDto[];
+}
+
+export interface GoalDetailDto {
+  id: string;
+  playerId: string;
+  scorerName: string;
+  minute: number;
+  assistPlayerId?: string;
+  assistPlayerName?: string;
+}
+
+export interface CardDetailDto {
+  id: string;
+  playerId: string;
+  playerName: string;
+  type: string;
+  minute: number;
+  reason?: string;
+}
+
+export interface InjuryDetailDto {
+  id: string;
+  playerId: string;
+  playerName: string;
+  minute: number;
+  description?: string;
+  severity: string;
+}
+
+export interface PerformanceRatingDto {
+  id: string;
+  playerId: string;
+  playerName: string;
+  rating?: number;
+}
+
+export interface MatchCoachDetailDto {
+  id: string;
+  coachId: string;
+  firstName: string;
+  lastName: string;
+}
+
+export interface MatchSubstitutionDetailDto {
+  id: string;
+  minute: number;
+  playerOutId: string;
+  playerOutName: string;
+  playerInId: string;
+  playerInName: string;
+}
+
+// Create Match Request DTOs
+
+export interface CreateMatchRequest {
+  teamId: string;
+  seasonId: string;
+  squadSize: number;
+  opposition: string;
+  matchDate: string;
+  meetTime?: string;
+  kickOffTime?: string;
+  location?: string;
+  isHome: boolean;
+  competition?: string;
+  primaryKitId?: string;
+  secondaryKitId?: string;
+  goalkeeperKitId?: string;
+  homeScore?: number;
+  awayScore?: number;
+  status: string;
+  notes?: string;
+  weatherCondition?: string;
+  weatherTemperature?: number;
+  lineup?: CreateMatchLineupRequest;
+  report?: CreateMatchReportRequest;
+  coachIds: string[];
+  substitutions: CreateMatchSubstitutionRequest[];
+}
+
+export interface CreateMatchLineupRequest {
+  formationId?: string;
+  tacticId?: string;
+  players: CreateLineupPlayerRequest[];
+}
+
+export interface CreateLineupPlayerRequest {
+  playerId: string;
+  position?: string;
+  squadNumber?: number;
+  isStarting: boolean;
+}
+
+export interface CreateMatchReportRequest {
+  summary?: string;
+  captainId?: string;
+  playerOfMatchId?: string;
+  goals: CreateGoalRequest[];
+  cards: CreateCardRequest[];
+  injuries: CreateInjuryRequest[];
+  performanceRatings: CreatePerformanceRatingRequest[];
+}
+
+export interface CreateGoalRequest {
+  playerId: string;
+  minute: number;
+  assistPlayerId?: string;
+}
+
+export interface CreateCardRequest {
+  playerId: string;
+  type: string;
+  minute: number;
+  reason?: string;
+}
+
+export interface CreateInjuryRequest {
+  playerId: string;
+  minute: number;
+  description?: string;
+  severity: string;
+}
+
+export interface CreatePerformanceRatingRequest {
+  playerId: string;
+  rating?: number;
+}
+
+export interface CreateMatchSubstitutionRequest {
+  minute: number;
+  playerOutId: string;
+  playerInId: string;
+}
+
+// Update Match Request DTOs
+
+export interface UpdateMatchRequest {
+  seasonId: string;
+  squadSize: number;
+  opposition: string;
+  matchDate: string;
+  meetTime?: string;
+  kickOffTime?: string;
+  location?: string;
+  isHome: boolean;
+  competition?: string;
+  primaryKitId?: string;
+  secondaryKitId?: string;
+  goalkeeperKitId?: string;
+  homeScore?: number;
+  awayScore?: number;
+  status: string;
+  isLocked: boolean;
+  notes?: string;
+  weatherCondition?: string;
+  weatherTemperature?: number;
+  lineup?: UpdateMatchLineupRequest;
+  report?: UpdateMatchReportRequest;
+  coachIds: string[];
+  substitutions: UpdateMatchSubstitutionRequest[];
+}
+
+export interface UpdateMatchLineupRequest {
+  formationId?: string;
+  tacticId?: string;
+  players: UpdateLineupPlayerRequest[];
+}
+
+export interface UpdateLineupPlayerRequest {
+  playerId: string;
+  position?: string;
+  squadNumber?: number;
+  isStarting: boolean;
+}
+
+export interface UpdateMatchReportRequest {
+  summary?: string;
+  captainId?: string;
+  playerOfMatchId?: string;
+  goals: UpdateGoalRequest[];
+  cards: UpdateCardRequest[];
+  injuries: UpdateInjuryRequest[];
+  performanceRatings: UpdatePerformanceRatingRequest[];
+}
+
+export interface UpdateGoalRequest {
+  playerId: string;
+  minute: number;
+  assistPlayerId?: string;
+}
+
+export interface UpdateCardRequest {
+  playerId: string;
+  type: string;
+  minute: number;
+  reason?: string;
+}
+
+export interface UpdateInjuryRequest {
+  playerId: string;
+  minute: number;
+  description?: string;
+  severity: string;
+}
+
+export interface UpdatePerformanceRatingRequest {
+  playerId: string;
+  rating?: number;
+}
+
+export interface UpdateMatchSubstitutionRequest {
+  minute: number;
+  playerOutId: string;
+  playerInId: string;
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -1011,6 +1305,22 @@ export const apiClient = {
      */
     getOverview: async (teamId: string): Promise<ApiResponse<TeamOverviewDto>> => {
       const response = await axiosInstance.get<ApiResponse<TeamOverviewDto>>(`/v1/teams/${teamId}/overview`);
+      return response.data;
+    },
+
+    /**
+     * Get players for a specific team
+     */
+    getPlayers: async (teamId: string): Promise<ApiResponse<TeamPlayerDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<TeamPlayerDto[]>>(`/v1/teams/${teamId}/players`);
+      return response.data;
+    },
+
+    /**
+     * Get coaches for a specific team
+     */
+    getCoaches: async (teamId: string): Promise<ApiResponse<TeamCoachDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<TeamCoachDto[]>>(`/v1/teams/${teamId}/coaches`);
       return response.data;
     },
   },
@@ -1407,6 +1717,46 @@ export const apiClient = {
         const response = await axiosInstance.put<ApiResponse<PlayerDto>>(
           `/v1/players/${playerId}`,
           data
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  },
+
+  matches: {
+    /**
+     * Get a match by ID with full detail
+     */
+    getById: async (matchId: string): Promise<ApiResponse<MatchDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<MatchDetailDto>>(`/v1/matches/${matchId}`);
+      return response.data;
+    },
+
+    /**
+     * Create a new match
+     */
+    create: async (request: CreateMatchRequest): Promise<ApiResponse<MatchDetailDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<MatchDetailDto>>(
+          '/v1/matches',
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing match
+     */
+    update: async (matchId: string, request: UpdateMatchRequest): Promise<ApiResponse<MatchDetailDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<MatchDetailDto>>(
+          `/v1/matches/${matchId}`,
+          request
         );
         return response.data;
       } catch (error) {

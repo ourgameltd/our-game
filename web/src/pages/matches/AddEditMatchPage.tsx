@@ -1,52 +1,83 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
-import { sampleMatches } from '@/data/matches';
-import { sampleTeams } from '@/data/teams';
-import { sampleClubs } from '@/data/clubs';
-import { samplePlayers } from '@/data/players';
-import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
-import { sampleTactics, getResolvedPositions } from '@/data/tactics';
-import { getAgeGroupById, sampleAgeGroups } from '@/data/ageGroups';
-import { sampleCoaches, getCoachesByTeam, getCoachesByAgeGroup } from '@/data/coaches';
-import { getPlayerSquadNumber } from '@/data/teams';
-import { weatherConditions, squadSizes, cardTypes, injurySeverities } from '@/data/referenceData';
-import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
+import { getResolvedPositions } from '@/data/tactics';
+import { weatherConditions, squadSizes, cardTypes, injurySeverities, coachRoleDisplay } from '@/constants/referenceData';
 import { PlayerPosition, SquadSize, Tactic } from '@/types';
 import { Routes } from '@utils/routes';
 import { calculateTeamRatings, getAttributeQuality, groupAttributes } from '@utils/attributeHelpers';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupDetail } from '@/api/hooks';
+import { apiClient, CreateMatchRequest, UpdateMatchRequest } from '@/api/client';
+import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
 
 export default function AddEditMatchPage() {
   const { clubId, ageGroupId, teamId, matchId } = useParams();
   const navigate = useNavigate();
   const isEditing = matchId && matchId !== 'new';
 
-  const team = sampleTeams.find(t => t.id === teamId);
-  const club = sampleClubs.find(c => c.id === clubId);
+  // Fetch data from API
+  const { data: team, isLoading: teamLoading, error: teamError } = useTeamOverview(teamId);
+  const { data: ageGroup, isLoading: ageGroupLoading } = useAgeGroupDetail(ageGroupId);
+  const { data: existingMatch, isLoading: matchLoading } = useMatch(isEditing ? matchId : undefined);
+  const { data: teamPlayers = [], isLoading: playersLoading } = useTeamPlayers(teamId);
+  const { data: teamCoaches = [], isLoading: coachesLoading } = useTeamCoaches(teamId);
+  const { data: tacticsData, isLoading: tacticsLoading } = useTacticsByScope(clubId, ageGroupId, teamId);
   
-  // Try to get age group from URL param, fallback to team's ageGroupId if not found
-  let ageGroup = getAgeGroupById(ageGroupId || '');
-  if (!ageGroup && team?.ageGroupId) {
-    ageGroup = getAgeGroupById(team.ageGroupId);
-  }
-  
-  const existingMatch = isEditing ? sampleMatches.find(m => m.id === matchId) : null;
+  const club = team?.club;
 
   // Get available seasons from age group
   const availableSeasons = ageGroup?.seasons || [];
-  const defaultSeason = ageGroup?.defaultSeason || ageGroup?.season || '';
+  const defaultSeason = ageGroup?.defaultSeason || '';
 
   // Get available kits (team kits take priority, then club kits)
   const teamKits = team?.kits || [];
   const clubKits = club?.kits || [];
   const availableKits = [...teamKits, ...clubKits].filter(k => k.isActive);
 
-  // Get players for this team
-  const teamPlayers = samplePlayers.filter(p => team?.playerIds.includes(p.id));
-  
-  // Get all club players (for cross-team selection)
-  const allClubPlayers = samplePlayers.filter(p => p.clubId === clubId);
+  // Get all club players (for cross-team selection) - for now using teamPlayers
+  // TODO: Add useClubPlayers hook when available
+  const allClubPlayers = teamPlayers;
+
+  // Loading and error states
+  const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || tacticsLoading;
+  const hasError = teamError;
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">
+              Error Loading Data
+            </h2>
+            <p className="text-red-700 dark:text-red-400 mb-4">
+              {hasError}
+            </p>
+            <button
+              onClick={() => navigate(Routes.matches(clubId!, ageGroupId!, teamId!))}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Back to Matches
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // Check if team is archived
   if (team?.isArchived && matchId === 'new') {
@@ -98,27 +129,17 @@ export default function AddEditMatchPage() {
   
   // Get tactics available for this team (including inherited from club and age group)
   const getAvailableTactics = (): Tactic[] => {
-    return sampleTactics.filter(tactic => {
+    if (!tacticsData?.tactics) return [];
+    
+    return tacticsData.tactics.filter(tactic => {
       // Must match squad size
       if (tactic.squadSize !== squadSize) return false;
-      
-      const scope = tactic.scope;
-      
-      // Team-level tactics for this team
-      if (scope.type === 'team' && scope.teamId === teamId) return true;
-      
-      // Age group tactics for this age group
-      if (scope.type === 'ageGroup' && scope.ageGroupId === ageGroupId) return true;
-      
-      // Club-level tactics for this club
-      if (scope.type === 'club' && scope.clubId === clubId) return true;
-      
-      return false;
+      return true;
     });
   };
   
   const availableTactics = getAvailableTactics();
-  const selectedTactic = tacticId ? sampleTactics.find(t => t.id === tacticId) : null;
+  const selectedTactic = tacticId ? availableTactics.find(t => t.id === tacticId) : null;
   const selectedFormation = formationId ? sampleFormations.find(f => f.id === formationId) : null;
   
   // Get the URL for viewing the selected tactic's detail page
@@ -152,7 +173,7 @@ export default function AddEditMatchPage() {
     
     const [type, id] = value.split(':');
     if (type === 'tactic') {
-      const tactic = sampleTactics.find(t => t.id === id);
+      const tactic = availableTactics.find(t => t.id === id);
       if (tactic) {
         setTacticId(id);
         setFormationId(tactic.parentFormationId || '');
@@ -200,6 +221,7 @@ export default function AddEditMatchPage() {
   // Coach assignment state
   const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>(existingMatch?.coachIds || []);
   const [showCoachModal, setShowCoachModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Attendance state
   const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>(
@@ -216,16 +238,14 @@ export default function AddEditMatchPage() {
   const [crossTeamModalType, setCrossTeamModalType] = useState<'starting' | 'substitute'>('starting');
   
   // Get coaches for this team and age group
-  const teamCoaches = team ? getCoachesByTeam(team.id) : [];
-  const ageGroupCoaches = ageGroup ? getCoachesByAgeGroup(ageGroup.id, sampleTeams) : [];
   
-  // Get coaches that can be added (in age group but not yet assigned)
-  const availableCoachesForMatch = ageGroupCoaches.filter(
+  // Get coaches that can be added (assigned coaches from API)
+  const availableCoachesForMatch = teamCoaches.filter(
     coach => !assignedCoachIds.includes(coach.id)
   );
   
   // Get assigned coach details
-  const assignedCoaches = sampleCoaches.filter(coach => assignedCoachIds.includes(coach.id));
+  const assignedCoaches = teamCoaches.filter(coach => assignedCoachIds.includes(coach.id));
   
   // Auto-assign team coaches for new matches
   useEffect(() => {
@@ -252,14 +272,19 @@ export default function AddEditMatchPage() {
   }
 
   const getPlayerName = (playerId: string) => {
-    const player = allClubPlayers.find(p => p.id === playerId);
+    const player = teamPlayers.find(p => p.id === playerId);
     return player ? `${player.firstName} ${player.lastName}` : 'Unknown';
+  };
+  
+  const getPlayerSquadNumber = (playerId: string): number | undefined => {
+    const player = teamPlayers.find(p => p.id === playerId);
+    return player?.squadNumber;
   };
 
   const handleAddStartingPlayer = (playerId: string, position: PlayerPosition) => {
     if (!startingPlayers.find(p => p.playerId === playerId)) {
-      // Get default squad number from team assignment
-      const squadNumber = getPlayerSquadNumber(teamId!, playerId);
+      // Get squad number from player data
+      const squadNumber = getPlayerSquadNumber(playerId);
       setStartingPlayers([...startingPlayers, { playerId, position, squadNumber }]);
       // Remove from substitutes if present
       setSubstitutes(substitutes.filter(s => s.playerId !== playerId));
@@ -276,8 +301,11 @@ export default function AddEditMatchPage() {
 
   const handleAddSubstitute = (playerId: string) => {
     if (!substitutes.find(s => s.playerId === playerId) && !startingPlayers.find(p => p.playerId === playerId)) {
-      // Get default squad number from team assignment
-      const squadNumber = getPlayerSquadNumber(teamId!, playerId);
+      // Get squad number from player data
+      const squadNumber = getPlayerSquadNumber(playerId);
+      setSubstitutes([...substitutes, { playerId, squadNumber }]);
+    }
+  };
       setSubstitutes([...substitutes, { playerId, squadNumber }]);
     }
   };
@@ -440,7 +468,7 @@ export default function AddEditMatchPage() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Check if match is locked
     if (isLocked) {
       alert('This match is locked and cannot be edited. Please unlock it first.');
@@ -453,42 +481,65 @@ export default function AddEditMatchPage() {
       return;
     }
 
-    // In a real app, this would save to backend
-    console.log('Saving match...', {
-      seasonId,
-      squadSize,
-      opposition,
-      kickOffTime,
-      meetTime,
-      date: kickOffTime, // Keep date for backward compatibility
-      location,
-      isHome,
-      competition,
-      kit: {
-        primary: kit,
-        goalkeeper: goalkeeperKit || undefined
-      },
-      formationId,
-      tacticId: tacticId || undefined,
-      weather,
-      temperature,
-      score: { home: parseInt(homeScore) || 0, away: parseInt(awayScore) || 0 },
-      lineup: { formationId, tacticId: tacticId || undefined, starting: startingPlayers, substitutes, substitutions },
-      report: {
-        summary,
-        captainId: captainId || undefined,
-        goalScorers: goals,
-        cards,
-        injuries,
-        performanceRatings: ratings,
-        playerOfTheMatch
-      },
-      coachIds: assignedCoachIds,
-      notes,
-      attendance
-    });
-    
-    navigate(Routes.matches(clubId!, ageGroupId!, teamId!));
+    try {
+      setIsSaving(true);
+      
+      const matchData: CreateMatchRequest | UpdateMatchRequest = {
+        teamId: teamId!,
+        seasonId: seasonId || undefined,
+        squadSize,
+        opposition,
+        kickOffTime: new Date(kickOffTime).toISOString(),
+        meetTime: meetTime ? new Date(meetTime).toISOString() : undefined,
+        location,
+        isHome,
+        competition,
+        kit: {
+          primary: kit,
+          goalkeeper: goalkeeperKit || undefined
+        },
+        formationId: formationId || undefined,
+        tacticId: tacticId || undefined,
+        weather: weather || undefined,
+        temperature: temperature ? parseFloat(temperature) : undefined,
+        score: homeScore || awayScore ? {
+          home: parseInt(homeScore) || 0,
+          away: parseInt(awayScore) || 0
+        } : undefined,
+        lineup: {
+          formationId: formationId || undefined,
+          tacticId: tacticId || undefined,
+          starting: startingPlayers,
+          substitutes,
+          substitutions
+        },
+        report: {
+          summary: summary || undefined,
+          captainId: captainId || undefined,
+          goalScorers: goals,
+          cards,
+          injuries,
+          performanceRatings: ratings,
+          playerOfTheMatch: playerOfTheMatch || undefined
+        },
+        coachIds: assignedCoachIds,
+        notes: notes || undefined,
+        attendance
+      };
+
+      if (isEditing) {
+        await apiClient.matches.update(matchId!, matchData as UpdateMatchRequest);
+      } else {
+        await apiClient.matches.create(matchData as CreateMatchRequest);
+      }
+      
+      navigate(Routes.matches(clubId!, ageGroupId!, teamId!));
+    } catch (error) {
+      console.error('Error saving match:', error);
+      alert('Failed to save match. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const allPlayersInMatch = [...startingPlayers.map(p => p.playerId), ...substitutes.map(s => s.playerId)];
@@ -2368,10 +2419,10 @@ export default function AddEditMatchPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLocked}
+                  disabled={isLocked || isSaving}
                   className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
                 >
-                  {isEditing ? 'Save Changes' : 'Create Match'}
+                  {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Match'}
                 </button>
               </div>
             </div>
@@ -2400,8 +2451,6 @@ export default function AddEditMatchPage() {
               {availableCoachesForMatch.length > 0 ? (
                 <div className="space-y-2">
                   {availableCoachesForMatch.map((coach) => {
-                    // Get the teams this coach is assigned to
-                    const coachTeams = sampleTeams.filter(t => coach.teamIds.includes(t.id) && t.ageGroupId === ageGroup?.id);
                     return (
                       <button
                         key={coach.id}
@@ -2519,11 +2568,7 @@ export default function AddEditMatchPage() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                   >
                     <option value="all">All Teams</option>
-                    {sampleTeams
-                      .filter(t => t.clubId === clubId && (modalAgeGroupFilter === 'all' || t.ageGroupId === modalAgeGroupFilter))
-                      .map(t => (
-                        <option key={t.id} value={t.id}>{t.name}</option>
-                      ))}
+                    {/* TODO: Add team filter when useClubTeams() hook is available */}
                   </select>
                 </div>
               </div>
@@ -2554,9 +2599,8 @@ export default function AddEditMatchPage() {
                     return true;
                   })
                   .map((player) => {
-                    // Find which teams this player belongs to
-                    const playerTeams = sampleTeams.filter(t => t.playerIds.includes(player.id));
-                    const teamNames = playerTeams.map(t => t.name).join(', ');
+                    // TODO: Show team names when useClubTeams() hook is available
+                    const teamNames = team?.name || 'Team';
                     
                     return (
                       <div key={player.id} className="relative">

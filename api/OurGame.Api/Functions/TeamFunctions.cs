@@ -13,6 +13,10 @@ using OurGame.Application.UseCases.Teams.Queries.GetTeamsByAgeGroupId;
 using OurGame.Application.UseCases.Teams.Queries.GetTeamsByAgeGroupId.DTOs;
 using OurGame.Application.UseCases.Teams.Queries.GetTeamOverview;
 using OurGame.Application.UseCases.Teams.Queries.GetTeamOverview.DTOs;
+using OurGame.Application.UseCases.Teams.Queries.GetPlayersByTeamId;
+using OurGame.Application.UseCases.Teams.Queries.GetPlayersByTeamId.DTOs;
+using OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId;
+using TeamCoachResponseDto = OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId.DTOs.TeamCoachDto;
 
 namespace OurGame.Api.Functions;
 
@@ -145,6 +149,86 @@ public class TeamFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<TeamOverviewDto>.SuccessResponse(overview));
+        return response;
+    }
+
+    /// <summary>
+    /// Get players for a specific team
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>List of players in the team with squad numbers</returns>
+    [Function("GetTeamPlayers")]
+    [OpenApiOperation(operationId: "GetTeamPlayers", tags: new[] { "Teams" }, Summary = "Get team players", Description = "Retrieves players assigned to a specific team with squad numbers and ratings")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamPlayerDto>>), Description = "Players retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamPlayerDto>>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamPlayerDto>>), Description = "Invalid team ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamPlayerDto>>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetTeamPlayers(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/teams/{teamId}/players")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<List<TeamPlayerDto>>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        var players = await _mediator.Send(new GetPlayersByTeamIdQuery(teamGuid));
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<List<TeamPlayerDto>>.SuccessResponse(players));
+        return response;
+    }
+
+    /// <summary>
+    /// Get coaches for a specific team
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>List of coaches assigned to the team</returns>
+    [Function("GetTeamCoaches")]
+    [OpenApiOperation(operationId: "GetTeamCoaches", tags: new[] { "Teams" }, Summary = "Get team coaches", Description = "Retrieves coaches assigned to a specific team with roles")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamCoachResponseDto>>), Description = "Coaches retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamCoachResponseDto>>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamCoachResponseDto>>), Description = "Invalid team ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamCoachResponseDto>>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetTeamCoaches(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/teams/{teamId}/coaches")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<List<TeamCoachResponseDto>>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        var coaches = await _mediator.Send(new GetCoachesByTeamIdQuery(teamGuid));
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<List<TeamCoachResponseDto>>.SuccessResponse(coaches));
         return response;
     }
 }
