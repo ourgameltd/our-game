@@ -1,5 +1,5 @@
 import { Coach } from '@/types';
-import { coachRoleDisplay } from '@/data/referenceData';
+import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { ReactNode } from 'react';
 
 interface CoachCardProps {

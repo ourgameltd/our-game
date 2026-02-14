@@ -1,6 +1,6 @@
 import { Coach } from '@/types';
 import { Link } from 'react-router-dom';
-import { coachRoleDisplay } from '@/data/referenceData';
+import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 
 interface CoachDetailsHeaderProps {
   coach: Coach;

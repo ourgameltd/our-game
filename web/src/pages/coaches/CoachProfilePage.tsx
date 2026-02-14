@@ -4,7 +4,7 @@ import { getTeamsByIds } from '@data/teams';
 import { getAgeGroupById } from '@data/ageGroups';
 import { getClubById } from '@data/clubs';
 import { Routes } from '@utils/routes';
-import { coachRoleDisplay } from '@/data/referenceData';
+import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import PageTitle from '@components/common/PageTitle';
 
 export default function CoachProfilePage() {

@@ -239,16 +239,6 @@ export function getSelectOptions<T extends readonly { value: string | number; la
 
 // Pre-built lookup objects for common use cases
 
-// Coach role display mapping
-export const coachRoleDisplay: Record<string, string> = Object.fromEntries(
-  coachRoles.map(r => [r.value, r.label])
-);
-
-// Get coach role label
-export function getCoachRoleLabel(role: string): string {
-  return coachRoleDisplay[role] ?? role;
-}
-
 // Position display mapping  
 export const positionDisplay: Record<string, string> = Object.fromEntries(
   playerPositions.map(p => [p.value, p.label])

@@ -7,7 +7,8 @@ import { sampleClubs } from '@/data/clubs';
 import { samplePlayers } from '@/data/players';
 import { getAgeGroupById } from '@/data/ageGroups';
 import { sampleCoaches, getCoachesByTeam, getCoachesByAgeGroup } from '@/data/coaches';
-import { coachRoleDisplay, sessionDurations, drillCategories, getDrillCategoryColors } from '@/data/referenceData';
+import { sessionDurations, drillCategories, getDrillCategoryColors } from '@/data/referenceData';
+import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { Drill, SessionDrill } from '@/types';
 

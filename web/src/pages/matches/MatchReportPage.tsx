@@ -5,7 +5,7 @@ import { samplePlayers } from '@/data/players';
 import { sampleCoaches } from '@/data/coaches';
 import { sampleTeams } from '@/data/teams';
 import { sampleClubs } from '@/data/clubs';
-import { coachRoleDisplay } from '@/data/referenceData';
+import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@/utils/routes';
 import MatchPreviewCard from '@/components/match/MatchPreviewCard';
 import { Kit } from '@/types';

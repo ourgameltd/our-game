@@ -3,7 +3,7 @@ import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
 import type { ClubCoachDto, ClubTeamDto } from '@/api';
-import { coachRoleDisplay } from '@/data/referenceData';
+import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
