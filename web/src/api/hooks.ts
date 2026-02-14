@@ -42,6 +42,9 @@ import {
   UpdateClubRequest,
   CreateMatchRequest,
   UpdateMatchRequest,
+  TacticDetailDto,
+  CreateTacticRequest,
+  UpdateTacticRequest,
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -759,4 +762,102 @@ export function useUpdateMatch(matchId: string): UseMutationState<MatchDetailDto
   }, [matchId]);
 
   return { updateMatch, isSubmitting, data, error };
+}
+
+// ============================================================
+// Tactic Mutation Hooks
+// ============================================================
+
+/**
+ * Hook to fetch a tactic by ID.
+ * Only fetches if tacticId is defined.
+ */
+export function useTactic(tacticId: string | undefined): UseApiState<TacticDetailDto> {
+  return useApiCall<TacticDetailDto>(
+    () => {
+      if (!tacticId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.tactics.getById(tacticId);
+    },
+    [tacticId]
+  );
+}
+
+/**
+ * Hook to create a tactic.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useCreateTactic(): UseMutationState<TacticDetailDto> & {
+  createTactic: (request: CreateTacticRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<TacticDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const createTactic = useCallback(async (request: CreateTacticRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TacticDetailDto> = await apiClient.tactics.create(request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create tactic',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return { createTactic, isSubmitting, data, error };
+}
+
+/**
+ * Hook to update a tactic.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateTactic(tacticId: string): UseMutationState<TacticDetailDto> & {
+  updateTactic: (request: UpdateTacticRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<TacticDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updateTactic = useCallback(async (request: UpdateTacticRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TacticDetailDto> = await apiClient.tactics.update(tacticId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update tactic',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [tacticId]);
+
+  return { updateTactic, isSubmitting, data, error };
 }

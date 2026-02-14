@@ -807,6 +807,84 @@ export interface TacticsByScopeResponseDto {
   inheritedTactics: TacticListDto[];
 }
 
+export interface TacticDetailScopeDto {
+  clubIds: string[];
+  ageGroupIds: string[];
+  teamIds: string[];
+}
+
+export interface PositionOverrideDto {
+  positionIndex: number;
+  xCoord?: number;
+  yCoord?: number;
+  direction?: string;
+}
+
+export interface TacticPrincipleDto {
+  id: string;
+  title: string;
+  description?: string;
+  positionIndices: number[];
+}
+
+export interface TacticDetailDto {
+  id: string;
+  name: string;
+  parentFormationId: string;
+  parentTacticId?: string;
+  squadSize: number;
+  summary?: string;
+  style?: string;
+  tags: string[];
+  scope: TacticDetailScopeDto;
+  positionOverrides: PositionOverrideDto[];
+  principles: TacticPrincipleDto[];
+}
+
+export interface CreateTacticRequest {
+  name: string;
+  parentFormationId: string;
+  parentTacticId?: string;
+  summary?: string;
+  style?: string;
+  tags: string[];
+  scope: {
+    type: 'club' | 'ageGroup' | 'team';
+    clubId: string;
+    ageGroupId?: string;
+    teamId?: string;
+  };
+  positionOverrides: {
+    positionIndex: number;
+    xCoord?: number;
+    yCoord?: number;
+    direction?: string;
+  }[];
+  principles: {
+    title: string;
+    description?: string;
+    positionIndices: number[];
+  }[];
+}
+
+export interface UpdateTacticRequest {
+  name: string;
+  summary?: string;
+  style?: string;
+  tags: string[];
+  positionOverrides: {
+    positionIndex: number;
+    xCoord?: number;
+    yCoord?: number;
+    direction?: string;
+  }[];
+  principles: {
+    title: string;
+    description?: string;
+    positionIndices: number[];
+  }[];
+}
+
 // Drill DTOs
 export interface DrillLinkDto {
   url: string;
@@ -1647,6 +1725,44 @@ export const apiClient = {
     getByTeam: async (clubId: string, ageGroupId: string, teamId: string): Promise<ApiResponse<TacticsByScopeResponseDto>> => {
       const response = await axiosInstance.get<ApiResponse<TacticsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`);
       return response.data;
+    },
+
+    /**
+     * Get a tactic by ID with full detail
+     */
+    getById: async (tacticId: string): Promise<ApiResponse<TacticDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<TacticDetailDto>>(`/v1/tactics/${tacticId}`);
+      return response.data;
+    },
+
+    /**
+     * Create a new tactic
+     */
+    create: async (request: CreateTacticRequest): Promise<ApiResponse<TacticDetailDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<TacticDetailDto>>(
+          '/v1/tactics',
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing tactic
+     */
+    update: async (tacticId: string, request: UpdateTacticRequest): Promise<ApiResponse<TacticDetailDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<TacticDetailDto>>(
+          `/v1/tactics/${tacticId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 

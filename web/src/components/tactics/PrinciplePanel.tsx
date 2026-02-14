@@ -1,11 +1,15 @@
 import { useState } from 'react';
 import { Plus, Trash2, Users, User, ChevronDown, ChevronUp, GripVertical, X } from 'lucide-react';
 import { TacticPrinciple } from '@/types';
-import { ResolvedPosition } from '@/data/tactics';
+
+/** Minimal position shape needed by PrinciplePanel — decoupled from data layer */
+interface ResolvedPositionItem {
+  position: string;
+}
 
 interface PrinciplePanelProps {
   principles: TacticPrinciple[];
-  resolvedPositions: ResolvedPosition[];
+  resolvedPositions: ResolvedPositionItem[];
   onPrinciplesChange?: (principles: TacticPrinciple[]) => void;
   selectedPositionIndex?: number | null;
   onPositionClick?: (index: number | null) => void;
