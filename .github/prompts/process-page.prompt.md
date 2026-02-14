@@ -30,3 +30,6 @@ This should include:
 - Standardize per-page loading UX across all pages: use skeleton placeholders within each section (e.g., title, stats, lists, cards) rather than global spinners or full-page loaders.
 - DO NOt create new versions of existing pages or controls, simply map the data from the APO to the existing controls, I dont mind the types being changed but the controls should remain the same.
 
+## Finishing
+
+- When compoeted mark the plan as done/completed and rename the filename to be prefixed with '_complete-'
