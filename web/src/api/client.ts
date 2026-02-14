@@ -559,6 +559,137 @@ export interface ClubTrainingSessionsDto {
   totalCount: number;
 }
 
+// Training Session Detail DTOs (from GET /v1/training-sessions/{id})
+export interface TrainingSessionDetailDto {
+  id: string;
+  teamId: string;
+  ageGroupId: string;
+  teamName: string;
+  ageGroupName: string;
+  sessionDate: string;
+  meetTime?: string;
+  durationMinutes?: number;
+  location: string;
+  focusAreas: string[];
+  templateId?: string;
+  notes?: string;
+  status: string;
+  isLocked: boolean;
+  createdAt: string;
+  updatedAt: string;
+  drills: SessionDrillDetailDto[];
+  attendance: SessionAttendanceDetailDto[];
+  coaches: SessionCoachDetailDto[];
+  appliedTemplates: AppliedTemplateDetailDto[];
+}
+
+export interface SessionDrillDetailDto {
+  id: string;
+  drillId: string;
+  drillName: string;
+  description?: string;
+  durationMinutes?: number;
+  category: string;
+  source: string;
+  templateId?: string;
+  order: number;
+}
+
+export interface SessionAttendanceDetailDto {
+  id: string;
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  status: string;
+  notes?: string;
+}
+
+export interface SessionCoachDetailDto {
+  id: string;
+  coachId: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+}
+
+export interface AppliedTemplateDetailDto {
+  id: string;
+  templateId: string;
+  templateName: string;
+  appliedAt: string;
+}
+
+// Create Training Session Request
+export interface CreateTrainingSessionRequest {
+  teamId: string;
+  sessionDate: string;
+  meetTime?: string;
+  durationMinutes?: number;
+  location?: string;
+  focusAreas: string[];
+  notes?: string;
+  status: string;
+  isLocked: boolean;
+  sessionDrills: CreateSessionDrillRequest[];
+  assignedCoachIds: string[];
+  attendance: CreateSessionAttendanceRequest[];
+  appliedTemplates: CreateAppliedTemplateRequest[];
+}
+
+export interface CreateSessionDrillRequest {
+  drillId: string;
+  source: string;
+  templateId?: string;
+  order: number;
+}
+
+export interface CreateSessionAttendanceRequest {
+  playerId: string;
+  status: string;
+  notes?: string;
+}
+
+export interface CreateAppliedTemplateRequest {
+  templateId: string;
+  appliedAt: string;
+}
+
+// Update Training Session Request
+export interface UpdateTrainingSessionRequest {
+  teamId: string;
+  sessionDate: string;
+  meetTime?: string;
+  durationMinutes?: number;
+  location?: string;
+  focusAreas: string[];
+  templateId?: string;
+  notes?: string;
+  status: string;
+  isLocked: boolean;
+  drills: UpdateSessionDrillRequest[];
+  coachIds: string[];
+  attendance: UpdateSessionAttendanceRequest[];
+  appliedTemplates: UpdateAppliedTemplateRequest[];
+}
+
+export interface UpdateSessionDrillRequest {
+  drillId: string;
+  source: string;
+  templateId?: string;
+  order: number;
+}
+
+export interface UpdateSessionAttendanceRequest {
+  playerId: string;
+  status: string;
+  notes?: string;
+}
+
+export interface UpdateAppliedTemplateRequest {
+  templateId: string;
+  appliedAt: string;
+}
+
 // Club Match DTOs
 export interface ClubMatchDto {
   id: string;
@@ -1403,6 +1534,8 @@ export interface UpdateMatchSubstitutionRequest {
   playerInId: string;
 }
 
+
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -1976,6 +2109,46 @@ export const apiClient = {
         const response = await axiosInstance.put<ApiResponse<PlayerDto>>(
           `/v1/players/${playerId}`,
           data
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  },
+
+  trainingSessions: {
+    /**
+     * Get a training session by ID with full detail
+     */
+    getById: async (sessionId: string): Promise<ApiResponse<TrainingSessionDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<TrainingSessionDetailDto>>(`/v1/training-sessions/${sessionId}`);
+      return response.data;
+    },
+
+    /**
+     * Create a new training session
+     */
+    create: async (request: CreateTrainingSessionRequest): Promise<ApiResponse<TrainingSessionDetailDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<TrainingSessionDetailDto>>(
+          '/v1/training-sessions',
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing training session
+     */
+    update: async (sessionId: string, request: UpdateTrainingSessionRequest): Promise<ApiResponse<TrainingSessionDetailDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<TrainingSessionDetailDto>>(
+          `/v1/training-sessions/${sessionId}`,
+          request
         );
         return response.data;
       } catch (error) {

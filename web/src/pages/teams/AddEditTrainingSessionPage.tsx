@@ -1,12 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, Youtube, Instagram, Globe, BookOpen, FileText } from 'lucide-react';
-import { sampleTrainingSessions, sampleDrills, sampleDrillTemplates } from '@/data/training';
-import { sampleTeams } from '@/data/teams';
-import { sampleClubs } from '@/data/clubs';
-import { samplePlayers } from '@/data/players';
-import { getAgeGroupById } from '@/data/ageGroups';
-import { sampleCoaches, getCoachesByTeam, getCoachesByAgeGroup } from '@/data/coaches';
+import { sampleDrills, sampleDrillTemplates } from '@/data/training';
+import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview } from '@/api/hooks';
+import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest } from '@/api/client';
 import { sessionDurations, drillCategories, getDrillCategoryColors } from '@/data/referenceData';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
@@ -17,19 +14,54 @@ export default function AddEditTrainingSessionPage() {
   const navigate = useNavigate();
   const isEditing = sessionId && sessionId !== 'new';
 
-  const team = sampleTeams.find(t => t.id === teamId);
-  const club = sampleClubs.find(c => c.id === clubId);
-  
-  // Try to get age group from URL param, fallback to team's ageGroupId if not found
-  let ageGroup = getAgeGroupById(ageGroupId || '');
-  if (!ageGroup && team?.ageGroupId) {
-    ageGroup = getAgeGroupById(team.ageGroupId);
-  }
-  
-  const existingSession = isEditing ? sampleTrainingSessions.find(s => s.id === sessionId) : null;
+  // Fetch data from API
+  const { data: team, isLoading: teamLoading, error: teamError } = useTeamOverview(teamId);
+  const { data: existingSession, isLoading: sessionLoading } = useTrainingSession(isEditing ? sessionId : undefined);
+  const { data: teamPlayers = [], isLoading: playersLoading } = useTeamPlayers(teamId);
+  const { data: teamCoaches = [], isLoading: coachesLoading } = useTeamCoaches(teamId);
 
-  // Get players for this team
-  const teamPlayers = samplePlayers.filter(p => team?.playerIds.includes(p.id));
+  const club = team?.club;
+
+  // Loading and error states
+  const isLoading = teamLoading || (isEditing && sessionLoading) || playersLoading || coachesLoading;
+  const hasError = teamError;
+
+  if (hasError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">
+              Error Loading Data
+            </h2>
+            <p className="text-red-700 dark:text-red-400 mb-4">
+              {hasError}
+            </p>
+            <button
+              onClick={() => navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!))}
+              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            >
+              Back to Training Sessions
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+            <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // Check if team is archived
   if (team?.isArchived && sessionId === 'new') {
@@ -93,6 +125,7 @@ export default function AddEditTrainingSessionPage() {
   
   const [notes, setNotes] = useState(existingSession?.notes || '');
   const [isLocked, setIsLocked] = useState(existingSession?.isLocked || false);
+  const [isSaving, setIsSaving] = useState(false);
   
   // Coach assignment state
   const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>(existingSession?.coachIds || []);
@@ -115,22 +148,18 @@ export default function AddEditTrainingSessionPage() {
     existingSession?.attendance || teamPlayers.map(p => ({ playerId: p.id, status: 'pending' as const }))
   );
   
-  // Get coaches for this team and age group
-  const teamCoaches = team ? getCoachesByTeam(team.id) : [];
-  const ageGroupCoaches = ageGroup ? getCoachesByAgeGroup(ageGroup.id, sampleTeams) : [];
-  
-  // Get coaches that can be added (in age group but not yet assigned)
-  const availableCoachesForSession = ageGroupCoaches.filter(
-    coach => !assignedCoachIds.includes(coach.id)
+  // Get coaches that can be added (team coaches not yet assigned)
+  const availableCoachesForSession = teamCoaches.filter(
+    coach => !assignedCoachIds.includes(coach.id!)
   );
   
   // Get assigned coach details
-  const assignedCoaches = sampleCoaches.filter(coach => assignedCoachIds.includes(coach.id));
+  const assignedCoaches = teamCoaches.filter(coach => assignedCoachIds.includes(coach.id!));
   
   // Auto-assign team coaches for new sessions
   useEffect(() => {
     if (!isEditing && teamCoaches.length > 0 && assignedCoachIds.length === 0) {
-      setAssignedCoachIds(teamCoaches.map(c => c.id));
+      setAssignedCoachIds(teamCoaches.map(c => c.id).filter((id): id is string => !!id));
     }
   }, [isEditing, teamCoaches.length]);
 
@@ -213,7 +242,7 @@ export default function AddEditTrainingSessionPage() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     // Check if session is locked
     if (isLocked) {
       alert('This training session is locked and cannot be edited. Please unlock it first.');
@@ -226,23 +255,76 @@ export default function AddEditTrainingSessionPage() {
       return;
     }
 
-    // In a real app, this would save to backend
-    console.log('Saving training session...', {
-      date: sessionDate,
-      meetTime,
-      duration: parseInt(duration) || 60,
-      location,
-      focusAreas,
-      drillIds: selectedDrillIds, // Legacy field for backward compatibility
-      sessionDrills, // New enhanced drill structure with source tracking
-      appliedTemplates, // Templates that have been applied
-      coachIds: assignedCoachIds,
-      attendance,
-      notes,
-      isLocked
-    });
-    
-    navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!));
+    try {
+      setIsSaving(true);
+
+      if (isEditing) {
+        const updateData: UpdateTrainingSessionRequest = {
+          teamId: teamId!,
+          sessionDate: new Date(sessionDate).toISOString(),
+          meetTime: meetTime ? new Date(meetTime).toISOString() : undefined,
+          durationMinutes: parseInt(duration) || 60,
+          location,
+          focusAreas,
+          notes: notes || undefined,
+          status: existingSession?.status || 'scheduled',
+          isLocked,
+          drills: sessionDrills.map(sd => ({
+            drillId: sd.drillId,
+            source: sd.source,
+            templateId: sd.templateId,
+            order: sd.order
+          })),
+          coachIds: assignedCoachIds,
+          attendance: attendance.map(a => ({
+            playerId: a.playerId,
+            status: a.status,
+            notes: a.notes
+          })),
+          appliedTemplates: appliedTemplates.map(at => ({
+            templateId: at.templateId,
+            appliedAt: at.appliedAt.toISOString()
+          }))
+        };
+        await apiClient.trainingSessions.update(sessionId!, updateData);
+      } else {
+        const createData: CreateTrainingSessionRequest = {
+          teamId: teamId!,
+          sessionDate: new Date(sessionDate).toISOString(),
+          meetTime: meetTime ? new Date(meetTime).toISOString() : undefined,
+          durationMinutes: parseInt(duration) || 60,
+          location,
+          focusAreas,
+          notes: notes || undefined,
+          status: 'scheduled',
+          isLocked,
+          sessionDrills: sessionDrills.map(sd => ({
+            drillId: sd.drillId,
+            source: sd.source,
+            templateId: sd.templateId,
+            order: sd.order
+          })),
+          assignedCoachIds,
+          attendance: attendance.map(a => ({
+            playerId: a.playerId,
+            status: a.status,
+            notes: a.notes
+          })),
+          appliedTemplates: appliedTemplates.map(at => ({
+            templateId: at.templateId,
+            appliedAt: at.appliedAt.toISOString()
+          }))
+        };
+        await apiClient.trainingSessions.create(createData);
+      }
+
+      navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!));
+    } catch (error) {
+      console.error('Error saving training session:', error);
+      alert('Failed to save training session. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Filter drills for modal
@@ -580,15 +662,15 @@ export default function AddEditTrainingSessionPage() {
                       const isTeamCoach = teamCoaches.some(tc => tc.id === coach.id);
                       return (
                         <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          {coach.photo ? (
+                          {coach.photoUrl ? (
                             <img 
-                              src={coach.photo} 
+                              src={coach.photoUrl} 
                               alt={`${coach.firstName} ${coach.lastName}`}
                               className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                             />
                           ) : (
                             <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                              {coach.firstName[0]}{coach.lastName[0]}
+                              {(coach.firstName || '')[0]}{(coach.lastName || '')[0]}
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
@@ -596,7 +678,7 @@ export default function AddEditTrainingSessionPage() {
                               {coach.firstName} {coach.lastName}
                             </p>
                             <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                              {coachRoleDisplay[coach.role]}
+                              {coachRoleDisplay[coach.role || '']}
                             </p>
                             {isTeamCoach && (
                               <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
@@ -1024,10 +1106,10 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                 </button>
                 <button
                   type="submit"
-                  disabled={isLocked}
+                  disabled={isLocked || isSaving}
                   className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
                 >
-                  {isEditing ? 'Save Changes' : 'Create Session'}
+                  {isSaving ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Session')}
                 </button>
               </div>
             </div>
@@ -1041,7 +1123,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full max-h-[80vh] overflow-hidden">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add Coach from Age Group</h2>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add Available Coach</h2>
                 <p className="text-gray-600 dark:text-gray-400 mt-1">{availableCoachesForSession.length} coaches available</p>
               </div>
               <button
@@ -1055,27 +1137,25 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
             <div className="p-6 overflow-y-auto max-h-[60vh]">
               {availableCoachesForSession.length > 0 ? (
                 <div className="space-y-2">
-                  {availableCoachesForSession.map((coach) => {
-                    const coachTeams = sampleTeams.filter(t => coach.teamIds.includes(t.id) && t.ageGroupId === ageGroup?.id);
-                    return (
+                  {availableCoachesForSession.map((coach) => (
                       <button
                         key={coach.id}
                         type="button"
                         onClick={() => {
-                          setAssignedCoachIds([...assignedCoachIds, coach.id]);
+                          setAssignedCoachIds([...assignedCoachIds, coach.id!]);
                           setShowCoachModal(false);
                         }}
                         className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
                       >
-                        {coach.photo ? (
+                        {coach.photoUrl ? (
                           <img 
-                            src={coach.photo} 
+                            src={coach.photoUrl} 
                             alt={`${coach.firstName} ${coach.lastName}`}
                             className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                           />
                         ) : (
                           <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                            {coach.firstName[0]}{coach.lastName[0]}
+                            {(coach.firstName || '')[0]}{(coach.lastName || '')[0]}
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
@@ -1083,18 +1163,12 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                             {coach.firstName} {coach.lastName}
                           </p>
                           <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                            {coachRoleDisplay[coach.role]}
+                            {coachRoleDisplay[coach.role || '']}
                           </p>
-                          {coachTeams.length > 0 && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                              {coachTeams.map(t => t.name).join(', ')}
-                            </p>
-                          )}
                         </div>
                         <Plus className="w-5 h-5 text-green-600 dark:text-green-400" />
                       </button>
-                    );
-                  })}
+                  ))}
                 </div>
               ) : (
                 <p className="text-center py-8 text-gray-500 dark:text-gray-400">

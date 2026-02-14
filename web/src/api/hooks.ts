@@ -48,6 +48,9 @@ import {
   TacticDetailDto,
   CreateTacticRequest,
   UpdateTacticRequest,
+  TrainingSessionDetailDto,
+  CreateTrainingSessionRequest,
+  UpdateTrainingSessionRequest,
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -912,6 +915,148 @@ export function useUpdateTeam(teamId: string): UseMutationState<TeamOverviewTeam
   }, [teamId]);
 
   return { updateTeam, isSubmitting, data, error };
+}
+
+// ============================================================
+// Training Session Hooks
+// ============================================================
+
+/**
+ * Hook to fetch a training session by ID.
+ * Only fetches if sessionId is defined and not "new".
+ * Maps API TrainingSessionDetailDto to UI TrainingSession type.
+ */
+export function useTrainingSession(sessionId: string | undefined): UseApiState<TrainingSession> {
+  return useApiCall<TrainingSession>(
+    async () => {
+      if (!sessionId || sessionId === 'new') {
+        return Promise.resolve({ success: true });
+      }
+      const response = await apiClient.trainingSessions.getById(sessionId);
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: mapTrainingSessionDetailToUi(response.data)
+        };
+      }
+      return response;
+    },
+    [sessionId]
+  );
+}
+
+/**
+ * Helper function to map API TrainingSessionDetailDto to UI TrainingSession model
+ */
+function mapTrainingSessionDetailToUi(dto: TrainingSessionDetailDto): TrainingSession {
+  return {
+    id: dto.id,
+    teamId: dto.teamId,
+    date: new Date(dto.sessionDate),
+    meetTime: dto.meetTime ? new Date(dto.meetTime) : undefined,
+    duration: dto.durationMinutes || 0,
+    location: dto.location || '',
+    focusAreas: dto.focusAreas || [],
+    drillIds: (dto.drills || []).map(d => d.drillId),
+    sessionDrills: (dto.drills || []).map(d => ({
+      drillId: d.drillId,
+      source: (d.source === 'template' ? 'template' : 'adhoc') as 'template' | 'adhoc',
+      templateId: d.templateId || undefined,
+      order: d.order
+    })),
+    appliedTemplates: (dto.appliedTemplates || []).map(t => ({
+      templateId: t.templateId,
+      appliedAt: new Date(t.appliedAt),
+      drillIds: [] // Drill IDs from applied templates are tracked in sessionDrills
+    })),
+    coachIds: (dto.coaches || []).map(c => c.coachId),
+    attendance: (dto.attendance || []).map(att => ({
+      playerId: att.playerId,
+      status: att.status as 'confirmed' | 'declined' | 'maybe' | 'pending',
+      notes: att.notes || undefined
+    })),
+    notes: dto.notes || undefined,
+    status: dto.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled',
+    isLocked: dto.isLocked || false
+  };
+}
+
+/**
+ * Hook to create a training session.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useCreateTrainingSession(): UseMutationState<TrainingSession> & {
+  createTrainingSession: (request: CreateTrainingSessionRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<TrainingSession | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const createTrainingSession = useCallback(async (request: CreateTrainingSessionRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TrainingSessionDetailDto> = await apiClient.trainingSessions.create(request);
+      if (response.success && response.data) {
+        setData(mapTrainingSessionDetailToUi(response.data));
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create training session',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return { createTrainingSession, isSubmitting, data, error };
+}
+
+/**
+ * Hook to update a training session.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateTrainingSession(sessionId: string): UseMutationState<TrainingSession> & {
+  updateTrainingSession: (request: UpdateTrainingSessionRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<TrainingSession | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updateTrainingSession = useCallback(async (request: UpdateTrainingSessionRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TrainingSessionDetailDto> = await apiClient.trainingSessions.update(sessionId, request);
+      if (response.success && response.data) {
+        setData(mapTrainingSessionDetailToUi(response.data));
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update training session',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [sessionId]);
+
+  return { updateTrainingSession, isSubmitting, data, error };
 }
 
 /**
