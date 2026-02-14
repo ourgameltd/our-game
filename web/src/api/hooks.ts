@@ -11,6 +11,7 @@ import {
   ApiResponse,
   TeamListItemDto,
   TeamOverviewDto,
+  TeamOverviewTeamDto,
   TeamWithStatsDto,
   ChildPlayerDto,
   ClubDetailDto,
@@ -42,6 +43,8 @@ import {
   UpdateClubRequest,
   CreateMatchRequest,
   UpdateMatchRequest,
+  CreateTeamRequest,
+  UpdateTeamRequest,
   TacticDetailDto,
   CreateTacticRequest,
   UpdateTacticRequest,
@@ -150,11 +153,17 @@ export function useTeamCoaches(teamId: string | undefined): UseApiState<TeamCoac
 }
 
 /**
- * Hook to fetch team overview data
+ * Hook to fetch team overview data.
+ * Returns early with null data when teamId is undefined (e.g. create mode).
  */
 export function useTeamOverview(teamId: string | undefined): UseApiState<TeamOverviewDto> {
   return useApiCall<TeamOverviewDto>(
-    () => apiClient.teams.getOverview(teamId!),
+    () => {
+      if (!teamId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.teams.getOverview(teamId);
+    },
     [teamId]
   );
 }
@@ -821,6 +830,88 @@ export function useCreateTactic(): UseMutationState<TacticDetailDto> & {
   }, []);
 
   return { createTactic, isSubmitting, data, error };
+}
+
+// ============================================================
+// Team Mutation Hooks
+// ============================================================
+
+/**
+ * Hook to create a team.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useCreateTeam(): UseMutationState<TeamOverviewTeamDto> & {
+  createTeam: (request: CreateTeamRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<TeamOverviewTeamDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const createTeam = useCallback(async (request: CreateTeamRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TeamOverviewTeamDto> = await apiClient.teams.create(request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create team',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return { createTeam, isSubmitting, data, error };
+}
+
+/**
+ * Hook to update a team.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateTeam(teamId: string): UseMutationState<TeamOverviewTeamDto> & {
+  updateTeam: (request: UpdateTeamRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<TeamOverviewTeamDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updateTeam = useCallback(async (request: UpdateTeamRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TeamOverviewTeamDto> = await apiClient.teams.update(teamId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update team',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId]);
+
+  return { updateTeam, isSubmitting, data, error };
 }
 
 /**

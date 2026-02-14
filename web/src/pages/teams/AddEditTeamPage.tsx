@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getAgeGroupById } from '../../data/ageGroups';
-import { getTeamById } from '../../data/teams';
-import { sampleClubs } from '../../data/clubs';
-import { teamLevels, TeamLevel } from '@/data/referenceData';
+import { teamLevels, TeamLevel } from '@/constants/referenceData';
+import { useClubById, useAgeGroupById, useTeamOverview, useCreateTeam, useUpdateTeam } from '@/api/hooks';
+import { CreateTeamRequest, UpdateTeamRequest } from '@/api/client';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@utils/routes';
@@ -11,23 +10,137 @@ import { Routes } from '@utils/routes';
 const AddEditTeamPage: React.FC = () => {
   const { clubId, ageGroupId, teamId } = useParams<{ clubId: string; ageGroupId: string; teamId?: string }>();
   const navigate = useNavigate();
-  
-  const club = sampleClubs.find(c => c.id === clubId);
-  const ageGroup = getAgeGroupById(ageGroupId || '');
-  const existingTeam = teamId ? getTeamById(teamId) : null;
-  const isEditing = !!existingTeam;
-  
+  const isEditing = !!teamId;
+
+  // API data hooks
+  const { data: club, isLoading: clubLoading, error: clubError } = useClubById(clubId);
+  const { data: ageGroup, isLoading: ageGroupLoading, error: ageGroupError } = useAgeGroupById(ageGroupId);
+  const { data: overview, isLoading: teamLoading } = useTeamOverview(isEditing ? teamId : undefined);
+
+  // Mutation hooks
+  const { createTeam, isSubmitting: isCreating, error: createError } = useCreateTeam();
+  const { updateTeam, isSubmitting: isUpdating, error: updateError } = useUpdateTeam(teamId || '');
+
+  const isLoading = clubLoading || ageGroupLoading || (isEditing && teamLoading);
+  const existingTeam = overview?.team;
+
   const [formData, setFormData] = useState({
-    name: existingTeam?.name || '',
-    shortName: existingTeam?.shortName || '',
-    level: (existingTeam?.level || ageGroup?.level || 'youth') as TeamLevel,
-    season: existingTeam?.season || ageGroup?.season || '2024/25',
-    primaryColor: existingTeam?.colors?.primary || club?.colors.primary || '#DC2626',
-    secondaryColor: existingTeam?.colors?.secondary || club?.colors.secondary || '#FFFFFF',
+    name: '',
+    shortName: '',
+    level: 'youth' as TeamLevel,
+    season: '',
+    primaryColor: '#DC2626',
+    secondaryColor: '#FFFFFF',
   });
-  
+
   const [errors, setErrors] = useState<Record<string, string>>({});
-  
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Initialize form from API data once loaded
+  useEffect(() => {
+    if (isInitialized) return;
+
+    if (isEditing && existingTeam) {
+      setFormData({
+        name: existingTeam.name || '',
+        shortName: existingTeam.shortName || '',
+        level: (existingTeam.level || 'youth') as TeamLevel,
+        season: existingTeam.season || '',
+        primaryColor: existingTeam.colors?.primary || '#DC2626',
+        secondaryColor: existingTeam.colors?.secondary || '#FFFFFF',
+      });
+      setIsInitialized(true);
+    } else if (!isEditing && club && ageGroup) {
+      setFormData(prev => ({
+        ...prev,
+        level: (ageGroup.level || 'youth') as TeamLevel,
+        season: ageGroup.season || '',
+        primaryColor: club.colors?.primary || '#DC2626',
+        secondaryColor: club.colors?.secondary || '#FFFFFF',
+      }));
+      setIsInitialized(true);
+    }
+  }, [isEditing, existingTeam, club, ageGroup, isInitialized]);
+
+  // Map validation errors from API to form fields
+  useEffect(() => {
+    const apiError = createError || updateError;
+    if (!apiError?.validationErrors) return;
+
+    const fieldMap: Record<string, string> = {
+      Name: 'name',
+      ShortName: 'shortName',
+      Level: 'level',
+      Season: 'season',
+      PrimaryColor: 'primaryColor',
+      SecondaryColor: 'secondaryColor',
+    };
+
+    const mapped: Record<string, string> = {};
+    for (const [serverField, messages] of Object.entries(apiError.validationErrors)) {
+      const formField = fieldMap[serverField] || serverField.charAt(0).toLowerCase() + serverField.slice(1);
+      mapped[formField] = messages[0] || 'Invalid value';
+    }
+    setErrors(prev => ({ ...prev, ...mapped }));
+  }, [createError, updateError]);
+
+  // Loading skeleton
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="animate-pulse space-y-4">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/4"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i}>
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2"></div>
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Error states for missing data
+  if (clubError && !clubLoading) {
+    return (
+      <div className="mx-auto px-4 py-8">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">Club Not Found</h2>
+          <p className="text-red-700 dark:text-red-400 mb-4">The requested club could not be found.</p>
+          <button
+            onClick={() => navigate(Routes.dashboard())}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Return to Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (ageGroupError && !ageGroupLoading) {
+    return (
+      <div className="mx-auto px-4 py-8">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">Age Group Not Found</h2>
+          <p className="text-red-700 dark:text-red-400 mb-4">The requested age group could not be found.</p>
+          <button
+            onClick={() => navigate(Routes.club(clubId!))}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Return to Club
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!club || !ageGroup) {
     return (
       <div className="mx-auto px-4 py-8">
@@ -35,7 +148,7 @@ const AddEditTeamPage: React.FC = () => {
       </div>
     );
   }
-  
+
   // Prevent adding teams to archived age groups
   if (!isEditing && ageGroup.isArchived) {
     return (
@@ -114,30 +227,50 @@ const AddEditTeamPage: React.FC = () => {
     return Object.keys(newErrors).length === 0;
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!validateForm()) {
       return;
     }
     
-    // In a real application, this would make an API call to save the team
-    console.log(isEditing ? 'Updating team:' : 'Creating team:', {
-      ...formData,
-      clubId,
-      ageGroupId,
-    });
-    
-    // Show success message (in a real app, this would be a toast notification)
-    alert(`Team ${isEditing ? 'updated' : 'created'} successfully!`);
-    
-    // Navigate back to age group overview
-    navigate(Routes.ageGroup(clubId!, ageGroupId!));
+    try {
+      if (isEditing) {
+        const request: UpdateTeamRequest = {
+          name: formData.name.trim(),
+          shortName: formData.shortName.trim() || undefined,
+          level: formData.level,
+          season: formData.season.trim(),
+          primaryColor: formData.primaryColor,
+          secondaryColor: formData.secondaryColor,
+        };
+        await updateTeam(request);
+      } else {
+        const request: CreateTeamRequest = {
+          clubId: clubId!,
+          ageGroupId: ageGroupId!,
+          name: formData.name.trim(),
+          shortName: formData.shortName.trim() || undefined,
+          level: formData.level,
+          season: formData.season.trim(),
+          primaryColor: formData.primaryColor,
+          secondaryColor: formData.secondaryColor,
+        };
+        await createTeam(request);
+      }
+
+      // Navigate back on success (errors are handled by the useEffect above)
+      navigate(Routes.ageGroup(clubId!, ageGroupId!));
+    } catch {
+      // Errors are captured by mutation hooks and mapped via useEffect
+    }
   };
   
   const handleCancel = () => {
     navigate(Routes.ageGroup(clubId!, ageGroupId!));
   };
+
+  const mutationError = createError || updateError;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -147,6 +280,15 @@ const AddEditTeamPage: React.FC = () => {
           title={isEditing ? 'Edit Team' : 'Add New Team'}
           subtitle={`${club.name} - ${ageGroup.name}`}
         />
+
+        {/* API Error Banner */}
+        {mutationError && (
+          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-red-700 dark:text-red-400 font-medium">
+              {mutationError.message}
+            </p>
+          </div>
+        )}
         
         {/* Form */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
@@ -316,7 +458,12 @@ const AddEditTeamPage: React.FC = () => {
             {/* Action Buttons */}
             <FormActions
               onCancel={handleCancel}
-              saveLabel={isEditing ? 'Update Team' : 'Create Team'}
+              saveLabel={
+                isEditing
+                  ? (isUpdating ? 'Updating...' : 'Update Team')
+                  : (isCreating ? 'Creating...' : 'Create Team')
+              }
+              saveDisabled={isCreating || isUpdating || isLoading}
               showArchive={false}
             />
           </form>

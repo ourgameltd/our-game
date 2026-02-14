@@ -1102,6 +1102,26 @@ export interface UpdateClubRequest {
   principles: string[];
 }
 
+export interface CreateTeamRequest {
+  clubId: string;
+  ageGroupId: string;
+  name: string;
+  shortName?: string;
+  level: string;
+  season: string;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
+export interface UpdateTeamRequest {
+  name: string;
+  shortName?: string;
+  level: string;
+  season: string;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
 // Match Detail DTOs
 
 export interface MatchDetailDto {
@@ -1493,6 +1513,36 @@ export const apiClient = {
     getCoaches: async (teamId: string): Promise<ApiResponse<TeamCoachDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<TeamCoachDto[]>>(`/v1/teams/${teamId}/coaches`);
       return response.data;
+    },
+
+    /**
+     * Create a new team
+     */
+    create: async (request: CreateTeamRequest): Promise<ApiResponse<TeamOverviewTeamDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<TeamOverviewTeamDto>>(
+          '/v1/teams',
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing team
+     */
+    update: async (teamId: string, request: UpdateTeamRequest): Promise<ApiResponse<TeamOverviewTeamDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<TeamOverviewTeamDto>>(
+          `/v1/teams/${teamId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 
