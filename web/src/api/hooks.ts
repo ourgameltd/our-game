@@ -35,6 +35,7 @@ import {
   PlayerDto,
   DevelopmentPlanDto,
   UpdateAgeGroupRequest,
+  UpdatePlayerRequest,
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -508,6 +509,45 @@ export function useDevelopmentPlan(planId: string | undefined): UseApiState<Deve
 // ============================================================
 // Mutation Hooks
 // ============================================================
+
+/**
+ * Hook to update a player.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdatePlayer(playerId: string): UseMutationState<PlayerDto> & {
+  updatePlayer: (request: UpdatePlayerRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<PlayerDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updatePlayer = useCallback(async (request: UpdatePlayerRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<PlayerDto> = await apiClient.players.update(playerId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update player',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [playerId]);
+
+  return { updatePlayer, isSubmitting, data, error };
+}
 
 /**
  * Hook to update an age group.

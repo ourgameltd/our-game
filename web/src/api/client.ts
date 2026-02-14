@@ -856,20 +856,49 @@ export interface UpdateDevelopmentPlanRequest {
 }
 
 // Player DTOs
+export interface PlayerTeamMinimalDto {
+  id: string;
+  name: string;
+  ageGroupId: string;
+  ageGroupName?: string;
+}
+
 export interface PlayerDto {
   id: string;
   firstName: string;
   lastName: string;
   fullName: string;
+  nickname?: string;
   photoUrl?: string;
   dateOfBirth: string;
+  associationId?: string;
+  isArchived: boolean;
   clubId?: string;
   clubName?: string;
+  preferredPositions: string[];
+  teamIds: string[];
+  ageGroupIds: string[];
+  teams: PlayerTeamMinimalDto[];
+  // Backward-compatible single-value fields
   ageGroupId?: string;
   ageGroupName?: string;
   teamId?: string;
   teamName?: string;
   preferredPosition?: string;
+}
+
+export interface UpdatePlayerRequest {
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  associationId?: string;
+  dateOfBirth: string; // ISO date string (YYYY-MM-DD)
+  email: string;
+  phoneNumber: string;
+  emergencyContact?: string;
+  preferredPositions: string[];
+  teamIds: string[];
+  isArchived: boolean;
 }
 
 /**
@@ -1336,6 +1365,21 @@ export const apiClient = {
     getById: async (playerId: string): Promise<ApiResponse<PlayerDto>> => {
       const response = await axiosInstance.get<ApiResponse<PlayerDto>>(`/v1/players/${playerId}`);
       return response.data;
+    },
+
+    /**
+     * Update an existing player
+     */
+    update: async (playerId: string, data: UpdatePlayerRequest): Promise<ApiResponse<PlayerDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<PlayerDto>>(
+          `/v1/players/${playerId}`,
+          data
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 };

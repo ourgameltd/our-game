@@ -1,9 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPlayerById } from '@/data/players';
-import { getTeamsByClubId } from '@/data/teams';
-import { getClubById } from '@/data/clubs';
-import { getAgeGroupById } from '@/data/ageGroups';
+import { usePlayer, useClubById, useClubTeams, useUpdatePlayer, UpdatePlayerRequest } from '@/api';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
@@ -13,33 +10,140 @@ export default function ClubPlayerSettingsPage() {
   const { clubId, playerId } = useParams();
   const navigate = useNavigate();
   const isNewPlayer = playerId === 'new';
-  const player = isNewPlayer ? null : getPlayerById(playerId!);
-  const club = getClubById(clubId!);
-  const allTeams = getTeamsByClubId(clubId!);
 
+  // API hooks
+  const { data: player, isLoading: playerLoading, error: playerError } = usePlayer(isNewPlayer ? undefined : playerId);
+  const { data: club, isLoading: clubLoading } = useClubById(clubId);
+  const { data: allTeams, isLoading: teamsLoading } = useClubTeams(clubId);
+  const { updatePlayer, isSubmitting, error: submitError } = useUpdatePlayer(playerId || '');
+
+  const [formInitialized, setFormInitialized] = useState(false);
   const [formData, setFormData] = useState({
-    firstName: player?.firstName || '',
-    lastName: player?.lastName || '',
-    nickname: player?.nickname || '',
-    dateOfBirth: player?.dateOfBirth ? player.dateOfBirth.toISOString().split('T')[0] : '',
-    photo: player?.photo || '',
-    associationId: player?.associationId || '',
-    preferredPositions: player?.preferredPositions || [],
+    firstName: '',
+    lastName: '',
+    nickname: '',
+    dateOfBirth: '',
+    photo: '',
+    associationId: '',
+    email: '',
+    phoneNumber: '',
+    emergencyContact: '',
+    preferredPositions: [] as string[],
   });
 
-  const [selectedAgeGroups] = useState<string[]>(player?.ageGroupIds || []);
-  const [selectedTeams, setSelectedTeams] = useState<string[]>(player?.teamIds || []);
-  const [photoPreview, setPhotoPreview] = useState<string>(player?.photo || '');
+  const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
+  const [photoPreview, setPhotoPreview] = useState<string>('');
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
 
-  const isFormDisabled = !isNewPlayer && player?.isArchived;
+  // Initialize form state from API data
+  useEffect(() => {
+    if (player && !formInitialized) {
+      setFormData({
+        firstName: player.firstName || '',
+        lastName: player.lastName || '',
+        nickname: player.nickname || '',
+        dateOfBirth: player.dateOfBirth ? player.dateOfBirth.split('T')[0] : '',
+        photo: player.photoUrl || '',
+        associationId: player.associationId || '',
+        email: '',
+        phoneNumber: '',
+        emergencyContact: '',
+        preferredPositions: player.preferredPositions || [],
+      });
+      setSelectedTeams(player.teamIds || []);
+      setPhotoPreview(player.photoUrl || '');
+      setFormInitialized(true);
+    }
+  }, [player, formInitialized]);
 
-  if (!isNewPlayer && !player) {
+  const isLoading = playerLoading || clubLoading || teamsLoading;
+  const isFormDisabled = !isNewPlayer && player?.isArchived;
+  const teams = allTeams || [];
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4 animate-pulse">
+          {/* Page Title Skeleton */}
+          <div className="mb-6">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-2"></div>
+            <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-96"></div>
+          </div>
+
+          <div className="space-y-2">
+            {/* Personal Information Skeleton */}
+            <div className="card">
+              <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-6"></div>
+              <div className="grid md:grid-cols-2 gap-4">
+                {[...Array(5)].map((_, i) => (
+                  <div key={i}>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2"></div>
+                    <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                  </div>
+                ))}
+              </div>
+              
+              {/* Photo Upload Skeleton */}
+              <div className="mt-4">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2"></div>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                  <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Preferred Positions Skeleton */}
+            <div className="card">
+              <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4"></div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[...Array(8)].map((_, i) => (
+                  <div key={i} className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+                ))}
+              </div>
+            </div>
+
+            {/* Team Assignments Skeleton */}
+            <div className="card">
+              <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-6"></div>
+              
+              <div className="space-y-6">
+                {[...Array(2)].map((_, i) => (
+                  <div key={i} className="border-l-4 border-gray-200 dark:border-gray-700 pl-4">
+                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-3"></div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                      {[...Array(3)].map((_, j) => (
+                        <div key={j} className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-800"></div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions Skeleton */}
+            <div className="flex justify-end gap-3 pt-4">
+               <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+               <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Player not found
+  if (!isNewPlayer && !player && !playerLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
           <div className="card">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Player not found</h2>
+            {playerError && (
+              <p className="text-sm text-red-600 dark:text-red-400">{playerError.message}</p>
+            )}
           </div>
         </main>
       </div>
@@ -81,11 +185,35 @@ export default function ClubPlayerSettingsPage() {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Saving player:', { ...formData, ageGroupIds: selectedAgeGroups, teamIds: selectedTeams });
-    alert(`Player ${isNewPlayer ? 'created' : 'updated'} successfully! (Demo - not saved to backend)`);
-    navigate(Routes.clubPlayers(clubId!));
+
+    if (isNewPlayer) {
+      // Create flow not yet implemented
+      return;
+    }
+
+    const request: UpdatePlayerRequest = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      nickname: formData.nickname || undefined,
+      associationId: formData.associationId || undefined,
+      dateOfBirth: formData.dateOfBirth,
+      email: formData.email,
+      phoneNumber: formData.phoneNumber,
+      emergencyContact: formData.emergencyContact || undefined,
+      preferredPositions: formData.preferredPositions,
+      teamIds: selectedTeams,
+      isArchived: player?.isArchived ?? false,
+    };
+
+    await updatePlayer(request);
+
+    // submitError will be set by the hook if the call failed;
+    // only navigate on success (submitError remains null)
+    if (!submitError) {
+      navigate(Routes.clubPlayers(clubId!));
+    }
   };
 
   const handleCancel = () => {
@@ -120,6 +248,24 @@ export default function ClubPlayerSettingsPage() {
           </div>
         )}
 
+        {/* API error banner */}
+        {submitError && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm font-medium text-red-800 dark:text-red-300">
+              {submitError.message}
+            </p>
+            {submitError.validationErrors && (
+              <ul className="mt-2 list-disc list-inside text-sm text-red-700 dark:text-red-400">
+                {Object.entries(submitError.validationErrors).map(([field, errors]) =>
+                  errors.map((msg, i) => (
+                    <li key={`${field}-${i}`}>{field}: {msg}</li>
+                  ))
+                )}
+              </ul>
+            )}
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} className="space-y-2">
           {/* Personal Information */}
           <div className="card">
@@ -137,7 +283,7 @@ export default function ClubPlayerSettingsPage() {
                   value={formData.firstName}
                   onChange={handleInputChange}
                   required
-                  disabled={isFormDisabled}
+                  disabled={!!isFormDisabled}
                   placeholder="Enter first name"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -153,7 +299,7 @@ export default function ClubPlayerSettingsPage() {
                   value={formData.lastName}
                   onChange={handleInputChange}
                   required
-                  disabled={isFormDisabled}
+                  disabled={!!isFormDisabled}
                   placeholder="Enter last name"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -168,7 +314,7 @@ export default function ClubPlayerSettingsPage() {
                   name="nickname"
                   value={formData.nickname}
                   onChange={handleInputChange}
-                  disabled={isFormDisabled}
+                  disabled={!!isFormDisabled}
                   placeholder="Enter nickname"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -184,7 +330,7 @@ export default function ClubPlayerSettingsPage() {
                   value={formData.dateOfBirth}
                   onChange={handleInputChange}
                   required
-                  disabled={isFormDisabled}
+                  disabled={!!isFormDisabled}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
@@ -198,7 +344,7 @@ export default function ClubPlayerSettingsPage() {
                   name="associationId"
                   value={formData.associationId}
                   onChange={handleInputChange}
-                  disabled={isFormDisabled}
+                  disabled={!!isFormDisabled}
                   placeholder="e.g., SFA-Y-40123"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -238,7 +384,7 @@ export default function ClubPlayerSettingsPage() {
                     type="file"
                     accept="image/*"
                     onChange={handlePhotoChange}
-                    disabled={isFormDisabled}
+                    disabled={!!isFormDisabled}
                     className="hidden"
                   />
                 </div>
@@ -257,7 +403,7 @@ export default function ClubPlayerSettingsPage() {
                   key={position}
                   type="button"
                   onClick={() => handlePositionToggle(position)}
-                  disabled={isFormDisabled}
+                  disabled={!!isFormDisabled}
                   className={`px-4 py-2 rounded-lg border-2 transition-colors ${
                     formData.preferredPositions.includes(position)
                       ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
@@ -280,22 +426,22 @@ export default function ClubPlayerSettingsPage() {
             </p>
             <div className="space-y-2">
               {/* Group teams by age group */}
-              {Array.from(new Set(allTeams.map(t => t.ageGroupId)))
+              {Array.from(new Set(teams.map(t => t.ageGroupId)))
                 .sort((a, b) => {
-                  const ageGroupA = getAgeGroupById(a);
-                  const ageGroupB = getAgeGroupById(b);
-                  return (ageGroupA?.name || '').localeCompare(ageGroupB?.name || '');
+                  const ageGroupA = teams.find(t => t.ageGroupId === a);
+                  const ageGroupB = teams.find(t => t.ageGroupId === b);
+                  return (ageGroupA?.ageGroupName || '').localeCompare(ageGroupB?.ageGroupName || '');
                 })
                 .map(ageGroupId => {
-                const ageGroup = getAgeGroupById(ageGroupId);
-                const ageGroupTeams = allTeams
+                const ageGroupTeams = teams
                   .filter(t => t.ageGroupId === ageGroupId)
                   .sort((a, b) => a.name.localeCompare(b.name));
+                const ageGroupName = ageGroupTeams[0]?.ageGroupName || 'Unknown Age Group';
                 
                 return (
                   <div key={ageGroupId} className="border-l-4 border-primary-500 pl-4">
                     <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                      {ageGroup?.name || 'Unknown Age Group'}
+                      {ageGroupName}
                     </h4>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
                       {ageGroupTeams.map((team) => (
@@ -307,7 +453,7 @@ export default function ClubPlayerSettingsPage() {
                             type="checkbox"
                             checked={selectedTeams.includes(team.id)}
                             onChange={() => handleTeamToggle(team.id)}
-                            disabled={isFormDisabled}
+                            disabled={!!isFormDisabled}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                           />
                           <div>
@@ -321,7 +467,7 @@ export default function ClubPlayerSettingsPage() {
                 );
               })}
             </div>
-            {allTeams.length === 0 && (
+            {teams.length === 0 && (
               <p className="text-sm text-gray-500 dark:text-gray-400 italic">
                 No teams available. Create teams first to assign players.
               </p>
@@ -333,28 +479,28 @@ export default function ClubPlayerSettingsPage() {
             isArchived={!isNewPlayer && player?.isArchived}
             onArchive={!isNewPlayer ? () => setShowArchiveConfirm(true) : undefined}
             onCancel={handleCancel}
-            saveLabel={isNewPlayer ? 'Create Player' : 'Save Changes'}
-            saveDisabled={isFormDisabled}
+            saveLabel={isSubmitting ? 'Saving...' : (isNewPlayer ? 'Create Player' : 'Save Changes')}
+            saveDisabled={!!isFormDisabled || isSubmitting}
             showArchive={!isNewPlayer}
           />
         </form>
 
         {/* Archive Confirmation Modal */}
-        {!isNewPlayer && showArchiveConfirm && (
+        {!isNewPlayer && showArchiveConfirm && player && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[1000]">
             <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                {player!.isArchived ? 'Unarchive Player?' : 'Archive Player?'}
+                {player.isArchived ? 'Unarchive Player?' : 'Archive Player?'}
               </h3>
               <p className="text-gray-600 dark:text-gray-400 mb-4">
-                {player!.isArchived ? (
+                {player.isArchived ? (
                   <>
-                    Are you sure you want to unarchive <strong>{player!.firstName} {player!.lastName}</strong>? 
+                    Are you sure you want to unarchive <strong>{player.firstName} {player.lastName}</strong>? 
                     This will make their profile active again and allow modifications.
                   </>
                 ) : (
                   <>
-                    Are you sure you want to archive <strong>{player!.firstName} {player!.lastName}</strong>? 
+                    Are you sure you want to archive <strong>{player.firstName} {player.lastName}</strong>? 
                     This will lock their profile and prevent modifications. All their data will be preserved and you can unarchive them later.
                   </>
                 )}
@@ -374,12 +520,12 @@ export default function ClubPlayerSettingsPage() {
                     handleArchive();
                   }}
                   className={`px-4 py-2 rounded-lg transition-colors ${
-                    player!.isArchived
+                    player.isArchived
                       ? 'bg-green-600 text-white hover:bg-green-700'
                       : 'bg-orange-600 text-white hover:bg-orange-700'
                   }`}
                 >
-                  Yes, {player!.isArchived ? 'Unarchive' : 'Archive'} Player
+                  Yes, {player.isArchived ? 'Unarchive' : 'Archive'} Player
                 </button>
               </div>
             </div>

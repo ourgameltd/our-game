@@ -33,7 +33,7 @@ public class PlayerFunctions
     /// <param name="playerId">The player ID</param>
     /// <returns>Player detail information with denormalized club, age group, and team context</returns>
     [Function("GetPlayerById")]
-    [OpenApiOperation(operationId: "GetPlayerById", tags: new[] { "Players" }, Summary = "Get player by ID", Description = "Retrieves player details including denormalized club, age group, and team context")]
+    [OpenApiOperation(operationId: "GetPlayerById", tags: new[] { "Players" }, Summary = "Get player by ID", Description = "Retrieves player details including club context, all team and age group assignments, preferred positions, nickname, association ID, and archive status. Backward-compatible single-value fields (TeamId, AgeGroupId, PreferredPosition) are derived from the first assignment.")]
     [OpenApiParameter(name: "playerId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The player ID")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerDto>), Description = "Player retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<PlayerDto>), Description = "User not authenticated")]
