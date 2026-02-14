@@ -2,7 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
-using OurGame.Application.UseCases.Clubs.Queries.GetDevelopmentPlansByClubId.DTOs;
+using OurGame.Application.UseCases.AgeGroups.Queries.GetAgeGroupDevelopmentPlans.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
@@ -11,12 +11,12 @@ namespace OurGame.Application.UseCases.AgeGroups.Queries.GetAgeGroupDevelopmentP
 /// <summary>
 /// Query to get all development plans for players in a specific age group
 /// </summary>
-public record GetAgeGroupDevelopmentPlansQuery(Guid AgeGroupId) : IQuery<List<ClubDevelopmentPlanDto>>;
+public record GetAgeGroupDevelopmentPlansQuery(Guid AgeGroupId) : IQuery<List<AgeGroupDevelopmentPlanSummaryDto>>;
 
 /// <summary>
 /// Handler for GetAgeGroupDevelopmentPlansQuery
 /// </summary>
-public class GetAgeGroupDevelopmentPlansHandler : IRequestHandler<GetAgeGroupDevelopmentPlansQuery, List<ClubDevelopmentPlanDto>>
+public class GetAgeGroupDevelopmentPlansHandler : IRequestHandler<GetAgeGroupDevelopmentPlansQuery, List<AgeGroupDevelopmentPlanSummaryDto>>
 {
     private readonly OurGameContext _db;
 
@@ -25,7 +25,7 @@ public class GetAgeGroupDevelopmentPlansHandler : IRequestHandler<GetAgeGroupDev
         _db = db;
     }
 
-    public async Task<List<ClubDevelopmentPlanDto>> Handle(GetAgeGroupDevelopmentPlansQuery query, CancellationToken cancellationToken)
+    public async Task<List<AgeGroupDevelopmentPlanSummaryDto>> Handle(GetAgeGroupDevelopmentPlansQuery query, CancellationToken cancellationToken)
     {
         // Get all development plans for players belonging to this age group
         var plansSql = @"
@@ -56,7 +56,7 @@ public class GetAgeGroupDevelopmentPlansHandler : IRequestHandler<GetAgeGroupDev
 
         if (planData.Count == 0)
         {
-            return new List<ClubDevelopmentPlanDto>();
+            return new List<AgeGroupDevelopmentPlanSummaryDto>();
         }
 
         // Get plan IDs for fetching goals
@@ -86,71 +86,46 @@ public class GetAgeGroupDevelopmentPlansHandler : IRequestHandler<GetAgeGroupDev
             .SqlQueryRaw<DevelopmentGoalRawDto>(goalsSql, planParams)
             .ToListAsync(cancellationToken);
 
-        // Get player IDs for fetching age groups
-        var playerIds = planData.Select(p => p.PlayerId).Distinct().ToList();
-
-        var playerParams = playerIds.Select((id, index) =>
-            new Microsoft.Data.SqlClient.SqlParameter($"@player{index}", id)).ToArray();
-        var playerParamNames = string.Join(", ", playerParams.Select(p => p.ParameterName));
-
-        // Get age groups for players
-        var ageGroupsSql = $@"
-            SELECT 
-                pag.PlayerId,
-                pag.AgeGroupId
-            FROM PlayerAgeGroups pag
-            WHERE pag.PlayerId IN ({playerParamNames})";
-
-        var ageGroupsData = await _db.Database
-            .SqlQueryRaw<PlayerAgeGroupRawDto>(ageGroupsSql, playerParams)
-            .ToListAsync(cancellationToken);
-
         // Group data for mapping
         var goalsByPlan = goalsData.GroupBy(g => g.PlanId).ToDictionary(g => g.Key, g => g.ToList());
-        var ageGroupsByPlayer = ageGroupsData.GroupBy(ag => ag.PlayerId).ToDictionary(g => g.Key, g => g.Select(x => x.AgeGroupId).ToList());
 
         // Map to DTOs
         return planData.Select(p =>
         {
             var statusName = Enum.GetName(typeof(PlanStatus), p.Status) ?? PlanStatus.Active.ToString();
 
-            return new ClubDevelopmentPlanDto
+            return new AgeGroupDevelopmentPlanSummaryDto
             {
                 Id = p.Id,
                 PlayerId = p.PlayerId,
                 Title = p.Title ?? string.Empty,
-                Description = p.Description,
                 Status = statusName.ToLowerInvariant(),
                 CreatedAt = p.CreatedAt,
-                CreatedBy = p.CreatedBy,
-                Period = new ClubDevelopmentPlanPeriodDto
+                Period = new AgeGroupDevelopmentPlanPeriodDto
                 {
                     Start = p.PeriodStart,
                     End = p.PeriodEnd
                 },
-                Player = new ClubDevelopmentPlanPlayerDto
+                Player = new AgeGroupDevelopmentPlanPlayerDto
                 {
                     Id = p.PlayerId,
                     FirstName = p.PlayerFirstName ?? string.Empty,
                     LastName = p.PlayerLastName ?? string.Empty,
                     Nickname = p.PlayerNickname,
                     Photo = p.PlayerPhoto,
-                    PreferredPositions = ParseJsonArray(p.PlayerPreferredPositions),
-                    AgeGroupIds = ageGroupsByPlayer.TryGetValue(p.PlayerId, out var ageGroups) ? ageGroups : new List<Guid>()
+                    PreferredPositions = ParseJsonArray(p.PlayerPreferredPositions)
                 },
                 Goals = goalsByPlan.TryGetValue(p.Id, out var goals)
-                    ? goals.Select(g => new ClubDevelopmentPlanGoalDto
+                    ? goals.Select(g => new AgeGroupDevelopmentPlanGoalSummaryDto
                     {
                         Id = g.Id,
                         Goal = g.Goal ?? string.Empty,
-                        Actions = ParseJsonArray(g.Actions),
-                        StartDate = g.StartDate,
                         TargetDate = g.TargetDate,
                         Progress = g.Progress ?? 0,
                         Completed = g.Completed,
                         CompletedDate = g.CompletedDate?.ToDateTime(TimeOnly.MinValue)
                     }).ToList()
-                    : new List<ClubDevelopmentPlanGoalDto>()
+                    : new List<AgeGroupDevelopmentPlanGoalSummaryDto>()
             };
         }).ToList();
     }
