@@ -1,9 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { getPlayerById } from '@data/players';
-import { getReportsByPlayerId } from '@data/reports';
-import { getAgeGroupById } from '@data/ageGroups';
-import { getTeamById } from '@data/teams';
+import { useState, useEffect } from 'react';
+import { apiClient } from '@api/client';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
@@ -12,45 +9,106 @@ export default function AddEditReportCardPage() {
   const { clubId, playerId, ageGroupId, teamId, reportId } = useParams();
   const navigate = useNavigate();
   
-  const player = getPlayerById(playerId!);
-  const reports = playerId ? getReportsByPlayerId(playerId) : [];
-  const report = reportId ? reports.find(r => r.id === reportId) : null;
-  const ageGroup = ageGroupId ? getAgeGroupById(ageGroupId) : null;
-  const team = teamId ? getTeamById(teamId) : null;
+  const [isLoading, setIsLoading] = useState(true);
+  const [player, setPlayer] = useState<any>(null);
+  const [report, setReport] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const isEditMode = !!reportId;
   
   // Form state
-  const [periodStart, setPeriodStart] = useState(
-    report?.period.start.toISOString().split('T')[0] || ''
-  );
-  const [periodEnd, setPeriodEnd] = useState(
-    report?.period.end.toISOString().split('T')[0] || ''
-  );
-  const [strengths, setStrengths] = useState<string[]>(
-    report?.strengths || ['']
-  );
-  const [improvements, setImprovements] = useState<string[]>(
-    report?.areasForImprovement || ['']
-  );
-  const [coachComments, setCoachComments] = useState(
-    report?.coachComments || ''
-  );
+  const [periodStart, setPeriodStart] = useState('');
+  const [periodEnd, setPeriodEnd] = useState('');
+  const [strengths, setStrengths] = useState<string[]>(['']);
+  const [improvements, setImprovements] = useState<string[]>(['']);
+  const [coachComments, setCoachComments] = useState('');
   const [similarPlayers, setSimilarPlayers] = useState<Array<{
+    id?: string;
     name: string;
     team: string;
     position: string;
     reason: string;
-  }>>(
-    report?.similarProfessionalPlayers || []
-  );
-  
-  if (!player) {
+  }>>([]);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        // Load player data
+        if (playerId) {
+          const playerResponse = await apiClient.players.getById(playerId);
+          if (playerResponse.success && playerResponse.data) {
+            setPlayer(playerResponse.data);
+          } else {
+            setError('Failed to load player data');
+          }
+        }
+
+        // Load report data if editing
+        if (isEditMode && reportId) {
+          const reportResponse = await apiClient.reports.getById(reportId);
+          if (reportResponse.success && reportResponse.data) {
+            const reportData = reportResponse.data;
+            setReport(reportData);
+            
+            // Populate form with existing data
+            setPeriodStart(reportData.periodStart || '');
+            setPeriodEnd(reportData.periodEnd || '');
+            setStrengths(reportData.strengths.length > 0 ? reportData.strengths : ['']);
+            setImprovements(reportData.areasForImprovement.length > 0 ? reportData.areasForImprovement : ['']);
+            setCoachComments(reportData.coachComments || '');
+            
+            // Map similar professionals - add id property
+            setSimilarPlayers(
+              reportData.similarProfessionals.length > 0 
+                ? reportData.similarProfessionals.map((sp: any) => ({
+                    id: sp.id,
+                    name: sp.name || '',
+                    team: sp.team || '',
+                    position: sp.position || '',
+                    reason: sp.reason || ''
+                  }))
+                : []
+            );
+          } else {
+            setError('Failed to load report card');
+          }
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'An error occurred loading data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadData();
+  }, [playerId, reportId, isEditMode]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Player not found</h2>
+            <div className="space-y-4">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/4"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded animate-pulse w-1/2"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  if (error || !player) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4">Error</h2>
+            <p className="text-red-600 dark:text-red-400">{error || 'Player not found'}</p>
           </div>
         </main>
       </div>
@@ -80,26 +138,87 @@ export default function AddEditReportCardPage() {
     }
   }
   
-  if (teamId && ageGroupId) {
-    subtitle = `${player.firstName} ${player.lastName} • ${ageGroup?.name || 'Age Group'} • ${team?.name || 'Team'}`;
-  } else if (ageGroupId) {
-    subtitle = `${player.firstName} ${player.lastName} • ${ageGroup?.name || 'Age Group'}`;
+  // Build subtitle with team and age group if available
+  const ageGroupName = player.ageGroupName || player.teams?.[0]?.ageGroupName;
+  const teamName = player.teamName || player.teams?.[0]?.name;
+  
+  if (teamId && ageGroupName && teamName) {
+    subtitle = `${player.firstName} ${player.lastName} • ${ageGroupName} • ${teamName}`;
+  } else if (ageGroupName) {
+    subtitle = `${player.firstName} ${player.lastName} • ${ageGroupName}`;
   } else {
     subtitle = `${player.firstName} ${player.lastName}`;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Save report card logic
-    console.log('Saving report card...', {
-      periodStart,
-      periodEnd,
-      strengths: strengths.filter(s => s.trim()),
-      improvements: improvements.filter(i => i.trim()),
-      coachComments,
-      similarPlayers: similarPlayers.filter(p => p.name.trim() && p.reason.trim())
-    });
-    navigate(backLink);
+    setIsSaving(true);
+    setError(null);
+
+    try {
+      // Filter out empty values
+      const filteredStrengths = strengths.filter(s => s.trim());
+      const filteredImprovements = improvements.filter(i => i.trim());
+      const filteredSimilarPlayers = similarPlayers.filter(p => p.name.trim() && p.reason.trim());
+
+      if (isEditMode && reportId) {
+        // Update existing report
+        const updateRequest = {
+          periodStart: periodStart || undefined,
+          periodEnd: periodEnd || undefined,
+          overallRating: undefined,
+          strengths: filteredStrengths,
+          areasForImprovement: filteredImprovements,
+          coachComments,
+          developmentActions: [],
+          similarProfessionals: filteredSimilarPlayers.map(sp => ({
+            id: sp.id,
+            name: sp.name,
+            team: sp.team,
+            position: sp.position,
+            reason: sp.reason
+          }))
+        };
+        
+        const response = await apiClient.reports.update(reportId, updateRequest);
+        
+        if (response.success) {
+          navigate(backLink);
+        } else {
+          setError(response.error?.message || 'Failed to update report card');
+        }
+      } else {
+        // Create new report
+        const createRequest = {
+          playerId: playerId!,
+          periodStart: periodStart || undefined,
+          periodEnd: periodEnd || undefined,
+          overallRating: undefined,
+          strengths: filteredStrengths,
+          areasForImprovement: filteredImprovements,
+          coachComments,
+          developmentActions: [],
+          similarProfessionals: filteredSimilarPlayers.map(sp => ({
+            name: sp.name,
+            team: sp.team,
+            position: sp.position,
+            reason: sp.reason
+          }))
+        };
+        
+        const response = await apiClient.reports.create(createRequest);
+        
+        if (response.success) {
+          navigate(backLink);
+        } else {
+          setError(response.error?.message || 'Failed to create report card');
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred saving the report');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -157,6 +276,12 @@ export default function AddEditReportCardPage() {
           subtitle={subtitle}
           backLink={backLink}
         />
+
+        {error && (
+          <div className="card mb-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+            <p className="text-red-600 dark:text-red-400">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           {/* Report Period */}
@@ -382,7 +507,7 @@ export default function AddEditReportCardPage() {
           <div className="card">
             <FormActions
               onCancel={handleCancel}
-              saveLabel={isEditMode ? 'Save Changes' : 'Create Report Card'}
+              saveLabel={isSaving ? 'Saving...' : (isEditMode ? 'Save Changes' : 'Create Report Card')}
               showArchive={false}
             />
           </div>

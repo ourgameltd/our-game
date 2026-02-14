@@ -687,6 +687,99 @@ export interface ClubDevelopmentPlanDto {
   player: ClubDevelopmentPlanPlayerDto;
 }
 
+// Report Card DTOs
+export interface ReportCardDto {
+  id: string;
+  playerId: string;
+  playerName: string;
+  periodStart?: string;
+  periodEnd?: string;
+  overallRating?: number;
+  strengths: string[];
+  areasForImprovement: string[];
+  coachComments: string;
+  createdBy?: string;
+  createdByName: string;
+  createdAt: string;
+  developmentActions: DevelopmentActionDto[];
+  similarProfessionals: SimilarProfessionalDto[];
+}
+
+export interface DevelopmentActionDto {
+  id: string;
+  goal: string;
+  actions: string[];
+  startDate?: string;
+  targetDate?: string;
+  completed: boolean;
+  completedDate?: string;
+}
+
+export interface SimilarProfessionalDto {
+  id: string;
+  name: string;
+  team: string;
+  position: string;
+  reason: string;
+}
+
+export interface CreateReportCardRequest {
+  playerId: string;
+  periodStart?: string;
+  periodEnd?: string;
+  overallRating?: number;
+  strengths: string[];
+  areasForImprovement: string[];
+  coachComments: string;
+  developmentActions: CreateDevelopmentActionRequest[];
+  similarProfessionals: CreateSimilarProfessionalRequest[];
+}
+
+export interface CreateDevelopmentActionRequest {
+  goal: string;
+  actions: string[];
+  startDate?: string;
+  targetDate?: string;
+  completed: boolean;
+  completedDate?: string;
+}
+
+export interface CreateSimilarProfessionalRequest {
+  name: string;
+  team: string;
+  position: string;
+  reason: string;
+}
+
+export interface UpdateReportCardRequest {
+  periodStart?: string;
+  periodEnd?: string;
+  overallRating?: number;
+  strengths: string[];
+  areasForImprovement: string[];
+  coachComments: string;
+  developmentActions: UpdateDevelopmentActionRequest[];
+  similarProfessionals: UpdateSimilarProfessionalRequest[];
+}
+
+export interface UpdateDevelopmentActionRequest {
+  id?: string;
+  goal: string;
+  actions: string[];
+  startDate?: string;
+  targetDate?: string;
+  completed: boolean;
+  completedDate?: string;
+}
+
+export interface UpdateSimilarProfessionalRequest {
+  id?: string;
+  name: string;
+  team: string;
+  position: string;
+  reason: string;
+}
+
 // Tactics DTOs
 export interface TacticScopeDto {
   type: string;
@@ -1756,6 +1849,46 @@ export const apiClient = {
       try {
         const response = await axiosInstance.put<ApiResponse<MatchDetailDto>>(
           `/v1/matches/${matchId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  },
+
+  reports: {
+    /**
+     * Get a report card by ID
+     */
+    getById: async (reportId: string): Promise<ApiResponse<ReportCardDto>> => {
+      const response = await axiosInstance.get<ApiResponse<ReportCardDto>>(`/v1/reports/${reportId}`);
+      return response.data;
+    },
+
+    /**
+     * Create a new report card
+     */
+    create: async (request: CreateReportCardRequest): Promise<ApiResponse<ReportCardDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<ReportCardDto>>(
+          '/v1/reports',
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing report card
+     */
+    update: async (reportId: string, request: UpdateReportCardRequest): Promise<ApiResponse<ReportCardDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<ReportCardDto>>(
+          `/v1/reports/${reportId}`,
           request
         );
         return response.data;
