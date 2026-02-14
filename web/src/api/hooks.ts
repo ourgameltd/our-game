@@ -23,7 +23,6 @@ import {
   ClubPlayerDto,
   ClubTeamDto,
   ClubCoachDto,
-  ClubTrainingSessionsDto,
   ClubTrainingSessionDto,
   ClubMatchesDto,
   ClubKitDto,
@@ -365,7 +364,7 @@ export function useClubTrainingSessions(
           }
         };
       }
-      return response;
+      return { success: false, error: { message: response.error?.message } };
     },
     [clubId, options?.ageGroupId, options?.teamId, options?.status]
   );
@@ -939,7 +938,7 @@ export function useTrainingSession(sessionId: string | undefined): UseApiState<T
           data: mapTrainingSessionDetailToUi(response.data)
         };
       }
-      return response;
+      return { success: false, error: { message: response.error?.message } };
     },
     [sessionId]
   );
