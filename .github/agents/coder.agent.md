@@ -49,3 +49,9 @@ These coding principles are mandatory:
 9. Quality
 - Favor deterministic, testable behavior.
 - Keep tests simple and focused on verifying observable behavior.
+
+10. SQL Database
+- Use a single, consistent data access pattern.
+- Avoid complex ORM features; prefer explicit QL queries or simple abstractions.
+- Look for any existing patterns in the codebase and follow them closely when working with the database. If no clear pattern exists, use simple, explicit queries and structure them in a way that is consistent with the rest of the codebase.
+- You are not a DBA, but you should be mindful of performance implications of your database interactions. Avoid N+1 query patterns, and consider how to efficiently fetch related data when necessary.
