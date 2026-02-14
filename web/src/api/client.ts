@@ -901,6 +901,23 @@ export interface UpdatePlayerRequest {
   isArchived: boolean;
 }
 
+export interface UpdateClubRequest {
+  name: string;
+  shortName: string;
+  logo: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  city: string;
+  country: string;
+  venue: string;
+  address: string;
+  founded: string;
+  history: string;
+  ethos: string;
+  principles: string[];
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -1105,6 +1122,21 @@ export const apiClient = {
     getDevelopmentPlans: async (clubId: string): Promise<ApiResponse<ClubDevelopmentPlanDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<ClubDevelopmentPlanDto[]>>(`/v1/clubs/${clubId}/development-plans`);
       return response.data;
+    },
+
+    /**
+     * Update a club
+     */
+    updateClub: async (clubId: string, request: UpdateClubRequest): Promise<ApiResponse<ClubDetailDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<ClubDetailDto>>(
+          `/v1/clubs/${clubId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 

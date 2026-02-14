@@ -36,6 +36,7 @@ import {
   DevelopmentPlanDto,
   UpdateAgeGroupRequest,
   UpdatePlayerRequest,
+  UpdateClubRequest,
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -586,4 +587,43 @@ export function useUpdateAgeGroup(ageGroupId: string): UseMutationState<AgeGroup
   }, [ageGroupId]);
 
   return { updateAgeGroup, isSubmitting, data, error };
+}
+
+/**
+ * Hook to update a club.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateClub(clubId: string): UseMutationState<ClubDetailDto> & {
+  updateClub: (request: UpdateClubRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<ClubDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updateClub = useCallback(async (request: UpdateClubRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<ClubDetailDto> = await apiClient.clubs.updateClub(clubId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update club',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId]);
+
+  return { updateClub, isSubmitting, data, error };
 }

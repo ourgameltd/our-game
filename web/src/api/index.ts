@@ -81,6 +81,7 @@ export type {
   PlayerDto,
   PlayerTeamMinimalDto,
   UpdatePlayerRequest,
+  UpdateClubRequest,
 } from './client';
 
 // React hooks
@@ -110,6 +111,7 @@ export {
   useDevelopmentPlan,
   useUpdateAgeGroup,
   useUpdatePlayer,
+  useUpdateClub,
 } from './hooks';
 export type { ApiError, UseMutationState } from './hooks';
 
