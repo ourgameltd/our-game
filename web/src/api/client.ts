@@ -752,6 +752,42 @@ export interface DrillTemplatesByScopeResponseDto {
   availableAttributes: string[];
 }
 
+// Age Group Development Plan DTOs
+export interface AgeGroupDevelopmentPlanPlayerDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  photo?: string;
+  preferredPositions: string[];
+}
+
+export interface AgeGroupDevelopmentPlanGoalSummaryDto {
+  id: string;
+  goal: string;
+  progress: number;
+  completed: boolean;
+  targetDate?: string;
+  completedDate?: string;
+}
+
+export interface AgeGroupDevelopmentPlanPeriodDto {
+  start?: string;
+  end?: string;
+}
+
+export interface AgeGroupDevelopmentPlanSummaryDto {
+  id: string;
+  playerId: string;
+  title: string;
+  status: 'active' | 'completed' | 'archived';
+  createdAt: string;
+  updatedAt?: string;
+  player: AgeGroupDevelopmentPlanPlayerDto;
+  period: AgeGroupDevelopmentPlanPeriodDto;
+  goals: AgeGroupDevelopmentPlanGoalSummaryDto[];
+}
+
 // Development Plan DTOs
 export interface DevelopmentGoalDto {
   id: string;
@@ -1080,6 +1116,14 @@ export const apiClient = {
      */
     getReportCards: async (ageGroupId: string): Promise<ApiResponse<ClubReportCardDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<ClubReportCardDto[]>>(`/v1/age-groups/${ageGroupId}/report-cards`);
+      return response.data;
+    },
+
+    /**
+     * Get development plans for a specific age group
+     */
+    getDevelopmentPlans: async (ageGroupId: string): Promise<ApiResponse<AgeGroupDevelopmentPlanSummaryDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<AgeGroupDevelopmentPlanSummaryDto[]>>(`/v1/age-groups/${ageGroupId}/development-plans`);
       return response.data;
     },
 

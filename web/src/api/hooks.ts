@@ -27,11 +27,13 @@ import {
   ClubKitDto,
   ClubReportCardDto,
   ClubDevelopmentPlanDto,
+  AgeGroupDevelopmentPlanSummaryDto,
   TacticsByScopeResponseDto,
   DrillsByScopeResponseDto,
   DrillTemplatesByScopeResponseDto,
   PlayerDto,
-  DevelopmentPlanDto
+  DevelopmentPlanDto,
+  AgeGroupDevelopmentPlanSummaryDto
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -218,6 +220,16 @@ export function useAgeGroupPlayers(
 export function useAgeGroupReportCards(ageGroupId: string | undefined): UseApiState<ClubReportCardDto[]> {
   return useApiCall<ClubReportCardDto[]>(
     () => apiClient.ageGroups.getReportCards(ageGroupId!),
+    [ageGroupId]
+  );
+}
+
+/**
+ * Hook to fetch development plans for an age group
+ */
+export function useAgeGroupDevelopmentPlans(ageGroupId: string | undefined): UseApiState<AgeGroupDevelopmentPlanSummaryDto[]> {
+  return useApiCall<AgeGroupDevelopmentPlanSummaryDto[]>(
+    () => apiClient.ageGroups.getDevelopmentPlans(ageGroupId!),
     [ageGroupId]
   );
 }
