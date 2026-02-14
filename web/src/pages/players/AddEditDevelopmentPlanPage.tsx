@@ -1,65 +1,223 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { getPlayerById } from '@data/players';
-import { getDevelopmentPlansByPlayerId } from '@data/developmentPlans';
-import { getAgeGroupById } from '@data/ageGroups';
-import { getTeamById } from '@data/teams';
+import { useState, useEffect } from 'react';
+import { apiClient } from '@/api';
+import type { PlayerDto, DevelopmentPlanDto, CreateDevelopmentPlanRequest, UpdateDevelopmentPlanRequest } from '@/api';
 import { developmentPlanStatuses, type DevelopmentPlanStatus } from '@data/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 
 interface Goal {
+  id?: string;
   goal: string;
   actions: string[];
   startDate: string;
   targetDate: string;
   progress: number;
+  completed: boolean;
+  completedDate?: string;
+}
+
+/**
+ * Format a date string (YYYY-MM-DD or ISO) for API submission.
+ */
+function formatDateForApi(dateStr: string): string {
+  if (!dateStr) return '';
+  return dateStr.split('T')[0];
+}
+
+/**
+ * Parse an ISO date string from the API into YYYY-MM-DD for form inputs.
+ */
+function parseApiDate(dateStr: string | undefined): string {
+  if (!dateStr) return '';
+  return dateStr.split('T')[0];
 }
 
 export default function AddEditDevelopmentPlanPage() {
   const { clubId, playerId, ageGroupId, teamId, planId } = useParams();
   const navigate = useNavigate();
-  
-  const player = getPlayerById(playerId!);
-  const plans = playerId ? getDevelopmentPlansByPlayerId(playerId) : [];
-  const plan = planId ? plans.find(p => p.id === planId) : null;
-  const ageGroup = ageGroupId ? getAgeGroupById(ageGroupId) : null;
-  const team = teamId ? getTeamById(teamId) : null;
-  
-  const isEditMode = !!planId;
-  
+
+  // Player state
+  const [player, setPlayer] = useState<PlayerDto | null>(null);
+  const [playerLoading, setPlayerLoading] = useState(true);
+  const [playerError, setPlayerError] = useState<string | null>(null);
+
+  // Plan state (edit mode)
+  const [plan, setPlan] = useState<DevelopmentPlanDto | null>(null);
+  const [planLoading, setPlanLoading] = useState(false);
+  const [planError, setPlanError] = useState<string | null>(null);
+
+  // Form initialization tracking
+  const [isFormInitialized, setIsFormInitialized] = useState(false);
+
+  const isEditMode = Boolean(planId);
+
   // Form state
-  const [title, setTitle] = useState(plan?.title || '');
-  const [description, setDescription] = useState(plan?.description || '');
-  const [periodStart, setPeriodStart] = useState(
-    plan?.period.start.toISOString().split('T')[0] || ''
-  );
-  const [periodEnd, setPeriodEnd] = useState(
-    plan?.period.end.toISOString().split('T')[0] || ''
-  );
-  const [status, setStatus] = useState<DevelopmentPlanStatus>(
-    plan?.status || 'active'
-  );
-  const [goals, setGoals] = useState<Goal[]>(
-    plan?.goals.map(g => ({
-      goal: g.goal,
-      actions: g.actions,
-      startDate: g.startDate.toISOString().split('T')[0],
-      targetDate: g.targetDate.toISOString().split('T')[0],
-      progress: g.progress
-    })) || [{ goal: '', actions: [''], startDate: '', targetDate: '', progress: 0 }]
-  );
-  const [coachNotes, setCoachNotes] = useState(plan?.coachNotes || '');
-  
-  if (!player) {
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [periodStart, setPeriodStart] = useState('');
+  const [periodEnd, setPeriodEnd] = useState('');
+  const [status, setStatus] = useState<DevelopmentPlanStatus>('active');
+  const [goals, setGoals] = useState<Goal[]>([
+    { goal: '', actions: [''], startDate: '', targetDate: '', progress: 0, completed: false },
+  ]);
+  const [coachNotes, setCoachNotes] = useState('');
+
+  // Submission state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
+
+  // Fetch player and plan data
+  useEffect(() => {
+    if (!playerId) {
+      setPlayerError('Player ID is required');
+      setPlayerLoading(false);
+      return;
+    }
+
+    setPlayerLoading(true);
+    apiClient.players.getById(playerId)
+      .then((response) => {
+        if (response.success && response.data) {
+          setPlayer(response.data);
+          setPlayerError(null);
+        } else {
+          setPlayerError(response.error?.message || 'Failed to load player');
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch player:', err);
+        setPlayerError('Failed to load player from API');
+      })
+      .finally(() => setPlayerLoading(false));
+
+    if (planId) {
+      setPlanLoading(true);
+      apiClient.developmentPlans.getById(planId)
+        .then((response) => {
+          if (response.success && response.data) {
+            setPlan(response.data);
+            setPlanError(null);
+          } else {
+            setPlanError(response.error?.message || 'Failed to load development plan');
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch development plan:', err);
+          setPlanError('Failed to load development plan from API');
+        })
+        .finally(() => setPlanLoading(false));
+    }
+  }, [playerId, planId]);
+
+  // Hydrate form in edit mode (one-time initialization)
+  useEffect(() => {
+    if (isEditMode && plan && !isFormInitialized) {
+      setTitle(plan.title || '');
+      setDescription(plan.description || '');
+      setPeriodStart(parseApiDate(plan.periodStart));
+      setPeriodEnd(parseApiDate(plan.periodEnd));
+      setStatus(plan.status || 'active');
+      setCoachNotes(plan.coachNotes || '');
+      setGoals(
+        plan.goals.length > 0
+          ? plan.goals.map((g) => ({
+              id: g.id,
+              goal: g.goal,
+              actions: g.actions.length > 0 ? g.actions : [''],
+              startDate: parseApiDate(g.startDate),
+              targetDate: parseApiDate(g.targetDate),
+              progress: g.progress,
+              completed: g.completed,
+              completedDate: g.completedDate ? parseApiDate(g.completedDate) : undefined,
+            }))
+          : [{ goal: '', actions: [''], startDate: '', targetDate: '', progress: 0, completed: false }]
+      );
+      setIsFormInitialized(true);
+    }
+  }, [isEditMode, plan, isFormInitialized]);
+
+  // Show skeleton while loading
+  if (playerLoading || (isEditMode && planLoading)) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
-          <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Player not found</h2>
+          <div className="animate-pulse">
+            <div className="h-7 w-56 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+            <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-6" />
+            {/* Plan Details skeleton */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-4">
+              <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+              <div className="space-y-4">
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="h-20 bg-gray-200 dark:bg-gray-700 rounded" />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+              </div>
+            </div>
+            {/* Goals skeleton */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-4">
+              <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+              <div className="space-y-4">
+                <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+              </div>
+            </div>
+            {/* Coach Notes skeleton */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-4">
+              <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+              <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded" />
+            </div>
           </div>
         </main>
+      </div>
+    );
+  }
+
+  // Player error handling
+  if (playerError || (!playerLoading && !player)) {
+    return (
+      <div className="mx-auto px-4 py-8">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">
+            Player Not Found
+          </h2>
+          <p className="text-red-700 dark:text-red-400 mb-4">
+            {playerError || 'The requested player could not be found.'}
+          </p>
+          <button
+            onClick={() => navigate(Routes.clubPlayers(clubId!))}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Back to Players
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Plan error handling (edit mode only)
+  if (isEditMode && (planError || (!planLoading && !plan))) {
+    return (
+      <div className="mx-auto px-4 py-8">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">
+            Development Plan Not Found
+          </h2>
+          <p className="text-red-700 dark:text-red-400 mb-4">
+            {planError || 'The requested development plan could not be found.'}
+          </p>
+          <button
+            onClick={() => navigate(Routes.clubPlayers(clubId!))}
+            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+          >
+            Back to Players
+          </button>
+        </div>
       </div>
     );
   }
@@ -68,7 +226,6 @@ export default function AddEditDevelopmentPlanPage() {
   let backLink: string;
   let subtitle: string;
   if (isEditMode) {
-    // Go back to development plan detail
     if (teamId && ageGroupId) {
       backLink = Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId, teamId, playerId!);
     } else if (ageGroupId) {
@@ -77,7 +234,6 @@ export default function AddEditDevelopmentPlanPage() {
       backLink = Routes.clubPlayers(clubId!);
     }
   } else {
-    // Go back to development plans list
     if (teamId && ageGroupId) {
       backLink = Routes.teamPlayerDevelopmentPlans(clubId!, ageGroupId, teamId, playerId!);
     } else if (ageGroupId) {
@@ -86,28 +242,82 @@ export default function AddEditDevelopmentPlanPage() {
       backLink = Routes.clubPlayers(clubId!);
     }
   }
-  
+
   if (teamId && ageGroupId) {
-    subtitle = `${player.firstName} ${player.lastName} • ${ageGroup?.name || 'Age Group'} • ${team?.name || 'Team'}`;
+    subtitle = `${player!.firstName} ${player!.lastName} • ${player!.ageGroupName || 'Age Group'} • ${player!.teamName || 'Team'}`;
   } else if (ageGroupId) {
-    subtitle = `${player.firstName} ${player.lastName} • ${ageGroup?.name || 'Age Group'}`;
+    subtitle = `${player!.firstName} ${player!.lastName} • ${player!.ageGroupName || 'Age Group'}`;
   } else {
-    subtitle = `${player.firstName} ${player.lastName}`;
+    subtitle = `${player!.firstName} ${player!.lastName}`;
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Save development plan logic
-    console.log('Saving development plan...', {
-      title,
-      description,
-      periodStart,
-      periodEnd,
-      status,
-      goals: goals.filter(g => g.goal.trim() && g.actions.some(a => a.trim())),
-      coachNotes
-    });
-    navigate(backLink);
+    setIsSubmitting(true);
+    setSubmitError(null);
+    setValidationErrors({});
+
+    try {
+      const filteredGoals = goals
+        .filter((g) => g.goal.trim())
+        .map((g) => ({
+          goal: g.goal,
+          actions: g.actions.filter((a) => a.trim()),
+          startDate: formatDateForApi(g.startDate),
+          targetDate: formatDateForApi(g.targetDate),
+          progress: g.progress,
+          completed: g.completed,
+          completedDate: g.completedDate ? formatDateForApi(g.completedDate) : undefined,
+        }));
+
+      let response;
+
+      if (isEditMode) {
+        const request: UpdateDevelopmentPlanRequest = {
+          title,
+          description: description || undefined,
+          periodStart: formatDateForApi(periodStart),
+          periodEnd: formatDateForApi(periodEnd),
+          status,
+          coachNotes: coachNotes || undefined,
+          goals: filteredGoals,
+        };
+        response = await apiClient.developmentPlans.update(planId!, request);
+      } else {
+        const request: CreateDevelopmentPlanRequest = {
+          playerId: playerId!,
+          title,
+          description: description || undefined,
+          periodStart: formatDateForApi(periodStart),
+          periodEnd: formatDateForApi(periodEnd),
+          status,
+          coachNotes: coachNotes || undefined,
+          goals: filteredGoals,
+        };
+        response = await apiClient.developmentPlans.create(request);
+      }
+
+      if (response.success && response.data) {
+        navigate(backLink);
+      } else {
+        const errorMessage = response.error?.message || 'Failed to save development plan';
+        setSubmitError(errorMessage);
+
+        if (response.error?.validationErrors) {
+          const fieldErrors: Record<string, string> = {};
+          Object.entries(response.error.validationErrors).forEach(([field, messages]) => {
+            const fieldName = field.charAt(0).toLowerCase() + field.slice(1);
+            fieldErrors[fieldName] = messages[0];
+          });
+          setValidationErrors(fieldErrors);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to save development plan:', err);
+      setSubmitError('An unexpected error occurred while saving the development plan');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCancel = () => {
@@ -115,14 +325,14 @@ export default function AddEditDevelopmentPlanPage() {
   };
 
   const addGoal = () => {
-    setGoals([...goals, { goal: '', actions: [''], startDate: '', targetDate: '', progress: 0 }]);
+    setGoals([...goals, { goal: '', actions: [''], startDate: '', targetDate: '', progress: 0, completed: false }]);
   };
 
   const removeGoal = (index: number) => {
     setGoals(goals.filter((_, i) => i !== index));
   };
 
-  const updateGoal = (index: number, field: keyof Goal, value: string | number | string[]) => {
+  const updateGoal = (index: number, field: keyof Goal, value: string | number | boolean | string[]) => {
     const updated = [...goals];
     updated[index] = { ...updated[index], [field]: value };
     setGoals(updated);
@@ -157,6 +367,13 @@ export default function AddEditDevelopmentPlanPage() {
         />
 
         <form onSubmit={handleSubmit}>
+          {/* Submission Error Display */}
+          {submitError && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
+              <p className="text-sm text-red-800 dark:text-red-300">{submitError}</p>
+            </div>
+          )}
+
           {/* Plan Details */}
           <div className="card mb-4">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Plan Details</h2>
@@ -170,10 +387,16 @@ export default function AddEditDevelopmentPlanPage() {
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
+                  disabled={isSubmitting}
                   placeholder="e.g., Complete Forward Development - Q1 2025"
                   required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                    validationErrors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
+                {validationErrors.title && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.title}</p>
+                )}
               </div>
               
               <div>
@@ -184,11 +407,17 @@ export default function AddEditDevelopmentPlanPage() {
                   id="description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
+                  disabled={isSubmitting}
                   placeholder="Provide an overview of what this development plan aims to achieve..."
                   rows={3}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none ${
+                    validationErrors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                  } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
+                {validationErrors.description && (
+                  <p className="mt-1 text-sm text-red-500">{validationErrors.description}</p>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -201,9 +430,15 @@ export default function AddEditDevelopmentPlanPage() {
                     id="periodStart"
                     value={periodStart}
                     onChange={(e) => setPeriodStart(e.target.value)}
+                    disabled={isSubmitting}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                      validationErrors.periodStart ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
+                  {validationErrors.periodStart && (
+                    <p className="mt-1 text-sm text-red-500">{validationErrors.periodStart}</p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="periodEnd" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -214,9 +449,15 @@ export default function AddEditDevelopmentPlanPage() {
                     id="periodEnd"
                     value={periodEnd}
                     onChange={(e) => setPeriodEnd(e.target.value)}
+                    disabled={isSubmitting}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                      validationErrors.periodEnd ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                    } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
+                  {validationErrors.periodEnd && (
+                    <p className="mt-1 text-sm text-red-500">{validationErrors.periodEnd}</p>
+                  )}
                 </div>
                 <div>
                   <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -226,7 +467,8 @@ export default function AddEditDevelopmentPlanPage() {
                     id="status"
                     value={status}
                     onChange={(e) => setStatus(e.target.value as DevelopmentPlanStatus)}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    disabled={isSubmitting}
+                    className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {developmentPlanStatuses.map(s => (
                       <option key={s.value} value={s.value}>{s.label}</option>
@@ -247,6 +489,7 @@ export default function AddEditDevelopmentPlanPage() {
               <button
                 type="button"
                 onClick={addGoal}
+                disabled={isSubmitting}
                 className="px-3 py-1 text-sm bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
               >
                 + Add Goal
@@ -265,6 +508,7 @@ export default function AddEditDevelopmentPlanPage() {
                       <button
                         type="button"
                         onClick={() => removeGoal(goalIndex)}
+                        disabled={isSubmitting}
                         className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                       >
                         ✕
@@ -281,9 +525,10 @@ export default function AddEditDevelopmentPlanPage() {
                         type="text"
                         value={goal.goal}
                         onChange={(e) => updateGoal(goalIndex, 'goal', e.target.value)}
+                        disabled={isSubmitting}
                         placeholder="e.g., Improve aerial duel success rate by 20%"
                         required
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                       />
                     </div>
 
@@ -296,8 +541,9 @@ export default function AddEditDevelopmentPlanPage() {
                           type="date"
                           value={goal.startDate}
                           onChange={(e) => updateGoal(goalIndex, 'startDate', e.target.value)}
+                          disabled={isSubmitting}
                           required
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                       </div>
                       <div>
@@ -308,8 +554,9 @@ export default function AddEditDevelopmentPlanPage() {
                           type="date"
                           value={goal.targetDate}
                           onChange={(e) => updateGoal(goalIndex, 'targetDate', e.target.value)}
+                          disabled={isSubmitting}
                           required
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                       </div>
                       <div>
@@ -322,7 +569,8 @@ export default function AddEditDevelopmentPlanPage() {
                           max="100"
                           value={goal.progress}
                           onChange={(e) => updateGoal(goalIndex, 'progress', parseInt(e.target.value) || 0)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          disabled={isSubmitting}
+                          className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                       </div>
                     </div>
@@ -336,6 +584,7 @@ export default function AddEditDevelopmentPlanPage() {
                         <button
                           type="button"
                           onClick={() => addAction(goalIndex)}
+                          disabled={isSubmitting}
                           className="px-2 py-1 text-xs bg-purple-600 text-white rounded hover:bg-purple-700 transition-colors"
                         >
                           + Add Action
@@ -348,14 +597,16 @@ export default function AddEditDevelopmentPlanPage() {
                               type="text"
                               value={action}
                               onChange={(e) => updateAction(goalIndex, actionIndex, e.target.value)}
+                              disabled={isSubmitting}
                               placeholder="Enter a specific action or drill..."
                               required
-                              className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                              className={`flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                             />
                             {goal.actions.length > 1 && (
                               <button
                                 type="button"
                                 onClick={() => removeAction(goalIndex, actionIndex)}
+                                disabled={isSubmitting}
                                 className="px-2 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                               >
                                 ✕
@@ -380,9 +631,10 @@ export default function AddEditDevelopmentPlanPage() {
             <textarea
               value={coachNotes}
               onChange={(e) => setCoachNotes(e.target.value)}
+              disabled={isSubmitting}
               placeholder="Add any additional notes or observations about the player's progress..."
               rows={4}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
 
@@ -392,6 +644,7 @@ export default function AddEditDevelopmentPlanPage() {
               onCancel={handleCancel}
               saveLabel={isEditMode ? 'Save Changes' : 'Create Development Plan'}
               showArchive={false}
+              saveDisabled={isSubmitting}
             />
           </div>
         </form>

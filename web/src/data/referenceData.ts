@@ -388,27 +388,20 @@ export function getDominantCategory(attributeKeys: string[]): 'technical' | 'tac
 }
 
 // ============================================================================
-// Development Plan & Training Session Statuses
+// Development Plan (re-exported from dedicated module)
 // ============================================================================
+export {
+  developmentPlanStatuses,
+  type DevelopmentPlanStatus,
+  developmentPlanStatusDisplay,
+  getDevelopmentPlanStatusLabel,
+  developmentPlanSortOptions,
+  type DevelopmentPlanSortOption,
+} from './developmentPlanConstants';
 
-// Development plan status
-export const developmentPlanStatuses = [
-  { value: 'active', label: 'Active' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'archived', label: 'Archived' },
-] as const;
-
-export type DevelopmentPlanStatus = typeof developmentPlanStatuses[number]['value'];
-
-// Development plan status display mapping
-export const developmentPlanStatusDisplay: Record<string, string> = Object.fromEntries(
-  developmentPlanStatuses.map(s => [s.value, s.label])
-);
-
-// Get development plan status label
-export function getDevelopmentPlanStatusLabel(status: string): string {
-  return developmentPlanStatusDisplay[status] ?? status;
-}
+// ============================================================================
+// Training Session Statuses
+// ============================================================================
 
 // Training session status
 export const trainingSessionStatuses = [
@@ -532,13 +525,6 @@ export function getDrillCategoryColors(category: string): { bgColor: string; tex
 // ============================================================================
 // Sort Options (for lists)
 // ============================================================================
-
-export const developmentPlanSortOptions = [
-  { value: 'date', label: 'Most Recent' },
-  { value: 'progress', label: 'Highest Progress' },
-] as const;
-
-export type DevelopmentPlanSortOption = typeof developmentPlanSortOptions[number]['value'];
 
 export const reportCardSortOptions = [
   { value: 'date', label: 'Most Recent' },

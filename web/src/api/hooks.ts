@@ -28,7 +28,9 @@ import {
   ClubReportCardDto,
   TacticsByScopeResponseDto,
   DrillsByScopeResponseDto,
-  DrillTemplatesByScopeResponseDto
+  DrillTemplatesByScopeResponseDto,
+  PlayerDto,
+  DevelopmentPlanDto
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -434,5 +436,33 @@ export function useDrillTemplatesByScope(
       return apiClient.drillTemplates.getByClub(clubId, options);
     },
     [clubId, ageGroupId, teamId, options?.category, options?.search, options?.attributes?.join(',')]
+  );
+}
+
+// ============================================================
+// Player Hooks
+// ============================================================
+
+/**
+ * Hook to fetch a player by ID
+ */
+export function usePlayer(playerId: string | undefined): UseApiState<PlayerDto> {
+  return useApiCall<PlayerDto>(
+    () => apiClient.players.getById(playerId!),
+    [playerId]
+  );
+}
+
+// ============================================================
+// Development Plan Hooks
+// ============================================================
+
+/**
+ * Hook to fetch a development plan by ID
+ */
+export function useDevelopmentPlan(planId: string | undefined): UseApiState<DevelopmentPlanDto> {
+  return useApiCall<DevelopmentPlanDto>(
+    () => apiClient.developmentPlans.getById(planId!),
+    [planId]
   );
 }

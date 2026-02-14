@@ -712,6 +712,88 @@ export interface DrillTemplatesByScopeResponseDto {
   availableAttributes: string[];
 }
 
+// Development Plan DTOs
+export interface DevelopmentGoalDto {
+  id: string;
+  goal: string;
+  actions: string[];
+  startDate: string;
+  targetDate: string;
+  progress: number;
+  completed: boolean;
+  completedDate?: string;
+}
+
+export interface DevelopmentPlanDto {
+  id: string;
+  playerId: string;
+  title: string;
+  description?: string;
+  periodStart: string;
+  periodEnd: string;
+  status: 'active' | 'completed' | 'archived';
+  coachNotes?: string;
+  goals: DevelopmentGoalDto[];
+}
+
+export interface CreateDevelopmentGoalRequest {
+  goal: string;
+  actions: string[];
+  startDate: string;
+  targetDate: string;
+  progress: number;
+  completed: boolean;
+  completedDate?: string;
+}
+
+export interface CreateDevelopmentPlanRequest {
+  playerId: string;
+  title: string;
+  description?: string;
+  periodStart: string;
+  periodEnd: string;
+  status: string;
+  coachNotes?: string;
+  goals: CreateDevelopmentGoalRequest[];
+}
+
+export interface UpdateDevelopmentGoalRequest {
+  goal: string;
+  actions: string[];
+  startDate: string;
+  targetDate: string;
+  progress: number;
+  completed: boolean;
+  completedDate?: string;
+}
+
+export interface UpdateDevelopmentPlanRequest {
+  title: string;
+  description?: string;
+  periodStart: string;
+  periodEnd: string;
+  status: string;
+  coachNotes?: string;
+  goals: UpdateDevelopmentGoalRequest[];
+}
+
+// Player DTOs
+export interface PlayerDto {
+  id: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  photoUrl?: string;
+  dateOfBirth: string;
+  clubId?: string;
+  clubName?: string;
+  ageGroupId?: string;
+  ageGroupName?: string;
+  teamId?: string;
+  teamName?: string;
+  preferredPosition?: string;
+}
+
 /**
  * Get the API base URL based on the environment
  * In both development and production, the API is available at /api
@@ -1109,6 +1191,56 @@ export const apiClient = {
       if (options?.attributes && options.attributes.length > 0) params.append('attributes', options.attributes.join(','));
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillTemplatesByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates${queryString}`);
+      return response.data;
+    },
+  },
+
+  developmentPlans: {
+    /**
+     * Get a development plan by ID
+     */
+    getById: async (planId: string): Promise<ApiResponse<DevelopmentPlanDto>> => {
+      const response = await axiosInstance.get<ApiResponse<DevelopmentPlanDto>>(`/v1/development-plans/${planId}`);
+      return response.data;
+    },
+
+    /**
+     * Create a new development plan
+     */
+    create: async (request: CreateDevelopmentPlanRequest): Promise<ApiResponse<DevelopmentPlanDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<DevelopmentPlanDto>>(
+          '/v1/development-plans',
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing development plan
+     */
+    update: async (planId: string, request: UpdateDevelopmentPlanRequest): Promise<ApiResponse<DevelopmentPlanDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<DevelopmentPlanDto>>(
+          `/v1/development-plans/${planId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  },
+
+  players: {
+    /**
+     * Get a player by ID
+     */
+    getById: async (playerId: string): Promise<ApiResponse<PlayerDto>> => {
+      const response = await axiosInstance.get<ApiResponse<PlayerDto>>(`/v1/players/${playerId}`);
       return response.data;
     },
   },

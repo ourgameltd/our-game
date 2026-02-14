@@ -63,6 +63,13 @@ export type {
   DrillsByScopeResponseDto,
   DrillTemplateListDto,
   DrillTemplatesByScopeResponseDto,
+  DevelopmentPlanDto,
+  DevelopmentGoalDto,
+  CreateDevelopmentPlanRequest,
+  CreateDevelopmentGoalRequest,
+  UpdateDevelopmentPlanRequest,
+  UpdateDevelopmentGoalRequest,
+  PlayerDto,
 } from './client';
 
 // React hooks
@@ -86,6 +93,8 @@ export {
   useTacticsByScope,
   useDrillsByScope,
   useDrillTemplatesByScope,
+  usePlayer,
+  useDevelopmentPlan,
 } from './hooks';
 
 // User API
