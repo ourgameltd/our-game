@@ -34,6 +34,9 @@ import {
   TacticsByScopeResponseDto,
   DrillsByScopeResponseDto,
   DrillTemplatesByScopeResponseDto,
+  DrillDetailDto,
+  CreateDrillRequest,
+  UpdateDrillRequest,
   PlayerDto,
   CoachDetailDto,
   DevelopmentPlanDto,
@@ -519,6 +522,100 @@ export function useDrillsByScope(
     },
     [clubId, ageGroupId, teamId, options?.category, options?.search]
   );
+}
+
+/**
+ * Hook to fetch a drill by ID with full detail.
+ * Only fetches if drillId is defined.
+ */
+export function useDrill(drillId: string | undefined): UseApiState<DrillDetailDto> {
+  return useApiCall<DrillDetailDto>(
+    () => {
+      if (!drillId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.drills.getById(drillId);
+    },
+    [drillId]
+  );
+}
+
+/**
+ * Hook to create a drill.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useCreateDrill(): UseMutationState<DrillDetailDto> & {
+  mutate: (request: CreateDrillRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<DrillDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const mutate = useCallback(async (request: CreateDrillRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<DrillDetailDto> = await apiClient.drills.create(request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create drill',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return { mutate, isSubmitting: isSubmitting, data, error };
+}
+
+/**
+ * Hook to update a drill.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateDrill(drillId: string): UseMutationState<DrillDetailDto> & {
+  mutate: (request: UpdateDrillRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<DrillDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const mutate = useCallback(async (request: UpdateDrillRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<DrillDetailDto> = await apiClient.drills.update(drillId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update drill',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [drillId]);
+
+  return { mutate, isSubmitting: isSubmitting, data, error };
 }
 
 // ============================================================

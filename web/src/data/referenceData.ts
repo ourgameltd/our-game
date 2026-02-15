@@ -17,6 +17,18 @@ export type { TeamLevel, AgeGroupLevel, SquadSizeValue } from '../constants/refe
 export { coachRoles } from '../constants/referenceData';
 export type { CoachRoleValue } from '../constants/referenceData';
 
+// Player attributes and link types - imported from constants for local use
+// Note: These are now sourced from constants for better reusability across drill and training features
+import { 
+  playerAttributes, 
+  getAttributeCategory, 
+  linkTypes 
+} from '../constants/referenceData';
+
+// Re-export for backward compatibility
+export { playerAttributes, getAttributeCategory, linkTypes };
+export type { LinkTypeValue } from '../constants/referenceData';
+
 // Kit types
 export const kitTypes = [
   { value: 'home', label: 'Home' },
@@ -93,50 +105,7 @@ export const attributeCategories = [
 
 export type AttributeCategoryValue = typeof attributeCategories[number]['value'];
 
-// Player attributes definition
-export const playerAttributes = {
-  skills: [
-    { key: 'ballControl', label: 'Ball Control' },
-    { key: 'crossing', label: 'Crossing' },
-    { key: 'weakFoot', label: 'Weak Foot' },
-    { key: 'dribbling', label: 'Dribbling' },
-    { key: 'finishing', label: 'Finishing' },
-    { key: 'freeKick', label: 'Free Kick' },
-    { key: 'heading', label: 'Heading' },
-    { key: 'longPassing', label: 'Long Passing' },
-    { key: 'longShot', label: 'Long Shot' },
-    { key: 'penalties', label: 'Penalties' },
-    { key: 'shortPassing', label: 'Short Passing' },
-    { key: 'shotPower', label: 'Shot Power' },
-    { key: 'slidingTackle', label: 'Sliding Tackle' },
-    { key: 'standingTackle', label: 'Standing Tackle' },
-    { key: 'volleys', label: 'Volleys' },
-  ],
-  physical: [
-    { key: 'acceleration', label: 'Acceleration' },
-    { key: 'agility', label: 'Agility' },
-    { key: 'balance', label: 'Balance' },
-    { key: 'jumping', label: 'Jumping' },
-    { key: 'pace', label: 'Pace' },
-    { key: 'reactions', label: 'Reactions' },
-    { key: 'sprintSpeed', label: 'Sprint Speed' },
-    { key: 'stamina', label: 'Stamina' },
-    { key: 'strength', label: 'Strength' },
-  ],
-  mental: [
-    { key: 'aggression', label: 'Aggression' },
-    { key: 'attackingPosition', label: 'Attacking Position' },
-    { key: 'awareness', label: 'Awareness' },
-    { key: 'communication', label: 'Communication' },
-    { key: 'composure', label: 'Composure' },
-    { key: 'defensivePositioning', label: 'Defensive Positioning' },
-    { key: 'interceptions', label: 'Interceptions' },
-    { key: 'marking', label: 'Marking' },
-    { key: 'positivity', label: 'Positivity' },
-    { key: 'positioning', label: 'Positioning' },
-    { key: 'vision', label: 'Vision' },
-  ],
-} as const;
+// Player attributes definition - now re-exported from constants (see imports above)
 
 // Training focus areas
 export const trainingFocusAreas = [
@@ -281,13 +250,7 @@ export function getAttributeLabel(key: string): string {
   return attr?.label ?? key;
 }
 
-// Helper to get attribute category by key
-export function getAttributeCategory(key: string): 'Skills' | 'Physical' | 'Mental' | null {
-  if (playerAttributes.skills.some(a => a.key === key)) return 'Skills';
-  if (playerAttributes.physical.some(a => a.key === key)) return 'Physical';
-  if (playerAttributes.mental.some(a => a.key === key)) return 'Mental';
-  return null;
-}
+// Helper to get attribute category by key - now re-exported from constants (see imports above)
 
 // Helper to determine drill/session category from attributes
 export function getDominantCategory(attributeKeys: string[]): 'technical' | 'tactical' | 'physical' | 'mental' | 'mixed' {
@@ -374,16 +337,7 @@ export type ObjectiveStatus = typeof objectiveStatuses[number]['value'];
 // ============================================================================
 // Link Types (for drills, training sessions, etc.)
 // ============================================================================
-
-export const linkTypes = [
-  { value: 'youtube', label: 'YouTube', icon: 'Youtube' },
-  { value: 'instagram', label: 'Instagram', icon: 'Instagram' },
-  { value: 'tiktok', label: 'TikTok', icon: 'TikTok' },
-  { value: 'website', label: 'Website', icon: 'Globe' },
-  { value: 'other', label: 'Other', icon: 'ExternalLink' },
-] as const;
-
-export type LinkTypeValue = typeof linkTypes[number]['value'];
+// Note: linkTypes now re-exported from constants (see imports above)
 
 // Link type display mapping
 export const linkTypeDisplay: Record<string, string> = Object.fromEntries(

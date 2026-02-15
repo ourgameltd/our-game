@@ -1,44 +1,175 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2 } from 'lucide-react';
-import { sampleDrills } from '@/data/training';
-import { sampleClubs } from '@/data/clubs';
-import { sampleAgeGroups } from '@/data/ageGroups';
-import { sampleTeams } from '@/data/teams';
-import { currentUser } from '@/data/currentUser';
-import { getAttributeCategory, playerAttributes, linkTypes } from '@/data/referenceData';
+import { ArrowLeft, Plus, Trash2, AlertCircle } from 'lucide-react';
+import { getAttributeCategory, playerAttributes, linkTypes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
-import type { Drill } from '@/types';
+import {
+  useDrill,
+  useCreateDrill,
+  useUpdateDrill,
+  useCurrentUser,
+  useClubById,
+  useAgeGroupsByClubId,
+  useClubTeams,
+} from '@/api';
+import type {
+  DrillDetailDto,
+  CreateDrillRequest,
+  UpdateDrillRequest,
+  CreateDrillLinkRequest,
+  UpdateDrillLinkRequest,
+} from '@/api';
+
+// ---------------------------------------------------------------------------
+// Skeleton Components
+// ---------------------------------------------------------------------------
+
+function BasicInfoSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+      <div className="space-y-2">
+        <div>
+          <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        </div>
+        <div>
+          <div className="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        </div>
+        <div>
+          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AttributesSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+      <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i}>
+            <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+            <div className="flex flex-wrap gap-2">
+              {Array.from({ length: 5 }).map((_, j) => (
+                <div key={j} className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded-full" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SectionSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <div className="h-6 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+      <div className="space-y-2">
+        {Array.from({ length: 2 }).map((_, i) => (
+          <div key={i} className="h-20 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function FormActionsSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <div className="flex justify-end gap-4">
+        <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+        <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+      </div>
+    </div>
+  );
+}
 
 export default function DrillFormPage() {
   const { clubId, ageGroupId, teamId, drillId } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!drillId;
   
-  const club = sampleClubs.find(c => c.id === clubId);
-  const ageGroup = ageGroupId ? sampleAgeGroups.find(ag => ag.id === ageGroupId) : undefined;
-  const team = teamId ? sampleTeams.find(t => t.id === teamId) : undefined;
+  // API Hooks
+  const { data: drillData, isLoading: isDrillLoading, error: fetchError } = useDrill(drillId);
+  const { mutate: createDrill, isSubmitting: isCreating, data: createData, error: createError } = useCreateDrill();
+  const { mutate: updateDrill, isSubmitting: isUpdating, data: updateData, error: updateError } = useUpdateDrill(drillId || '');
+  const { data: currentUser } = useCurrentUser();
+  const { data: club } = useClubById(clubId);
+  const { data: ageGroups } = useAgeGroupsByClubId(clubId);
+  const { data: teams } = useClubTeams(clubId);
   
-  // Get existing drill if editing
-  const existingDrill = isEditMode ? sampleDrills.find(d => d.id === drillId) : undefined;
+  const isSubmitting = isCreating || isUpdating;
+  const mutationError = createError || updateError;
   
-  // Check if user can edit this drill
-  const canEdit = !existingDrill || existingDrill.clubId === clubId;
-  const isInherited = existingDrill && existingDrill.clubId !== clubId;
+  // Find context data
+  const ageGroup = ageGroupId && ageGroups ? ageGroups.find(ag => ag.id === ageGroupId) : undefined;
+  const team = teamId && teams ? teams.find(t => t.id === teamId) : undefined;
+  
+  // Form initialization flag
+  const formInitialized = useRef(false);
 
   // Form state
-  const [name, setName] = useState(existingDrill?.name || '');
-  const [description, setDescription] = useState(existingDrill?.description || '');
-  const [duration, setDuration] = useState(existingDrill?.duration || 10);
-  const [selectedAttributes, setSelectedAttributes] = useState<string[]>(existingDrill?.attributes || []);
-  const [equipment, setEquipment] = useState<string[]>(existingDrill?.equipment || []);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [duration, setDuration] = useState(10);
+  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
+  const [equipment, setEquipment] = useState<string[]>([]);
   const [newEquipment, setNewEquipment] = useState('');
-  const [instructions, setInstructions] = useState<string[]>(existingDrill?.instructions || ['']);
-  const [variations, setVariations] = useState<string[]>(existingDrill?.variations || []);
-  const [links, setLinks] = useState<Array<{url: string; title: string; type: string}>>(existingDrill?.links || []);
-  const [isPublic, setIsPublic] = useState(existingDrill?.isPublic ?? true);
+  const [instructions, setInstructions] = useState<string[]>(['']);
+  const [variations, setVariations] = useState<string[]>([]);
+  const [links, setLinks] = useState<Array<{url: string; title: string; type: string}>>([]);
+  const [isPublic, setIsPublic] = useState(true);
+
+  // Check if drill is inherited (can only view, not edit)
+  const isInherited = isEditMode && drillData ? (() => {
+    const { scope } = drillData;
+    if (teamId && !scope.teamIds.includes(teamId)) return true;
+    if (ageGroupId && !scope.ageGroupIds.includes(ageGroupId) && scope.clubIds.length > 0 && scope.teamIds.length === 0) return true;
+    return false;
+  })() : false;
+
+  // Initialize form state from API data (edit mode)
+  useEffect(() => {
+    if (isEditMode && drillData && !formInitialized.current) {
+      setName(drillData.name);
+      setDescription(drillData.description || '');
+      setDuration(drillData.durationMinutes || 10);
+      setSelectedAttributes(drillData.attributes);
+      setEquipment(drillData.equipment);
+      setInstructions(drillData.instructions.length > 0 ? drillData.instructions : ['']);
+      setVariations(drillData.variations);
+      setLinks(drillData.links.map(l => ({
+        url: l.url,
+        title: l.title || '',
+        type: l.linkType
+      })));
+      setIsPublic(drillData.isPublic);
+      formInitialized.current = true;
+    }
+  }, [isEditMode, drillData]);
+
+  // Navigate to list on successful save
+  useEffect(() => {
+    const savedDrill = createData || updateData;
+    if (savedDrill) {
+      if (team) {
+        navigate(Routes.teamDrills(clubId!, ageGroupId!, teamId!));
+      } else if (ageGroup) {
+        navigate(Routes.ageGroupDrills(clubId!, ageGroupId!));
+      } else {
+        navigate(Routes.drills(clubId!));
+      }
+    }
+  }, [createData, updateData, clubId, ageGroupId, teamId, team, ageGroup, navigate]);
 
   // Calculate category based on selected attributes
   const getCategory = (): 'technical' | 'tactical' | 'physical' | 'mental' => {
@@ -138,8 +269,7 @@ export default function DrillFormPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!canEdit) {
-      alert('You cannot edit inherited drills. Please create a new drill instead.');
+    if (isInherited) {
       return;
     }
 
@@ -162,36 +292,49 @@ export default function DrillFormPage() {
     const cleanedVariations = variations.filter(v => v.trim());
     const cleanedLinks = links.filter(l => l.url.trim() && l.title.trim());
 
-    // Create drill object
-    const drill: Drill = {
-      id: isEditMode ? drillId! : `d${Date.now()}`,
-      name: name.trim(),
-      description: description.trim(),
-      duration,
-      category: getCategory(),
-      attributes: selectedAttributes,
-      equipment,
-      instructions: cleanedInstructions,
-      variations: cleanedVariations.length > 0 ? cleanedVariations : undefined,
-      links: cleanedLinks.length > 0 ? cleanedLinks.map(l => ({
-        url: l.url,
-        title: l.title,
-        type: l.type as any
-      })) : undefined,
-      clubId: clubId,
-      createdBy: currentUser.staffId,
-      isPublic
-    };
-
-    console.log('Saving drill:', drill);
-    
-    // Navigate back
-    if (team) {
-      navigate(Routes.teamDrills(clubId!, ageGroupId!, teamId!));
-    } else if (ageGroup) {
-      navigate(Routes.ageGroupDrills(clubId!, ageGroupId!));
+    if (isEditMode && drillId) {
+      // Update existing drill
+      const request: UpdateDrillRequest = {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        durationMinutes: duration,
+        category: getCategory(),
+        attributes: selectedAttributes,
+        equipment,
+        instructions: cleanedInstructions,
+        variations: cleanedVariations,
+        links: cleanedLinks.map(l => ({
+          url: l.url,
+          title: l.title || undefined,
+          type: l.type
+        })),
+        isPublic
+      };
+      updateDrill(request);
     } else {
-      navigate(Routes.drills(clubId!));
+      // Create new drill
+      const request: CreateDrillRequest = {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        durationMinutes: duration,
+        category: getCategory(),
+        attributes: selectedAttributes,
+        equipment,
+        instructions: cleanedInstructions,
+        variations: cleanedVariations,
+        links: cleanedLinks.map(l => ({
+          url: l.url,
+          title: l.title || undefined,
+          linkType: l.type
+        })),
+        isPublic,
+        scope: {
+          clubId: clubId,
+          ageGroupId: ageGroupId,
+          teamId: teamId
+        }
+      };
+      createDrill(request);
     }
   };
 
@@ -219,6 +362,69 @@ export default function DrillFormPage() {
 
   const contextName = team ? team.name : ageGroup ? ageGroup.name : club.name;
 
+  // ---- Loading state (edit mode only) --------------------------------------
+  const showSkeletons = isEditMode && isDrillLoading;
+
+  if (showSkeletons) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="mb-4">
+            <PageTitle
+              title="Edit Drill"
+              subtitle={`${contextName} • Loading…`}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <BasicInfoSkeleton />
+            <AttributesSkeleton />
+            <SectionSkeleton />
+            <SectionSkeleton />
+            <SectionSkeleton />
+            <SectionSkeleton />
+            <FormActionsSkeleton />
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ---- Error state (edit mode fetch failed) --------------------------------
+  if (isEditMode && fetchError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="mb-4">
+            <PageTitle
+              title="Edit Drill"
+              subtitle={`${contextName} • Error`}
+            />
+          </div>
+
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+            <p className="text-red-700 dark:text-red-300">
+              Failed to load drill: {fetchError.message}
+            </p>
+          </div>
+
+          <div className="mt-4 flex justify-center">
+            <button
+              type="button"
+              onClick={handleCancel}
+              className="btn btn-secondary"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to Drills
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // ---- Render form ---------------------------------------------------------
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -229,6 +435,27 @@ export default function DrillFormPage() {
             subtitle={`${contextName}`}
           />
         </div>
+
+        {/* Mutation error panel */}
+        {mutationError && (
+          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+            <div>
+              <p className="text-red-700 dark:text-red-300">
+                {mutationError.message}
+              </p>
+              {mutationError.validationErrors && (
+                <ul className="mt-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside">
+                  {Object.entries(mutationError.validationErrors).map(([field, messages]) =>
+                    messages.map((msg, i) => (
+                      <li key={`${field}-${i}`}>{field}: {msg}</li>
+                    ))
+                  )}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
 
         {isInherited && (
           <div className="card mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
@@ -548,6 +775,7 @@ export default function DrillFormPage() {
               <FormActions
                 onCancel={handleCancel}
                 saveLabel={isEditMode ? 'Update Drill' : 'Create Drill'}
+                saveDisabled={isSubmitting}
               />
             )}
 

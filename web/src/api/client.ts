@@ -1104,6 +1104,82 @@ export interface DrillsByScopeResponseDto {
   totalCount: number;
 }
 
+export interface DrillScopeDto {
+  clubIds: string[];
+  ageGroupIds: string[];
+  teamIds: string[];
+}
+
+export interface DrillDetailDto {
+  id: string;
+  name: string;
+  description?: string;
+  durationMinutes?: number;
+  category: string;
+  attributes: string[];
+  equipment: string[];
+  instructions: string[];
+  variations: string[];
+  links: DrillDetailLinkDto[];
+  isPublic: boolean;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt: string;
+  scope: DrillScopeDto;
+}
+
+export interface DrillDetailLinkDto {
+  id: string;
+  url: string;
+  title?: string;
+  linkType: string;
+}
+
+export interface CreateDrillRequest {
+  name: string;
+  description?: string;
+  durationMinutes?: number;
+  category: string;
+  attributes: string[];
+  equipment: string[];
+  instructions: string[];
+  variations: string[];
+  links: CreateDrillLinkRequest[];
+  isPublic: boolean;
+  scope: CreateDrillScopeRequest;
+}
+
+export interface CreateDrillLinkRequest {
+  url: string;
+  title?: string;
+  linkType: string;
+}
+
+export interface CreateDrillScopeRequest {
+  clubId?: string;
+  ageGroupId?: string;
+  teamId?: string;
+}
+
+export interface UpdateDrillRequest {
+  name: string;
+  description?: string;
+  durationMinutes?: number;
+  category: string;
+  attributes: string[];
+  equipment: string[];
+  instructions: string[];
+  variations: string[];
+  links: UpdateDrillLinkRequest[];
+  isPublic: boolean;
+}
+
+export interface UpdateDrillLinkRequest {
+  url: string;
+  title?: string;
+  type: string;
+}
+
 // Drill Template DTOs
 export interface DrillTemplateListDto {
   id: string;
@@ -2074,6 +2150,44 @@ export const apiClient = {
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills${queryString}`);
       return response.data;
+    },
+
+    /**
+     * Get a drill by ID with full detail
+     */
+    getById: async (drillId: string): Promise<ApiResponse<DrillDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<DrillDetailDto>>(`/v1/drills/${drillId}`);
+      return response.data;
+    },
+
+    /**
+     * Create a new drill
+     */
+    create: async (request: CreateDrillRequest): Promise<ApiResponse<DrillDetailDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<DrillDetailDto>>(
+          '/v1/drills',
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing drill
+     */
+    update: async (drillId: string, request: UpdateDrillRequest): Promise<ApiResponse<DrillDetailDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<DrillDetailDto>>(
+          `/v1/drills/${drillId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 

@@ -67,3 +67,67 @@ export const coachRoles = [
 ] as const;
 
 export type CoachRoleValue = typeof coachRoles[number]['value'];
+
+// Player attributes definition (EA FC style - 35 attributes)
+export const playerAttributes = {
+  skills: [
+    { key: 'ballControl', label: 'Ball Control' },
+    { key: 'crossing', label: 'Crossing' },
+    { key: 'weakFoot', label: 'Weak Foot' },
+    { key: 'dribbling', label: 'Dribbling' },
+    { key: 'finishing', label: 'Finishing' },
+    { key: 'freeKick', label: 'Free Kick' },
+    { key: 'heading', label: 'Heading' },
+    { key: 'longPassing', label: 'Long Passing' },
+    { key: 'longShot', label: 'Long Shot' },
+    { key: 'penalties', label: 'Penalties' },
+    { key: 'shortPassing', label: 'Short Passing' },
+    { key: 'shotPower', label: 'Shot Power' },
+    { key: 'slidingTackle', label: 'Sliding Tackle' },
+    { key: 'standingTackle', label: 'Standing Tackle' },
+    { key: 'volleys', label: 'Volleys' },
+  ],
+  physical: [
+    { key: 'acceleration', label: 'Acceleration' },
+    { key: 'agility', label: 'Agility' },
+    { key: 'balance', label: 'Balance' },
+    { key: 'jumping', label: 'Jumping' },
+    { key: 'pace', label: 'Pace' },
+    { key: 'reactions', label: 'Reactions' },
+    { key: 'sprintSpeed', label: 'Sprint Speed' },
+    { key: 'stamina', label: 'Stamina' },
+    { key: 'strength', label: 'Strength' },
+  ],
+  mental: [
+    { key: 'aggression', label: 'Aggression' },
+    { key: 'attackingPosition', label: 'Attacking Position' },
+    { key: 'awareness', label: 'Awareness' },
+    { key: 'communication', label: 'Communication' },
+    { key: 'composure', label: 'Composure' },
+    { key: 'defensivePositioning', label: 'Defensive Positioning' },
+    { key: 'interceptions', label: 'Interceptions' },
+    { key: 'marking', label: 'Marking' },
+    { key: 'positivity', label: 'Positivity' },
+    { key: 'positioning', label: 'Positioning' },
+    { key: 'vision', label: 'Vision' },
+  ],
+} as const;
+
+// Helper to get attribute category by key
+export function getAttributeCategory(key: string): 'Skills' | 'Physical' | 'Mental' | null {
+  if (playerAttributes.skills.some(a => a.key === key)) return 'Skills';
+  if (playerAttributes.physical.some(a => a.key === key)) return 'Physical';
+  if (playerAttributes.mental.some(a => a.key === key)) return 'Mental';
+  return null;
+}
+
+// Link types (for drills, training sessions, etc.)
+export const linkTypes = [
+  { value: 'youtube', label: 'YouTube', icon: 'Youtube' },
+  { value: 'instagram', label: 'Instagram', icon: 'Instagram' },
+  { value: 'tiktok', label: 'TikTok', icon: 'TikTok' },
+  { value: 'website', label: 'Website', icon: 'Globe' },
+  { value: 'other', label: 'Other', icon: 'ExternalLink' },
+] as const;
+
+export type LinkTypeValue = typeof linkTypes[number]['value'];
