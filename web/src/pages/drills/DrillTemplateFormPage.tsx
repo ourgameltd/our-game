@@ -1,51 +1,128 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown } from 'lucide-react';
-import { sampleDrillTemplates, sampleDrills } from '@/data/training';
-import { sampleClubs } from '@/data/clubs';
-import { sampleAgeGroups } from '@/data/ageGroups';
-import { sampleTeams } from '@/data/teams';
-import { currentUser } from '@/data/currentUser';
+import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, AlertCircle } from 'lucide-react';
+import { 
+  useDrillTemplateById, 
+  useDrillsByScope, 
+  useClubById,
+  useCreateDrillTemplate,
+  useUpdateDrillTemplate
+} from '@/api/hooks';
+import type { DrillListDto, CreateDrillTemplateRequest, UpdateDrillTemplateRequest } from '@/api';
 import { getAttributeLabel } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
-import type { DrillTemplate } from '@/types';
+
+// Skeleton components for loading states
+function BasicInfoSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+      <div className="space-y-2">
+        <div>
+          <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="h-10 w-full bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+        <div>
+          <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="h-24 w-full bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DrillsSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <h3 className="text-lg font-semibold mb-2">Drills</h3>
+      <div className="h-4 w-full max-w-md bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+      <div className="space-y-2">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+            <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+            <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+            <div className="h-3 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        ))}
+      </div>
+      <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded mt-4" />
+    </div>
+  );
+}
 
 export default function DrillTemplateFormPage() {
   const { clubId, ageGroupId, teamId, templateId } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!templateId;
   
-  const club = sampleClubs.find(c => c.id === clubId);
-  const ageGroup = ageGroupId ? sampleAgeGroups.find(ag => ag.id === ageGroupId) : undefined;
-  const team = teamId ? sampleTeams.find(t => t.id === teamId) : undefined;
+  // Fetch data
+  const { data: club } = useClubById(clubId);
+  const { data: template, isLoading: isLoadingTemplate, error: templateError } = useDrillTemplateById(templateId);
+  const { data: drillsData, isLoading: isLoadingDrills, error: drillsError } = useDrillsByScope(clubId, ageGroupId, teamId);
   
-  // Get existing template if editing
-  const existingTemplate = isEditMode ? sampleDrillTemplates.find(t => t.id === templateId) : undefined;
+  // Mutations
+  const createMutation = useCreateDrillTemplate();
+  const updateMutation = useUpdateDrillTemplate(templateId || '');
   
-  // Check if user can edit this template
-  const canEdit = !existingTemplate || existingTemplate.clubId === clubId;
-  const isInherited = existingTemplate && existingTemplate.clubId !== clubId;
+  // Determine if user can edit based on scope
+  const canEdit = useMemo(() => {
+    if (!isEditMode || !template) return true;
+    
+    // Check scope against route context
+    if (teamId) {
+      return template.scopeType === 'team' && template.scopeTeamId === teamId;
+    }
+    if (ageGroupId) {
+      return template.scopeType === 'agegroup' && template.scopeAgeGroupId === ageGroupId;
+    }
+    if (clubId) {
+      return template.scopeType === 'club' && template.scopeClubId === clubId;
+    }
+    
+    return false;
+  }, [isEditMode, template, clubId, ageGroupId, teamId]);
+  
+  const isInherited = isEditMode && !canEdit;
 
-  // Get available drills (club drills + global drills)
-  const availableDrills = sampleDrills.filter(drill => 
-    !drill.clubId || drill.clubId === clubId
-  );
+  const availableDrills = drillsData?.drills || [];
 
   // Form state
-  const [name, setName] = useState(existingTemplate?.name || '');
-  const [description, setDescription] = useState(existingTemplate?.description || '');
-  const [selectedDrillIds, setSelectedDrillIds] = useState<string[]>(existingTemplate?.drillIds || []);
-  const [isPublic, setIsPublic] = useState(existingTemplate?.isPublic ?? true);
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [selectedDrillIds, setSelectedDrillIds] = useState<string[]>([]);
+  const [isPublic, setIsPublic] = useState(true);
   const [showDrillPicker, setShowDrillPicker] = useState(false);
+
+  // Initialize form when template loads
+  useEffect(() => {
+    if (template) {
+      setName(template.name);
+      setDescription(template.description || '');
+      setSelectedDrillIds(template.drillIds);
+      setIsPublic(template.isPublic);
+    }
+  }, [template]);
+
+  // Initialize form when template loads
+  useEffect(() => {
+    if (template) {
+      setName(template.name);
+      setDescription(template.description || '');
+      setSelectedDrillIds(template.drillIds);
+      setIsPublic(template.isPublic);
+    }
+  }, [template]);
 
   // Calculate aggregated data from selected drills
   const getAggregatedData = () => {
-    const drills = selectedDrillIds.map(id => availableDrills.find(d => d.id === id)).filter(Boolean) as typeof availableDrills;
+    const drills = selectedDrillIds
+      .map(id => availableDrills.find(d => d.id === id))
+      .filter((d): d is DrillListDto => d !== undefined);
     
     // Total duration
-    const totalDuration = drills.reduce((sum, drill) => sum + drill.duration, 0);
+    const totalDuration = drills.reduce((sum, drill) => sum + (drill.duration || 0), 0);
     
     // Unique attributes
     const attributeSet = new Set<string>();
@@ -127,26 +204,48 @@ export default function DrillTemplateFormPage() {
       return;
     }
 
-    // Create template object
-    const template: DrillTemplate = {
-      id: isEditMode ? templateId! : `dt${Date.now()}`,
-      name: name.trim(),
-      description: description.trim(),
-      drillIds: selectedDrillIds,
-      attributes,
-      totalDuration,
-      category,
-      clubId: clubId,
-      createdBy: currentUser.staffId,
-      isPublic
-    };
+    if (isEditMode && templateId) {
+      // Update existing template
+      const updateRequest: UpdateDrillTemplateRequest = {
+        name: name.trim(),
+        description: description.trim(),
+        drillIds: selectedDrillIds,
+        isPublic
+      };
+      
+      updateMutation.mutate(updateRequest).then(() => {
+        if (updateMutation.data) {
+          // Navigate back on success
+          navigateBack();
+        }
+      });
+    } else {
+      // Create new template
+      const createRequest: CreateDrillTemplateRequest = {
+        name: name.trim(),
+        description: description.trim(),
+        drillIds: selectedDrillIds,
+        isPublic,
+        scope: {
+          clubId,
+          ageGroupId,
+          teamId
+        }
+      };
+      
+      createMutation.mutate(createRequest).then(() => {
+        if (createMutation.data) {
+          // Navigate back on success
+          navigateBack();
+        }
+      });
+    }
+  };
 
-    console.log('Saving session template:', template);
-    
-    // Navigate back
-    if (team) {
+  const navigateBack = () => {
+    if (teamId) {
       navigate(Routes.teamDrillTemplates(clubId!, ageGroupId!, teamId!));
-    } else if (ageGroup) {
+    } else if (ageGroupId) {
       navigate(Routes.ageGroupDrillTemplates(clubId!, ageGroupId!));
     } else {
       navigate(Routes.drillTemplates(clubId!));
@@ -154,13 +253,7 @@ export default function DrillTemplateFormPage() {
   };
 
   const handleCancel = () => {
-    if (team) {
-      navigate(Routes.teamDrillTemplates(clubId!, ageGroupId!, teamId!));
-    } else if (ageGroup) {
-      navigate(Routes.ageGroupDrillTemplates(clubId!, ageGroupId!));
-    } else {
-      navigate(Routes.drillTemplates(clubId!));
-    }
+    navigateBack();
   };
 
   if (!club) {
@@ -168,14 +261,23 @@ export default function DrillTemplateFormPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Club not found</h2>
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-xl font-semibold mb-2">Club not found</h2>
+                <p className="text-gray-600 dark:text-gray-400">
+                  The requested club could not be found.
+                </p>
+              </div>
+            </div>
           </div>
         </main>
       </div>
     );
   }
 
-  const contextName = team ? team.name : ageGroup ? ageGroup.name : club.name;
+  const contextName = club.name;
+  const isSubmitting = createMutation.isSubmitting || updateMutation.isSubmitting;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -208,54 +310,84 @@ export default function DrillTemplateFormPage() {
         <form onSubmit={handleSubmit}>
           <div className="space-y-2">
             {/* Basic Information */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Session Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g., Technical Foundation, Possession Play"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    disabled={isInherited}
-                    required
-                  />
-                </div>
+            {isLoadingTemplate && isEditMode ? (
+              <BasicInfoSkeleton />
+            ) : (
+              <div className="card">
+                <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+                
+                {templateError && (
+                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-red-800 dark:text-red-300">
+                        {templateError.message || 'Failed to load session template'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                <div className="space-y-2">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Session Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g., Technical Foundation, Possession Play"
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isInherited || isSubmitting}
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Description *
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Brief description of the session objectives"
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    disabled={isInherited}
-                    required
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Description *
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Brief description of the session objectives"
+                      rows={3}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isInherited || isSubmitting}
+                      required
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Drills */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-2">Drills *</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Add drills to your session. You can reorder them by dragging or using the arrow buttons.
-              </p>
+            {isLoadingDrills ? (
+              <DrillsSkeleton />
+            ) : (
+              <div className="card">
+                <h3 className="text-lg font-semibold mb-2">Drills *</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                  Add drills to your session. You can reorder them by dragging or using the arrow buttons.
+                </p>
 
-              {/* Selected Drills */}
-              {selectedDrillIds.length > 0 && (
-                <div className="space-y-2 mb-4">
-                  {selectedDrillIds.map((drillId, index) => {
-                    const drill = availableDrills.find(d => d.id === drillId);
-                    if (!drill) return null;
+                {drillsError && (
+                  <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      <div className="text-sm text-red-800 dark:text-red-300">
+                        {drillsError.message || 'Failed to load drills'}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Selected Drills */}
+                {selectedDrillIds.length > 0 && (
+                  <div className="space-y-2 mb-4">
+                    {selectedDrillIds.map((drillId, index) => {
+                      const drill = availableDrills.find(d => d.id === drillId);
+                      if (!drill) return null;
                     
                     return (
                       <div
@@ -266,7 +398,7 @@ export default function DrillTemplateFormPage() {
                           <button
                             type="button"
                             onClick={() => moveDrillUp(index)}
-                            disabled={isInherited || index === 0}
+                            disabled={isInherited || isSubmitting || index === 0}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <ChevronUp className="w-4 h-4" />
@@ -274,7 +406,7 @@ export default function DrillTemplateFormPage() {
                           <button
                             type="button"
                             onClick={() => moveDrillDown(index)}
-                            disabled={isInherited || index === selectedDrillIds.length - 1}
+                            disabled={isInherited || isSubmitting || index === selectedDrillIds.length - 1}
                             className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <ChevronDown className="w-4 h-4" />
@@ -297,7 +429,7 @@ export default function DrillTemplateFormPage() {
                             {drill.description}
                           </p>
                           <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            <span>⏱️ {drill.duration}m</span>
+                            <span>⏱️ {drill.duration || 0}m</span>
                             <span>🎯 {drill.attributes.length} attributes</span>
                           </div>
                         </div>
@@ -306,7 +438,8 @@ export default function DrillTemplateFormPage() {
                           <button
                             type="button"
                             onClick={() => removeDrill(drillId)}
-                            className="text-red-600 hover:text-red-700 dark:text-red-400"
+                            disabled={isSubmitting}
+                            className="text-red-600 hover:text-red-700 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -318,12 +451,13 @@ export default function DrillTemplateFormPage() {
               )}
 
               {/* Add Drill Button */}
-              {!isInherited && (
+              {!isInherited && !drillsError && (
                 <div className="space-y-2">
                   <button
                     type="button"
                     onClick={() => setShowDrillPicker(!showDrillPicker)}
-                    className="btn btn-secondary"
+                    disabled={isSubmitting}
+                    className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Drill
@@ -355,7 +489,7 @@ export default function DrillTemplateFormPage() {
                                 {drill.description}
                               </p>
                               <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                <span>⏱️ {drill.duration}m</span>
+                                <span>⏱️ {drill.duration || 0}m</span>
                                 <span>🎯 {drill.attributes.length} attributes</span>
                               </div>
                             </button>
@@ -372,6 +506,7 @@ export default function DrillTemplateFormPage() {
                 </p>
               )}
             </div>
+            )}
 
             {/* Session Summary */}
             {selectedDrillIds.length > 0 && (
@@ -432,7 +567,8 @@ export default function DrillTemplateFormPage() {
                     type="checkbox"
                     checked={isPublic}
                     onChange={(e) => setIsPublic(e.target.checked)}
-                    className="w-4 h-4"
+                    disabled={isSubmitting}
+                    className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <span className="text-sm text-gray-700 dark:text-gray-300">
                     Share this session template with other teams in the club
@@ -446,6 +582,7 @@ export default function DrillTemplateFormPage() {
               <FormActions
                 onCancel={handleCancel}
                 saveLabel={isEditMode ? 'Update Session' : 'Create Session'}
+                saveDisabled={isSubmitting || !!templateError}
               />
             )}
 

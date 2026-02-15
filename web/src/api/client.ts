@@ -1202,6 +1202,43 @@ export interface DrillTemplatesByScopeResponseDto {
   availableAttributes: string[];
 }
 
+export interface DrillTemplateDetailDto {
+  id: string;
+  name: string;
+  description?: string;
+  drillIds: string[];
+  isPublic: boolean;
+  createdBy?: string;
+  createdAt: string;
+  updatedAt?: string;
+  totalDuration?: number;
+  category?: string;
+  aggregatedAttributes: string[];
+  scopeType: string;
+  scopeClubId?: string;
+  scopeAgeGroupId?: string;
+  scopeTeamId?: string;
+}
+
+export interface CreateDrillTemplateRequest {
+  name: string;
+  description?: string;
+  drillIds: string[];
+  isPublic: boolean;
+  scope: {
+    clubId?: string;
+    ageGroupId?: string;
+    teamId?: string;
+  };
+}
+
+export interface UpdateDrillTemplateRequest {
+  name: string;
+  description?: string;
+  drillIds: string[];
+  isPublic: boolean;
+}
+
 // Age Group Development Plan DTOs
 export interface AgeGroupDevelopmentPlanPlayerDto {
   id: string;
@@ -2241,6 +2278,44 @@ export const apiClient = {
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillTemplatesByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates${queryString}`);
       return response.data;
+    },
+
+    /**
+     * Get a drill template by ID with full detail
+     */
+    getById: async (templateId: string): Promise<ApiResponse<DrillTemplateDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<DrillTemplateDetailDto>>(`/v1/drill-templates/${templateId}`);
+      return response.data;
+    },
+
+    /**
+     * Create a new drill template
+     */
+    create: async (request: CreateDrillTemplateRequest): Promise<ApiResponse<DrillTemplateDetailDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<DrillTemplateDetailDto>>(
+          '/v1/drill-templates',
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing drill template
+     */
+    update: async (templateId: string, request: UpdateDrillTemplateRequest): Promise<ApiResponse<DrillTemplateDetailDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<DrillTemplateDetailDto>>(
+          `/v1/drill-templates/${templateId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 
