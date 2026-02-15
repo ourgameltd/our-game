@@ -1,5 +1,9 @@
 # Migration Plan: DrillTemplatesListPage
 
+**STATUS: COMPLETED** ✅  
+**Completion Date:** February 15, 2026  
+**Note:** Page was already using the correct import path `@/constants/referenceData` for all reference data items. No changes were needed.
+
 ## File
 `web/src/pages/drills/DrillTemplatesListPage.tsx`
 
@@ -32,10 +36,10 @@ Move all 4 reference data items to shared constants module.
 
 ## Implementation Checklist
 
-- [ ] Move reference data items to shared constants (coordinated with DrillsListPage)
-- [ ] Update import paths
-- [ ] Verify template list renders correctly
-- [ ] Done — page is fully migrated after this
+- [x] Move reference data items to shared constants (coordinated with DrillsListPage)
+- [x] Update import paths
+- [x] Verify template list renders correctly
+- [x] Done — page is fully migrated after this
 
 
 ## Backend Implementation Standards
