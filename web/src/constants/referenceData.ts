@@ -56,3 +56,14 @@ export const injurySeverities = [
 ] as const;
 
 export type InjurySeverity = typeof injurySeverities[number]['value'];
+
+// Coach roles
+export const coachRoles = [
+  { value: 'head-coach', label: 'Head Coach' },
+  { value: 'assistant-coach', label: 'Assistant Coach' },
+  { value: 'goalkeeper-coach', label: 'Goalkeeper Coach' },
+  { value: 'fitness-coach', label: 'Fitness Coach' },
+  { value: 'technical-coach', label: 'Technical Coach' },
+] as const;
+
+export type CoachRoleValue = typeof coachRoles[number]['value'];

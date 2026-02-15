@@ -1310,6 +1310,19 @@ export interface UpdateTeamRequest {
   secondaryColor: string;
 }
 
+export interface UpdateCoachRequest {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  dateOfBirth?: string;
+  associationId?: string;
+  role: string;
+  biography?: string;
+  specializations: string[];
+  teamIds: string[];
+  photo?: string;
+}
+
 // Match Detail DTOs
 
 export interface MatchDetailDto {
@@ -2269,6 +2282,21 @@ export const apiClient = {
     getById: async (coachId: string): Promise<ApiResponse<CoachDetailDto>> => {
       const response = await axiosInstance.get<ApiResponse<CoachDetailDto>>(`/v1/coaches/${coachId}`);
       return response.data;
+    },
+
+    /**
+     * Update an existing coach
+     */
+    update: async (coachId: string, request: UpdateCoachRequest): Promise<ApiResponse<CoachDetailDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<CoachDetailDto>>(
+          `/v1/coaches/${coachId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 

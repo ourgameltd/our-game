@@ -13,6 +13,10 @@ export type { WeatherCondition, CardType, InjurySeverity } from '../constants/re
 export { teamLevels, squadSizes } from '../constants/referenceData';
 export type { TeamLevel, AgeGroupLevel, SquadSizeValue } from '../constants/referenceData';
 
+// Coach roles - re-exported from shared constants
+export { coachRoles } from '../constants/referenceData';
+export type { CoachRoleValue } from '../constants/referenceData';
+
 // Kit types
 export const kitTypes = [
   { value: 'home', label: 'Home' },
@@ -56,17 +60,6 @@ export const playerPositions = [
 ] as const;
 
 export type PlayerPositionValue = typeof playerPositions[number]['value'];
-
-// Coach roles
-export const coachRoles = [
-  { value: 'head-coach', label: 'Head Coach' },
-  { value: 'assistant-coach', label: 'Assistant Coach' },
-  { value: 'goalkeeper-coach', label: 'Goalkeeper Coach' },
-  { value: 'fitness-coach', label: 'Fitness Coach' },
-  { value: 'technical-coach', label: 'Technical Coach' },
-] as const;
-
-export type CoachRoleValue = typeof coachRoles[number]['value'];
 
 // User roles
 export const userRoles = [

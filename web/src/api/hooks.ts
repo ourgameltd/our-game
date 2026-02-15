@@ -53,6 +53,7 @@ import {
   TrainingSessionDetailDto,
   CreateTrainingSessionRequest,
   UpdateTrainingSessionRequest,
+  UpdateCoachRequest,
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -1105,6 +1106,45 @@ export function useUpdateTrainingSession(sessionId: string): UseMutationState<Tr
   }, [sessionId]);
 
   return { updateTrainingSession, isSubmitting, data, error };
+}
+
+/**
+ * Hook to update a coach.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateCoach(coachId: string): UseMutationState<CoachDetailDto> & {
+  updateCoach: (request: UpdateCoachRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<CoachDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updateCoach = useCallback(async (request: UpdateCoachRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<CoachDetailDto> = await apiClient.coaches.update(coachId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update coach',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [coachId]);
+
+  return { updateCoach, isSubmitting, data, error };
 }
 
 /**

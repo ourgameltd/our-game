@@ -134,6 +134,7 @@ export type {
   UpdateClubRequest,
   CreateTeamRequest,
   UpdateTeamRequest,
+  UpdateCoachRequest,
 } from './client';
 
 // React hooks
@@ -178,6 +179,7 @@ export {
   useUpdateMatch,
   useCreateTeam,
   useUpdateTeam,
+  useUpdateCoach,
 } from './hooks';
 export type { ApiError, UseMutationState } from './hooks';
 
