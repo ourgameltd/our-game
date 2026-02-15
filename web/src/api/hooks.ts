@@ -65,8 +65,9 @@ import {
   PlayerAbilityEvaluationDto,
   CreatePlayerAbilityEvaluationRequest,
   UpdatePlayerAbilityEvaluationRequest,
+  PlayerAlbumDto,
 } from './client';
-import { TrainingSession } from '@/types';
+import { TrainingSession, PlayerImage } from '@/types';
 
 // Generic hook state
 interface UseApiState<T> {
@@ -88,6 +89,13 @@ export interface UseMutationState<TData> {
   data: TData | null;
   isSubmitting: boolean;
   error: ApiError | null;
+}
+
+// Player album data with transformed photos
+export interface PlayerAlbumData {
+  playerId: string;
+  playerName: string;
+  photos: (PlayerImage & { thumbnail: string })[];
 }
 
 /**
@@ -921,6 +929,48 @@ export function useDeletePlayerAbilityEvaluation(
   }, [playerId, evaluationId]);
 
   return { mutate, isSubmitting, data, error };
+}
+
+/**
+ * Hook to fetch player album with photos.
+ * Transforms API response to UI-ready format with Date objects.
+ * Only fetches if playerId is defined.
+ */
+export function usePlayerAlbum(playerId: string | undefined): UseApiState<PlayerAlbumData> {
+  return useApiCall<PlayerAlbumData>(
+    async () => {
+      if (!playerId) {
+        return Promise.resolve({ success: true });
+      }
+      const response = await apiClient.players.getAlbum(playerId);
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: {
+            playerId: response.data.playerId,
+            playerName: response.data.playerName,
+            photos: response.data.photos.map(photo => {
+              // Parse date with fallback to current date if invalid
+              const parsedDate = new Date(photo.date);
+              const date = isNaN(parsedDate.getTime()) ? new Date() : parsedDate;
+              
+              return {
+                id: photo.id,
+                url: photo.url,
+                thumbnail: photo.thumbnail,
+                caption: photo.caption || undefined,
+                date: date,
+                tags: photo.tags || [],
+                uploadedBy: undefined
+              };
+            })
+          }
+        };
+      }
+      return { success: false, error: { message: response.error?.message } };
+    },
+    [playerId]
+  );
 }
 
 // ============================================================

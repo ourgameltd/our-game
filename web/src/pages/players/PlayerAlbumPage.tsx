@@ -1,21 +1,58 @@
 import { useParams } from 'react-router-dom';
-import { getPlayerById } from '@data/players';
+import { usePlayerAlbum } from '@/api/hooks';
 import PageTitle from '@components/common/PageTitle';
 import ImageAlbum from '@components/player/ImageAlbum';
 import { PlayerImage } from '@/types';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function PlayerAlbumPage() {
   const { playerId } = useParams();
-  const player = getPlayerById(playerId!);
-  const [albumImages, setAlbumImages] = useState<PlayerImage[]>(player?.album || []);
+  const { data: album, isLoading, error } = usePlayerAlbum(playerId);
+  const [albumImages, setAlbumImages] = useState<PlayerImage[]>([]);
 
-  if (!player) {
+  // Initialize album images from API data on first load
+  useEffect(() => {
+    if (album?.photos && albumImages.length === 0) {
+      setAlbumImages(album.photos);
+    }
+  }, [album]);
+
+  // Error state
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Player not found</h2>
+            <h2 className="text-xl font-semibold mb-4 text-red-600 dark:text-red-400">
+              {(error as any).statusCode === 404 ? 'Player not found' : 'Error Loading Album'}
+            </h2>
+            {(error as any).statusCode !== 404 && (
+              <p className="text-gray-700 dark:text-gray-300">
+                {error.message || 'An error occurred while loading the player album.'}
+              </p>
+            )}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Loading state with skeletons
+  if (isLoading || !album) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          {/* Page Title Skeleton */}
+          <div className="mb-4">
+            <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded animate-pulse mb-2" />
+            <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          </div>
+
+          {/* Photo Grid Skeleton */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+              <div key={i} className="aspect-square bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+            ))}
           </div>
         </main>
       </div>
@@ -36,13 +73,16 @@ export default function PlayerAlbumPage() {
     }
   };
 
+  // Extract first name from player name
+  const firstName = album.playerName.split(' ')[0];
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         {/* Page Header */}
         <div className="mb-4">
           <PageTitle
-            title={`${player.firstName} ${player.lastName}'s Album`}
+            title={`${album.playerName}'s Album`}
             subtitle={`${albumImages.length} ${albumImages.length === 1 ? 'image' : 'images'}`}
           />
         </div>
@@ -59,7 +99,7 @@ export default function PlayerAlbumPage() {
               <div className="flex-1">
                 <h2 className="text-xl font-semibold mb-2">Player Image Album</h2>
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Keep track of {player.firstName}'s football journey with photos from training sessions, matches, 
+                  Keep track of {firstName}'s football journey with photos from training sessions, matches, 
                   awards, and special moments. Click on any image to view it in full size.
                 </p>
                 <div className="flex flex-wrap gap-4 text-sm">

@@ -1500,6 +1500,21 @@ export interface UpdatePlayerAbilityEvaluationRequest {
   }[];
 }
 
+export interface PlayerAlbumDto {
+  playerId: string;
+  playerName: string;
+  photos: PlayerAlbumPhotoDto[];
+}
+
+export interface PlayerAlbumPhotoDto {
+  id: string;
+  url: string;
+  thumbnail: string;
+  caption?: string;
+  date: string; // ISO date string (YYYY-MM-DD)
+  tags: string[];
+}
+
 export interface UpdatePlayerRequest {
   firstName: string;
   lastName: string;
@@ -2584,6 +2599,16 @@ export const apiClient = {
      */
     deleteAbilityEvaluation: async (playerId: string, evaluationId: string): Promise<void> => {
       await axiosInstance.delete(`/v1/players/${playerId}/abilities/evaluations/${evaluationId}`);
+    },
+
+    /**
+     * Get player photo album
+     */
+    getAlbum: async (playerId: string): Promise<ApiResponse<PlayerAlbumDto>> => {
+      const response = await axiosInstance.get<ApiResponse<PlayerAlbumDto>>(
+        `/v1/players/${playerId}/album`
+      );
+      return response.data;
     },
   },
 
