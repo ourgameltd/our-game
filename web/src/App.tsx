@@ -162,7 +162,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plan" element={<PlayerDevelopmentPlanPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/:planId" element={<PlayerDevelopmentPlanPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/new" element={<AddEditDevelopmentPlanPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/:planId/edit" element={<AddEditDevelopmentPlanPage />} />
@@ -192,7 +192,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plan" element={<PlayerDevelopmentPlanPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/:planId" element={<PlayerDevelopmentPlanPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/new" element={<AddEditDevelopmentPlanPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/:planId/edit" element={<AddEditDevelopmentPlanPage />} />

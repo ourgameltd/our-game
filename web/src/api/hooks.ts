@@ -42,7 +42,7 @@ import {
   UpdateDrillTemplateRequest,
   PlayerDto,
   CoachDetailDto,
-  DevelopmentPlanDto,
+  DevelopmentPlanDetailDto,
   MatchDetailDto,
   TeamPlayerDto,
   TeamCoachDto,
@@ -998,11 +998,16 @@ export function useCoach(coachId: string | undefined): UseApiState<CoachDetailDt
 // ============================================================
 
 /**
- * Hook to fetch a development plan by ID
+ * Hook to fetch a development plan by ID with full detail
  */
-export function useDevelopmentPlan(planId: string | undefined): UseApiState<DevelopmentPlanDto> {
-  return useApiCall<DevelopmentPlanDto>(
-    () => apiClient.developmentPlans.getById(planId!),
+export function useDevelopmentPlan(planId: string | undefined): UseApiState<DevelopmentPlanDetailDto> {
+  return useApiCall<DevelopmentPlanDetailDto>(
+    () => {
+      if (!planId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.developmentPlans.getById(planId);
+    },
     [planId]
   );
 }

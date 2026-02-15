@@ -1333,6 +1333,60 @@ export interface DevelopmentPlanDto {
   goals: DevelopmentGoalDto[];
 }
 
+// Development Plan Detail DTOs (from GET /v1/development-plans/{id})
+export interface DevelopmentPlanDetailDto {
+  id: string;
+  title: string;
+  description?: string;
+  periodStart: string;
+  periodEnd: string;
+  status: string;
+  createdAt: string;
+  playerId: string;
+  playerName: string;
+  position?: string;
+  teamId?: string;
+  teamName?: string;
+  ageGroupId?: string;
+  ageGroupName?: string;
+  clubId?: string;
+  clubName?: string;
+  goals: DevelopmentPlanGoalDetailDto[];
+  progressNotes: DevelopmentPlanProgressNoteDto[];
+  trainingObjectives: DevelopmentPlanTrainingObjectiveDto[];
+}
+
+export interface DevelopmentPlanGoalDetailDto {
+  id: string;
+  title: string;
+  description?: string;
+  targetDate?: string;
+  completedDate?: string;
+  status: string;
+  actions: string[];
+  progress: number;
+}
+
+export interface DevelopmentPlanProgressNoteDto {
+  id: string;
+  noteDate: string;
+  note: string;
+  coachId?: string;
+  coachName?: string;
+}
+
+export interface DevelopmentPlanTrainingObjectiveDto {
+  id: string;
+  title: string;
+  description?: string;
+  startDate?: string;
+  targetDate?: string;
+  status: string;
+  progress: number;
+  completed: boolean;
+  completedDate?: string;
+}
+
 export interface CreateDevelopmentGoalRequest {
   goal: string;
   actions: string[];
@@ -2487,10 +2541,10 @@ export const apiClient = {
 
   developmentPlans: {
     /**
-     * Get a development plan by ID
+     * Get a development plan by ID with full detail
      */
-    getById: async (planId: string): Promise<ApiResponse<DevelopmentPlanDto>> => {
-      const response = await axiosInstance.get<ApiResponse<DevelopmentPlanDto>>(`/v1/development-plans/${planId}`);
+    getById: async (planId: string): Promise<ApiResponse<DevelopmentPlanDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<DevelopmentPlanDetailDto>>(`/v1/development-plans/${planId}`);
       return response.data;
     },
 

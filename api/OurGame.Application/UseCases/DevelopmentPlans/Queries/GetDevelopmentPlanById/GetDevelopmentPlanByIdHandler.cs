@@ -9,14 +9,14 @@ using OurGame.Persistence.Models;
 namespace OurGame.Application.UseCases.DevelopmentPlans.Queries.GetDevelopmentPlanById;
 
 /// <summary>
-/// Query to get a development plan by ID
+/// Query to get a development plan by ID with full detail
 /// </summary>
-public record GetDevelopmentPlanByIdQuery(Guid PlanId) : IQuery<DevelopmentPlanDto?>;
+public record GetDevelopmentPlanByIdQuery(Guid PlanId) : IQuery<DevelopmentPlanDetailDto?>;
 
 /// <summary>
-/// Handler for GetDevelopmentPlanByIdQuery
+/// Handler for GetDevelopmentPlanByIdQuery - retrieves full development plan detail using raw SQL
 /// </summary>
-public class GetDevelopmentPlanByIdHandler : IRequestHandler<GetDevelopmentPlanByIdQuery, DevelopmentPlanDto?>
+public class GetDevelopmentPlanByIdHandler : IRequestHandler<GetDevelopmentPlanByIdQuery, DevelopmentPlanDetailDto?>
 {
     private readonly OurGameContext _db;
 
@@ -25,23 +25,44 @@ public class GetDevelopmentPlanByIdHandler : IRequestHandler<GetDevelopmentPlanB
         _db = db;
     }
 
-    public async Task<DevelopmentPlanDto?> Handle(GetDevelopmentPlanByIdQuery query, CancellationToken cancellationToken)
+    public async Task<DevelopmentPlanDetailDto?> Handle(GetDevelopmentPlanByIdQuery query, CancellationToken cancellationToken)
     {
+        // 1. Fetch base plan with player info and team/ageGroup/club context
         var planSql = @"
             SELECT 
                 dp.Id,
-                dp.PlayerId,
                 dp.Title,
                 dp.Description,
                 dp.PeriodStart,
                 dp.PeriodEnd,
                 dp.Status,
-                dp.CoachNotes
+                dp.CoachNotes,
+                dp.CreatedAt,
+                dp.UpdatedAt,
+                p.Id AS PlayerId,
+                p.FirstName,
+                p.LastName,
+                p.PreferredPositions,
+                p.ClubId,
+                c.Name AS ClubName,
+                t.Id AS TeamId,
+                t.Name AS TeamName,
+                ag.Id AS AgeGroupId,
+                ag.Name AS AgeGroupName
             FROM DevelopmentPlans dp
-            WHERE dp.Id = {0}";
+            INNER JOIN Players p ON p.Id = dp.PlayerId
+            INNER JOIN Clubs c ON c.Id = p.ClubId
+            LEFT JOIN (
+                SELECT pt.PlayerId, pt.TeamId, pt.AssignedAt,
+                    ROW_NUMBER() OVER (PARTITION BY pt.PlayerId ORDER BY pt.AssignedAt DESC) AS RowNum
+                FROM PlayerTeams pt
+            ) pt_ranked ON pt_ranked.PlayerId = p.Id AND pt_ranked.RowNum = 1
+            LEFT JOIN Teams t ON t.Id = pt_ranked.TeamId
+            LEFT JOIN AgeGroups ag ON ag.Id = t.AgeGroupId
+            WHERE dp.Id = @p0";
 
         var plan = await _db.Database
-            .SqlQueryRaw<DevelopmentPlanRawDto>(planSql, query.PlanId)
+            .SqlQueryRaw<PlanDetailRaw>(planSql, query.PlanId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (plan == null)
@@ -49,47 +70,67 @@ public class GetDevelopmentPlanByIdHandler : IRequestHandler<GetDevelopmentPlanB
             return null;
         }
 
+        // 2. Fetch goals/milestones from DevelopmentGoals
         var goalsSql = @"
             SELECT 
                 dg.Id,
-                dg.PlanId,
                 dg.Goal,
                 dg.Actions,
-                dg.StartDate,
                 dg.TargetDate,
-                dg.Progress,
+                dg.CompletedDate,
                 dg.Completed,
-                dg.CompletedDate
+                dg.Progress
             FROM DevelopmentGoals dg
-            WHERE dg.PlanId = {0}";
+            WHERE dg.PlanId = @p0
+            ORDER BY dg.TargetDate";
 
         var goals = await _db.Database
-            .SqlQueryRaw<DevelopmentGoalRawDto>(goalsSql, query.PlanId)
+            .SqlQueryRaw<GoalRaw>(goalsSql, query.PlanId)
             .ToListAsync(cancellationToken);
 
-        var statusName = Enum.GetName(typeof(PlanStatus), plan.Status) ?? PlanStatus.Active.ToString();
+        // 3. Progress notes - not directly linked to DevelopmentPlans, return empty list
+        var progressNotes = new List<DevelopmentPlanProgressNoteDto>();
 
-        return new DevelopmentPlanDto
+        // 4. Training objectives - not directly linked to DevelopmentPlans, return empty list
+        var trainingObjectives = new List<DevelopmentPlanTrainingObjectiveDto>();
+
+        // Map to response DTO
+        var statusName = Enum.GetName(typeof(PlanStatus), plan.Status) ?? PlanStatus.Active.ToString();
+        var playerName = $"{plan.FirstName ?? ""} {plan.LastName ?? ""}".Trim();
+
+        return new DevelopmentPlanDetailDto
         {
             Id = plan.Id,
-            PlayerId = plan.PlayerId,
             Title = plan.Title ?? string.Empty,
             Description = plan.Description,
-            PeriodStart = plan.PeriodStart?.ToDateTime(TimeOnly.MinValue) ?? DateTime.MinValue,
-            PeriodEnd = plan.PeriodEnd?.ToDateTime(TimeOnly.MinValue) ?? DateTime.MinValue,
-            Status = statusName.ToLowerInvariant(),
+            PeriodStart = plan.PeriodStart,
+            PeriodEnd = plan.PeriodEnd,
+            Status = statusName,
             CoachNotes = plan.CoachNotes,
-            Goals = goals.Select(g => new DevelopmentGoalDto
+            CreatedAt = plan.CreatedAt,
+            UpdatedAt = plan.UpdatedAt,
+            PlayerId = plan.PlayerId,
+            PlayerName = playerName,
+            Position = plan.PreferredPositions,
+            TeamId = plan.TeamId,
+            TeamName = plan.TeamName,
+            AgeGroupId = plan.AgeGroupId,
+            AgeGroupName = plan.AgeGroupName,
+            ClubId = plan.ClubId,
+            ClubName = plan.ClubName ?? string.Empty,
+            Goals = goals.Select(g => new DevelopmentPlanGoalDto
             {
                 Id = g.Id,
-                Goal = g.Goal ?? string.Empty,
+                Title = g.Goal ?? string.Empty,
+                Description = null,
+                TargetDate = g.TargetDate,
+                CompletedDate = g.CompletedDate,
+                Status = g.Completed ? "Completed" : "InProgress",
                 Actions = ParseActions(g.Actions),
-                StartDate = g.StartDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.MinValue,
-                TargetDate = g.TargetDate?.ToDateTime(TimeOnly.MinValue) ?? DateTime.MinValue,
-                Progress = g.Progress ?? 0,
-                Completed = g.Completed,
-                CompletedDate = g.CompletedDate?.ToDateTime(TimeOnly.MinValue)
-            }).ToList()
+                Progress = g.Progress ?? 0
+            }).ToList(),
+            ProgressNotes = progressNotes,
+            TrainingObjectives = trainingObjectives
         };
     }
 
@@ -117,8 +158,50 @@ public class GetDevelopmentPlanByIdHandler : IRequestHandler<GetDevelopmentPlanB
     }
 }
 
+#region Raw SQL DTOs
+
 /// <summary>
-/// Raw SQL query result for development plan
+/// Raw SQL query result for development plan with player and context
+/// </summary>
+public class PlanDetailRaw
+{
+    public Guid Id { get; set; }
+    public string? Title { get; set; }
+    public string? Description { get; set; }
+    public DateOnly? PeriodStart { get; set; }
+    public DateOnly? PeriodEnd { get; set; }
+    public int Status { get; set; }
+    public string? CoachNotes { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public Guid PlayerId { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? PreferredPositions { get; set; }
+    public Guid ClubId { get; set; }
+    public string? ClubName { get; set; }
+    public Guid? TeamId { get; set; }
+    public string? TeamName { get; set; }
+    public Guid? AgeGroupId { get; set; }
+    public string? AgeGroupName { get; set; }
+}
+
+/// <summary>
+/// Raw SQL query result for development goal
+/// </summary>
+public class GoalRaw
+{
+    public Guid Id { get; set; }
+    public string? Goal { get; set; }
+    public string? Actions { get; set; }
+    public DateOnly? TargetDate { get; set; }
+    public DateOnly? CompletedDate { get; set; }
+    public bool Completed { get; set; }
+    public int? Progress { get; set; }
+}
+
+/// <summary>
+/// Raw SQL query result for basic development plan (used by other handlers)
 /// </summary>
 public class DevelopmentPlanRawDto
 {
@@ -133,7 +216,7 @@ public class DevelopmentPlanRawDto
 }
 
 /// <summary>
-/// Raw SQL query result for development goal
+/// Raw SQL query result for basic development goal (used by other handlers)
 /// </summary>
 public class DevelopmentGoalRawDto
 {
@@ -147,3 +230,5 @@ public class DevelopmentGoalRawDto
     public bool Completed { get; set; }
     public DateOnly? CompletedDate { get; set; }
 }
+
+#endregion

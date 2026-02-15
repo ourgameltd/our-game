@@ -66,11 +66,11 @@ export default function PlayerDevelopmentPlansPage() {
   }
 
   // Helper to generate development plan link
-  const getDevelopmentPlanLink = () => {
+  const getDevelopmentPlanLink = (plan: typeof plans[0]) => {
     if (teamId && ageGroupId) {
-      return Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId, teamId, playerId!);
+      return Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId, teamId, playerId!, plan.id);
     } else if (ageGroupId) {
-      return Routes.playerDevelopmentPlan(clubId!, ageGroupId, playerId!);
+      return Routes.playerDevelopmentPlan(clubId!, ageGroupId, playerId!, plan.id);
     }
     return '#';
   };
@@ -151,7 +151,7 @@ export default function PlayerDevelopmentPlansPage() {
                   key={plan.id}
                   plan={plan}
                   player={player}
-                  linkTo={getDevelopmentPlanLink()}
+                  linkTo={getDevelopmentPlanLink(plan)}
                 />
               ))}
             </div>
@@ -163,7 +163,7 @@ export default function PlayerDevelopmentPlansPage() {
                   key={plan.id}
                   plan={plan}
                   player={player}
-                  linkTo={getDevelopmentPlanLink()}
+                  linkTo={getDevelopmentPlanLink(plan)}
                 />
               ))}
             </div>

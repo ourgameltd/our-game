@@ -172,9 +172,10 @@ export class Routes {
   static playerDevelopmentPlan(
     clubId: string,
     ageGroupId: string,
-    playerId: string
+    playerId: string,
+    planId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plan`;
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans/${planId}`;
   }
 
   static playerDevelopmentPlans(
@@ -278,9 +279,10 @@ export class Routes {
     clubId: string,
     ageGroupId: string,
     teamId: string,
-    playerId: string
+    playerId: string,
+    planId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plan`;
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans/${planId}`;
   }
 
   static teamPlayerDevelopmentPlans(

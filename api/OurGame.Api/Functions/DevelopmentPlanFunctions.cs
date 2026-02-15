@@ -19,6 +19,8 @@ namespace OurGame.Api.Functions;
 
 /// <summary>
 /// Azure Functions for Development Plan endpoints
+/// NOTE: GET ById moved to standalone function file (Functions/DevelopmentPlans/GetDevelopmentPlanByIdFunction.cs)
+/// following repo pattern for read operations
 /// </summary>
 public class DevelopmentPlanFunctions
 {
@@ -29,84 +31,6 @@ public class DevelopmentPlanFunctions
     {
         _mediator = mediator;
         _logger = logger;
-    }
-
-    /// <summary>
-    /// Get a development plan by ID
-    /// </summary>
-    /// <param name="req">The HTTP request</param>
-    /// <param name="id">The development plan ID</param>
-    /// <returns>Development plan with goals</returns>
-    [Function("GetDevelopmentPlanById")]
-    [OpenApiOperation(
-        operationId: "GetDevelopmentPlanById",
-        tags: new[] { "DevelopmentPlans" },
-        Summary = "Get development plan by ID",
-        Description = "Retrieves a development plan with all its goals")]
-    [OpenApiParameter(
-        name: "id",
-        In = ParameterLocation.Path,
-        Required = true,
-        Type = typeof(Guid),
-        Description = "The development plan ID")]
-    [OpenApiResponseWithBody(
-        statusCode: HttpStatusCode.OK,
-        contentType: "application/json",
-        bodyType: typeof(ApiResponse<DevelopmentPlanDto>),
-        Description = "Development plan retrieved successfully")]
-    [OpenApiResponseWithBody(
-        statusCode: HttpStatusCode.Unauthorized,
-        contentType: "application/json",
-        bodyType: typeof(ApiResponse<DevelopmentPlanDto>),
-        Description = "User not authenticated")]
-    [OpenApiResponseWithBody(
-        statusCode: HttpStatusCode.NotFound,
-        contentType: "application/json",
-        bodyType: typeof(ApiResponse<DevelopmentPlanDto>),
-        Description = "Development plan not found")]
-    [OpenApiResponseWithBody(
-        statusCode: HttpStatusCode.BadRequest,
-        contentType: "application/json",
-        bodyType: typeof(ApiResponse<DevelopmentPlanDto>),
-        Description = "Invalid development plan ID format")]
-    [OpenApiResponseWithBody(
-        statusCode: HttpStatusCode.InternalServerError,
-        contentType: "application/json",
-        bodyType: typeof(ApiResponse<DevelopmentPlanDto>),
-        Description = "Internal server error")]
-    public async Task<HttpResponseData> GetDevelopmentPlanById(
-        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/development-plans/{id}")] HttpRequestData req,
-        string id)
-    {
-        var azureUserId = req.GetUserId();
-
-        if (string.IsNullOrEmpty(azureUserId))
-        {
-            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
-            return unauthorizedResponse;
-        }
-
-        if (!Guid.TryParse(id, out var planGuid))
-        {
-            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-            await badRequestResponse.WriteAsJsonAsync(ApiResponse<DevelopmentPlanDto>.ErrorResponse(
-                "Invalid development plan ID format", 400));
-            return badRequestResponse;
-        }
-
-        var plan = await _mediator.Send(new GetDevelopmentPlanByIdQuery(planGuid));
-
-        if (plan == null)
-        {
-            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFoundResponse.WriteAsJsonAsync(ApiResponse<DevelopmentPlanDto>.ErrorResponse(
-                "Development plan not found", 404));
-            return notFoundResponse;
-        }
-
-        var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(ApiResponse<DevelopmentPlanDto>.SuccessResponse(plan));
-        return response;
     }
 
     /// <summary>
