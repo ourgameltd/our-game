@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
-import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors } from '@/data/referenceData';
+import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 

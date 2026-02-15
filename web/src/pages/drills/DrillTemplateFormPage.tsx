@@ -6,7 +6,7 @@ import { sampleClubs } from '@/data/clubs';
 import { sampleAgeGroups } from '@/data/ageGroups';
 import { sampleTeams } from '@/data/teams';
 import { currentUser } from '@/data/currentUser';
-import { getAttributeLabel } from '@/data/referenceData';
+import { getAttributeLabel } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';

@@ -4,7 +4,8 @@ import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, 
 import { sampleDrills, sampleDrillTemplates } from '@/data/training';
 import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById } from '@/api/hooks';
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest } from '@/api/client';
-import { sessionDurations, drillCategories, getDrillCategoryColors } from '@/data/referenceData';
+import { sessionDurations } from '@/data/referenceData';
+import { drillCategories, getDrillCategoryColors } from '@/constants/referenceData';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { Drill, SessionDrill } from '@/types';

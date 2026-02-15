@@ -22,11 +22,15 @@ export type { CoachRoleValue } from '../constants/referenceData';
 import { 
   playerAttributes, 
   getAttributeCategory, 
-  linkTypes 
+  getAttributeLabel,
+  linkTypes,
+  drillCategories,
+  getDrillCategoryColors,
 } from '../constants/referenceData';
 
 // Re-export for backward compatibility
-export { playerAttributes, getAttributeCategory, linkTypes };
+export { playerAttributes, getAttributeCategory, getAttributeLabel, linkTypes, drillCategories, getDrillCategoryColors };
+export type { DrillCategory } from '../constants/referenceData';
 export type { LinkTypeValue } from '../constants/referenceData';
 
 // Kit types
@@ -239,17 +243,7 @@ export function getAllAttributeKeys(): string[] {
   ];
 }
 
-// Helper to get attribute label by key
-export function getAttributeLabel(key: string): string {
-  const allAttributes = [
-    ...playerAttributes.skills,
-    ...playerAttributes.physical,
-    ...playerAttributes.mental,
-  ];
-  const attr = allAttributes.find(a => a.key === key);
-  return attr?.label ?? key;
-}
-
+// Helper to get attribute label by key - now re-exported from constants (see imports above)
 // Helper to get attribute category by key - now re-exported from constants (see imports above)
 
 // Helper to determine drill/session category from attributes
@@ -383,18 +377,9 @@ export function getNotificationTypeColors(type: string): { bgColor: string; text
 }
 
 // ============================================================================
-// Drill Categories
+// Drill Categories (re-exported from shared constants)
 // ============================================================================
-
-export const drillCategories = [
-  { value: 'technical', label: 'Technical', bgColor: 'bg-blue-100 dark:bg-blue-900/30', textColor: 'text-blue-800 dark:text-blue-300' },
-  { value: 'tactical', label: 'Tactical', bgColor: 'bg-purple-100 dark:bg-purple-900/30', textColor: 'text-purple-800 dark:text-purple-300' },
-  { value: 'physical', label: 'Physical', bgColor: 'bg-orange-100 dark:bg-orange-900/30', textColor: 'text-orange-800 dark:text-orange-300' },
-  { value: 'mental', label: 'Mental', bgColor: 'bg-green-100 dark:bg-green-900/30', textColor: 'text-green-800 dark:text-green-300' },
-  { value: 'mixed', label: 'Mixed', bgColor: 'bg-gray-100 dark:bg-gray-900/30', textColor: 'text-gray-800 dark:text-gray-300' },
-] as const;
-
-export type DrillCategory = typeof drillCategories[number]['value'];
+// Note: drillCategories, DrillCategory type, and getDrillCategoryColors now re-exported from constants (see imports above)
 
 // Drill category display mapping
 export const drillCategoryDisplay: Record<string, string> = Object.fromEntries(
@@ -406,14 +391,7 @@ export function getDrillCategoryLabel(category: string): string {
   return drillCategoryDisplay[category] ?? category;
 }
 
-// Get drill category colors
-export function getDrillCategoryColors(category: string): { bgColor: string; textColor: string } {
-  const drillCategory = drillCategories.find(c => c.value === category);
-  return {
-    bgColor: drillCategory?.bgColor ?? 'bg-gray-100 dark:bg-gray-900/30',
-    textColor: drillCategory?.textColor ?? 'text-gray-800 dark:text-gray-300',
-  };
-}
+// Get drill category colors - now re-exported from constants (see imports above)
 
 // ============================================================================
 // Sort Options (for lists)
