@@ -1,10 +1,17 @@
 import { Link } from 'react-router-dom';
 import Logo from '../components/common/Logo';
-import { currentUser } from '../data/currentUser';
+import { useAuth } from '@/contexts/AuthContext';
+import { useCurrentUser } from '@/api/hooks';
 
 export default function HomePage() {
+  // Get auth state
+  const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
+  
+  // Get user profile (only when authenticated)
+  const { data: userProfile, isLoading: isProfileLoading, error: profileError } = useCurrentUser();
+  
   // Check if user is logged in
-  const isLoggedIn = currentUser && currentUser.role;
+  const isLoggedIn = isAuthenticated;
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden">
@@ -41,8 +48,16 @@ export default function HomePage() {
               Community Football for Everyone
             </p>
 
+            {/* Buttons - Loading state */}
+            {isAuthLoading && (
+              <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+                <div className="animate-pulse h-12 w-32 bg-white/20 rounded-full" />
+                <div className="animate-pulse h-12 w-32 bg-white/20 rounded-full" />
+              </div>
+            )}
+
             {/* Buttons - Only show if not logged in */}
-            {!isLoggedIn && (
+            {!isAuthLoading && !isLoggedIn && (
               <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
                 <Link 
                   to="/register" 
@@ -61,16 +76,35 @@ export default function HomePage() {
             )}
 
             {/* Welcome message for logged in users */}
-            {isLoggedIn && (
+            {!isAuthLoading && isLoggedIn && (
               <div className="mb-4">
-                <p className="text-xl text-white/90 drop-shadow-lg">
-                  Welcome back, {currentUser.firstName}!
-                </p>
+                {/* Loading state for profile */}
+                {isProfileLoading && (
+                  <div className="animate-pulse h-8 w-64 bg-white/20 rounded-full mx-auto mb-4" />
+                )}
+                
+                {/* Error state for profile */}
+                {!isProfileLoading && profileError && (
+                  <div className="mb-4 max-w-md mx-auto">
+                    <div className="bg-red-50/90 backdrop-blur-sm border border-red-200 rounded-lg p-4">
+                      <p className="text-red-800 font-medium">Failed to load profile</p>
+                      <p className="text-red-600 text-sm mt-1">{profileError.message}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Welcome message when profile is loaded */}
+                {!isProfileLoading && !profileError && (
+                  <p className="text-xl text-white/90 drop-shadow-lg">
+                    Welcome back, {userProfile?.firstName || 'there'}!
+                  </p>
+                )}
+                
                 <a 
                   href="/dashboard" 
                   className="inline-block mt-4 px-8 py-3 text-base font-semibold bg-white text-primary-700 rounded-full hover:bg-primary-50 transition-all duration-300 shadow-lg hover:shadow-xl"
                 >
-                  Login
+                  Continue to Dashboard
                 </a>
               </div>
             )}
