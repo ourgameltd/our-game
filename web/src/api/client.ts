@@ -1476,6 +1476,8 @@ export interface MatchDetailDto {
   id: string;
   teamId: string;
   ageGroupId: string;
+  clubId: string;
+  clubName: string;
   teamName: string;
   ageGroupName: string;
   seasonId: string;
@@ -1519,6 +1521,7 @@ export interface LineupPlayerDto {
   playerId: string;
   firstName: string;
   lastName: string;
+  photo?: string;
   position?: string;
   squadNumber?: number;
   isStarting: boolean;
@@ -1529,8 +1532,10 @@ export interface MatchReportDetailDto {
   summary?: string;
   captainId?: string;
   captainName?: string;
+  captainPhoto?: string;
   playerOfMatchId?: string;
   playerOfMatchName?: string;
+  playerOfMatchPhoto?: string;
   goals: GoalDetailDto[];
   cards: CardDetailDto[];
   injuries: InjuryDetailDto[];
@@ -1576,6 +1581,8 @@ export interface MatchCoachDetailDto {
   coachId: string;
   firstName: string;
   lastName: string;
+  photo?: string;
+  role: string;
 }
 
 export interface MatchSubstitutionDetailDto {
@@ -2480,6 +2487,15 @@ export const apiClient = {
      */
     getById: async (matchId: string): Promise<ApiResponse<MatchDetailDto>> => {
       const response = await axiosInstance.get<ApiResponse<MatchDetailDto>>(`/v1/matches/${matchId}`);
+      return response.data;
+    },
+
+    /**
+     * Get a match report by match ID with extended details
+     * Optimized endpoint for report view with coach photos, player photos, etc.
+     */
+    getReport: async (matchId: string): Promise<ApiResponse<MatchDetailDto>> => {
+      const response = await axiosInstance.get<ApiResponse<MatchDetailDto>>(`/v1/matches/${matchId}/report`);
       return response.data;
     },
 

@@ -194,6 +194,7 @@ export {
   usePlayer,
   useDevelopmentPlan,
   useMatch,
+  useMatchReport,
   useUpdateAgeGroup,
   useUpdatePlayer,
   useUpdateClub,

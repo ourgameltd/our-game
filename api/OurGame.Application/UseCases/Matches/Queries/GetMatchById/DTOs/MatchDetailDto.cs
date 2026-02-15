@@ -8,6 +8,8 @@ public record MatchDetailDto
     public Guid Id { get; init; }
     public Guid TeamId { get; init; }
     public Guid AgeGroupId { get; init; }
+    public Guid ClubId { get; init; }
+    public string ClubName { get; init; } = string.Empty;
     public string TeamName { get; init; } = string.Empty;
     public string AgeGroupName { get; init; } = string.Empty;
     public string SeasonId { get; init; } = string.Empty;
@@ -60,6 +62,7 @@ public record LineupPlayerDto
     public Guid PlayerId { get; init; }
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
+    public string? Photo { get; init; }
     public string? Position { get; init; }
     public int? SquadNumber { get; init; }
     public bool IsStarting { get; init; }
@@ -74,8 +77,10 @@ public record MatchReportDetailDto
     public string? Summary { get; init; }
     public Guid? CaptainId { get; init; }
     public string? CaptainName { get; init; }
+    public string? CaptainPhoto { get; init; }
     public Guid? PlayerOfMatchId { get; init; }
     public string? PlayerOfMatchName { get; init; }
+    public string? PlayerOfMatchPhoto { get; init; }
     public List<GoalDetailDto> Goals { get; init; } = new();
     public List<CardDetailDto> Cards { get; init; } = new();
     public List<InjuryDetailDto> Injuries { get; init; } = new();
@@ -141,6 +146,8 @@ public record MatchCoachDetailDto
     public Guid CoachId { get; init; }
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
+    public string? Photo { get; init; }
+    public string Role { get; init; } = string.Empty;
 }
 
 /// <summary>

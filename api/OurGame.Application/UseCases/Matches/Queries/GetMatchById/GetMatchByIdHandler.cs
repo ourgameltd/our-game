@@ -10,7 +10,7 @@ namespace OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 /// <summary>
 /// Query to get a match by ID with all related data
 /// </summary>
-public record GetMatchByIdQuery(Guid MatchId) : IQuery<MatchDetailDto?>;
+public record GetMatchByIdQuery(Guid MatchId, string? UserId = null) : IQuery<MatchDetailDto?>;
 
 /// <summary>
 /// Handler for GetMatchByIdQuery - retrieves full match detail using raw SQL
@@ -26,12 +26,62 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
 
     public async Task<MatchDetailDto?> Handle(GetMatchByIdQuery query, CancellationToken cancellationToken)
     {
-        // 1. Fetch the match with team/age-group context
+        // Authorization check: if userId is provided, verify user has access to this match
+        if (!string.IsNullOrEmpty(query.UserId))
+        {
+            var authSql = @"
+                SELECT CASE WHEN EXISTS (
+                    -- User is a coach for one of the teams in the match
+                    SELECT 1
+                    FROM Matches m
+                    INNER JOIN Teams t ON m.TeamId = t.Id
+                    INNER JOIN TeamCoaches tc ON t.Id = tc.TeamId
+                    INNER JOIN Coaches c ON tc.CoachId = c.Id
+                    INNER JOIN Users u ON c.UserId = u.Id
+                    WHERE m.Id = {0} AND u.AuthId = {1}
+                    
+                    UNION
+                    
+                    -- User is a player in one of the teams
+                    SELECT 1
+                    FROM Matches m
+                    INNER JOIN Teams t ON m.TeamId = t.Id
+                    INNER JOIN PlayerTeams pt ON t.Id = pt.TeamId
+                    INNER JOIN Players p ON pt.PlayerId = p.Id
+                    INNER JOIN Users u ON p.UserId = u.Id
+                    WHERE m.Id = {0} AND u.AuthId = {1}
+                    
+                    UNION
+                    
+                    -- User is a parent of a player in one of the teams
+                    SELECT 1
+                    FROM Matches m
+                    INNER JOIN Teams t ON m.TeamId = t.Id
+                    INNER JOIN PlayerTeams pt ON t.Id = pt.TeamId
+                    INNER JOIN Players p ON pt.PlayerId = p.Id
+                    INNER JOIN PlayerParents pp ON p.Id = pp.PlayerId
+                    INNER JOIN Users u ON pp.ParentUserId = u.Id
+                    WHERE m.Id = {0} AND u.AuthId = {1}
+                ) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS HasAccess";
+
+            var hasAccess = await _db.Database
+                .SqlQueryRaw<AuthCheckResult>(authSql, query.MatchId, query.UserId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (hasAccess == null || !hasAccess.HasAccess)
+            {
+                return null; // Return 404 to not leak existence
+            }
+        }
+
+        // 1. Fetch the match with team/age-group/club context
         var matchSql = @"
             SELECT 
                 m.Id,
                 m.TeamId,
                 t.AgeGroupId,
+                t.ClubId,
+                cl.Name AS ClubName,
                 t.Name AS TeamName,
                 ag.Name AS AgeGroupName,
                 m.SeasonId,
@@ -58,6 +108,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             FROM Matches m
             INNER JOIN Teams t ON m.TeamId = t.Id
             INNER JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
+            INNER JOIN Clubs cl ON t.ClubId = cl.Id
             WHERE m.Id = {0}";
 
         var match = await _db.Database
@@ -96,6 +147,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     lp.PlayerId,
                     p.FirstName,
                     p.LastName,
+                    p.Photo,
                     lp.Position,
                     lp.SquadNumber,
                     lp.IsStarting
@@ -115,7 +167,9 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 mc.Id,
                 mc.CoachId,
                 c.FirstName,
-                c.LastName
+                c.LastName,
+                c.Photo,
+                c.Role
             FROM MatchCoaches mc
             INNER JOIN Coaches c ON mc.CoachId = c.Id
             WHERE mc.MatchId = {0}";
@@ -150,8 +204,10 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 mr.Summary,
                 mr.CaptainId,
                 capP.FirstName + ' ' + capP.LastName AS CaptainName,
+                capP.Photo AS CaptainPhoto,
                 mr.PlayerOfMatchId,
-                pomP.FirstName + ' ' + pomP.LastName AS PlayerOfMatchName
+                pomP.FirstName + ' ' + pomP.LastName AS PlayerOfMatchName,
+                pomP.Photo AS PlayerOfMatchPhoto
             FROM MatchReports mr
             LEFT JOIN Players capP ON mr.CaptainId = capP.Id
             LEFT JOIN Players pomP ON mr.PlayerOfMatchId = pomP.Id
@@ -243,6 +299,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             Id = match.Id,
             TeamId = match.TeamId,
             AgeGroupId = match.AgeGroupId,
+            ClubId = match.ClubId,
+            ClubName = match.ClubName ?? string.Empty,
             TeamName = match.TeamName ?? string.Empty,
             AgeGroupName = match.AgeGroupName ?? string.Empty,
             SeasonId = match.SeasonId ?? string.Empty,
@@ -279,6 +337,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     PlayerId = lp.PlayerId,
                     FirstName = lp.FirstName ?? string.Empty,
                     LastName = lp.LastName ?? string.Empty,
+                    Photo = lp.Photo,
                     Position = lp.Position,
                     SquadNumber = lp.SquadNumber,
                     IsStarting = lp.IsStarting
@@ -290,8 +349,10 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 Summary = report.Summary,
                 CaptainId = report.CaptainId,
                 CaptainName = report.CaptainName,
+                CaptainPhoto = report.CaptainPhoto,
                 PlayerOfMatchId = report.PlayerOfMatchId,
                 PlayerOfMatchName = report.PlayerOfMatchName,
+                PlayerOfMatchPhoto = report.PlayerOfMatchPhoto,
                 Goals = goals.Select(g => new GoalDetailDto
                 {
                     Id = g.Id,
@@ -332,7 +393,9 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 Id = c.Id,
                 CoachId = c.CoachId,
                 FirstName = c.FirstName ?? string.Empty,
-                LastName = c.LastName ?? string.Empty
+                LastName = c.LastName ?? string.Empty,
+                Photo = c.Photo,
+                Role = MapCoachRoleToString(c.Role)
             }).ToList(),
             Substitutions = substitutions.Select(s => new MatchSubstitutionDetailDto
             {
@@ -356,6 +419,19 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             3 => "postponed",
             4 => "cancelled",
             _ => "scheduled"
+        };
+    }
+
+    private static string MapCoachRoleToString(int role)
+    {
+        return role switch
+        {
+            0 => "head-coach",
+            1 => "assistant-coach",
+            2 => "goalkeeper-coach",
+            3 => "fitness-coach",
+            4 => "technical-coach",
+            _ => "assistant-coach"
         };
     }
 
@@ -388,6 +464,8 @@ public class MatchRaw
     public Guid Id { get; set; }
     public Guid TeamId { get; set; }
     public Guid AgeGroupId { get; set; }
+    public Guid ClubId { get; set; }
+    public string? ClubName { get; set; }
     public string? TeamName { get; set; }
     public string? AgeGroupName { get; set; }
     public string? SeasonId { get; set; }
@@ -428,6 +506,7 @@ public class LineupPlayerRaw
     public Guid PlayerId { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public string? Photo { get; set; }
     public string? Position { get; set; }
     public int? SquadNumber { get; set; }
     public bool IsStarting { get; set; }
@@ -439,6 +518,8 @@ public class MatchCoachRaw
     public Guid CoachId { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
+    public string? Photo { get; set; }
+    public int Role { get; set; }
 }
 
 public class SubstitutionRaw
@@ -457,8 +538,10 @@ public class ReportRaw
     public string? Summary { get; set; }
     public Guid? CaptainId { get; set; }
     public string? CaptainName { get; set; }
+    public string? CaptainPhoto { get; set; }
     public Guid? PlayerOfMatchId { get; set; }
     public string? PlayerOfMatchName { get; set; }
+    public string? PlayerOfMatchPhoto { get; set; }
 }
 
 public class GoalRaw
@@ -497,6 +580,11 @@ public class RatingRaw
     public Guid PlayerId { get; set; }
     public string? PlayerName { get; set; }
     public decimal? Rating { get; set; }
+}
+
+public class AuthCheckResult
+{
+    public bool HasAccess { get; set; }
 }
 
 #endregion

@@ -839,6 +839,23 @@ export function useMatch(matchId: string | undefined): UseApiState<MatchDetailDt
   );
 }
 
+/**
+ * Hook to fetch a match report by match ID with extended details.
+ * Optimized for report view with coach photos, player photos, captain photo, etc.
+ * Only fetches if matchId is defined.
+ */
+export function useMatchReport(matchId: string | undefined): UseApiState<MatchDetailDto> {
+  return useApiCall<MatchDetailDto>(
+    () => {
+      if (!matchId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.matches.getReport(matchId);
+    },
+    [matchId]
+  );
+}
+
 // ============================================================
 // Mutation Hooks
 // ============================================================
