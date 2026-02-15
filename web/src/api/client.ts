@@ -1406,6 +1406,100 @@ export interface PlayerDto {
   preferredPosition?: string;
 }
 
+// Player Abilities DTOs
+export interface PlayerAttributesDto {
+  // Technical attributes
+  ballControl: number;
+  crossing: number;
+  weakFoot: number;
+  dribbling: number;
+  finishing: number;
+  freeKick: number;
+  heading: number;
+  longPassing: number;
+  longShot: number;
+  penalties: number;
+  shortPassing: number;
+  shotPower: number;
+  slidingTackle: number;
+  standingTackle: number;
+  volleys: number;
+  // Physical attributes
+  acceleration: number;
+  agility: number;
+  balance: number;
+  jumping: number;
+  pace: number;
+  reactions: number;
+  sprintSpeed: number;
+  stamina: number;
+  strength: number;
+  // Mental attributes
+  aggression: number;
+  attackingPosition: number;
+  awareness: number;
+  communication: number;
+  composure: number;
+  defensivePositioning: number;
+  interceptions: number;
+  marking: number;
+  positivity: number;
+  positioning: number;
+  vision: number;
+}
+
+export interface EvaluationAttributeDto {
+  attributeName: string;
+  rating: number;
+  notes?: string;
+}
+
+export interface PlayerAbilityEvaluationDto {
+  evaluationId: string;
+  evaluatedAt: string;
+  overallRating: number;
+  coachName?: string;
+  coachNotes?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  attributes: EvaluationAttributeDto[];
+}
+
+export interface PlayerAbilitiesDto {
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  photo?: string;
+  preferredPositions: string[];
+  attributes: PlayerAttributesDto;
+  overallRating: number;
+  evaluations: PlayerAbilityEvaluationDto[];
+}
+
+export interface CreatePlayerAbilityEvaluationRequest {
+  evaluatedAt: string;
+  coachNotes?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  attributes: {
+    attributeName: string;
+    rating: number;
+    notes?: string;
+  }[];
+}
+
+export interface UpdatePlayerAbilityEvaluationRequest {
+  evaluatedAt: string;
+  coachNotes?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  attributes: {
+    attributeName: string;
+    rating: number;
+    notes?: string;
+  }[];
+}
+
 export interface UpdatePlayerRequest {
   firstName: string;
   lastName: string;
@@ -2438,6 +2532,58 @@ export const apiClient = {
       } catch (error) {
         return handleApiError(error);
       }
+    },
+
+    /**
+     * Get player abilities with attributes and evaluation history
+     */
+    getAbilities: async (playerId: string): Promise<ApiResponse<PlayerAbilitiesDto>> => {
+      const response = await axiosInstance.get<ApiResponse<PlayerAbilitiesDto>>(`/v1/players/${playerId}/abilities`);
+      return response.data;
+    },
+
+    /**
+     * Create a new ability evaluation for a player
+     */
+    createAbilityEvaluation: async (
+      playerId: string,
+      request: CreatePlayerAbilityEvaluationRequest
+    ): Promise<ApiResponse<PlayerAbilityEvaluationDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<PlayerAbilityEvaluationDto>>(
+          `/v1/players/${playerId}/abilities/evaluations`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing ability evaluation
+     */
+    updateAbilityEvaluation: async (
+      playerId: string,
+      evaluationId: string,
+      request: UpdatePlayerAbilityEvaluationRequest
+    ): Promise<ApiResponse<PlayerAbilityEvaluationDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<PlayerAbilityEvaluationDto>>(
+          `/v1/players/${playerId}/abilities/evaluations/${evaluationId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Delete an ability evaluation
+     */
+    deleteAbilityEvaluation: async (playerId: string, evaluationId: string): Promise<void> => {
+      await axiosInstance.delete(`/v1/players/${playerId}/abilities/evaluations/${evaluationId}`);
     },
   },
 

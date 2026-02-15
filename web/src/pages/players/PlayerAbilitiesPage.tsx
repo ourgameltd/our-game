@@ -1,10 +1,12 @@
 import { useParams } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
-import { getPlayerById } from '@data/players';
+import { usePlayerAbilities, useCreatePlayerAbilityEvaluation } from '@api/hooks';
+import { CreatePlayerAbilityEvaluationRequest } from '@api/client';
 import { groupAttributes, getQualityColor, calculateOverallRating } from '@utils/attributeHelpers';
-import { PlayerAttributes, AttributeEvaluation } from '@/types';
+import { PlayerAttributes } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useNavigation } from '@/contexts/NavigationContext';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PolarAngleAxis, PolarGrid, PolarRadiusAxis, RadarChart, Radar, Legend
@@ -12,9 +14,18 @@ import {
 
 export default function PlayerAbilitiesPage() {
   const { playerId } = useParams();
-  const player = getPlayerById(playerId!);
+  const { data: abilities, isLoading: loading, error, refetch } = usePlayerAbilities(playerId);
+  const { mutate: createEvaluation, isSubmitting } = useCreatePlayerAbilityEvaluation(playerId!);
   const { actualTheme } = useTheme();
+  const { setEntityName } = useNavigation();
   const isDark = actualTheme === 'dark';
+  
+  // Update navigation context with player name
+  useEffect(() => {
+    if (abilities) {
+      setEntityName('player', abilities.playerId, `${abilities.firstName} ${abilities.lastName}`);
+    }
+  }, [abilities, setEntityName]);
   
   // Theme-aware chart colors
   const chartColors = {
@@ -32,124 +43,92 @@ export default function PlayerAbilitiesPage() {
     emerald: { stroke: '#10B981', fill: '#10B981' },
   };
   
-  // Mock current coach ID - in a real app this would come from auth context
-  const currentCoachId = 'c1d2e3f4-a5b6-7c8d-9e0f-1a2b3c4d5e6f';
-  
   const [showEvaluationForm, setShowEvaluationForm] = useState(false);
   const [evaluationDate, setEvaluationDate] = useState(new Date().toISOString().split('T')[0]);
   const [selectedCategory, setSelectedCategory] = useState<'skills' | 'physical' | 'mental'>('skills');
   const [attributeRatings, setAttributeRatings] = useState<Record<string, number>>({});
   const [coachNotes, setCoachNotes] = useState('');
   const [showAllAbilities, setShowAllAbilities] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
-  if (!player) {
+  if (!playerId) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Player not found</h2>
+            <h2 className="text-xl font-semibold mb-4">Player ID is required</h2>
           </div>
         </main>
       </div>
     );
   }
 
-  // Calculate average attributes from all evaluations
-  const calculateAverageAttributes = (): PlayerAttributes => {
-    if (!player.evaluations || player.evaluations.length === 0) {
-      return player.attributes;
-    }
-
-    const attributeKeys = Object.keys(player.attributes) as (keyof PlayerAttributes)[];
-    const averaged = {} as PlayerAttributes;
-
-    attributeKeys.forEach(key => {
-      const allRatings: number[] = [];
-      
-      player.evaluations.forEach(evaluation => {
-        const evalAttr = evaluation.attributes.find(a => a.name === key);
-        if (evalAttr) {
-          allRatings.push(evalAttr.rating);
-        }
-      });
-
-      // If we have evaluations, use average; otherwise use current value
-      averaged[key] = allRatings.length > 0
-        ? Math.round(allRatings.reduce((sum, val) => sum + val, 0) / allRatings.length)
-        : player.attributes[key];
-    });
-
-    return averaged;
+  // Get the last evaluation for pre-filling the form
+  const getLastEvaluation = () => {
+    if (!abilities?.evaluations || abilities.evaluations.length === 0) return null;
+    return abilities.evaluations[0]; // Evaluations are already sorted by date (most recent first)
   };
 
-  // Get the last evaluation from the current coach
-  const getLastCoachEvaluation = () => {
-    return player.evaluations
-      .filter(e => e.evaluatedBy === currentCoachId)
-      .sort((a, b) => new Date(b.evaluatedAt).getTime() - new Date(a.evaluatedAt).getTime())[0];
-  };
-
-  // Initialize form with last coach evaluation or current averages
+  // Initialize form with last evaluation or current attributes
   const initializeForm = () => {
-    const lastEval = getLastCoachEvaluation();
+    if (!abilities) return;
+    
+    const lastEval = getLastEvaluation();
     const newRatings: Record<string, number> = {};
 
     if (lastEval) {
-      // Use coach's last evaluation
+      // Use last evaluation
       lastEval.attributes.forEach(attr => {
-        newRatings[attr.name] = attr.rating;
+        newRatings[attr.attributeName] = attr.rating;
       });
       setCoachNotes(lastEval.coachNotes || '');
     } else {
-      // Use current average attributes
-      const averageAttrs = calculateAverageAttributes();
-      Object.keys(averageAttrs).forEach(key => {
-        newRatings[key] = averageAttrs[key as keyof PlayerAttributes];
+      // Use current attributes
+      Object.entries(abilities.attributes).forEach(([key, value]) => {
+        newRatings[key] = value;
       });
     }
 
     setAttributeRatings(newRatings);
+    setSubmitError(null);
     setShowEvaluationForm(true);
   };
 
-  const handleSubmitEvaluation = () => {
-    // Merge attributeRatings with averageAttributes to ensure all fields are present
-    const completeAttributes: PlayerAttributes = {
-      ...averageAttributes,
-      ...attributeRatings
-    } as PlayerAttributes;
-
-    // In a real app, this would save to a backend
-    const newEvaluation: AttributeEvaluation = {
-      id: `eval-${Date.now()}`,
-      playerId: player.id,
-      evaluatedBy: currentCoachId,
-      evaluatedAt: new Date(evaluationDate),
-      attributes: Object.entries(attributeRatings).map(([name, rating]) => ({
-        name,
+  const handleSubmitEvaluation = async () => {
+    if (!abilities) return;
+    
+    setSubmitError(null);
+    
+    // Build request with all attributes
+    const request: CreatePlayerAbilityEvaluationRequest = {
+      evaluatedAt: new Date(evaluationDate).toISOString(),
+      coachNotes: coachNotes || undefined,
+      attributes: Object.entries(attributeRatings).map(([attributeName, rating]) => ({
+        attributeName,
         rating,
-        notes: ''
       })),
-      overallRating: calculateOverallRating(completeAttributes),
-      coachNotes,
     };
 
-    console.log('New evaluation submitted:', newEvaluation);
-    alert('Evaluation submitted successfully! (This is a demo - no backend save)');
-    setShowEvaluationForm(false);
-    setAttributeRatings({});
-    setCoachNotes('');
+    try {
+      await createEvaluation(request);
+      // On success, close form and refresh data
+      setShowEvaluationForm(false);
+      setAttributeRatings({});
+      setCoachNotes('');
+      await refetch();
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Failed to submit evaluation');
+    }
   };
 
   // Group attributes by category
-  const averageAttributes = calculateAverageAttributes();
-  const groupedAttributes = groupAttributes(averageAttributes);
+  const groupedAttributes = abilities ? groupAttributes(abilities.attributes) : { skills: [], physical: [], mental: [] };
   
-  const allAbilities = [
+  const allAbilities = abilities ? [
     ...groupedAttributes.skills,
     ...groupedAttributes.physical,
     ...groupedAttributes.mental
-  ];
+  ] : [];
 
   const topAbilities = [...allAbilities]
     .sort((a, b) => b.rating - a.rating)
@@ -163,12 +142,15 @@ export default function PlayerAbilitiesPage() {
 
   // Calculate historical data from evaluations
   const getHistoricalData = () => {
-    if (!player.evaluations || player.evaluations.length === 0) {
-      return [{ date: 'Current', rating: player.overallRating }];
+    if (!abilities) return [];
+    
+    if (!abilities.evaluations || abilities.evaluations.length === 0) {
+      return [{ date: 'Current', rating: abilities.overallRating }];
     }
 
-    return player.evaluations
-      .sort((a, b) => new Date(a.evaluatedAt).getTime() - new Date(b.evaluatedAt).getTime())
+    return abilities.evaluations
+      .slice()
+      .reverse() // Reverse to get chronological order
       .slice(-6) // Last 6 evaluations
       .map(e => ({
         date: new Date(e.evaluatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
@@ -242,7 +224,7 @@ export default function PlayerAbilitiesPage() {
   const physicalRadarData = getPhysicalRadarData();
   const mentalRadarData = getMentalRadarData();
 
-  const currentAttributes = groupedAttributes[selectedCategory];
+  const currentAttributes = abilities ? groupedAttributes[selectedCategory] : [];
   const attributeKeyMap: Record<string, string> = {
     'Ball Control': 'ballControl',
     'Crossing': 'crossing',
@@ -282,53 +264,86 @@ export default function PlayerAbilitiesPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
+        {/* Error State */}
+        {error && (
+          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <p className="text-sm text-red-800 dark:text-red-200">
+              {error.message || 'Failed to load player abilities'}
+            </p>
+            <button onClick={refetch} className="mt-2 text-sm text-red-600 dark:text-red-400 hover:underline">
+              Try again
+            </button>
+          </div>
+        )}
+        
         {/* Header with Action Button */}
         <div className="flex justify-between items-center mb-4">
-          <div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-              {player.firstName} {player.lastName} - Abilities
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Overall Rating: {calculateOverallRating(averageAttributes)}/99
-              {player.evaluations.length > 0 && (
-                <span className="ml-2 text-sm">
-                  (Based on {player.evaluations.length} evaluation{player.evaluations.length !== 1 ? 's' : ''})
-                </span>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={initializeForm}
-            className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-            title="Add New Evaluation"
-          >
-            <Plus className="w-5 h-5" />
-          </button>
+          {loading ? (
+            <div className="flex-1">
+              <div className="h-7 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-64 mb-2" />
+              <div className="h-5 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-48" />
+            </div>
+          ) : abilities ? (
+            <div>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                {abilities.firstName} {abilities.lastName} - Abilities
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mt-1">
+                Overall Rating: {abilities.overallRating}/99
+                {abilities.evaluations.length > 0 && (
+                  <span className="ml-2 text-sm">
+                    (Based on {abilities.evaluations.length} evaluation{abilities.evaluations.length !== 1 ? 's' : ''})
+                  </span>
+                )}
+              </p>
+            </div>
+          ) : null}
+          {!loading && abilities && (
+            <button
+              onClick={initializeForm}
+              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              title="Add New Evaluation"
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Progress Summary */}
         <div className="grid md:grid-cols-3 gap-4 mb-4">
-          <div className="card">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Overall Score</div>
-            <div className="text-4xl font-bold text-primary-600">
-              {player.evaluations.length > 0 
-                ? Math.round(player.evaluations.reduce((sum, e) => sum + e.overallRating, 0) / player.evaluations.length)
-                : calculateOverallRating(averageAttributes)}/99
-            </div>
-            <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-              {player.evaluations.length} evaluation{player.evaluations.length !== 1 ? 's' : ''}
-            </div>
-          </div>
-          <div className="card">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Best Skill</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{bestSkill.name}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Rating: {bestSkill.rating}/99</div>
-          </div>
-          <div className="card">
-            <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Focus Area</div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-white">{focusArea.name}</div>
-            <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Rating: {focusArea.rating}/99</div>
-          </div>
+          {loading ? (
+            <>
+              {[1, 2, 3].map(i => (
+                <div key={i} className="card">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-24 mb-2" />
+                  <div className="h-10 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-20 mb-1" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-32" />
+                </div>
+              ))}
+            </>
+          ) : abilities && bestSkill && focusArea ? (
+            <>
+              <div className="card">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Overall Score</div>
+                <div className="text-4xl font-bold text-primary-600">
+                  {abilities.overallRating}/99
+                </div>
+                <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  {abilities.evaluations.length} evaluation{abilities.evaluations.length !== 1 ? 's' : ''}
+                </div>
+              </div>
+              <div className="card">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Best Skill</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{bestSkill.name}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Rating: {bestSkill.rating}/99</div>
+              </div>
+              <div className="card">
+                <div className="text-sm text-gray-600 dark:text-gray-400 mb-1">Focus Area</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-white">{focusArea.name}</div>
+                <div className="text-sm text-gray-500 dark:text-gray-400 mt-1">Rating: {focusArea.rating}/99</div>
+              </div>
+            </>
+          ) : null}
         </div>
 
         {/* Evaluation Form Modal */}
@@ -339,10 +354,10 @@ export default function PlayerAbilitiesPage() {
                 <div className="flex justify-between items-center">
                   <div>
                     <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      New Evaluation - {player.firstName} {player.lastName}
+                      New Evaluation - {abilities?.firstName} {abilities?.lastName}
                     </h2>
                     <p className="text-gray-600 dark:text-gray-400 mt-1">
-                      {getLastCoachEvaluation() ? 'Values auto-populated from your last evaluation' : 'Values auto-populated from current averages'}
+                      {getLastEvaluation() ? 'Values auto-populated from last evaluation' : 'Values auto-populated from current attributes'}
                     </p>
                   </div>
                   <button
@@ -357,6 +372,13 @@ export default function PlayerAbilitiesPage() {
               </div>
 
               <div className="p-6">
+                {/* Submit Error */}
+                {submitError && (
+                  <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                    <p className="text-sm text-red-800 dark:text-red-200">{submitError}</p>
+                  </div>
+                )}
+                
                 {/* Evaluation Date */}
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -393,7 +415,7 @@ export default function PlayerAbilitiesPage() {
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
                   {currentAttributes.map((attr) => {
                     const attrKey = attributeKeyMap[attr.name];
-                    const currentRating = attributeRatings[attrKey] ?? averageAttributes[attrKey as keyof PlayerAttributes];
+                    const currentRating = attributeRatings[attrKey] ?? (abilities?.attributes[attrKey as keyof PlayerAttributes] || 50);
                     const quality = getQualityColor(attr.quality);
 
                     return (
@@ -446,14 +468,16 @@ export default function PlayerAbilitiesPage() {
                 <div className="flex gap-4">
                   <button
                     onClick={handleSubmitEvaluation}
-                    className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                    disabled={isSubmitting}
+                    className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Submit Evaluation
+                    {isSubmitting ? 'Submitting...' : 'Submit Evaluation'}
                   </button>
                   <button
                     onClick={() => setShowEvaluationForm(false)}
+                    disabled={isSubmitting}
                     className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 
-                      text-gray-900 dark:text-white font-medium py-3 px-4 rounded-lg transition-colors"
+                      text-gray-900 dark:text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Cancel
                   </button>
@@ -464,7 +488,18 @@ export default function PlayerAbilitiesPage() {
         )}
 
         {/* Main Charts Row */}
-        <div className="grid md:grid-cols-3 gap-4 mb-4">
+        {loading ? (
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="card">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-48 mb-4" />
+                <div className="h-80 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-full mt-4" />
+              </div>
+            ))}
+          </div>
+        ) : abilities ? (
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
           {/* Overall Rating Chart */}
           <div className="card">
             <h3 className="text-xl font-semibold mb-4">Overall Rating Over Time</h3>
@@ -626,9 +661,20 @@ export default function PlayerAbilitiesPage() {
             </div>
           </div>
         </div>
+        ) : null}
 
         {/* Individual Category Radar Charts */}
-        <div className="grid md:grid-cols-3 gap-4 mb-4">
+        {loading ? (
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="card">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-40 mb-4" />
+                <div className="h-72 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+              </div>
+            ))}
+          </div>
+        ) : abilities ? (
+          <div className="grid md:grid-cols-3 gap-4 mb-4">
           {/* Skills Radar */}
           <div className="card">
             <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
@@ -818,16 +864,27 @@ export default function PlayerAbilitiesPage() {
             </div>
           </div>
         </div>
+        ) : null}
 
         {/* All Abilities by Category */}
-        <div className="card">
-          <div 
-            className="flex justify-between items-center cursor-pointer"
-            onClick={() => setShowAllAbilities(!showAllAbilities)}
-          >
-            <h3 className="text-xl font-semibold">
-              All Abilities {player.evaluations.length > 0 && `(Averaged from ${player.evaluations.length} evaluations)`}
-            </h3>
+        {loading ? (
+          <div className="card">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-64 mb-4" />
+            <div className="space-y-2">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+              ))}
+            </div>
+          </div>
+        ) : abilities ? (
+          <div className="card">
+            <div 
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() => setShowAllAbilities(!showAllAbilities)}
+            >
+              <h3 className="text-xl font-semibold">
+                All Abilities {abilities.evaluations.length > 0 && `(Based on ${abilities.evaluations.length} evaluations)`}
+              </h3>
             <button className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-transform">
               <svg 
                 className={`w-6 h-6 transform transition-transform ${showAllAbilities ? 'rotate-180' : ''}`}
@@ -925,9 +982,19 @@ export default function PlayerAbilitiesPage() {
             </div>
           )}
         </div>
+        ) : null}
 
         {/* Evaluation History */}
-        {player.evaluations.length > 0 && (
+        {loading ? (
+          <div className="card mt-4">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-48 mb-4" />
+            <div className="space-y-2">
+              {[1, 2, 3].map(i => (
+                <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
+              ))}
+            </div>
+          </div>
+        ) : abilities && abilities.evaluations.length > 0 ? (
           <div className="card mt-4">
             <h3 className="text-xl font-semibold mb-4">Evaluation History</h3>
             <div className="overflow-x-auto">
@@ -941,29 +1008,27 @@ export default function PlayerAbilitiesPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {player.evaluations
-                    .sort((a, b) => new Date(b.evaluatedAt).getTime() - new Date(a.evaluatedAt).getTime())
-                    .map((evaluation) => (
-                      <tr key={evaluation.id} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                          {new Date(evaluation.evaluatedAt).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                          {evaluation.evaluatedBy === currentCoachId ? 'You' : 'Other Coach'}
-                        </td>
-                        <td className="py-3 px-4 text-sm">
-                          <span className="font-bold text-primary-600">{evaluation.overallRating}/99</span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                          {evaluation.coachNotes || '-'}
-                        </td>
-                      </tr>
-                    ))}
+                  {abilities.evaluations.map((evaluation) => (
+                    <tr key={evaluation.evaluationId} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                        {new Date(evaluation.evaluatedAt).toLocaleDateString()}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+                        {evaluation.coachName || 'Unknown Coach'}
+                      </td>
+                      <td className="py-3 px-4 text-sm">
+                        <span className="font-bold text-primary-600">{evaluation.overallRating}/99</span>
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
+                        {evaluation.coachNotes || '-'}
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
-        )}
+        ) : null}
       </main>
     </div>
   );

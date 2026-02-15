@@ -1,5 +1,7 @@
 # Migration Plan: PlayerAbilitiesPage
 
+**Status: ✅ COMPLETED**
+
 ## File
 `web/src/pages/players/PlayerAbilitiesPage.tsx`
 

@@ -61,6 +61,10 @@ import {
   CreateTrainingSessionRequest,
   UpdateTrainingSessionRequest,
   UpdateCoachRequest,
+  PlayerAbilitiesDto,
+  PlayerAbilityEvaluationDto,
+  CreatePlayerAbilityEvaluationRequest,
+  UpdatePlayerAbilityEvaluationRequest,
 } from './client';
 import { TrainingSession } from '@/types';
 
@@ -783,6 +787,140 @@ export function usePlayer(playerId: string | undefined): UseApiState<PlayerDto> 
     },
     [playerId]
   );
+}
+
+/**
+ * Hook to fetch player abilities with attributes and evaluation history.
+ * Only fetches if playerId is defined.
+ */
+export function usePlayerAbilities(playerId: string | undefined): UseApiState<PlayerAbilitiesDto> {
+  return useApiCall<PlayerAbilitiesDto>(
+    () => {
+      if (!playerId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.players.getAbilities(playerId);
+    },
+    [playerId]
+  );
+}
+
+/**
+ * Hook to create a player ability evaluation.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useCreatePlayerAbilityEvaluation(playerId: string): UseMutationState<PlayerAbilityEvaluationDto> & {
+  mutate: (request: CreatePlayerAbilityEvaluationRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<PlayerAbilityEvaluationDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const mutate = useCallback(async (request: CreatePlayerAbilityEvaluationRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<PlayerAbilityEvaluationDto> = await apiClient.players.createAbilityEvaluation(playerId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create ability evaluation',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [playerId]);
+
+  return { mutate, isSubmitting, data, error };
+}
+
+/**
+ * Hook to update a player ability evaluation.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdatePlayerAbilityEvaluation(
+  playerId: string,
+  evaluationId: string
+): UseMutationState<PlayerAbilityEvaluationDto> & {
+  mutate: (request: UpdatePlayerAbilityEvaluationRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<PlayerAbilityEvaluationDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const mutate = useCallback(async (request: UpdatePlayerAbilityEvaluationRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<PlayerAbilityEvaluationDto> = await apiClient.players.updateAbilityEvaluation(
+        playerId,
+        evaluationId,
+        request
+      );
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update ability evaluation',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [playerId, evaluationId]);
+
+  return { mutate, isSubmitting, data, error };
+}
+
+/**
+ * Hook to delete a player ability evaluation.
+ * Returns a mutation function, submitting state, and error.
+ */
+export function useDeletePlayerAbilityEvaluation(
+  playerId: string,
+  evaluationId: string
+): UseMutationState<void> & {
+  mutate: () => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const mutate = useCallback(async (): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      await apiClient.players.deleteAbilityEvaluation(playerId, evaluationId);
+      setData(undefined);
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'Failed to delete ability evaluation',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [playerId, evaluationId]);
+
+  return { mutate, isSubmitting, data, error };
 }
 
 // ============================================================
