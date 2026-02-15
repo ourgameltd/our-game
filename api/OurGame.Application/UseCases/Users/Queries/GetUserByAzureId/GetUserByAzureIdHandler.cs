@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
-using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
 using OurGame.Persistence.Models;
 
@@ -10,12 +9,12 @@ namespace OurGame.Application.UseCases.Users.Queries.GetUserByAzureId;
 /// <summary>
 /// Query to get a user by Auth ID (Azure, Auth0, etc.)
 /// </summary>
-public record GetUserByAzureIdQuery(string AuthId) : IQuery<UserProfileDto>;
+public record GetUserByAzureIdQuery(string AuthId) : IQuery<UserProfileDto?>;
 
 /// <summary>
 /// Handler for GetUserByAzureIdQuery
 /// </summary>
-public class GetUserByAzureIdHandler : IRequestHandler<GetUserByAzureIdQuery, UserProfileDto>
+public class GetUserByAzureIdHandler : IRequestHandler<GetUserByAzureIdQuery, UserProfileDto?>
 {
     private readonly OurGameContext _db;
 
@@ -24,7 +23,7 @@ public class GetUserByAzureIdHandler : IRequestHandler<GetUserByAzureIdQuery, Us
         _db = db;
     }
 
-    public async Task<UserProfileDto> Handle(GetUserByAzureIdQuery query, CancellationToken cancellationToken)
+    public async Task<UserProfileDto?> Handle(GetUserByAzureIdQuery query, CancellationToken cancellationToken)
     {
         var user = await _db.Users
             .AsNoTracking()
@@ -32,7 +31,7 @@ public class GetUserByAzureIdHandler : IRequestHandler<GetUserByAzureIdQuery, Us
 
         if (user == null)
         {
-            throw new NotFoundException("User", query.AuthId);
+            return null;
         }
 
         // Check if user is associated with a player or coach
