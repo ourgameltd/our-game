@@ -445,6 +445,40 @@ export interface TeamTrainingSessionDto {
   focusAreas: string[];
 }
 
+// Team Matches DTOs (for GET /v1/teams/{teamId}/matches)
+export interface TeamMatchesDto {
+  team: TeamInfoDto;
+  club: ClubInfoDto;
+  matches: TeamMatchDto[];
+  totalCount: number;
+}
+
+export interface TeamMatchDto {
+  id: string;
+  date: string;
+  kickOffTime: string;
+  location: string;
+  status: string;
+  competition: string;
+  opponentName: string;
+  isHome: boolean;
+  homeScore?: number;
+  awayScore?: number;
+  hasReport: boolean;
+  reportId?: string;
+}
+
+export interface TeamInfoDto {
+  id: string;
+  name: string;
+  isArchived: boolean;
+}
+
+export interface ClubInfoDto {
+  id: string;
+  name: string;
+}
+
 // Club Player DTOs
 export interface ClubPlayerAgeGroupDto {
   id: string;
@@ -1836,6 +1870,22 @@ export const apiClient = {
      */
     getCoaches: async (teamId: string): Promise<ApiResponse<TeamCoachDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<TeamCoachDto[]>>(`/v1/teams/${teamId}/coaches`);
+      return response.data;
+    },
+
+    /**
+     * Get matches for a specific team with optional filters
+     */
+    getMatches: async (
+      teamId: string,
+      options?: { status?: string; dateFrom?: string; dateTo?: string }
+    ): Promise<ApiResponse<TeamMatchesDto>> => {
+      const params = new URLSearchParams();
+      if (options?.status) params.append('status', options.status);
+      if (options?.dateFrom) params.append('dateFrom', options.dateFrom);
+      if (options?.dateTo) params.append('dateTo', options.dateTo);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<TeamMatchesDto>>(`/v1/teams/${teamId}/matches${queryString}`);
       return response.data;
     },
 

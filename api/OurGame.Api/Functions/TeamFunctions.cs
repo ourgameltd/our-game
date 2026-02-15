@@ -17,6 +17,8 @@ using OurGame.Application.UseCases.Teams.Queries.GetPlayersByTeamId;
 using OurGame.Application.UseCases.Teams.Queries.GetPlayersByTeamId.DTOs;
 using OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId;
 using TeamCoachResponseDto = OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId.DTOs.TeamCoachDto;
+using OurGame.Application.UseCases.Teams.Queries.GetMatchesByTeamId;
+using OurGame.Application.UseCases.Teams.Queries.GetMatchesByTeamId.DTOs;
 
 namespace OurGame.Api.Functions;
 
@@ -230,5 +232,88 @@ public class TeamFunctions
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<TeamCoachResponseDto>>.SuccessResponse(coaches));
         return response;
+    }
+
+    /// <summary>
+    /// Get matches for a specific team with optional filters
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>List of matches for the team with team and club information</returns>
+    [Function("GetTeamMatches")]
+    [OpenApiOperation(operationId: "GetTeamMatches", tags: new[] { "Teams" }, Summary = "Get team matches", Description = "Retrieves matches for a specific team with optional filters for status and date range")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiParameter(name: "status", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Optional match status filter (scheduled, in-progress, completed, cancelled, upcoming)")]
+    [OpenApiParameter(name: "dateFrom", In = ParameterLocation.Query, Required = false, Type = typeof(DateTime), Description = "Optional start date filter (ISO 8601 format)")]
+    [OpenApiParameter(name: "dateTo", In = ParameterLocation.Query, Required = false, Type = typeof(DateTime), Description = "Optional end date filter (ISO 8601 format)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<TeamMatchesDto>), Description = "Matches retrieved successfully")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.BadRequest, Description = "Invalid team ID or date format")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NotFound, Description = "Team not found")]
+    public async Task<HttpResponseData> GetTeamMatches(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/teams/{teamId}/matches")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamMatchesDto>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        // Parse optional query parameters
+        var queryParams = System.Web.HttpUtility.ParseQueryString(req.Url.Query);
+        var status = queryParams["status"];
+        
+        DateTime? dateFrom = null;
+        if (!string.IsNullOrEmpty(queryParams["dateFrom"]))
+        {
+            if (!DateTime.TryParse(queryParams["dateFrom"], out var parsedDateFrom))
+            {
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamMatchesDto>.ErrorResponse(
+                    "Invalid dateFrom format. Use ISO 8601 format (e.g., 2024-01-01T00:00:00Z)", 400));
+                return badRequestResponse;
+            }
+            dateFrom = parsedDateFrom;
+        }
+
+        DateTime? dateTo = null;
+        if (!string.IsNullOrEmpty(queryParams["dateTo"]))
+        {
+            if (!DateTime.TryParse(queryParams["dateTo"], out var parsedDateTo))
+            {
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamMatchesDto>.ErrorResponse(
+                    "Invalid dateTo format. Use ISO 8601 format (e.g., 2024-12-31T23:59:59Z)", 400));
+                return badRequestResponse;
+            }
+            dateTo = parsedDateTo;
+        }
+
+        try
+        {
+            var matches = await _mediator.Send(new GetMatchesByTeamIdQuery(teamGuid, status, dateFrom, dateTo));
+
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(ApiResponse<TeamMatchesDto>.SuccessResponse(matches));
+            return response;
+        }
+        catch (KeyNotFoundException)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<TeamMatchesDto>.ErrorResponse(
+                "Team not found", 404));
+            return notFoundResponse;
+        }
     }
 }

@@ -46,6 +46,7 @@ import {
   MatchDetailDto,
   TeamPlayerDto,
   TeamCoachDto,
+  TeamMatchesDto,
   UpdateAgeGroupRequest,
   UpdatePlayerRequest,
   UpdateClubRequest,
@@ -161,6 +162,24 @@ export function useTeamCoaches(teamId: string | undefined): UseApiState<TeamCoac
       return apiClient.teams.getCoaches(teamId);
     },
     [teamId]
+  );
+}
+
+/**
+ * Hook to fetch matches for a team with optional filtering
+ */
+export function useTeamMatches(
+  teamId: string | undefined,
+  options?: { status?: string; dateFrom?: string; dateTo?: string }
+): UseApiState<TeamMatchesDto> {
+  return useApiCall<TeamMatchesDto>(
+    () => {
+      if (!teamId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.teams.getMatches(teamId, options);
+    },
+    [teamId, options?.status, options?.dateFrom, options?.dateTo]
   );
 }
 
