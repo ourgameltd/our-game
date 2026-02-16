@@ -144,6 +144,15 @@ export class Routes {
     return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`;
   }
 
+  static playerReportCardDetail(
+    clubId: string,
+    ageGroupId: string,
+    playerId: string,
+    reportId: string
+  ): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-cards/${reportId}`;
+  }
+
   static playerReportCards(
     clubId: string,
     ageGroupId: string,
@@ -245,6 +254,16 @@ export class Routes {
     playerId: string
   ): string {
     return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`;
+  }
+
+  static teamPlayerReportCardDetail(
+    clubId: string,
+    ageGroupId: string,
+    teamId: string,
+    playerId: string,
+    reportId: string
+  ): string {
+    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-cards/${reportId}`;
   }
 
   static teamPlayerReportCards(

@@ -178,7 +178,7 @@ export default function AgeGroupReportCardsPage() {
             {/* Mobile Card View */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {filteredReports.map((report) => {
-                const linkTo = Routes.playerReportCard(clubId!, ageGroupId!, report.player.id);
+                const linkTo = Routes.playerReportCardDetail(clubId!, ageGroupId!, report.player.id, report.id);
                 
                 return (
                   <ReportCardListCard
@@ -194,7 +194,7 @@ export default function AgeGroupReportCardsPage() {
             {/* Desktop Compact Row View */}
             <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               {filteredReports.map((report) => {
-                const linkTo = Routes.playerReportCard(clubId!, ageGroupId!, report.player.id);
+                const linkTo = Routes.playerReportCardDetail(clubId!, ageGroupId!, report.player.id, report.id);
                 
                 return (
                   <ReportCardTableRow

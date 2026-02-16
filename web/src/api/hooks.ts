@@ -68,6 +68,9 @@ import {
   PlayerAlbumDto,
   PlayerRecentPerformanceDto,
   PlayerUpcomingMatchDto,
+  ReportCardDto,
+  DevelopmentActionDto,
+  SimilarProfessionalDto,
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 
@@ -1088,6 +1091,26 @@ export function useMatchReport(matchId: string | undefined): UseApiState<MatchDe
       return apiClient.matches.getReport(matchId);
     },
     [matchId]
+  );
+}
+
+// ============================================================
+// Report Card Hooks
+// ============================================================
+
+/**
+ * Hook to fetch a report card by ID.
+ * Only fetches if reportId is defined.
+ */
+export function useReportCard(reportId: string | undefined): UseApiState<ReportCardDto> {
+  return useApiCall<ReportCardDto>(
+    () => {
+      if (!reportId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.reports.getById(reportId);
+    },
+    [reportId]
   );
 }
 

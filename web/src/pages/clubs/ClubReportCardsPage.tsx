@@ -306,7 +306,7 @@ export default function ClubReportCardsPage() {
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {reportsWithPlayers.map(({ report, player }) => {
                 const ageGroupId = player.ageGroupIds[0];
-                const linkTo = Routes.playerReportCard(clubId!, ageGroupId, player.id);
+                const linkTo = Routes.playerReportCardDetail(clubId!, ageGroupId, player.id, report.id);
                 
                 return (
                   <ReportCardListCard
@@ -323,7 +323,7 @@ export default function ClubReportCardsPage() {
             <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               {reportsWithPlayers.map(({ report, player }) => {
                 const ageGroupId = player.ageGroupIds[0];
-                const linkTo = Routes.playerReportCard(clubId!, ageGroupId, player.id);
+                const linkTo = Routes.playerReportCardDetail(clubId!, ageGroupId, player.id, report.id);
                 
                 return (
                   <ReportCardTableRow

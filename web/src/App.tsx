@@ -161,6 +161,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards" element={<PlayerReportCardsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/:reportId" element={<PlayerReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/:planId" element={<PlayerDevelopmentPlanPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
@@ -191,6 +192,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards" element={<PlayerReportCardsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/:reportId" element={<PlayerReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/:planId" element={<PlayerDevelopmentPlanPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />

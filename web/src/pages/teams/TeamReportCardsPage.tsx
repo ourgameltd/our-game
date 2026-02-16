@@ -116,7 +116,7 @@ export default function TeamReportCardsPage() {
             {/* Mobile Card View */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {reportsWithPlayers.map(({ report, player }) => {
-                const linkTo = Routes.teamPlayerReportCard(clubId!, ageGroupId!, teamId!, player.id);
+                const linkTo = Routes.teamPlayerReportCardDetail(clubId!, ageGroupId!, teamId!, player.id, report.id);
                 
                 return (
                   <ReportCardListCard
@@ -132,7 +132,7 @@ export default function TeamReportCardsPage() {
             {/* Desktop Compact Row View */}
             <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               {reportsWithPlayers.map(({ report, player }) => {
-                const linkTo = Routes.teamPlayerReportCard(clubId!, ageGroupId!, teamId!, player.id);
+                const linkTo = Routes.teamPlayerReportCardDetail(clubId!, ageGroupId!, teamId!, player.id, report.id);
                 
                 return (
                   <ReportCardTableRow

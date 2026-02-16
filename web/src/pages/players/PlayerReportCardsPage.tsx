@@ -50,11 +50,11 @@ export default function PlayerReportCardsPage() {
   }
 
   // Helper to generate report card link
-  const getReportCardLink = () => {
+  const getReportCardLink = (reportId: string) => {
     if (teamId && ageGroupId) {
-      return Routes.teamPlayerReportCard(clubId!, ageGroupId, teamId, playerId!);
+      return Routes.teamPlayerReportCardDetail(clubId!, ageGroupId, teamId, playerId!, reportId);
     } else if (ageGroupId) {
-      return Routes.playerReportCard(clubId!, ageGroupId, playerId!);
+      return Routes.playerReportCardDetail(clubId!, ageGroupId, playerId!, reportId);
     }
     return '#';
   };
@@ -128,7 +128,7 @@ export default function PlayerReportCardsPage() {
                   key={report.id}
                   report={report}
                   player={player}
-                  linkTo={getReportCardLink()}
+                  linkTo={getReportCardLink(report.id)}
                 />
               ))}
             </div>
@@ -140,7 +140,7 @@ export default function PlayerReportCardsPage() {
                   key={report.id}
                   report={report}
                   player={player}
-                  linkTo={getReportCardLink()}
+                  linkTo={getReportCardLink(report.id)}
                 />
               ))}
             </div>
