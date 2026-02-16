@@ -1,18 +1,9 @@
 import { Link } from 'react-router-dom';
 import { Routes } from '@utils/routes';
-import { getMatchById } from '@data/matches';
-import { getTeamById } from '@data/teams';
-
-interface PerformanceData {
-  matchId: string;
-  opposition: string;
-  date: Date;
-  rating: number;
-  isHome: boolean;
-}
+import type { PlayerRecentPerformanceDto } from '@api/client';
 
 interface RecentPerformanceCardProps {
-  performances: PerformanceData[];
+  performances: PlayerRecentPerformanceDto[];
   clubId: string;
 }
 
@@ -58,11 +49,14 @@ export default function RecentPerformanceCard({
         ) : (
           performances.map((performance) => {
             const classes = getRatingClasses(performance.rating);
-            const match = getMatchById(performance.matchId);
-            const team = match ? getTeamById(match.teamId) : null;
-            const matchLink = match && team 
-              ? Routes.matchReport(clubId, team.ageGroupId, team.id, performance.matchId)
-              : '#';
+            const matchLink = Routes.matchReport(
+              clubId, 
+              performance.ageGroupId, 
+              performance.teamId, 
+              performance.matchId
+            );
+            const isHome = performance.homeAway.toLowerCase() === 'home';
+            const matchDate = new Date(performance.matchDate);
             
             return (
               <Link
@@ -72,10 +66,10 @@ export default function RecentPerformanceCard({
               >
                 <div>
                   <div className="font-medium text-gray-900 dark:text-white">
-                    {performance.isHome ? 'vs' : '@'} {performance.opposition}
+                    {isHome ? 'vs' : '@'} {performance.opponent}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {performance.date.toLocaleDateString('en-GB', { 
+                    {matchDate.toLocaleDateString('en-GB', { 
                       month: 'short', 
                       day: 'numeric', 
                       year: 'numeric' 

@@ -1569,6 +1569,34 @@ export interface PlayerAlbumPhotoDto {
   tags: string[];
 }
 
+export interface PlayerRecentPerformanceDto {
+  matchId: string;
+  teamId: string;
+  ageGroupId: string;
+  matchDate: string;  // ISO date string
+  opponent: string;
+  homeAway: string;   // "Home" | "Away"
+  result: string;     // e.g., "W 3-1"
+  rating: number;
+  goals: number;
+  assists: number;
+  competition?: string;
+}
+
+export interface PlayerUpcomingMatchDto {
+  matchId: string;
+  teamId: string;
+  ageGroupId: string;
+  teamName: string;
+  ageGroupName: string;
+  matchDate: string;  // ISO date string
+  kickoffTime?: string;
+  opponent: string;
+  homeAway: string;
+  venue?: string;
+  competition?: string;
+}
+
 export interface UpdatePlayerRequest {
   firstName: string;
   lastName: string;
@@ -2661,6 +2689,28 @@ export const apiClient = {
     getAlbum: async (playerId: string): Promise<ApiResponse<PlayerAlbumDto>> => {
       const response = await axiosInstance.get<ApiResponse<PlayerAlbumDto>>(
         `/v1/players/${playerId}/album`
+      );
+      return response.data;
+    },
+
+    /**
+     * Get recent performance data for a player
+     */
+    getRecentPerformances: async (playerId: string, limit?: number): Promise<ApiResponse<PlayerRecentPerformanceDto[]>> => {
+      const params = limit ? `?limit=${limit}` : '';
+      const response = await axiosInstance.get<ApiResponse<PlayerRecentPerformanceDto[]>>(
+        `/v1/players/${playerId}/recent-performances${params}`
+      );
+      return response.data;
+    },
+
+    /**
+     * Get upcoming matches for a player
+     */
+    getUpcomingMatches: async (playerId: string, limit?: number): Promise<ApiResponse<PlayerUpcomingMatchDto[]>> => {
+      const params = limit ? `?limit=${limit}` : '';
+      const response = await axiosInstance.get<ApiResponse<PlayerUpcomingMatchDto[]>>(
+        `/v1/players/${playerId}/upcoming-matches${params}`
       );
       return response.data;
     },

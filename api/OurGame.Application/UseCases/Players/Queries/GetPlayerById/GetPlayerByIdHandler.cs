@@ -9,7 +9,7 @@ namespace OurGame.Application.UseCases.Players.Queries.GetPlayerById;
 /// <summary>
 /// Query to get player details by ID
 /// </summary>
-public record GetPlayerByIdQuery(Guid PlayerId) : IQuery<PlayerDto?>;
+public record GetPlayerByIdQuery(Guid PlayerId, string? UserId = null) : IQuery<PlayerDto?>;
 
 /// <summary>
 /// Handler for GetPlayerByIdQuery.
@@ -27,6 +27,49 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
 
     public async Task<PlayerDto?> Handle(GetPlayerByIdQuery query, CancellationToken cancellationToken)
     {
+        // Authorization check: verify user has access to this player
+        if (!string.IsNullOrEmpty(query.UserId))
+        {
+            var authSql = @"
+                SELECT CASE WHEN EXISTS (
+                    -- User is a coach assigned to any team the player is in
+                    SELECT 1
+                    FROM Players p
+                    INNER JOIN PlayerTeams pt ON p.Id = pt.PlayerId
+                    INNER JOIN Teams t ON pt.TeamId = t.Id
+                    INNER JOIN TeamCoaches tc ON t.Id = tc.TeamId
+                    INNER JOIN Coaches c ON tc.CoachId = c.Id
+                    INNER JOIN Users u ON c.UserId = u.Id
+                    WHERE p.Id = {0} AND u.AuthId = {1}
+                    
+                    UNION
+                    
+                    -- User is the player's own linked user
+                    SELECT 1
+                    FROM Players p
+                    INNER JOIN Users u ON p.UserId = u.Id
+                    WHERE p.Id = {0} AND u.AuthId = {1}
+                    
+                    UNION
+                    
+                    -- User is a parent of the player
+                    SELECT 1
+                    FROM Players p
+                    INNER JOIN PlayerParents pp ON p.Id = pp.PlayerId
+                    INNER JOIN Users u ON pp.ParentUserId = u.Id
+                    WHERE p.Id = {0} AND u.AuthId = {1}
+                ) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS HasAccess";
+
+            var hasAccess = await _db.Database
+                .SqlQueryRaw<AuthCheckResult>(authSql, query.PlayerId, query.UserId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (hasAccess == null || !hasAccess.HasAccess)
+            {
+                return null; // Return 404 to not leak existence
+            }
+        }
+
         // 1. Fetch base player data with club
         var playerSql = @"
             SELECT 
@@ -40,7 +83,10 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
                 p.IsArchived,
                 p.ClubId,
                 c.Name AS ClubName,
-                p.PreferredPositions
+                p.PreferredPositions,
+                p.Allergies,
+                p.MedicalConditions,
+                p.OverallRating
             FROM Players p
             INNER JOIN Clubs c ON c.Id = p.ClubId
             WHERE p.Id = {0}";
@@ -54,13 +100,14 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             return null;
         }
 
-        // 2. Fetch all team assignments with age group details
+        // 2. Fetch all team assignments with age group details and squad numbers
         var teamSql = @"
             SELECT 
                 t.Id,
                 t.AgeGroupId,
                 t.Name,
-                ag.Name AS AgeGroupName
+                ag.Name AS AgeGroupName,
+                pt.SquadNumber
             FROM PlayerTeams pt
             INNER JOIN Teams t ON t.Id = pt.TeamId
             LEFT JOIN AgeGroups ag ON ag.Id = t.AgeGroupId
@@ -71,24 +118,35 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             .SqlQueryRaw<PlayerTeamRawDto>(teamSql, query.PlayerId)
             .ToListAsync(cancellationToken);
 
-        // 3. Parse positions
+        // 3. Calculate average rating from performance ratings
+        var avgRatingSql = @"
+            SELECT AVG(CAST(pr.Rating AS FLOAT)) AS AverageRating
+            FROM PerformanceRatings pr
+            WHERE pr.PlayerId = {0}";
+
+        var avgRatingResult = await _db.Database
+            .SqlQueryRaw<AverageRatingResult>(avgRatingSql, query.PlayerId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        // 4. Parse positions
         var positions = ParsePositions(player.PreferredPositions);
 
-        // 4. Build team minimal DTOs
+        // 5. Build team minimal DTOs
         var teams = teamData
             .Select(t => new TeamMinimalDto
             {
                 Id = t.Id,
                 Name = t.Name ?? string.Empty,
                 AgeGroupId = t.AgeGroupId,
-                AgeGroupName = t.AgeGroupName
+                AgeGroupName = t.AgeGroupName,
+                SquadNumber = t.SquadNumber
             })
             .ToArray();
 
         var teamIds = teams.Select(t => t.Id).ToArray();
         var ageGroupIds = teams.Select(t => t.AgeGroupId).Distinct().ToArray();
 
-        // 5. Map to DTO, keeping backward-compatible single-value fields from first assignment
+        // 6. Map to DTO, keeping backward-compatible single-value fields from first assignment
         var firstTeam = teams.FirstOrDefault();
 
         return new PlayerDto
@@ -107,12 +165,17 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             TeamIds = teamIds,
             AgeGroupIds = ageGroupIds,
             Teams = teams,
+            Allergies = player.Allergies,
+            MedicalConditions = player.MedicalConditions,
+            OverallRating = player.OverallRating,
+            AverageRating = avgRatingResult?.AverageRating,
 
             // Backward-compatible single-value fields
             AgeGroupId = firstTeam?.AgeGroupId,
             AgeGroupName = firstTeam?.AgeGroupName,
             TeamId = firstTeam?.Id,
             TeamName = firstTeam?.Name,
+            SquadNumber = firstTeam?.SquadNumber,
             PreferredPosition = positions.FirstOrDefault()
         };
     }
@@ -156,6 +219,9 @@ public class PlayerBaseRawDto
     public Guid? ClubId { get; set; }
     public string? ClubName { get; set; }
     public string? PreferredPositions { get; set; }
+    public string? Allergies { get; set; }
+    public string? MedicalConditions { get; set; }
+    public int? OverallRating { get; set; }
 }
 
 /// <summary>
@@ -167,4 +233,21 @@ public class PlayerTeamRawDto
     public Guid AgeGroupId { get; set; }
     public string? Name { get; set; }
     public string? AgeGroupName { get; set; }
+    public int? SquadNumber { get; set; }
+}
+
+/// <summary>
+/// Result for authorization check
+/// </summary>
+public class AuthCheckResult
+{
+    public bool HasAccess { get; set; }
+}
+
+/// <summary>
+/// Result for average rating calculation
+/// </summary>
+public class AverageRatingResult
+{
+    public double? AverageRating { get; set; }
 }

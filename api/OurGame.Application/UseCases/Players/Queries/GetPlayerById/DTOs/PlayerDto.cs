@@ -30,6 +30,26 @@ public class PlayerDto
     /// <summary>Minimal team details for each assignment</summary>
     public TeamMinimalDto[] Teams { get; init; } = Array.Empty<TeamMinimalDto>();
 
+    // --- Medical & Physical Information ---
+
+    /// <summary>Player allergies</summary>
+    public string? Allergies { get; init; }
+    /// <summary>Player medical conditions</summary>
+    public string? MedicalConditions { get; init; }
+    /// <summary>Height in cm (future field)</summary>
+    public int? Height { get; init; }
+    /// <summary>Weight in kg (future field)</summary>
+    public int? Weight { get; init; }
+    /// <summary>Preferred foot: Left, Right, Both (future field)</summary>
+    public string? PreferredFoot { get; init; }
+
+    // --- Performance Stats ---
+
+    /// <summary>Overall rating (static evaluation)</summary>
+    public int? OverallRating { get; init; }
+    /// <summary>Average rating from performance ratings</summary>
+    public double? AverageRating { get; init; }
+
     // --- Backward-compatible single-value fields (first assignment) ---
 
     /// <summary>First age group ID (kept for backward compatibility)</summary>
@@ -40,6 +60,8 @@ public class PlayerDto
     public Guid? TeamId { get; init; }
     /// <summary>First team name (kept for backward compatibility)</summary>
     public string? TeamName { get; init; }
+    /// <summary>Squad number for first team (kept for backward compatibility)</summary>
+    public int? SquadNumber { get; init; }
     /// <summary>First preferred position (kept for backward compatibility)</summary>
     public string? PreferredPosition { get; init; }
 }
@@ -53,4 +75,5 @@ public class TeamMinimalDto
     public string Name { get; init; } = string.Empty;
     public Guid AgeGroupId { get; init; }
     public string? AgeGroupName { get; init; }
+    public int? SquadNumber { get; init; }
 }

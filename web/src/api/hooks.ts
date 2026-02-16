@@ -66,6 +66,8 @@ import {
   CreatePlayerAbilityEvaluationRequest,
   UpdatePlayerAbilityEvaluationRequest,
   PlayerAlbumDto,
+  PlayerRecentPerformanceDto,
+  PlayerUpcomingMatchDto,
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 
@@ -116,8 +118,10 @@ function useApiCall<T>(
       const response = await fetchFn();
       if (response.success && response.data) {
         setData(response.data);
-      } else if (response.error?.message) {
-        setError(new Error(response.error.message));
+      } else if (!response.success) {
+        const error = new Error(response.error?.message || 'Request failed');
+        (error as any).statusCode = response.statusCode;
+        setError(error);
       }
     } catch (err) {
       setError(err instanceof Error ? err : new Error('An error occurred'));
@@ -929,6 +933,44 @@ export function useDeletePlayerAbilityEvaluation(
   }, [playerId, evaluationId]);
 
   return { mutate, isSubmitting, data, error };
+}
+
+/**
+ * Hook to fetch recent performance data for a player.
+ * Only fetches if playerId is defined.
+ */
+export function usePlayerRecentPerformances(
+  playerId: string | undefined,
+  limit?: number
+): UseApiState<PlayerRecentPerformanceDto[]> {
+  return useApiCall<PlayerRecentPerformanceDto[]>(
+    () => {
+      if (!playerId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.players.getRecentPerformances(playerId, limit);
+    },
+    [playerId, limit]
+  );
+}
+
+/**
+ * Hook to fetch upcoming matches for a player.
+ * Only fetches if playerId is defined.
+ */
+export function usePlayerUpcomingMatches(
+  playerId: string | undefined,
+  limit?: number
+): UseApiState<PlayerUpcomingMatchDto[]> {
+  return useApiCall<PlayerUpcomingMatchDto[]>(
+    () => {
+      if (!playerId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.players.getUpcomingMatches(playerId, limit);
+    },
+    [playerId, limit]
+  );
 }
 
 /**
