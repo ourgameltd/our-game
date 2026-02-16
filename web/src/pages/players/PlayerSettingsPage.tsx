@@ -1,56 +1,171 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getPlayerById } from '@/data/players';
+import { usePlayer, useUpdatePlayer, UpdatePlayerRequest } from '@/api';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
 import { Plus } from 'lucide-react';
 
+// Skeleton for the page title area
+function PageTitleSkeleton() {
+  return (
+    <div className="mb-6 animate-pulse">
+      <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-2" />
+      <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-72" />
+    </div>
+  );
+}
+
+// Skeleton for a settings card
+function SettingsCardSkeleton({ inputs = 4, columns = 2 }: { inputs?: number; columns?: number }) {
+  return (
+    <div className="card animate-pulse">
+      <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4" />
+      <div className={`grid md:grid-cols-${columns} gap-4`}>
+        {[...Array(inputs)].map((_, i) => (
+          <div key={i}>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-24 mb-2" />
+            <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Skeleton for positions section
+function PositionsSkeleton() {
+  return (
+    <div className="card animate-pulse">
+      <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-40 mb-4" />
+      <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-4" />
+      <div className="space-y-2">
+        {[1, 2, 3].map(g => (
+          <div key={g}>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-28 mb-3" />
+            <div className="flex flex-wrap gap-2">
+              {[1, 2, 3, 4, 5].map(i => (
+                <div key={i} className="h-10 w-16 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Skeleton for emergency contacts
+function EmergencyContactsSkeleton() {
+  return (
+    <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 animate-pulse">
+      <div className="flex items-center justify-between mb-3">
+        <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-40" />
+        <div className="h-8 w-8 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+      </div>
+      <div className="space-y-2">
+        {[1, 2].map(i => (
+          <div key={i} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+            <div className="grid md:grid-cols-3 gap-3">
+              {[1, 2, 3].map(j => (
+                <div key={j}>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-2" />
+                  <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+
 export default function PlayerSettingsPage() {
   const { clubId, ageGroupId, playerId } = useParams();
   const navigate = useNavigate();
   const isNewPlayer = playerId === 'new';
-  const player = isNewPlayer ? null : getPlayerById(playerId!);
 
-  const [formData, setFormData] = useState({
-    firstName: player?.firstName || '',
-    lastName: player?.lastName || '',
-    nickname: player?.nickname || '',
-    dateOfBirth: player?.dateOfBirth ? player.dateOfBirth.toISOString().split('T')[0] : '',
-    photo: player?.photo || '',
-    associationId: player?.associationId || '',
-    preferredPositions: player?.preferredPositions || [],
-    // Medical Information
-    allergies: player?.medicalInfo?.allergies?.join(', ') || '',
-    conditions: player?.medicalInfo?.conditions?.join(', ') || '',
-  });
+  // API hooks
+  const { data: player, isLoading: isLoadingPlayer, error: playerError } = usePlayer(
+    isNewPlayer ? undefined : playerId
+  );
+  const { updatePlayer, isSubmitting, error: submitError } = useUpdatePlayer(playerId || '');
+
+  const isLoading = isLoadingPlayer;
+
+  // Form state
+  const [formInitialized, setFormInitialized] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [dateOfBirth, setDateOfBirth] = useState('');
+  const [photo, setPhoto] = useState('');
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [associationId, setAssociationId] = useState('');
+  const [preferredPositions, setPreferredPositions] = useState<PlayerPosition[]>([]);
+  const [allergies, setAllergies] = useState('');
+  const [medicalConditions, setMedicalConditions] = useState('');
 
   const [emergencyContacts, setEmergencyContacts] = useState<{
-    id: string;
+    id?: string;
     name: string;
     phone: string;
     relationship: string;
     isPrimary: boolean;
-  }[]>(
-    (player?.medicalInfo?.emergencyContacts || []).map(contact => ({
-      ...contact,
-      isPrimary: contact.isPrimary ?? false
-    }))
-  );
+  }[]>([]);
 
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
-  const [photoPreview, setPhotoPreview] = useState<string>(player?.photo || '');
+
+  // Initialize form state from API data (only once)
+  useEffect(() => {
+    if (player && !formInitialized) {
+      setFirstName(player.firstName || '');
+      setLastName(player.lastName || '');
+      setNickname(player.nickname || '');
+      setDateOfBirth(player.dateOfBirth ? player.dateOfBirth.split('T')[0] : '');
+      setPhoto(player.photoUrl || '');
+      setPhotoPreview(player.photoUrl || '');
+      setAssociationId(player.associationId || '');
+      setPreferredPositions(player.preferredPositions as PlayerPosition[] || []);
+      setAllergies(player.allergies || '');
+      setMedicalConditions(player.medicalConditions || '');
+      setEmergencyContacts(player.emergencyContacts || []);
+      setFormInitialized(true);
+    }
+  }, [player, formInitialized]);
 
   // Helper to determine if fields should be disabled (only for archived existing players)
   const isFormDisabled = !isNewPlayer && player?.isArchived;
 
-  if (!isNewPlayer && !player) {
+  // Error state - not found
+  if (!isNewPlayer && playerError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="card">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Player not found</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              {playerError.message || 'The player you are looking for could not be loaded.'}
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Not found after loading completes
+  if (!isNewPlayer && !isLoadingPlayer && !player) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
           <div className="card">
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Player not found</h2>
+            <p className="text-gray-600 dark:text-gray-400">
+              The player you are looking for does not exist or you do not have access.
+            </p>
           </div>
         </main>
       </div>
@@ -61,7 +176,13 @@ export default function PlayerSettingsPage() {
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    if (name === 'firstName') setFirstName(value);
+    else if (name === 'lastName') setLastName(value);
+    else if (name === 'nickname') setNickname(value);
+    else if (name === 'dateOfBirth') setDateOfBirth(value);
+    else if (name === 'associationId') setAssociationId(value);
+    else if (name === 'allergies') setAllergies(value);
+    else if (name === 'conditions') setMedicalConditions(value);
   };
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -83,19 +204,18 @@ export default function PlayerSettingsPage() {
       reader.onloadend = () => {
         const result = reader.result as string;
         setPhotoPreview(result);
-        setFormData(prev => ({ ...prev, photo: result }));
+        setPhoto(result);
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handlePositionToggle = (position: PlayerPosition) => {
-    setFormData(prev => ({
-      ...prev,
-      preferredPositions: prev.preferredPositions.includes(position)
-        ? prev.preferredPositions.filter(p => p !== position)
-        : [...prev.preferredPositions, position]
-    }));
+    setPreferredPositions(prev =>
+      prev.includes(position)
+        ? prev.filter(p => p !== position)
+        : [...prev, position]
+    );
   };
 
   const handleAddEmergencyContact = () => {
@@ -111,7 +231,7 @@ export default function PlayerSettingsPage() {
 
   const handleRemoveEmergencyContact = (contactId: string) => {
     setEmergencyContacts(prev => {
-      const filtered = prev.filter(c => c.id !== contactId);
+      const filtered = prev.filter(c => (c.id || `ec-${Date.now()}`) !== contactId);
       // If we removed the primary contact and there are others, make the first one primary
       if (filtered.length > 0 && !filtered.some(c => c.isPrimary)) {
         filtered[0].isPrimary = true;
@@ -123,7 +243,7 @@ export default function PlayerSettingsPage() {
   const handleEmergencyContactChange = (contactId: string, field: 'name' | 'phone' | 'relationship', value: string) => {
     setEmergencyContacts(prev =>
       prev.map(contact =>
-        contact.id === contactId
+        (contact.id || `ec-${Date.now()}`) === contactId
           ? { ...contact, [field]: value }
           : contact
       )
@@ -134,31 +254,92 @@ export default function PlayerSettingsPage() {
     setEmergencyContacts(prev =>
       prev.map(contact => ({
         ...contact,
-        isPrimary: contact.id === contactId
+        isPrimary: (contact.id || `ec-${Date.now()}`) === contactId
       }))
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real app, this would save to the backend
-    console.log('Saving player settings:', { ...formData, emergencyContacts });
-    alert('Player settings updated successfully! (Demo - not saved to backend)');
-    navigate(Routes.player(clubId!, ageGroupId!, playerId!));
+    // Validation
+    if (!firstName.trim() || !lastName.trim()) {
+      return; // Browser validation should catch this
+    }
+
+    if (!dateOfBirth) {
+      return; // Browser validation should catch this
+    }
+
+    if (preferredPositions.length === 0) {
+      alert('Please select at least one preferred position');
+      return;
+    }
+
+    // Validate emergency contacts
+    for (const contact of emergencyContacts) {
+      if (!contact.name.trim() || !contact.phone.trim() || !contact.relationship.trim()) {
+        alert('Please fill in all emergency contact fields or remove incomplete contacts');
+        return;
+      }
+    }
+
+    // Ensure exactly one primary contact if contacts exist
+    const primaryCount = emergencyContacts.filter(c => c.isPrimary).length;
+    if (emergencyContacts.length > 0 && primaryCount !== 1) {
+      alert('Please select exactly one primary emergency contact');
+      return;
+    }
+
+    const request: UpdatePlayerRequest = {
+      firstName,
+      lastName,
+      nickname: nickname || undefined,
+      associationId: associationId || undefined,
+      dateOfBirth,
+      photo: photo || undefined,
+      allergies: allergies || undefined,
+      medicalConditions: medicalConditions || undefined,
+      preferredPositions,
+      emergencyContacts: emergencyContacts.map(({ id, ...rest }) => rest),
+      isArchived: player?.isArchived || false,
+    };
+
+    await updatePlayer(request);
+
+    // Navigate back on success (submitError will be null)
+    if (!submitError) {
+      navigate(Routes.player(clubId!, ageGroupId!, playerId!));
+    }
   };
 
   const handleCancel = () => {
     navigate(Routes.player(clubId!, ageGroupId!, playerId!));
   };
 
-  const handleArchive = () => {
+  const handleArchive = async () => {
     if (!player) return;
-    const isCurrentlyArchived = player.isArchived;
-    const action = isCurrentlyArchived ? 'unarchived' : 'archived';
-    // In a real app, this would call the backend API
-    alert(`Player ${action} successfully! (Demo - not saved to backend)`);
-    navigate(Routes.player(clubId!, ageGroupId!, playerId!));
+    
+    const request: UpdatePlayerRequest = {
+      firstName,
+      lastName,
+      nickname: nickname || undefined,
+      associationId: associationId || undefined,
+      dateOfBirth,
+      photo: photo || undefined,
+      allergies: allergies || undefined,
+      medicalConditions: medicalConditions || undefined,
+      preferredPositions,
+      emergencyContacts: emergencyContacts.map(({ id, ...rest }) => rest),
+      isArchived: !player.isArchived,
+    };
+
+    await updatePlayer(request);
+
+    // Navigate back on success
+    if (!submitError) {
+      navigate(Routes.player(clubId!, ageGroupId!, playerId!));
+    }
   };
 
   // Calculate age
@@ -177,20 +358,63 @@ export default function PlayerSettingsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         {/* Header */}
-        <PageTitle
-          title={isNewPlayer ? "Add New Player" : "Player Settings"}
-          subtitle={isNewPlayer ? "Create a new player profile" : `Manage ${player!.firstName} ${player!.lastName}'s profile and information`}
-          badge={!isNewPlayer && player!.isArchived ? "🗄️ Archived" : undefined}
-        />
-        {!isNewPlayer && player!.isArchived && (
-          <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
-            <p className="text-sm text-orange-800 dark:text-orange-300">
-              ⚠️ This player is archived. You cannot modify their settings while they are archived. Unarchive them to make changes.
+        {isLoading ? (
+          <PageTitleSkeleton />
+        ) : (
+          <>
+            <PageTitle
+              title={isNewPlayer ? "Add New Player" : "Player Settings"}
+              subtitle={isNewPlayer ? "Create a new player profile" : `Manage ${player!.firstName} ${player!.lastName}'s profile and information`}
+              badge={!isNewPlayer && player!.isArchived ? "🗄️ Archived" : undefined}
+            />
+            {!isNewPlayer && player!.isArchived && (
+              <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
+                <p className="text-sm text-orange-800 dark:text-orange-300">
+                  ⚠️ This player is archived. You cannot modify their settings while they are archived. Unarchive them to make changes.
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Submit error banner */}
+        {submitError && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm font-medium text-red-800 dark:text-red-300">
+              {submitError.message}
             </p>
+            {submitError.validationErrors && (
+              <ul className="mt-2 list-disc list-inside text-sm text-red-700 dark:text-red-400">
+                {Object.entries(submitError.validationErrors).map(([field, errors]) =>
+                  errors.map((msg, i) => (
+                    <li key={`${field}-${i}`}>{field}: {msg}</li>
+                  ))
+                )}
+              </ul>
+            )}
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-2">
+        {isLoading ? (
+          <div className="space-y-2">
+            <SettingsCardSkeleton inputs={7} columns={2} />
+            <PositionsSkeleton />
+            <div className="card animate-pulse">
+              <div className="h-7 bg-gray-200 dark:bg-gray-700 rounded w-48 mb-4" />
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-96 mb-4" />
+              <div className="space-y-2">
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+                <EmergencyContactsSkeleton />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 pt-4 animate-pulse">
+              <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              <div className="h-10 w-32 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+            </div>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-2">
           {/* Personal Information */}
           <div className="card">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
@@ -205,7 +429,7 @@ export default function PlayerSettingsPage() {
                 <input
                   type="text"
                   name="firstName"
-                  value={formData.firstName}
+                  value={firstName}
                   onChange={handleInputChange}
                   required
                   disabled={isFormDisabled}
@@ -221,7 +445,7 @@ export default function PlayerSettingsPage() {
                 <input
                   type="text"
                   name="lastName"
-                  value={formData.lastName}
+                  value={lastName}
                   onChange={handleInputChange}
                   required
                   disabled={isFormDisabled}
@@ -237,7 +461,7 @@ export default function PlayerSettingsPage() {
                 <input
                   type="text"
                   name="nickname"
-                  value={formData.nickname}
+                  value={nickname}
                   onChange={handleInputChange}
                   disabled={isFormDisabled}
                   placeholder="e.g., Speedy, The Wall, Magic"
@@ -255,15 +479,15 @@ export default function PlayerSettingsPage() {
                 <input
                   type="date"
                   name="dateOfBirth"
-                  value={formData.dateOfBirth}
+                  value={dateOfBirth}
                   onChange={handleInputChange}
                   required
                   disabled={isFormDisabled}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
-                {formData.dateOfBirth && (
+                {dateOfBirth && (
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Age: {calculateAge(new Date(formData.dateOfBirth))} years
+                    Age: {calculateAge(new Date(dateOfBirth))} years
                   </p>
                 )}
               </div>
@@ -275,7 +499,7 @@ export default function PlayerSettingsPage() {
                 <input
                   type="text"
                   name="associationId"
-                  value={formData.associationId}
+                  value={associationId}
                   onChange={handleInputChange}
                   disabled={isFormDisabled}
                   placeholder="e.g., SFA-Y-40123"
@@ -301,7 +525,7 @@ export default function PlayerSettingsPage() {
                       />
                     ) : (
                       <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 flex items-center justify-center text-white text-2xl font-bold border-2 border-gray-300 dark:border-gray-600">
-                        {formData.firstName[0]}{formData.lastName[0]}
+                        {firstName[0]}{lastName[0]}
                       </div>
                     )}
                   </div>
@@ -332,8 +556,8 @@ export default function PlayerSettingsPage() {
                         <button
                           type="button"
                           onClick={() => {
+                            setPhoto('');
                             setPhotoPreview('');
-                            setFormData(prev => ({ ...prev, photo: '' }));
                           }}
                           disabled={isFormDisabled}
                           className="inline-flex items-center px-3 py-2 border border-red-300 dark:border-red-600 rounded-lg shadow-sm text-sm font-medium text-red-700 dark:text-red-300 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -372,7 +596,7 @@ export default function PlayerSettingsPage() {
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
                       disabled={isFormDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                        formData.preferredPositions.includes(position as PlayerPosition)
+                        preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                       }`}
@@ -394,7 +618,7 @@ export default function PlayerSettingsPage() {
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
                       disabled={isFormDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                        formData.preferredPositions.includes(position as PlayerPosition)
+                        preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                       }`}
@@ -416,7 +640,7 @@ export default function PlayerSettingsPage() {
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
                       disabled={isFormDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                        formData.preferredPositions.includes(position as PlayerPosition)
+                        preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                       }`}
@@ -438,7 +662,7 @@ export default function PlayerSettingsPage() {
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
                       disabled={isFormDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                        formData.preferredPositions.includes(position as PlayerPosition)
+                        preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
                       }`}
@@ -468,7 +692,7 @@ export default function PlayerSettingsPage() {
                 <input
                   type="text"
                   name="allergies"
-                  value={formData.allergies}
+                  value={allergies}
                   onChange={handleInputChange}
                   disabled={isFormDisabled}
                   placeholder="e.g., Peanuts, Penicillin (comma-separated)"
@@ -483,7 +707,7 @@ export default function PlayerSettingsPage() {
                 <input
                   type="text"
                   name="conditions"
-                  value={formData.conditions}
+                  value={medicalConditions}
                   onChange={handleInputChange}
                   disabled={isFormDisabled}
                   placeholder="e.g., Asthma, Diabetes (comma-separated)"
@@ -514,7 +738,7 @@ export default function PlayerSettingsPage() {
                 ) : (
                   <div className="space-y-2">
                     {emergencyContacts.map((contact, index) => (
-                      <div key={contact.id} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                      <div key={contact.id || `contact-${index}`} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -530,7 +754,7 @@ export default function PlayerSettingsPage() {
                             {!contact.isPrimary && (
                               <button
                                 type="button"
-                                onClick={() => handleSetPrimaryContact(contact.id)}
+                                onClick={() => handleSetPrimaryContact(contact.id || `contact-${index}`)}
                                 disabled={isFormDisabled}
                                 className="text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
                               >
@@ -539,7 +763,7 @@ export default function PlayerSettingsPage() {
                             )}
                             <button
                               type="button"
-                              onClick={() => handleRemoveEmergencyContact(contact.id)}
+                              onClick={() => handleRemoveEmergencyContact(contact.id || `contact-${index}`)}
                               disabled={isFormDisabled}
                               className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                               title="Remove contact"
@@ -559,7 +783,7 @@ export default function PlayerSettingsPage() {
                             <input
                               type="text"
                               value={contact.name}
-                              onChange={(e) => handleEmergencyContactChange(contact.id, 'name', e.target.value)}
+                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'name', e.target.value)}
                               disabled={isFormDisabled}
                               placeholder="Enter name"
                               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -573,7 +797,7 @@ export default function PlayerSettingsPage() {
                             <input
                               type="tel"
                               value={contact.phone}
-                              onChange={(e) => handleEmergencyContactChange(contact.id, 'phone', e.target.value)}
+                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'phone', e.target.value)}
                               disabled={isFormDisabled}
                               placeholder="+44 7XXX XXXXXX"
                               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -587,7 +811,7 @@ export default function PlayerSettingsPage() {
                             <input
                               type="text"
                               value={contact.relationship}
-                              onChange={(e) => handleEmergencyContactChange(contact.id, 'relationship', e.target.value)}
+                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'relationship', e.target.value)}
                               disabled={isFormDisabled}
                               placeholder="e.g., Parent, Guardian"
                               className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -607,13 +831,15 @@ export default function PlayerSettingsPage() {
             isArchived={!isNewPlayer && player?.isArchived}
             onArchive={!isNewPlayer ? () => setShowArchiveConfirm(true) : undefined}
             onCancel={handleCancel}
-            saveDisabled={isFormDisabled}
+            saveLabel={isSubmitting ? 'Saving...' : 'Save Changes'}
+            saveDisabled={isFormDisabled || isSubmitting}
             showArchive={!isNewPlayer}
           />
         </form>
+        )}
 
         {/* Archive Confirmation Modal */}
-        {!isNewPlayer && showArchiveConfirm && (
+        {!isNewPlayer && showArchiveConfirm && player && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[1000]">
             <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6">
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">

@@ -41,25 +41,28 @@ public record UpdatePlayerRequestDto
     public DateOnly DateOfBirth { get; init; }
 
     /// <summary>
-    /// Player's contact email address.
-    /// </summary>
-    [Required]
-    [EmailAddress]
-    [StringLength(256)]
-    public string Email { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Player's phone number.
-    /// </summary>
-    [Required]
-    [StringLength(20)]
-    public string PhoneNumber { get; init; } = string.Empty;
-
-    /// <summary>
-    /// Optional emergency contact details.
+    /// Optional URL or path to the player's profile photo.
     /// </summary>
     [StringLength(500)]
-    public string? EmergencyContact { get; init; }
+    public string? Photo { get; init; }
+
+    /// <summary>
+    /// Optional allergies information.
+    /// </summary>
+    [StringLength(1000)]
+    public string? Allergies { get; init; }
+
+    /// <summary>
+    /// Optional medical conditions information.
+    /// </summary>
+    [StringLength(1000)]
+    public string? MedicalConditions { get; init; }
+
+    /// <summary>
+    /// List of emergency contacts for the player.
+    /// Server enforces exactly one primary contact.
+    /// </summary>
+    public EmergencyContactRequestDto[]? EmergencyContacts { get; init; }
 
     /// <summary>
     /// Preferred playing positions (e.g. ["GK", "CB", "CM"]).
@@ -71,9 +74,9 @@ public record UpdatePlayerRequestDto
     /// <summary>
     /// Team IDs this player is assigned to.
     /// Used to update the PlayerTeams join table.
+    /// Only updates team assignments if provided (not null).
     /// </summary>
-    [Required]
-    public Guid[] TeamIds { get; init; } = Array.Empty<Guid>();
+    public Guid[]? TeamIds { get; init; }
 
     /// <summary>
     /// Whether the player record is archived (soft-deleted).

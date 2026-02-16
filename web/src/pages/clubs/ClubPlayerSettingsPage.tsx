@@ -25,9 +25,6 @@ export default function ClubPlayerSettingsPage() {
     dateOfBirth: '',
     photo: '',
     associationId: '',
-    email: '',
-    phoneNumber: '',
-    emergencyContact: '',
     preferredPositions: [] as string[],
   });
 
@@ -199,11 +196,8 @@ export default function ClubPlayerSettingsPage() {
       nickname: formData.nickname || undefined,
       associationId: formData.associationId || undefined,
       dateOfBirth: formData.dateOfBirth,
-      email: formData.email,
-      phoneNumber: formData.phoneNumber,
-      emergencyContact: formData.emergencyContact || undefined,
       preferredPositions: formData.preferredPositions,
-      teamIds: selectedTeams,
+      teamIds: selectedTeams.length > 0 ? selectedTeams : undefined,
       isArchived: player?.isArchived ?? false,
     };
 

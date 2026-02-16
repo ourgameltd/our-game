@@ -128,10 +128,32 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             .SqlQueryRaw<AverageRatingResult>(avgRatingSql, query.PlayerId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        // 4. Parse positions
+        // 4. Fetch emergency contacts
+        var emergencyContactsSql = @"
+            SELECT Id, Name, Phone, Relationship, IsPrimary
+            FROM EmergencyContacts
+            WHERE PlayerId = {0}
+            ORDER BY IsPrimary DESC, Name";
+
+        var emergencyContactsData = await _db.Database
+            .SqlQueryRaw<EmergencyContactRawDto>(emergencyContactsSql, query.PlayerId)
+            .ToListAsync(cancellationToken);
+
+        var emergencyContacts = emergencyContactsData
+            .Select(ec => new EmergencyContactDto
+            {
+                Id = ec.Id,
+                Name = ec.Name ?? string.Empty,
+                Phone = ec.Phone ?? string.Empty,
+                Relationship = ec.Relationship ?? string.Empty,
+                IsPrimary = ec.IsPrimary
+            })
+            .ToArray();
+
+        // 5. Parse positions
         var positions = ParsePositions(player.PreferredPositions);
 
-        // 5. Build team minimal DTOs
+        // 6. Build team minimal DTOs
         var teams = teamData
             .Select(t => new TeamMinimalDto
             {
@@ -146,7 +168,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
         var teamIds = teams.Select(t => t.Id).ToArray();
         var ageGroupIds = teams.Select(t => t.AgeGroupId).Distinct().ToArray();
 
-        // 6. Map to DTO, keeping backward-compatible single-value fields from first assignment
+        // 7. Map to DTO, keeping backward-compatible single-value fields from first assignment
         var firstTeam = teams.FirstOrDefault();
 
         return new PlayerDto
@@ -169,6 +191,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             MedicalConditions = player.MedicalConditions,
             OverallRating = player.OverallRating,
             AverageRating = avgRatingResult?.AverageRating,
+            EmergencyContacts = emergencyContacts.Length > 0 ? emergencyContacts : null,
 
             // Backward-compatible single-value fields
             AgeGroupId = firstTeam?.AgeGroupId,
@@ -250,4 +273,16 @@ public class AuthCheckResult
 public class AverageRatingResult
 {
     public double? AverageRating { get; set; }
+}
+
+/// <summary>
+/// Raw SQL result for emergency contacts
+/// </summary>
+public class EmergencyContactRawDto
+{
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public string? Phone { get; set; }
+    public string? Relationship { get; set; }
+    public bool IsPrimary { get; set; }
 }

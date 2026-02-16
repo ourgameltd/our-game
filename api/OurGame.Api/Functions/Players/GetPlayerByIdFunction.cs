@@ -49,20 +49,14 @@ public class GetPlayerByIdFunction
         contentType: "application/json",
         bodyType: typeof(ApiResponse<PlayerDto>),
         Description = "Player retrieved successfully")]
-    [OpenApiResponseWithBody(
+    [OpenApiResponseWithoutBody(
         statusCode: HttpStatusCode.Unauthorized,
-        contentType: "application/json",
-        bodyType: typeof(ApiResponse<PlayerDto>),
         Description = "User not authenticated")]
-    [OpenApiResponseWithBody(
+    [OpenApiResponseWithoutBody(
         statusCode: HttpStatusCode.NotFound,
-        contentType: "application/json",
-        bodyType: typeof(ApiResponse<PlayerDto>),
         Description = "Player not found or user not authorized")]
-    [OpenApiResponseWithBody(
+    [OpenApiResponseWithoutBody(
         statusCode: HttpStatusCode.BadRequest,
-        contentType: "application/json",
-        bodyType: typeof(ApiResponse<PlayerDto>),
         Description = "Invalid player ID format")]
     public async Task<HttpResponseData> GetPlayerById(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/players/{playerId}")] HttpRequestData req,

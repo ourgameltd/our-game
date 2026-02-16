@@ -39,7 +39,7 @@ public class UpdatePlayerFunction
         operationId: "UpdatePlayer",
         tags: new[] { "Players" },
         Summary = "Update player settings",
-        Description = "Updates an existing player's personal details, preferred positions, and team assignments.")]
+        Description = "Updates an existing player's personal details, medical info, emergency contacts, preferred positions, and optionally team assignments.")]
     [OpenApiParameter(
         name: "playerId",
         In = ParameterLocation.Path,
@@ -50,7 +50,7 @@ public class UpdatePlayerFunction
         contentType: "application/json",
         bodyType: typeof(UpdatePlayerRequestDto),
         Required = true,
-        Description = "Updated player details")]
+        Description = "Updated player details including photo, allergies, medical conditions, emergency contacts (array), and optional team assignments")]
     [OpenApiResponseWithBody(
         statusCode: HttpStatusCode.OK,
         contentType: "application/json",
@@ -103,8 +103,16 @@ public class UpdatePlayerFunction
 
         try
         {
-            var command = new UpdatePlayerCommand(playerGuid, dto);
+            var command = new UpdatePlayerCommand(playerGuid, dto, userId);
             var result = await _mediator.Send(command);
+
+            if (result == null)
+            {
+                _logger.LogWarning("Player not found or access denied: {PlayerId}", playerGuid);
+                var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+                await notFoundResponse.WriteAsJsonAsync(ApiResponse<PlayerDto>.NotFoundResponse("Player not found"));
+                return notFoundResponse;
+            }
 
             _logger.LogInformation("Player updated successfully: {PlayerId}", result.Id);
             var successResponse = req.CreateResponse(HttpStatusCode.OK);

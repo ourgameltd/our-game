@@ -1452,6 +1452,15 @@ export interface PlayerDto {
   teamIds: string[];
   ageGroupIds: string[];
   teams: PlayerTeamMinimalDto[];
+  emergencyContacts?: {
+    id: string;
+    name: string;
+    phone: string;
+    relationship: string;
+    isPrimary: boolean;
+  }[];
+  allergies?: string;
+  medicalConditions?: string;
   // Backward-compatible single-value fields
   ageGroupId?: string;
   ageGroupName?: string;
@@ -1623,11 +1632,19 @@ export interface UpdatePlayerRequest {
   nickname?: string;
   associationId?: string;
   dateOfBirth: string; // ISO date string (YYYY-MM-DD)
-  email: string;
-  phoneNumber: string;
-  emergencyContact?: string;
+  email?: string;
+  phoneNumber?: string;
+  emergencyContacts?: {
+    name: string;
+    phone: string;
+    relationship: string;
+    isPrimary: boolean;
+  }[];
+  photo?: string;
+  allergies?: string;
+  medicalConditions?: string;
   preferredPositions: string[];
-  teamIds: string[];
+  teamIds?: string[];
   isArchived: boolean;
 }
 
