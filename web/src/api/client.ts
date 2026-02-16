@@ -1597,6 +1597,26 @@ export interface PlayerUpcomingMatchDto {
   competition?: string;
 }
 
+export interface PlayerReportSummaryDto {
+  id: string;
+  playerId: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  photoUrl?: string;
+  preferredPositions: string[];
+  periodStart?: string;
+  periodEnd?: string;
+  overallRating?: number;
+  coachFirstName?: string;
+  coachLastName?: string;
+  coachName?: string;
+  createdAt: string;
+  strengthsCount: number;
+  areasForImprovementCount: number;
+  developmentActionsCount: number;
+}
+
 export interface UpdatePlayerRequest {
   firstName: string;
   lastName: string;
@@ -2711,6 +2731,16 @@ export const apiClient = {
       const params = limit ? `?limit=${limit}` : '';
       const response = await axiosInstance.get<ApiResponse<PlayerUpcomingMatchDto[]>>(
         `/v1/players/${playerId}/upcoming-matches${params}`
+      );
+      return response.data;
+    },
+
+    /**
+     * Get all report cards for a player
+     */
+    getReports: async (playerId: string): Promise<ApiResponse<PlayerReportSummaryDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<PlayerReportSummaryDto[]>>(
+        `/v1/players/${playerId}/reports`
       );
       return response.data;
     },

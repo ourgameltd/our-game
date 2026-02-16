@@ -68,6 +68,7 @@ import {
   PlayerAlbumDto,
   PlayerRecentPerformanceDto,
   PlayerUpcomingMatchDto,
+  PlayerReportSummaryDto,
   ReportCardDto,
   DevelopmentActionDto,
   SimilarProfessionalDto,
@@ -973,6 +974,22 @@ export function usePlayerUpcomingMatches(
       return apiClient.players.getUpcomingMatches(playerId, limit);
     },
     [playerId, limit]
+  );
+}
+
+/**
+ * Hook to fetch all report cards for a player.
+ * Only fetches if playerId is defined.
+ */
+export function usePlayerReports(playerId: string | undefined): UseApiState<PlayerReportSummaryDto[]> {
+  return useApiCall<PlayerReportSummaryDto[]>(
+    () => {
+      if (!playerId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.players.getReports(playerId);
+    },
+    [playerId]
   );
 }
 
