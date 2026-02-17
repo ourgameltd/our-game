@@ -1042,6 +1042,15 @@ export interface PositionOverrideDto {
   direction?: string;
 }
 
+export interface ResolvedPositionDto {
+  position: string;
+  x: number;
+  y: number;
+  direction?: string;
+  sourceFormationId?: string;
+  overriddenBy?: string[];
+}
+
 export interface TacticPrincipleDto {
   id: string;
   title: string;
@@ -1053,6 +1062,7 @@ export interface TacticDetailDto {
   id: string;
   name: string;
   parentFormationId: string;
+  parentFormationName?: string;
   parentTacticId?: string;
   squadSize: number;
   summary?: string;
@@ -1061,6 +1071,7 @@ export interface TacticDetailDto {
   scope: TacticDetailScopeDto;
   positionOverrides: PositionOverrideDto[];
   principles: TacticPrincipleDto[];
+  resolvedPositions: ResolvedPositionDto[];
 }
 
 export interface CreateTacticRequest {

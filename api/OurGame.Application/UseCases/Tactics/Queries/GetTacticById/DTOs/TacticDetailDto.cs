@@ -19,6 +19,12 @@ public class TacticDetailDto
     public TacticScopeDto Scope { get; set; } = new();
     public List<PositionOverrideDto> PositionOverrides { get; set; } = new();
     public List<TacticPrincipleDto> Principles { get; set; } = new();
+    
+    /// <summary>
+    /// The fully resolved positions with inheritance applied from base formation and parent tactics
+    /// </summary>
+    public List<ResolvedPositionDto> ResolvedPositions { get; set; } = new();
+    
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

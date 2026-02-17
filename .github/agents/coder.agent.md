@@ -1,7 +1,7 @@
 ---
 name: Coder
 description: Writes code following mandatory coding principles.
-model: Claude Opus 4.6 (copilot)
+model: Claude Opus 4.6 (fast mode) (Preview) (copilot)
 tools: ['vscode', 'execute', 'read', 'agent', 'context7/*', 'edit', 'search', 'web', 'memory', 'todo']
 ---
 

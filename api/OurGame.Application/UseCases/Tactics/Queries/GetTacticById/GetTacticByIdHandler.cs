@@ -2,6 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.UseCases.Tactics.Queries.GetTacticById.DTOs;
+using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.Tactics.Queries.GetTacticById;
@@ -98,6 +99,77 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
             .SqlQueryRaw<Guid>(teamIdsSql, query.TacticId)
             .ToListAsync(cancellationToken);
 
+        // 5. Fetch base formation positions from parent formation
+        var basePositionsSql = @"
+            SELECT 
+                fp.PositionIndex,
+                fp.Position,
+                fp.XCoord,
+                fp.YCoord,
+                fp.Direction
+            FROM FormationPositions fp
+            WHERE fp.FormationId = {0}
+            ORDER BY fp.PositionIndex";
+
+        var basePositions = tactic.ParentFormationId.HasValue
+            ? await _db.Database
+                .SqlQueryRaw<FormationPositionRaw>(basePositionsSql, tactic.ParentFormationId.Value)
+                .ToListAsync(cancellationToken)
+            : new List<FormationPositionRaw>();
+
+        // 6. Build tactic inheritance chain using recursive CTE
+        var hierarchySql = @"
+            WITH TacticHierarchy AS (
+                SELECT Id, ParentTacticId, 0 as Depth
+                FROM Formations
+                WHERE Id = {0}
+                
+                UNION ALL
+                
+                SELECT f.Id, f.ParentTacticId, th.Depth + 1
+                FROM Formations f
+                INNER JOIN TacticHierarchy th ON f.Id = th.ParentTacticId
+                WHERE th.Depth < 10
+            )
+            SELECT Id, Depth 
+            FROM TacticHierarchy
+            ORDER BY Depth DESC";
+
+        var hierarchy = await _db.Database
+            .SqlQueryRaw<TacticHierarchyRaw>(hierarchySql, query.TacticId)
+            .ToListAsync(cancellationToken);
+
+        // 7. Fetch position overrides for all tactics in the chain
+        List<PositionOverrideWithTacticRaw> allOverrides = new();
+        
+        if (hierarchy.Any())
+        {
+            var tacticIds = hierarchy.Select(h => h.Id).ToList();
+            // Note: Safe to use string concatenation here because tacticIds come from DB query, not user input
+            var tacticIdsParam = string.Join(",", tacticIds.Select(id => $"'{id}'"));
+            
+            var chainOverridesSql = $@"
+                SELECT 
+                    po.FormationId as TacticId,
+                    po.PositionIndex,
+                    po.XCoord,
+                    po.YCoord,
+                    po.Direction
+                FROM PositionOverrides po
+                WHERE po.FormationId IN ({tacticIdsParam})";
+
+            allOverrides = await _db.Database
+                .SqlQueryRaw<PositionOverrideWithTacticRaw>(chainOverridesSql)
+                .ToListAsync(cancellationToken);
+        }
+
+        // 8. Compute resolved positions with inheritance applied
+        var resolvedPositions = ComputeResolvedPositions(
+            basePositions, 
+            hierarchy, 
+            allOverrides, 
+            tactic.ParentFormationId);
+
         // Map to response DTO
         return new TacticDetailDto
         {
@@ -133,9 +205,89 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
                 Description = p.Description,
                 PositionIndices = ParsePositionIndices(p.PositionIndices)
             }).ToList(),
+            ResolvedPositions = resolvedPositions,
             CreatedAt = tactic.CreatedAt,
             UpdatedAt = tactic.UpdatedAt
         };
+    }
+
+    /// <summary>
+    /// Compute resolved positions by applying inheritance chain from base formation through parent tactics
+    /// </summary>
+    private static List<ResolvedPositionDto> ComputeResolvedPositions(
+        List<FormationPositionRaw> basePositions,
+        List<TacticHierarchyRaw> hierarchy,
+        List<PositionOverrideWithTacticRaw> allOverrides,
+        Guid? sourceFormationId)
+    {
+        // Start with a dictionary indexed by PositionIndex for efficient lookups
+        var positionMap = new Dictionary<int, ResolvedPosition>();
+
+        // Initialize with base formation positions
+        foreach (var basePos in basePositions)
+        {
+            positionMap[basePos.PositionIndex] = new ResolvedPosition
+            {
+                PositionIndex = basePos.PositionIndex,
+                Position = ((PlayerPosition)basePos.Position).ToString(),
+                X = (double)(basePos.XCoord ?? 0),
+                Y = (double)(basePos.YCoord ?? 0),
+                Direction = basePos.Direction.HasValue 
+                    ? ((Direction)basePos.Direction.Value).ToString() 
+                    : null,
+                SourceFormationId = sourceFormationId,
+                OverriddenBy = new List<Guid>()
+            };
+        }
+
+        // Apply overrides in order from root (highest depth) to current tactic (lowest depth)
+        // Hierarchy is already ordered by Depth DESC (root first)
+        foreach (var node in hierarchy)
+        {
+            var overridesForThisTactic = allOverrides.Where(o => o.TacticId == node.Id).ToList();
+            
+            foreach (var ovr in overridesForThisTactic)
+            {
+                // Only apply override if the position index exists in the base formation
+                if (positionMap.TryGetValue(ovr.PositionIndex, out var position))
+                {
+                    // Apply coordinate overrides
+                    if (ovr.XCoord.HasValue)
+                    {
+                        position.X = (double)ovr.XCoord.Value;
+                    }
+                    
+                    if (ovr.YCoord.HasValue)
+                    {
+                        position.Y = (double)ovr.YCoord.Value;
+                    }
+                    
+                    // Apply direction override (PositionOverride.Direction is a string)
+                    if (!string.IsNullOrWhiteSpace(ovr.Direction))
+                    {
+                        position.Direction = ovr.Direction;
+                    }
+                    
+                    // Track that this tactic overrode this position
+                    position.OverriddenBy.Add(node.Id);
+                }
+            }
+        }
+
+        // Convert to DTO list, ordered by PositionIndex
+        return positionMap.Values
+            .OrderBy(p => p.PositionIndex)
+            .Select(p => new ResolvedPositionDto(
+                Position: p.Position,
+                X: p.X,
+                Y: p.Y,
+                Direction: p.Direction,
+                SourceFormationId: p.SourceFormationId?.ToString(),
+                OverriddenBy: p.OverriddenBy.Count > 0 
+                    ? p.OverriddenBy.Select(id => id.ToString()).ToList() 
+                    : null
+            ))
+            .ToList();
     }
 
     /// <summary>
@@ -211,6 +363,48 @@ public class TacticPrincipleRaw
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? PositionIndices { get; set; }
+}
+
+public class FormationPositionRaw
+{
+    public int PositionIndex { get; set; }
+    public int Position { get; set; }  // PlayerPosition enum stored as int in SQL
+    public decimal? XCoord { get; set; }
+    public decimal? YCoord { get; set; }
+    public int? Direction { get; set; }  // Direction enum stored as int in SQL
+}
+
+public class TacticHierarchyRaw
+{
+    public Guid Id { get; set; }
+    public int Depth { get; set; }
+}
+
+public class PositionOverrideWithTacticRaw
+{
+    public Guid TacticId { get; set; }
+    public int PositionIndex { get; set; }
+    public decimal? XCoord { get; set; }
+    public decimal? YCoord { get; set; }
+    public string? Direction { get; set; }
+}
+
+#endregion
+
+#region Helper Classes
+
+/// <summary>
+/// Internal model for tracking resolved position state during inheritance computation
+/// </summary>
+internal class ResolvedPosition
+{
+    public int PositionIndex { get; set; }
+    public string Position { get; set; } = string.Empty;
+    public double X { get; set; }
+    public double Y { get; set; }
+    public string? Direction { get; set; }
+    public Guid? SourceFormationId { get; set; }
+    public List<Guid> OverriddenBy { get; set; } = new();
 }
 
 #endregion

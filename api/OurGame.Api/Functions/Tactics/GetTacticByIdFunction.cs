@@ -34,7 +34,7 @@ public class GetTacticByIdFunction
         operationId: "GetTacticById",
         tags: new[] { "Tactics" },
         Summary = "Get tactic by ID",
-        Description = "Retrieves full tactic detail including position overrides, principles, and scope assignments")]
+        Description = "Retrieves full tactic detail including resolved positions (computed with inheritance applied), base formation details, position overrides, principles, and scope assignments")]
     [OpenApiParameter(
         name: "id",
         In = ParameterLocation.Path,
