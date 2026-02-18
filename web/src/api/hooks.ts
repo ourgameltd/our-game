@@ -75,6 +75,10 @@ import {
   SimilarProfessionalDto,
   AssignTeamCoachRequest,
   UpdateTeamCoachRoleRequest,
+  TeamKitsDto,
+  TeamKitDto,
+  CreateTeamKitRequest,
+  UpdateTeamKitRequest,
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 
@@ -218,6 +222,21 @@ export function useTeamMatches(
       return apiClient.teams.getMatches(teamId, options);
     },
     [teamId, options?.status, options?.dateFrom, options?.dateTo]
+  );
+}
+
+/**
+ * Hook to fetch kits for a team
+ */
+export function useTeamKits(teamId: string | undefined): UseApiState<TeamKitsDto> {
+  return useApiCall<TeamKitsDto>(
+    () => {
+      if (!teamId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.teams.getKits(teamId);
+    },
+    [teamId]
   );
 }
 
@@ -1854,4 +1873,151 @@ export function useUpdateTeamCoachRole(teamId: string | undefined, coachId: stri
   }, [teamId, coachId, refetchCoaches]);
 
   return { updateRole, isSubmitting, data, error, refetchCoaches };
+}
+
+// ============================================================
+// Team Kit Mutation Hooks
+// ============================================================
+
+/**
+ * Hook to create a kit for a team.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ * Automatically refetches team kits on success.
+ */
+export function useCreateTeamKit(teamId: string | undefined): UseMutationState<TeamKitDto> & {
+  createKit: (request: CreateTeamKitRequest) => Promise<void>;
+  refetchKits: () => Promise<void>;
+} {
+  const [data, setData] = useState<TeamKitDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchKits } = useTeamKits(teamId);
+
+  const createKit = useCallback(async (request: CreateTeamKitRequest): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TeamKitDto> = await apiClient.teams.createKit(teamId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+        // Refetch team kits to update the list
+        await refetchKits();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create kit',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchKits]);
+
+  return { createKit, isSubmitting, data, error, refetchKits };
+}
+
+/**
+ * Hook to update a kit for a team.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ * Automatically refetches team kits on success.
+ */
+export function useUpdateTeamKit(teamId: string | undefined): UseMutationState<TeamKitDto> & {
+  updateKit: (kitId: string, request: UpdateTeamKitRequest) => Promise<void>;
+  refetchKits: () => Promise<void>;
+} {
+  const [data, setData] = useState<TeamKitDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchKits } = useTeamKits(teamId);
+
+  const updateKit = useCallback(async (kitId: string, request: UpdateTeamKitRequest): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TeamKitDto> = await apiClient.teams.updateKit(teamId, kitId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+        // Refetch team kits to update the list
+        await refetchKits();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update kit',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchKits]);
+
+  return { updateKit, isSubmitting, data, error, refetchKits };
+}
+
+/**
+ * Hook to delete a kit for a team.
+ * Returns a mutation function, submitting state, and error.
+ * Automatically refetches team kits on success.
+ */
+export function useDeleteTeamKit(teamId: string | undefined): UseMutationState<void> & {
+  deleteKit: (kitId: string) => Promise<void>;
+  refetchKits: () => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchKits } = useTeamKits(teamId);
+
+  const deleteKit = useCallback(async (kitId: string): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.teams.deleteKit(teamId, kitId);
+      if (response.success || response.statusCode === 204) {
+        setData(undefined);
+        // Refetch team kits to update the list
+        await refetchKits();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to delete kit',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchKits]);
+
+  return { deleteKit, isSubmitting, data, error, refetchKits };
 }

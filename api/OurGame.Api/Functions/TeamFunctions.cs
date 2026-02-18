@@ -19,6 +19,13 @@ using OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId;
 using TeamCoachResponseDto = OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId.DTOs.TeamCoachDto;
 using OurGame.Application.UseCases.Teams.Queries.GetMatchesByTeamId;
 using OurGame.Application.UseCases.Teams.Queries.GetMatchesByTeamId.DTOs;
+using OurGame.Application.UseCases.Teams.Queries.GetKitsByTeamId;
+using OurGame.Application.UseCases.Teams.Queries.GetKitsByTeamId.DTOs;
+using OurGame.Application.UseCases.Teams.Commands.CreateTeamKit;
+using OurGame.Application.UseCases.Teams.Commands.CreateTeamKit.DTOs;
+using OurGame.Application.UseCases.Teams.Commands.UpdateTeamKit;
+using OurGame.Application.UseCases.Teams.Commands.UpdateTeamKit.DTOs;
+using OurGame.Application.UseCases.Teams.Commands.DeleteTeamKit;
 
 namespace OurGame.Api.Functions;
 
@@ -314,6 +321,305 @@ public class TeamFunctions
             await notFoundResponse.WriteAsJsonAsync(ApiResponse<TeamMatchesDto>.ErrorResponse(
                 "Team not found", 404));
             return notFoundResponse;
+        }
+    }
+
+    /// <summary>
+    /// Get kits for a specific team
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>List of kits for the team</returns>
+    [Function("GetTeamKits")]
+    [OpenApiOperation(operationId: "GetTeamKits", tags: new[] { "Teams" }, Summary = "Get team kits", Description = "Retrieves all kits for a specific team")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitsDto>), Description = "Kits retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitsDto>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitsDto>), Description = "Invalid team ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitsDto>), Description = "Team not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitsDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetTeamKits(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/teams/{teamId}/kits")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamKitsDto>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        var result = await _mediator.Send(new GetKitsByTeamIdQuery(teamGuid));
+
+        if (result.IsNotFound)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<TeamKitsDto>.ErrorResponse(
+                result.ErrorMessage ?? "Team not found", 404));
+            return notFoundResponse;
+        }
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<TeamKitsDto>.SuccessResponse(result.Value!));
+        return response;
+    }
+
+    /// <summary>
+    /// Create a new kit for a team
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>The created kit</returns>
+    [Function("CreateTeamKit")]
+    [OpenApiOperation(operationId: "CreateTeamKit", tags: new[] { "Teams" }, Summary = "Create team kit", Description = "Creates a new kit for a specific team")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(CreateTeamKitRequestDto), Required = true, Description = "Kit details")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Created, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "Kit created successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "Invalid request data")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "Team not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> CreateTeamKit(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/teams/{teamId}/kits")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<CreateTeamKitRequestDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize CreateTeamKitRequestDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new CreateTeamKitCommand(teamGuid, dto);
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Team kit created successfully: {KitId} for team {TeamId}", result.Id, teamGuid);
+            var successResponse = req.CreateResponse(HttpStatusCode.Created);
+            successResponse.Headers.Add("Location", $"/v1/teams/{teamGuid}/kits/{result.Id}");
+            await successResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.SuccessResponse(result, (int)HttpStatusCode.Created));
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during CreateTeamKit");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error during CreateTeamKit");
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ValidationErrorResponse(
+                "Validation failed",
+                ex.Errors));
+            return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating team kit");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ErrorResponse(
+                "An error occurred while creating the team kit",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Update an existing team kit
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <param name="kitId">The kit ID</param>
+    /// <returns>The updated kit</returns>
+    [Function("UpdateTeamKit")]
+    [OpenApiOperation(operationId: "UpdateTeamKit", tags: new[] { "Teams" }, Summary = "Update team kit", Description = "Updates an existing kit for a specific team")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiParameter(name: "kitId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The kit ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(UpdateTeamKitRequestDto), Required = true, Description = "Updated kit details")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "Kit updated successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "Invalid request data")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "Team or kit not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<TeamKitDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> UpdateTeamKit(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "v1/teams/{teamId}/kits/{kitId}")] HttpRequestData req,
+        string teamId,
+        string kitId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        if (!Guid.TryParse(kitId, out var kitGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ErrorResponse(
+                "Invalid kit ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<UpdateTeamKitRequestDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize UpdateTeamKitRequestDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new UpdateTeamKitCommand(teamGuid, kitGuid, dto);
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Team kit updated successfully: {KitId} for team {TeamId}", kitGuid, teamGuid);
+            var successResponse = req.CreateResponse(HttpStatusCode.OK);
+            await successResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.SuccessResponse(result));
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during UpdateTeamKit");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error during UpdateTeamKit");
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ValidationErrorResponse(
+                "Validation failed",
+                ex.Errors));
+            return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating team kit");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<TeamKitDto>.ErrorResponse(
+                "An error occurred while updating the team kit",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Delete a team kit
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <param name="kitId">The kit ID</param>
+    /// <returns>No content on success</returns>
+    [Function("DeleteTeamKit")]
+    [OpenApiOperation(operationId: "DeleteTeamKit", tags: new[] { "Teams" }, Summary = "Delete team kit", Description = "Deletes a kit from a specific team")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiParameter(name: "kitId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The kit ID")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Kit deleted successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Invalid ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Team or kit not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Internal server error")]
+    public async Task<HttpResponseData> DeleteTeamKit(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "v1/teams/{teamId}/kits/{kitId}")] HttpRequestData req,
+        string teamId,
+        string kitId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        if (!Guid.TryParse(kitId, out var kitGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Invalid kit ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var command = new DeleteTeamKitCommand(teamGuid, kitGuid);
+            await _mediator.Send(command);
+
+            _logger.LogInformation("Team kit deleted successfully: {KitId} for team {TeamId}", kitGuid, teamGuid);
+            var successResponse = req.CreateResponse(HttpStatusCode.NoContent);
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during DeleteTeamKit");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting team kit");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "An error occurred while deleting the team kit",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
         }
     }
 }

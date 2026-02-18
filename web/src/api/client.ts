@@ -445,6 +445,46 @@ export interface TeamTrainingSessionDto {
   focusAreas: string[];
 }
 
+// Team Kit DTOs
+export interface TeamKitDto {
+  id: string;
+  name: string;
+  type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
+  shirtColor: string;
+  shortsColor: string;
+  socksColor: string;
+  season?: string;
+  isActive: boolean;
+}
+
+export interface TeamKitsDto {
+  teamId: string;
+  teamName: string;
+  clubId: string;
+  clubName: string;
+  kits: TeamKitDto[];
+}
+
+export interface CreateTeamKitRequest {
+  name: string;
+  type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
+  shirtColor: string;
+  shortsColor: string;
+  socksColor: string;
+  season?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateTeamKitRequest {
+  name: string;
+  type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
+  shirtColor: string;
+  shortsColor: string;
+  socksColor: string;
+  season?: string;
+  isActive?: boolean;
+}
+
 // Team Matches DTOs (for GET /v1/teams/{teamId}/matches)
 export interface TeamMatchesDto {
   team: TeamInfoDto;
@@ -2257,6 +2297,58 @@ export const apiClient = {
     getDevelopmentPlans: async (teamId: string): Promise<ApiResponse<TeamDevelopmentPlanDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<TeamDevelopmentPlanDto[]>>(`/v1/teams/${teamId}/development-plans`);
       return response.data;
+    },
+
+    /**
+     * Get kits for a specific team
+     */
+    getKits: async (teamId: string): Promise<ApiResponse<TeamKitsDto>> => {
+      const response = await axiosInstance.get<ApiResponse<TeamKitsDto>>(`/v1/teams/${teamId}/kits`);
+      return response.data;
+    },
+
+    /**
+     * Create a new kit for a team
+     */
+    createKit: async (teamId: string, request: CreateTeamKitRequest): Promise<ApiResponse<TeamKitDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<TeamKitDto>>(
+          `/v1/teams/${teamId}/kits`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing team kit
+     */
+    updateKit: async (teamId: string, kitId: string, request: UpdateTeamKitRequest): Promise<ApiResponse<TeamKitDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<TeamKitDto>>(
+          `/v1/teams/${teamId}/kits/${kitId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Delete a team kit
+     */
+    deleteKit: async (teamId: string, kitId: string): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.delete<ApiResponse<void>>(
+          `/v1/teams/${teamId}/kits/${kitId}`
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
   },
 
