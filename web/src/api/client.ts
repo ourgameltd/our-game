@@ -1709,6 +1709,15 @@ export interface UpdateCoachRequest {
   photo?: string;
 }
 
+export interface AssignTeamCoachRequest {
+  coachId: string;
+  role: string; // 'HeadCoach' | 'AssistantCoach' | 'GoalkeeperCoach' | 'FitnessCoach' | 'TechnicalCoach'
+}
+
+export interface UpdateTeamCoachRoleRequest {
+  role: string; // 'HeadCoach' | 'AssistantCoach' | 'GoalkeeperCoach' | 'FitnessCoach' | 'TechnicalCoach'
+}
+
 // Match Detail DTOs
 
 export interface MatchDetailDto {
@@ -2157,6 +2166,50 @@ export const apiClient = {
       try {
         const response = await axiosInstance.put<ApiResponse<TeamOverviewTeamDto>>(
           `/v1/teams/${teamId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Assign a coach to a team
+     */
+    assignCoach: async (teamId: string, request: AssignTeamCoachRequest): Promise<ApiResponse<TeamCoachDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<TeamCoachDto>>(
+          `/v1/teams/${teamId}/coaches`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Remove a coach from a team
+     */
+    removeCoach: async (teamId: string, coachId: string): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.delete<ApiResponse<void>>(
+          `/v1/teams/${teamId}/coaches/${coachId}`
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update a coach's role on a team
+     */
+    updateCoachRole: async (teamId: string, coachId: string, request: UpdateTeamCoachRoleRequest): Promise<ApiResponse<TeamCoachDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<TeamCoachDto>>(
+          `/v1/teams/${teamId}/coaches/${coachId}/role`,
           request
         );
         return response.data;

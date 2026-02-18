@@ -72,6 +72,8 @@ import {
   ReportCardDto,
   DevelopmentActionDto,
   SimilarProfessionalDto,
+  AssignTeamCoachRequest,
+  UpdateTeamCoachRoleRequest,
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 
@@ -1689,4 +1691,151 @@ export function useUpdateTactic(tacticId: string): UseMutationState<TacticDetail
   }, [tacticId]);
 
   return { updateTactic, isSubmitting, data, error };
+}
+
+// ============================================================
+// Team Coach Mutation Hooks
+// ============================================================
+
+/**
+ * Hook to assign a coach to a team.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ * Automatically refetches team coaches on success.
+ */
+export function useAssignTeamCoach(teamId: string | undefined): UseMutationState<TeamCoachDto> & {
+  assignCoach: (request: AssignTeamCoachRequest) => Promise<void>;
+  refetchCoaches: () => Promise<void>;
+} {
+  const [data, setData] = useState<TeamCoachDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchCoaches } = useTeamCoaches(teamId);
+
+  const assignCoach = useCallback(async (request: AssignTeamCoachRequest): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TeamCoachDto> = await apiClient.teams.assignCoach(teamId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+        // Refetch team coaches to update the list
+        await refetchCoaches();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to assign coach',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchCoaches]);
+
+  return { assignCoach, isSubmitting, data, error, refetchCoaches };
+}
+
+/**
+ * Hook to remove a coach from a team.
+ * Returns a mutation function, submitting state, and error.
+ * Automatically refetches team coaches on success.
+ */
+export function useRemoveTeamCoach(teamId: string | undefined): UseMutationState<void> & {
+  removeCoach: (coachId: string) => Promise<void>;
+  refetchCoaches: () => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchCoaches } = useTeamCoaches(teamId);
+
+  const removeCoach = useCallback(async (coachId: string): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.teams.removeCoach(teamId, coachId);
+      if (response.success || response.statusCode === 204) {
+        setData(undefined);
+        // Refetch team coaches to update the list
+        await refetchCoaches();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to remove coach',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchCoaches]);
+
+  return { removeCoach, isSubmitting, data, error, refetchCoaches };
+}
+
+/**
+ * Hook to update a coach's role on a team.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ * Automatically refetches team coaches on success.
+ */
+export function useUpdateTeamCoachRole(teamId: string | undefined, coachId: string | undefined): UseMutationState<TeamCoachDto> & {
+  updateRole: (request: UpdateTeamCoachRoleRequest) => Promise<void>;
+  refetchCoaches: () => Promise<void>;
+} {
+  const [data, setData] = useState<TeamCoachDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchCoaches } = useTeamCoaches(teamId);
+
+  const updateRole = useCallback(async (request: UpdateTeamCoachRoleRequest): Promise<void> => {
+    if (!teamId || !coachId) {
+      setError({ message: 'Team ID and Coach ID are required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<TeamCoachDto> = await apiClient.teams.updateCoachRole(teamId, coachId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+        // Refetch team coaches to update the list
+        await refetchCoaches();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update coach role',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, coachId, refetchCoaches]);
+
+  return { updateRole, isSubmitting, data, error, refetchCoaches };
 }
