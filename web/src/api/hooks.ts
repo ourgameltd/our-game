@@ -31,6 +31,7 @@ import {
   ClubReportCardDto,
   ClubDevelopmentPlanDto,
   AgeGroupDevelopmentPlanSummaryDto,
+  TeamDevelopmentPlanDto,
   TacticsByScopeResponseDto,
   DrillsByScopeResponseDto,
   DrillTemplatesByScopeResponseDto,
@@ -182,6 +183,21 @@ export function useTeamCoaches(teamId: string | undefined): UseApiState<TeamCoac
         return Promise.resolve({ success: true });
       }
       return apiClient.teams.getCoaches(teamId);
+    },
+    [teamId]
+  );
+}
+
+/**
+ * Hook to fetch development plans for a team
+ */
+export function useTeamDevelopmentPlans(teamId: string | undefined): UseApiState<TeamDevelopmentPlanDto[]> {
+  return useApiCall<TeamDevelopmentPlanDto[]>(
+    () => {
+      if (!teamId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.teams.getDevelopmentPlans(teamId);
     },
     [teamId]
   );

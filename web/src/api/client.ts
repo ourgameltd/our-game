@@ -1320,6 +1320,39 @@ export interface AgeGroupDevelopmentPlanSummaryDto {
   goals: AgeGroupDevelopmentPlanGoalSummaryDto[];
 }
 
+// Team Development Plan DTOs
+export interface TeamDevelopmentPlanDto {
+  id: string;
+  playerId: string;
+  title: string;
+  description?: string;
+  status: 'active' | 'completed' | 'archived';
+  createdAt: string;
+  createdBy?: string;
+  period?: {
+    start?: string;
+    end?: string;
+  };
+  player: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    nickname?: string;
+    photo?: string;
+    preferredPositions: string[];
+  };
+  goals: Array<{
+    id: string;
+    goal: string;
+    actions: string[];
+    startDate?: string;
+    targetDate?: string;
+    progress: number;
+    completed: boolean;
+    completedDate?: string;
+  }>;
+}
+
 // Development Plan DTOs
 export interface DevelopmentGoalDto {
   id: string;
@@ -2216,6 +2249,14 @@ export const apiClient = {
       } catch (error) {
         return handleApiError(error);
       }
+    },
+
+    /**
+     * Get development plans for a specific team
+     */
+    getDevelopmentPlans: async (teamId: string): Promise<ApiResponse<TeamDevelopmentPlanDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<TeamDevelopmentPlanDto[]>>(`/v1/teams/${teamId}/development-plans`);
+      return response.data;
     },
   },
 
