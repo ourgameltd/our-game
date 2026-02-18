@@ -1,28 +1,207 @@
 import { useParams, Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { useState } from 'react';
-import { getTeamById, getPlayerSquadNumber } from '@data/teams';
-import { getPlayersByTeamId, getPlayersByAgeGroupId } from '@data/players';
+import { useState, useMemo } from 'react';
+import { 
+  useTeamOverview, 
+  useAgeGroupPlayers, 
+  useTeamPlayers,
+  useAddTeamPlayer,
+  useRemoveTeamPlayer,
+  type AgeGroupPlayerDto,
+  type TeamPlayerDto
+} from '@/api';
 import PlayerCard from '@components/player/PlayerCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
+import { Player, PlayerAttributes } from '@/types';
 
 export default function TeamPlayersPage() {
   const { clubId, ageGroupId, teamId } = useParams();
   const [showArchived, setShowArchived] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
-  const team = getTeamById(teamId!);
-  const teamPlayers = getPlayersByTeamId(teamId!, showArchived);
-  const ageGroupPlayers = team ? getPlayersByAgeGroupId(team.ageGroupId) : [];
+
+  // Fetch data from API
+  const teamOverview = useTeamOverview(teamId);
+  const ageGroupPlayersData = useAgeGroupPlayers(
+    teamOverview.data?.team?.ageGroupId, 
+    showArchived
+  );
+  const teamPlayersData = useTeamPlayers(teamId, showArchived);
+  
+  // Mutations
+  const addPlayerMutation = useAddTeamPlayer(teamId);
+  const removePlayerMutation = useRemoveTeamPlayer(teamId);
+
+  // Map API data to Player type and filter for team players
+  const { teamPlayers, availablePlayers, squadNumberMap } = useMemo(() => {
+    const ageGroupPlayers = ageGroupPlayersData.data || [];
+    const teamPlayerDtos = teamPlayersData.data || [];
+    
+    // Helper to map AgeGroupPlayerDto to Player
+    const mapAgeGroupPlayerToPlayer = (player: AgeGroupPlayerDto): Player => ({
+      id: player.id,
+      clubId: player.clubId,
+      firstName: player.firstName,
+      lastName: player.lastName,
+      nickname: player.nickname,
+      dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth) : new Date(),
+      photo: player.photo,
+      associationId: player.associationId,
+      preferredPositions: player.preferredPositions as any[],
+      attributes: {
+        ballControl: player.attributes?.ballControl ?? 0,
+        crossing: player.attributes?.crossing ?? 0,
+        weakFoot: player.attributes?.weakFoot ?? 0,
+        dribbling: player.attributes?.dribbling ?? 0,
+        finishing: player.attributes?.finishing ?? 0,
+        freeKick: player.attributes?.freeKick ?? 0,
+        heading: player.attributes?.heading ?? 0,
+        longPassing: player.attributes?.longPassing ?? 0,
+        longShot: player.attributes?.longShot ?? 0,
+        penalties: player.attributes?.penalties ?? 0,
+        shortPassing: player.attributes?.shortPassing ?? 0,
+        shotPower: player.attributes?.shotPower ?? 0,
+        slidingTackle: player.attributes?.slidingTackle ?? 0,
+        standingTackle: player.attributes?.standingTackle ?? 0,
+        volleys: player.attributes?.volleys ?? 0,
+        acceleration: player.attributes?.acceleration ?? 0,
+        agility: player.attributes?.agility ?? 0,
+        balance: player.attributes?.balance ?? 0,
+        jumping: player.attributes?.jumping ?? 0,
+        pace: player.attributes?.pace ?? 0,
+        reactions: player.attributes?.reactions ?? 0,
+        sprintSpeed: player.attributes?.sprintSpeed ?? 0,
+        stamina: player.attributes?.stamina ?? 0,
+        strength: player.attributes?.strength ?? 0,
+        aggression: player.attributes?.aggression ?? 0,
+        attackingPosition: player.attributes?.attackingPosition ?? 0,
+        awareness: player.attributes?.awareness ?? 0,
+        communication: player.attributes?.communication ?? 0,
+        composure: player.attributes?.composure ?? 0,
+        defensivePositioning: player.attributes?.defensivePositioning ?? 0,
+        interceptions: player.attributes?.interceptions ?? 0,
+        marking: player.attributes?.marking ?? 0,
+        positivity: player.attributes?.positivity ?? 0,
+        positioning: player.attributes?.positioning ?? 0,
+        vision: player.attributes?.vision ?? 0,
+      } as PlayerAttributes,
+      overallRating: player.overallRating ?? 0,
+      evaluations: [],
+      ageGroupIds: player.ageGroupIds ?? [],
+      teamIds: player.teamIds ?? [],
+      parentIds: player.parentIds,
+      isArchived: player.isArchived,
+    });
+    
+    // Create squad number map
+    const squadMap: Record<string, number> = {};
+    teamPlayerDtos.forEach((tp: TeamPlayerDto) => {
+      if (tp.squadNumber) {
+        squadMap[tp.id] = tp.squadNumber;
+      }
+    });
+
+    // Filter age group players to only those in the team
+    const teamPlayerIds = new Set(teamPlayerDtos.map(tp => tp.id));
+    const team = ageGroupPlayers
+      .filter(p => teamPlayerIds.has(p.id))
+      .map(mapAgeGroupPlayerToPlayer);
+    
+    // Get available players (not in team)
+    const available = ageGroupPlayers
+      .filter(p => !teamPlayerIds.has(p.id))
+      .map(mapAgeGroupPlayerToPlayer);
+
+    return {
+      teamPlayers: team,
+      availablePlayers: available,
+      squadNumberMap: squadMap
+    };
+  }, [ageGroupPlayersData.data, teamPlayersData.data]);
+
+  const team = teamOverview.data?.team;
+
+  // Auto-compute next available squad number
+  const getNextSquadNumber = (): number => {
+    const usedNumbers = Object.values(squadNumberMap).sort((a, b) => a - b);
+    for (let i = 1; i <= 99; i++) {
+      if (!usedNumbers.includes(i)) {
+        return i;
+      }
+    }
+    return usedNumbers.length + 1;
+  };
+
+  // Handle remove player
+  const handleRemovePlayer = async (playerId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (team?.isArchived) return;
+    await removePlayerMutation.removePlayer(playerId);
+  };
+
+  // Handle add player
+  const handleAddPlayer = async (playerId: string, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const squadNumber = getNextSquadNumber();
+    await addPlayerMutation.addPlayer({ playerId, squadNumber });
+  };
+
+  // Loading state
+  if (teamOverview.isLoading || ageGroupPlayersData.isLoading || teamPlayersData.isLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          {/* Title skeleton */}
+          <div className="mb-4">
+            <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-64 mb-2 animate-pulse"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-96 animate-pulse"></div>
+          </div>
+          
+          {/* Toggle skeleton */}
+          <div className="mb-4">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-48 animate-pulse"></div>
+          </div>
+          
+          {/* List skeleton */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+            {[1, 2, 3, 4, 5].map(i => (
+              <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 md:rounded-none md:p-4 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b">
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
+                  <div className="flex-1">
+                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2 animate-pulse"></div>
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  // Error state
+  if (teamOverview.error || ageGroupPlayersData.error || teamPlayersData.error) {
+    const error = teamOverview.error || ageGroupPlayersData.error || teamPlayersData.error;
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Error loading data</h3>
+            <p className="text-gray-600 dark:text-gray-400">{error?.message}</p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!team) {
     return <div>Team not found</div>;
   }
-
-  // Get players from age group who aren't already in this team
-  const availablePlayers = ageGroupPlayers.filter(
-    player => !player.teamIds.includes(teamId!)
-  );
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -80,7 +259,7 @@ export default function TeamPlayersPage() {
               <Link key={player.id} to={Routes.player(clubId!, ageGroupId!, player.id)}>
                 <PlayerCard 
                   player={player}
-                  squadNumber={getPlayerSquadNumber(teamId!, player.id)}
+                  squadNumber={squadNumberMap[player.id]}
                   badges={
                     player.teamIds.length > 1 ? (
                       <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
@@ -91,11 +270,12 @@ export default function TeamPlayersPage() {
                   actions={
                     !team.isArchived ? (
                       <button
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                        className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors"
+                        onClick={(e) => handleRemovePlayer(player.id, e)}
+                        disabled={removePlayerMutation.isSubmitting}
+                        className="bg-red-500 text-white p-1.5 rounded-full hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title="Remove from team"
                       >
-                        ✕
+                        {removePlayerMutation.isSubmitting ? '...' : '✕'}
                       </button>
                     ) : undefined
                   }
@@ -143,10 +323,12 @@ export default function TeamPlayersPage() {
                       <div key={player.id} className="relative">
                         <PlayerCard player={player} />
                         <button
-                          className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 shadow-lg flex items-center gap-1"
+                          onClick={(e) => handleAddPlayer(player.id, e)}
+                          disabled={addPlayerMutation.isSubmitting}
+                          className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 shadow-lg flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
                           title="Add Player"
                         >
-                          <Plus className="w-4 h-4" />
+                          {addPlayerMutation.isSubmitting ? '...' : <Plus className="w-4 h-4" />}
                         </button>
                       </div>
                     ))}

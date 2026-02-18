@@ -10,7 +10,7 @@ namespace OurGame.Application.UseCases.Teams.Queries.GetPlayersByTeamId;
 /// <summary>
 /// Query to get players belonging to a specific team
 /// </summary>
-public record GetPlayersByTeamIdQuery(Guid TeamId) : IQuery<List<TeamPlayerDto>>;
+public record GetPlayersByTeamIdQuery(Guid TeamId, bool IncludeArchived = false) : IQuery<List<TeamPlayerDto>>;
 
 /// <summary>
 /// Handler for GetPlayersByTeamIdQuery
@@ -38,11 +38,12 @@ public class GetPlayersByTeamIdHandler : IRequestHandler<GetPlayersByTeamIdQuery
             FROM PlayerTeams pt
             INNER JOIN Players p ON p.Id = pt.PlayerId
             WHERE pt.TeamId = {0}
-              AND p.IsArchived = 0
+              AND ({1} = 1 OR p.IsArchived = 0)
             ORDER BY pt.SquadNumber, p.LastName, p.FirstName";
 
+        var includeArchivedParam = query.IncludeArchived ? 1 : 0;
         var rows = await _db.Database
-            .SqlQueryRaw<TeamPlayerRawDto>(sql, query.TeamId)
+            .SqlQueryRaw<TeamPlayerRawDto>(sql, query.TeamId, includeArchivedParam)
             .ToListAsync(cancellationToken);
 
         return rows.Select(r => new TeamPlayerDto

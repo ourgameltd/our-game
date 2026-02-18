@@ -103,6 +103,9 @@ export type {
   TeamKitsDto,
   CreateTeamKitRequest,
   UpdateTeamKitRequest,
+  AddPlayerToTeamRequest,
+  AddPlayerToTeamResult,
+  UpdateSquadNumberRequest,
   ClubReportCardDto,
   ClubReportCardPlayerDto,
   ClubReportCardPeriodDto,
@@ -231,6 +234,12 @@ export {
   useCreateTeam,
   useUpdateTeam,
   useUpdateCoach,
+  useAddTeamPlayer,
+  useRemoveTeamPlayer,
+  useUpdateTeamPlayerSquadNumber,
+  useAssignTeamCoach,
+  useRemoveTeamCoach,
+  useUpdateTeamCoachRole,
 } from './hooks';
 export type { ApiError, UseMutationState } from './hooks';
 

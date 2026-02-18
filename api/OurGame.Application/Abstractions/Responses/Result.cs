@@ -1,6 +1,70 @@
 namespace OurGame.Application.Abstractions.Responses;
 
 /// <summary>
+/// Represents the result of an operation with success/failure status but no data payload.
+/// Used for operations like DELETE that don't return data on success.
+/// </summary>
+public class Result
+{
+    /// <summary>
+    /// Indicates whether the operation was successful
+    /// </summary>
+    public bool IsSuccess { get; private set; }
+
+    /// <summary>
+    /// Indicates whether the operation failed due to resource not found
+    /// </summary>
+    public bool IsNotFound { get; private set; }
+
+    /// <summary>
+    /// Indicates whether the operation failed
+    /// </summary>
+    public bool IsFailure => !IsSuccess;
+
+    /// <summary>
+    /// Error message (available when IsSuccess is false)
+    /// </summary>
+    public string? ErrorMessage { get; private set; }
+
+    /// <summary>
+    /// HTTP status code hint (optional)
+    /// </summary>
+    public int? StatusCode { get; private set; }
+
+    private Result(bool isSuccess, string? errorMessage, bool isNotFound = false, int? statusCode = null)
+    {
+        IsSuccess = isSuccess;
+        ErrorMessage = errorMessage;
+        IsNotFound = isNotFound;
+        StatusCode = statusCode;
+    }
+
+    /// <summary>
+    /// Creates a successful result with no data
+    /// </summary>
+    public static Result Success()
+    {
+        return new Result(true, null, false, 204);
+    }
+
+    /// <summary>
+    /// Creates a not found result with error message
+    /// </summary>
+    public static Result NotFound(string errorMessage)
+    {
+        return new Result(false, errorMessage, true, 404);
+    }
+
+    /// <summary>
+    /// Creates a failure result with error message
+    /// </summary>
+    public static Result Failure(string errorMessage, int statusCode = 400)
+    {
+        return new Result(false, errorMessage, false, statusCode);
+    }
+}
+
+/// <summary>
 /// Represents the result of an operation with success/failure status and optional data.
 /// </summary>
 /// <typeparam name="T">The type of data returned on success</typeparam>

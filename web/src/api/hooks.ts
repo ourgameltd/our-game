@@ -165,15 +165,15 @@ export function useMyTeams(): UseApiState<TeamListItemDto[]> {
 /**
  * Hook to fetch team players
  */
-export function useTeamPlayers(teamId: string | undefined): UseApiState<TeamPlayerDto[]> {
+export function useTeamPlayers(teamId: string | undefined, includeArchived?: boolean): UseApiState<TeamPlayerDto[]> {
   return useApiCall<TeamPlayerDto[]>(
     () => {
       if (!teamId) {
         return Promise.resolve({ success: true });
       }
-      return apiClient.teams.getPlayers(teamId);
+      return apiClient.teams.getPlayers(teamId, includeArchived);
     },
-    [teamId]
+    [teamId, includeArchived]
   );
 }
 
@@ -2020,4 +2020,150 @@ export function useDeleteTeamKit(teamId: string | undefined): UseMutationState<v
   }, [teamId, refetchKits]);
 
   return { deleteKit, isSubmitting, data, error, refetchKits };
+}
+
+// ============================================================
+// Team Player Mutation Hooks
+// ============================================================
+
+/**
+ * Hook to add a player to a team.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ * Automatically refetches team players on success.
+ */
+export function useAddTeamPlayer(teamId: string | undefined): UseMutationState<import('./client').AddPlayerToTeamResult> & {
+  addPlayer: (request: import('./client').AddPlayerToTeamRequest) => Promise<void>;
+  refetchPlayers: () => Promise<void>;
+} {
+  const [data, setData] = useState<import('./client').AddPlayerToTeamResult | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchPlayers } = useTeamPlayers(teamId);
+
+  const addPlayer = useCallback(async (request: import('./client').AddPlayerToTeamRequest): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<import('./client').AddPlayerToTeamResult> = await apiClient.teams.addPlayer(teamId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+        // Refetch team players to update the list
+        await refetchPlayers();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to add player to team',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchPlayers]);
+
+  return { addPlayer, isSubmitting, data, error, refetchPlayers };
+}
+
+/**
+ * Hook to remove a player from a team.
+ * Returns a mutation function, submitting state, and error.
+ * Automatically refetches team players on success.
+ */
+export function useRemoveTeamPlayer(teamId: string | undefined): UseMutationState<void> & {
+  removePlayer: (playerId: string) => Promise<void>;
+  refetchPlayers: () => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchPlayers } = useTeamPlayers(teamId);
+
+  const removePlayer = useCallback(async (playerId: string): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.teams.removePlayer(teamId, playerId);
+      if (response.success || response.statusCode === 204) {
+        setData(undefined);
+        // Refetch team players to update the list
+        await refetchPlayers();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to remove player from team',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchPlayers]);
+
+  return { removePlayer, isSubmitting, data, error, refetchPlayers };
+}
+
+/**
+ * Hook to update a player's squad number on a team.
+ * Returns a mutation function, submitting state, and error.
+ * Automatically refetches team players on success.
+ */
+export function useUpdateTeamPlayerSquadNumber(teamId: string | undefined): UseMutationState<void> & {
+  updateSquadNumber: (playerId: string, request: import('./client').UpdateSquadNumberRequest) => Promise<void>;
+  refetchPlayers: () => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchPlayers } = useTeamPlayers(teamId);
+
+  const updateSquadNumber = useCallback(async (playerId: string, request: import('./client').UpdateSquadNumberRequest): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.teams.updatePlayerSquadNumber(teamId, playerId, request);
+      if (response.success || response.statusCode === 204) {
+        setData(undefined);
+        // Refetch team players to update the list
+        await refetchPlayers();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update squad number',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchPlayers]);
+
+  return { updateSquadNumber, isSubmitting, data, error, refetchPlayers };
 }

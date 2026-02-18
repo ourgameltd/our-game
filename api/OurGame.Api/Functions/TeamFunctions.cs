@@ -170,6 +170,7 @@ public class TeamFunctions
     [Function("GetTeamPlayers")]
     [OpenApiOperation(operationId: "GetTeamPlayers", tags: new[] { "Teams" }, Summary = "Get team players", Description = "Retrieves players assigned to a specific team with squad numbers and ratings")]
     [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiParameter(name: "includeArchived", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Include archived players (default: false)")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamPlayerDto>>), Description = "Players retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamPlayerDto>>), Description = "User not authenticated")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<TeamPlayerDto>>), Description = "Invalid team ID format")]
@@ -194,7 +195,9 @@ public class TeamFunctions
             return badRequestResponse;
         }
 
-        var players = await _mediator.Send(new GetPlayersByTeamIdQuery(teamGuid));
+        bool.TryParse(req.Query["includeArchived"], out var includeArchived);
+
+        var players = await _mediator.Send(new GetPlayersByTeamIdQuery(teamGuid, includeArchived));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<TeamPlayerDto>>.SuccessResponse(players));

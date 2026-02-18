@@ -18,6 +18,22 @@ export interface ApiResponse<T> {
   statusCode?: number;
 }
 
+// Team Players Request/Response Types
+export interface AddPlayerToTeamRequest {
+  playerId: string;
+  squadNumber: number;
+}
+
+export interface AddPlayerToTeamResult {
+  playerId: string;
+  teamId: string;
+  squadNumber: number;
+}
+
+export interface UpdateSquadNumberRequest {
+  squadNumber: number;
+}
+
 // User Profile
 export interface UserProfile {
   id: string;
@@ -2188,9 +2204,54 @@ export const apiClient = {
     /**
      * Get players for a specific team
      */
-    getPlayers: async (teamId: string): Promise<ApiResponse<TeamPlayerDto[]>> => {
-      const response = await axiosInstance.get<ApiResponse<TeamPlayerDto[]>>(`/v1/teams/${teamId}/players`);
+    getPlayers: async (teamId: string, includeArchived?: boolean): Promise<ApiResponse<TeamPlayerDto[]>> => {
+      const params = includeArchived ? '?includeArchived=true' : '';
+      const response = await axiosInstance.get<ApiResponse<TeamPlayerDto[]>>(`/v1/teams/${teamId}/players${params}`);
       return response.data;
+    },
+
+    /**
+     * Add a player to a team
+     */
+    addPlayer: async (teamId: string, request: AddPlayerToTeamRequest): Promise<ApiResponse<AddPlayerToTeamResult>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<AddPlayerToTeamResult>>(
+          `/v1/teams/${teamId}/players`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Remove a player from a team
+     */
+    removePlayer: async (teamId: string, playerId: string): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.delete<ApiResponse<void>>(
+          `/v1/teams/${teamId}/players/${playerId}`
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update a player's squad number on a team
+     */
+    updatePlayerSquadNumber: async (teamId: string, playerId: string, request: UpdateSquadNumberRequest): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<void>>(
+          `/v1/teams/${teamId}/players/${playerId}/squad-number`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
 
     /**
