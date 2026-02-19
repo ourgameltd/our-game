@@ -180,6 +180,7 @@ export {
   useTeamDevelopmentPlans,
   useTeamMatches,
   useTeamKits,
+  useTeamReportCards,
   useCreateTeamKit,
   useUpdateTeamKit,
   useDeleteTeamKit,

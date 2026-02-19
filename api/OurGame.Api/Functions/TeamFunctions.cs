@@ -26,6 +26,8 @@ using OurGame.Application.UseCases.Teams.Commands.CreateTeamKit.DTOs;
 using OurGame.Application.UseCases.Teams.Commands.UpdateTeamKit;
 using OurGame.Application.UseCases.Teams.Commands.UpdateTeamKit.DTOs;
 using OurGame.Application.UseCases.Teams.Commands.DeleteTeamKit;
+using OurGame.Application.UseCases.Teams.Queries.GetReportCardsByTeamId;
+using OurGame.Application.UseCases.Clubs.Queries.GetReportCardsByClubId.DTOs;
 
 namespace OurGame.Api.Functions;
 
@@ -624,5 +626,45 @@ public class TeamFunctions
                 (int)HttpStatusCode.InternalServerError));
             return errorResponse;
         }
+    }
+
+    /// <summary>
+    /// Get report cards for players in a specific team
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>List of report cards for players in the team</returns>
+    [Function("GetTeamReportCards")]
+    [OpenApiOperation(operationId: "GetTeamReportCards", tags: new[] { "Teams", "ReportCards" }, Summary = "Get team report cards", Description = "Retrieves all player report cards for a specific team")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubReportCardDto>>), Description = "Report cards retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubReportCardDto>>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubReportCardDto>>), Description = "Invalid team ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubReportCardDto>>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetTeamReportCards(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/teams/{teamId}/report-cards")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<List<ClubReportCardDto>>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        var reportCards = await _mediator.Send(new GetReportCardsByTeamIdQuery(teamGuid));
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<List<ClubReportCardDto>>.SuccessResponse(reportCards));
+        return response;
     }
 }

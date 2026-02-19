@@ -241,6 +241,16 @@ export function useTeamKits(teamId: string | undefined): UseApiState<TeamKitsDto
 }
 
 /**
+ * Hook to fetch report cards for a team
+ */
+export function useTeamReportCards(teamId: string | undefined): UseApiState<ClubReportCardDto[]> {
+  return useApiCall<ClubReportCardDto[]>(
+    () => apiClient.teams.getReportCards(teamId!),
+    [teamId]
+  );
+}
+
+/**
  * Hook to fetch team overview data.
  * Returns early with null data when teamId is undefined (e.g. create mode).
  */

@@ -2353,6 +2353,14 @@ export const apiClient = {
     },
 
     /**
+     * Get report cards for a specific team
+     */
+    getReportCards: async (teamId: string): Promise<ApiResponse<ClubReportCardDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<ClubReportCardDto[]>>(`/v1/teams/${teamId}/report-cards`);
+      return response.data;
+    },
+
+    /**
      * Get development plans for a specific team
      */
     getDevelopmentPlans: async (teamId: string): Promise<ApiResponse<TeamDevelopmentPlanDto[]>> => {
