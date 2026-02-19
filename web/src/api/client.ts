@@ -535,6 +535,43 @@ export interface ClubInfoDto {
   name: string;
 }
 
+// Team Training Sessions DTOs (for GET /v1/teams/{teamId}/training-sessions)
+export interface TeamTrainingSessionsDto {
+  team: TeamTrainingInfoDto;
+  club: ClubInfoDto;
+  sessions: TeamTrainingSessionDto[];
+  totalCount: number;
+}
+
+export interface TeamTrainingInfoDto {
+  id: string;
+  name: string;
+  isArchived: boolean;
+  ageGroupId: string;
+  ageGroupName: string;
+}
+
+export interface TeamTrainingSessionDto {
+  id: string;
+  date: string;
+  meetTime?: string;
+  durationMinutes?: number;
+  location: string;
+  focusAreas: string[];
+  drillIds: string[];
+  attendance: AttendanceDto[];
+  status: string;
+  isLocked: boolean;
+  drillCount: number;
+  attendanceCount: number;
+}
+
+export interface AttendanceDto {
+  playerId: string;
+  status: string;
+  notes?: string;
+}
+
 // Club Player DTOs
 export interface ClubPlayerAgeGroupDto {
   id: string;
@@ -2288,6 +2325,22 @@ export const apiClient = {
       if (options?.dateTo) params.append('dateTo', options.dateTo);
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<TeamMatchesDto>>(`/v1/teams/${teamId}/matches${queryString}`);
+      return response.data;
+    },
+
+    /**
+     * Get training sessions for a specific team with optional filters
+     */
+    getTrainingSessions: async (
+      teamId: string,
+      options?: { status?: string; dateFrom?: string; dateTo?: string }
+    ): Promise<ApiResponse<TeamTrainingSessionsDto>> => {
+      const params = new URLSearchParams();
+      if (options?.status) params.append('status', options.status);
+      if (options?.dateFrom) params.append('dateFrom', options.dateFrom);
+      if (options?.dateTo) params.append('dateTo', options.dateTo);
+      const queryString = params.toString() ? `?${params.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<TeamTrainingSessionsDto>>(`/v1/teams/${teamId}/training-sessions${queryString}`);
       return response.data;
     },
 

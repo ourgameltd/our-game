@@ -226,6 +226,24 @@ export function useTeamMatches(
 }
 
 /**
+ * Hook to fetch training sessions for a team with optional filtering
+ */
+export function useTeamTrainingSessions(
+  teamId: string | undefined,
+  options?: { status?: string; dateFrom?: string; dateTo?: string }
+): UseApiState<TeamTrainingSessionsDto> {
+  return useApiCall<TeamTrainingSessionsDto>(
+    () => {
+      if (!teamId) {
+        return Promise.resolve({ success: true });
+      }
+      return apiClient.teams.getTrainingSessions(teamId, options);
+    },
+    [teamId, options?.status, options?.dateFrom, options?.dateTo]
+  );
+}
+
+/**
  * Hook to fetch kits for a team
  */
 export function useTeamKits(teamId: string | undefined): UseApiState<TeamKitsDto> {
