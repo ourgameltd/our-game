@@ -1,53 +1,102 @@
 # Migration Plan: TeamSettingsPage
 
+**✅ COMPLETED**
+
 ## File
 `web/src/pages/teams/TeamSettingsPage.tsx`
 
 ## Priority
 **Medium** — Team settings/edit form.
 
+## Implementation Summary
+
+### API Endpoints Created
+
+1. **PUT /api/teams/{teamId}** - Update team details (name, colors, level, season)
+   - Handler: `OurGame.Application.UseCases.Teams.Commands.UpdateTeam.UpdateTeamHandler`
+   - Validates team exists and is not archived
+   - Returns updated `TeamOverviewTeamDto`
+
+2. **PUT /api/teams/{teamId}/squad-numbers** - Batch update squad numbers for multiple players
+   - Handler: `UpdateTeamPlayerSquadNumberHandler` (called for each assignment)
+   - Validates no duplicate squad numbers
+   - Updates PlayerTeams assignments
+
+3. **PUT /api/teams/{teamId}/archive** - Archive or unarchive a team
+   - Handler: `OurGame.Application.UseCases.Teams.Commands.ArchiveTeam.ArchiveTeamHandler`
+   - Toggles `IsArchived` flag on team
+
+### Client Implementation
+
+- Uses `useTeamOverview()` hook to fetch team details
+- Uses `useTeamPlayers()` hook to fetch players with squad numbers
+- Uses `useUpdateTeam()` mutation for updating team details
+- Uses `useUpdateTeamSquadNumbers()` mutation for batch squad number updates
+- Uses `useArchiveTeam()` mutation for archiving/unarchiving
+- Displays loading skeletons during data fetch
+- Shows error messages for mutation failures
+- Validates no duplicate squad numbers before submission
+- Disables form inputs during submission
+
+### Reference Data
+
+- `teamLevels` already exists in `@/constants/referenceData` - no migration needed
+
 ## Current Static Data Usage
 
 | Import | Source File | Usage |
 |---|---|---|
-| `getTeamById` | `@/data/teams` | Fetches team details to pre-populate settings form |
-| `getPlayerSquadNumber` | `@/data/teams` | Gets squad numbers for player list in settings |
-| `getPlayersByTeamId` | `@/data/players` | Fetches team players for roster management within settings |
-| `teamLevels` | `@/data/referenceData` | Dropdown options for team level (recreational, competitive, elite) |
+| ~~`getTeamById`~~ | ~~`@/data/teams`~~ | Replaced with `useTeamOverview()` |
+| ~~`getPlayerSquadNumber`~~ | ~~`@/data/teams`~~ | Replaced with `useTeamPlayers()` (returns squad numbers) |
+| ~~`getPlayersByTeamId`~~ | ~~`@/data/players`~~ | Replaced with `useTeamPlayers()` |
+| `teamLevels` | `@/constants/referenceData` | ✅ Already in shared constants |
 
 ## Proposed API Changes
 
 ### New API Endpoints Required
 
-1. **Team Detail for Edit**
+1. **Team Detail for Edit** - ✅ COMPLETED
    ```
-   GET /api/teams/{teamId}
+   GET /api/teams/{teamId}/overview
    ```
-   or reuse `useTeamOverview()` — already exists
+   Already exists via `useTeamOverview()`
 
-2. **Update Team**
+2. **Update Team** - ✅ COMPLETED
    ```
    PUT /api/teams/{teamId}
    ```
 
-3. **Team Players with Squad Numbers** (shared)
+3. **Team Players with Squad Numbers** - ✅ COMPLETED
    ```
    GET /api/teams/{teamId}/players
    ```
+   Already exists
+
+4. **Update Squad Numbers** - ✅ COMPLETED
+   ```
+   PUT /api/teams/{teamId}/squad-numbers
+   ```
+
+5. **Archive Team** - ✅ COMPLETED
+   ```
+   PUT /api/teams/{teamId}/archive
+   ```
 
 ### Reference Data Note
-`teamLevels` → move to shared constants.
+`teamLevels` → already in shared constants.
 
 ## Implementation Checklist
 
-- [ ] Ensure `GET /api/teams/{teamId}` or `useTeamOverview()` provides editable fields
-- [ ] Create `PUT /api/teams/{teamId}` endpoint
-- [ ] Reuse `GET /api/teams/{teamId}/players` (shared with TeamPlayersPage)
-- [ ] Move `teamLevels` to shared constants
-- [ ] Replace data imports with API hooks
-- [ ] Wire form submit to PUT endpoint
-- [ ] Add loading/error states
-- [ ] Test settings form pre-population and save
+- [x] Ensure `GET /api/teams/{teamId}` or `useTeamOverview()` provides editable fields
+- [x] Create `PUT /api/teams/{teamId}` endpoint
+- [x] Reuse `GET /api/teams/{teamId}/players` (shared with TeamPlayersPage)
+- [x] Create `PUT /api/teams/{teamId}/squad-numbers` endpoint for batch updates
+- [x] Create `PUT /api/teams/{teamId}/archive` endpoint
+- [x] Move `teamLevels` to shared constants (already done)
+- [x] Replace data imports with API hooks
+- [x] Wire form submit to PUT endpoint
+- [x] Add loading/error states
+- [x] Test settings form pre-population and save
 
 
 ## Backend Implementation Standards

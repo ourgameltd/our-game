@@ -2177,3 +2177,93 @@ export function useUpdateTeamPlayerSquadNumber(teamId: string | undefined): UseM
 
   return { updateSquadNumber, isSubmitting, data, error, refetchPlayers };
 }
+
+/**
+ * Hook to update squad numbers for multiple players in a team.
+ * Returns a mutation function, submitting state, and error.
+ * Automatically refetches team players on success.
+ */
+export function useUpdateTeamSquadNumbers(teamId: string | undefined): UseMutationState<void> & {
+  updateSquadNumbers: (request: import('./client').UpdateSquadNumbersRequest) => Promise<void>;
+  refetchPlayers: () => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchPlayers } = useTeamPlayers(teamId);
+
+  const updateSquadNumbers = useCallback(async (request: import('./client').UpdateSquadNumbersRequest): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.teams.updateSquadNumbers(teamId, request);
+      if (response.success || response.statusCode === 200) {
+        setData(undefined);
+        // Refetch team players to update the list
+        await refetchPlayers();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update squad numbers',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId, refetchPlayers]);
+
+  return { updateSquadNumbers, isSubmitting, data, error, refetchPlayers };
+}
+
+/**
+ * Hook to archive or unarchive a team.
+ * Returns a mutation function, submitting state, and error.
+ */
+export function useArchiveTeam(teamId: string | undefined): UseMutationState<void> & {
+  archiveTeam: (request: import('./client').ArchiveTeamRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const archiveTeam = useCallback(async (request: import('./client').ArchiveTeamRequest): Promise<void> => {
+    if (!teamId) {
+      setError({ message: 'Team ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.teams.archive(teamId, request);
+      if (response.success || response.statusCode === 204) {
+        setData(undefined);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update team archive status',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [teamId]);
+
+  return { archiveTeam, isSubmitting, data, error };
+}
+

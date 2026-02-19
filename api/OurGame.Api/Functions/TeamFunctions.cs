@@ -28,6 +28,12 @@ using OurGame.Application.UseCases.Teams.Commands.UpdateTeamKit.DTOs;
 using OurGame.Application.UseCases.Teams.Commands.DeleteTeamKit;
 using OurGame.Application.UseCases.Teams.Queries.GetReportCardsByTeamId;
 using OurGame.Application.UseCases.Clubs.Queries.GetReportCardsByClubId.DTOs;
+using OurGame.Application.UseCases.Teams.Commands.UpdateTeam;
+using OurGame.Application.UseCases.Teams.Commands.UpdateTeam.DTOs;
+using OurGame.Application.UseCases.Teams.Commands.ArchiveTeam;
+using OurGame.Application.UseCases.Teams.Commands.ArchiveTeam.DTOs;
+using OurGame.Application.UseCases.Teams.Commands.UpdateTeamPlayerSquadNumber;
+using OurGame.Api.Functions.Teams;
 
 namespace OurGame.Api.Functions;
 
@@ -666,5 +672,279 @@ public class TeamFunctions
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<ClubReportCardDto>>.SuccessResponse(reportCards));
         return response;
+    }
+
+    /// <summary>
+    /// Update a team's details (name, colors, level, etc.)
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>The updated team details</returns>
+    [Function("UpdateTeam")]
+    [OpenApiOperation(operationId: "UpdateTeam", tags: new[] { "Teams" }, Summary = "Update team", Description = "Updates a team's details including name, colors, level, and season")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(UpdateTeamRequestDto), Required = true, Description = "Team update details")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewTeamDto>), Description = "Team updated successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewTeamDto>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewTeamDto>), Description = "Invalid request data or team is archived")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewTeamDto>), Description = "Team not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<TeamOverviewTeamDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> UpdateTeam(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "v1/teams/{teamId}")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamOverviewTeamDto>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<UpdateTeamRequestDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize UpdateTeamRequestDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<TeamOverviewTeamDto>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new UpdateTeamCommand(teamGuid, dto);
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Team updated successfully: {TeamId}", teamGuid);
+            var successResponse = req.CreateResponse(HttpStatusCode.OK);
+            await successResponse.WriteAsJsonAsync(ApiResponse<TeamOverviewTeamDto>.SuccessResponse(result));
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during UpdateTeam");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<TeamOverviewTeamDto>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error during UpdateTeam");
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<TeamOverviewTeamDto>.ValidationErrorResponse(
+                "Validation failed",
+                ex.Errors));
+            return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating team");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<TeamOverviewTeamDto>.ErrorResponse(
+                "An error occurred while updating the team",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Update squad numbers for multiple players in a team
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>Success response</returns>
+    [Function("UpdateTeamSquadNumbers")]
+    [OpenApiOperation(operationId: "UpdateTeamSquadNumbers", tags: new[] { "Teams" }, Summary = "Update squad numbers", Description = "Updates squad numbers for multiple players in a team")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(UpdateSquadNumbersRequestDto), Required = true, Description = "List of player squad number assignments")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Squad numbers updated successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Invalid request data or duplicate squad numbers")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Team or player not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Internal server error")]
+    public async Task<HttpResponseData> UpdateTeamSquadNumbers(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "v1/teams/{teamId}/squad-numbers")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<UpdateSquadNumbersRequestDto>();
+            if (dto == null || dto.Assignments == null)
+            {
+                _logger.LogWarning("Failed to deserialize UpdateSquadNumbersRequestDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            // Check for duplicate squad numbers in the request
+            var assignedNumbers = dto.Assignments
+                .Where(a => a.SquadNumber.HasValue)
+                .Select(a => a.SquadNumber!.Value)
+                .ToList();
+
+            var duplicates = assignedNumbers
+                .GroupBy(n => n)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.Key)
+                .ToList();
+
+            if (duplicates.Any())
+            {
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                    $"Duplicate squad numbers detected: {string.Join(", ", duplicates)}",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            // Update each assignment
+            foreach (var assignment in dto.Assignments)
+            {
+                if (assignment.SquadNumber.HasValue)
+                {
+                    var command = new UpdateTeamPlayerSquadNumberCommand(
+                        teamGuid,
+                        assignment.PlayerId,
+                        assignment.SquadNumber.Value,
+                        azureUserId);
+
+                    var result = await _mediator.Send(command);
+
+                    if (result.IsNotFound)
+                    {
+                        var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+                        await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                            result.ErrorMessage ?? "Player or team not found",
+                            (int)HttpStatusCode.NotFound));
+                        return notFoundResponse;
+                    }
+
+                    if (result.IsFailure)
+                    {
+                        var failureResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                        await failureResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                            result.ErrorMessage ?? "Failed to update squad number",
+                            (int)HttpStatusCode.BadRequest));
+                        return failureResponse;
+                    }
+                }
+            }
+
+            _logger.LogInformation("Squad numbers updated successfully for team: {TeamId}", teamGuid);
+            var successResponse = req.CreateResponse(HttpStatusCode.OK);
+            await successResponse.WriteAsJsonAsync(ApiResponse<object>.SuccessResponse(new { message = "Squad numbers updated successfully" }));
+            return successResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating squad numbers");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "An error occurred while updating squad numbers",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Archive or unarchive a team
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="teamId">The team ID</param>
+    /// <returns>No content on success</returns>
+    [Function("ArchiveTeam")]
+    [OpenApiOperation(operationId: "ArchiveTeam", tags: new[] { "Teams" }, Summary = "Archive/unarchive team", Description = "Archives or unarchives a team")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(ArchiveTeamRequestDto), Required = true, Description = "Archive status")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Team archive status updated successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Invalid request data")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Team not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Internal server error")]
+    public async Task<HttpResponseData> ArchiveTeam(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "v1/teams/{teamId}/archive")] HttpRequestData req,
+        string teamId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(teamId, out var teamGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Invalid team ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<ArchiveTeamRequestDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize ArchiveTeamRequestDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new ArchiveTeamCommand(teamGuid, dto);
+            await _mediator.Send(command);
+
+            _logger.LogInformation("Team archive status updated: {TeamId} - IsArchived: {IsArchived}", teamGuid, dto.IsArchived);
+            var successResponse = req.CreateResponse(HttpStatusCode.NoContent);
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during ArchiveTeam");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error archiving team");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "An error occurred while updating team archive status",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
     }
 }

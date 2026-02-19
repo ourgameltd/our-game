@@ -1,35 +1,82 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getTeamById, getPlayerSquadNumber } from '@/data/teams';
-import { getPlayersByTeamId } from '@/data/players';
-import { teamLevels } from '@/data/referenceData';
+import { teamLevels } from '@/constants/referenceData';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
-import { TeamPlayerAssignment } from '@/types';
+import { useTeamOverview, useTeamPlayers, useUpdateTeam, useUpdateTeamSquadNumbers, useArchiveTeam } from '@/api/hooks';
+import type { SquadNumberAssignment } from '@/api/client';
 
 export default function TeamSettingsPage() {
   const { clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
-  const team = getTeamById(teamId!);
-  const teamPlayers = team ? getPlayersByTeamId(teamId!) : [];
+  
+  // Fetch team data
+
+  // Fetch team data
+  const { data: teamData, isLoading: isLoadingTeam } = useTeamOverview(teamId);
+  const { data: players, isLoading: isLoadingPlayers, refetch: refetchPlayers } = useTeamPlayers(teamId);
+  
+  // API mutations
+  const { updateTeam, isSubmitting: isUpdatingTeam, error: updateError } = useUpdateTeam(teamId!);
+  const { updateSquadNumbers, isSubmitting: isUpdatingSquadNumbers, error: squadNumbersError } = useUpdateTeamSquadNumbers(teamId);
+  const { archiveTeam, isSubmitting: isArchiving, error: archiveError } = useArchiveTeam(teamId);
+
+  const team = teamData?.team;
+  const teamPlayers = players || [];
 
   const [formData, setFormData] = useState({
-    name: team?.name || '',
-    shortName: team?.shortName || '',
-    level: team?.level || 'youth',
-    season: team?.season || '2024/25',
-    primaryColor: team?.colors?.primary || '#1a472a',
-    secondaryColor: team?.colors?.secondary || '#ffffff'
+    name: '',
+    shortName: '',
+    level: 'youth',
+    season: '2024/25',
+    primaryColor: '#1a472a',
+    secondaryColor: '#ffffff'
   });
 
+  // Initialize form data when team loads
+  useEffect(() => {
+    if (team) {
+      setFormData({
+        name: team.name || '',
+        shortName: team.shortName || '',
+        level: team.level || 'youth',
+        season: team.season || '2024/25',
+        primaryColor: team.colors?.primary || '#1a472a',
+        secondaryColor: team.colors?.secondary || '#ffffff'
+      });
+    }
+  }, [team]);
+
   // Initialize squad numbers from team data
-  const [squadNumbers, setSquadNumbers] = useState<TeamPlayerAssignment[]>(() => {
-    return teamPlayers.map(player => ({
-      playerId: player.id,
-      squadNumber: getPlayerSquadNumber(teamId!, player.id)
-    }));
-  });
+  const [squadNumbers, setSquadNumbers] = useState<SquadNumberAssignment[]>([]);
+
+  useEffect(() => {
+    if (teamPlayers.length > 0) {
+      setSquadNumbers(
+        teamPlayers.map(player => ({
+          playerId: player.playerId,
+          squadNumber: player.squadNumber
+        }))
+      );
+    }
+  }, [teamPlayers]);
+
+  if (isLoadingTeam || isLoadingPlayers) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="card">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (!team) {
     return (
@@ -77,26 +124,53 @@ export default function TeamSettingsPage() {
 
   const duplicates = getDuplicateSquadNumbers();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // In a real app, this would save to the backend
-    alert('Team settings updated successfully! (Demo - not saved to backend)');
-    navigate(Routes.team(clubId!, ageGroupId!, teamId!));
+    if (!teamId) return;
+
+    try {
+      // Update team details
+      await updateTeam({
+        name: formData.name,
+        shortName: formData.shortName || undefined,
+        level: formData.level,
+        season: formData.season,
+        primaryColor: formData.primaryColor,
+        secondaryColor: formData.secondaryColor
+      });
+
+      // Update squad numbers
+      await updateSquadNumbers({
+        assignments: squadNumbers
+      });
+
+      // Refetch team data and navigate back
+      await refetchPlayers();
+      navigate(Routes.team(clubId!, ageGroupId!, teamId!));
+    } catch (err) {
+      console.error('Failed to update team settings:', err);
+    }
   };
 
   const handleCancel = () => {
     navigate(Routes.team(clubId!, ageGroupId!, teamId!));
   };
 
-  const handleArchive = () => {
+  const handleArchive = async () => {
+    if (!teamId) return;
+
     const isCurrentlyArchived = team.isArchived;
     const action = isCurrentlyArchived ? 'unarchive' : 'archive';
     const actionPast = isCurrentlyArchived ? 'unarchived' : 'archived';
     
     if (confirm(`Are you sure you want to ${action} this team? ${isCurrentlyArchived ? 'This will make it active again.' : 'This will lock the team and prevent modifications.'}`)) {
-      alert(`Team ${actionPast} successfully! (Demo - not saved to backend)`);
-      navigate(Routes.team(clubId!, ageGroupId!, teamId!));
+      try {
+        await archiveTeam({ isArchived: !isCurrentlyArchived });
+        navigate(Routes.team(clubId!, ageGroupId!, teamId!));
+      } catch (err) {
+        console.error('Failed to archive team:', err);
+      }
     }
   };
 
@@ -113,6 +187,15 @@ export default function TeamSettingsPage() {
           <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
             <p className="text-sm text-orange-800 dark:text-orange-300">
               ⚠️ This team is archived. You cannot modify its settings while it is archived. Unarchive it to make changes.
+            </p>
+          </div>
+        )}
+
+        {/* Error Messages */}
+        {(updateError || squadNumbersError || archiveError) && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-800 dark:text-red-300">
+              {updateError?.message || squadNumbersError?.message || archiveError?.message}
             </p>
           </div>
         )}
@@ -135,7 +218,7 @@ export default function TeamSettingsPage() {
                   value={formData.name}
                   onChange={handleInputChange}
                   required
-                  disabled={team.isArchived}
+                  disabled={team.isArchived || isUpdatingTeam}
                   placeholder="e.g., Reds, Blues, Whites"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -152,7 +235,7 @@ export default function TeamSettingsPage() {
                   onChange={handleInputChange}
                   placeholder="e.g., RDS, BLS, WTS"
                   maxLength={3}
-                  disabled={team.isArchived}
+                  disabled={team.isArchived || isUpdatingTeam}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
@@ -166,7 +249,7 @@ export default function TeamSettingsPage() {
                   value={formData.level}
                   onChange={handleInputChange}
                   required
-                  disabled={team.isArchived}
+                  disabled={team.isArchived || isUpdatingTeam}
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {teamLevels.map(level => (
@@ -185,7 +268,7 @@ export default function TeamSettingsPage() {
                   value={formData.season}
                   onChange={handleInputChange}
                   required
-                  disabled={team.isArchived}
+                  disabled={team.isArchived || isUpdatingTeam}
                   placeholder="e.g., 2024/25"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
@@ -213,14 +296,14 @@ export default function TeamSettingsPage() {
                     name="primaryColor"
                     value={formData.primaryColor}
                     onChange={handleInputChange}
-                    disabled={team.isArchived}
+                    disabled={team.isArchived || isUpdatingTeam}
                     className="h-10 w-20 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <input
                     type="text"
                     value={formData.primaryColor}
                     onChange={(e) => setFormData(prev => ({ ...prev, primaryColor: e.target.value }))}
-                    disabled={team.isArchived}
+                    disabled={team.isArchived || isUpdatingTeam}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -236,14 +319,14 @@ export default function TeamSettingsPage() {
                     name="secondaryColor"
                     value={formData.secondaryColor}
                     onChange={handleInputChange}
-                    disabled={team.isArchived}
+                    disabled={team.isArchived || isUpdatingTeam}
                     className="h-10 w-20 rounded cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <input
                     type="text"
                     value={formData.secondaryColor}
                     onChange={(e) => setFormData(prev => ({ ...prev, secondaryColor: e.target.value }))}
-                    disabled={team.isArchived}
+                    disabled={team.isArchived || isUpdatingTeam}
                     className="flex-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -287,17 +370,17 @@ export default function TeamSettingsPage() {
               <div className="space-y-2">
                 {teamPlayers
                   .sort((a, b) => {
-                    const numA = squadNumbers.find(s => s.playerId === a.id)?.squadNumber ?? 999;
-                    const numB = squadNumbers.find(s => s.playerId === b.id)?.squadNumber ?? 999;
+                    const numA = squadNumbers.find(s => s.playerId === a.playerId)?.squadNumber ?? 999;
+                    const numB = squadNumbers.find(s => s.playerId === b.playerId)?.squadNumber ?? 999;
                     return numA - numB;
                   })
                   .map(player => {
-                    const assignment = squadNumbers.find(a => a.playerId === player.id);
+                    const assignment = squadNumbers.find(a => a.playerId === player.playerId);
                     const isDuplicate = assignment?.squadNumber !== undefined && duplicates.includes(assignment.squadNumber);
                     
                     return (
                       <div 
-                        key={player.id} 
+                        key={player.playerId} 
                         className={`flex items-center gap-4 p-3 rounded-lg border ${
                           isDuplicate 
                             ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-700' 
@@ -309,12 +392,12 @@ export default function TeamSettingsPage() {
                           {player.photo ? (
                             <img 
                               src={player.photo} 
-                              alt={`${player.firstName} ${player.lastName}`}
+                              alt={player.playerName}
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-medium">
-                              {player.firstName[0]}{player.lastName[0]}
+                              {player.playerName.split(' ').map(n => n[0]).join('')}
                             </div>
                           )}
                         </div>
@@ -322,7 +405,7 @@ export default function TeamSettingsPage() {
                         {/* Player Name & Position */}
                         <div className="flex-grow min-w-0">
                           <p className="font-medium text-gray-900 dark:text-white truncate">
-                            {player.firstName} {player.lastName}
+                            {player.playerName}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             {player.preferredPositions?.join(', ') || 'No position'}
@@ -336,8 +419,8 @@ export default function TeamSettingsPage() {
                             min="1"
                             max="99"
                             value={assignment?.squadNumber ?? ''}
-                            onChange={(e) => handleSquadNumberChange(player.id, e.target.value)}
-                            disabled={team.isArchived}
+                            onChange={(e) => handleSquadNumberChange(player.playerId, e.target.value)}
+                            disabled={team.isArchived || isUpdatingSquadNumbers}
                             placeholder="#"
                             className={`w-full px-3 py-2 text-center font-bold text-lg border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${
                               isDuplicate 
@@ -367,7 +450,7 @@ export default function TeamSettingsPage() {
             isArchived={team.isArchived}
             onArchive={handleArchive}
             onCancel={handleCancel}
-            saveDisabled={team.isArchived || duplicates.length > 0}
+            saveDisabled={team.isArchived || duplicates.length > 0 || isUpdatingTeam || isUpdatingSquadNumbers || isArchiving}
           />
         </form>
       </main>

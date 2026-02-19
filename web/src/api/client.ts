@@ -1785,6 +1785,19 @@ export interface UpdateTeamRequest {
   secondaryColor: string;
 }
 
+export interface SquadNumberAssignment {
+  playerId: string;
+  squadNumber?: number;
+}
+
+export interface UpdateSquadNumbersRequest {
+  assignments: SquadNumberAssignment[];
+}
+
+export interface ArchiveTeamRequest {
+  isArchived: boolean;
+}
+
 export interface UpdateCoachRequest {
   firstName: string;
   lastName: string;
@@ -2413,6 +2426,39 @@ export const apiClient = {
       try {
         const response = await axiosInstance.delete<ApiResponse<void>>(
           `/v1/teams/${teamId}/kits/${kitId}`
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update squad numbers for multiple players in a team
+     */
+    updateSquadNumbers: async (
+      teamId: string,
+      request: UpdateSquadNumbersRequest
+    ): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<void>>(
+          `/v1/teams/${teamId}/squad-numbers`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Archive or unarchive a team
+     */
+    archive: async (teamId: string, request: ArchiveTeamRequest): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<void>>(
+          `/v1/teams/${teamId}/archive`,
+          request
         );
         return response.data;
       } catch (error) {
