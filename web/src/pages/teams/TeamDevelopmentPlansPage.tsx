@@ -303,7 +303,7 @@ export default function TeamDevelopmentPlansPage() {
             {/* Mobile Card View */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {plansWithPlayers.map(({ plan, player }) => {
-                const linkTo = Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId!, teamId!, player.id);
+                const linkTo = Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId!, teamId!, player.id, plan.id);
                 
                 return (
                   <DevelopmentPlanListCard
@@ -319,7 +319,7 @@ export default function TeamDevelopmentPlansPage() {
             {/* Desktop Compact Row View */}
             <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               {plansWithPlayers.map(({ plan, player }) => {
-                const linkTo = Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId!, teamId!, player.id);
+                const linkTo = Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId!, teamId!, player.id, plan.id);
                 
                 return (
                   <DevelopmentPlanTableRow

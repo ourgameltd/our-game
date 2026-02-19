@@ -8,7 +8,7 @@ import TacticPitchEditor from '@/components/tactics/TacticPitchEditor';
 import PrinciplePanel from '@/components/tactics/PrinciplePanel';
 import { getResolvedPositions } from '@/data/tactics';
 import { getFormationById, sampleFormations } from '@/data/formations';
-import { Tactic, TacticalPositionOverride, TacticPrinciple, FormationScope, PlayerDirection } from '@/types';
+import { Tactic, TacticalPositionOverride, TacticPrinciple, FormationScope, PlayerDirection, SquadSize } from '@/types';
 import {
   useTactic,
   useCreateTactic,
@@ -56,7 +56,7 @@ function mapDtoToFormState(dto: TacticDetailDto): Tactic {
     name: dto.name,
     parentFormationId: dto.parentFormationId,
     parentTacticId: dto.parentTacticId,
-    squadSize: dto.squadSize,
+    squadSize: dto.squadSize as SquadSize,
     positionOverrides,
     principles,
     summary: dto.summary || '',

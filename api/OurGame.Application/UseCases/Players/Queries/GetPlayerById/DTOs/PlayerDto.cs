@@ -80,17 +80,3 @@ public class TeamMinimalDto
     public string? AgeGroupName { get; init; }
     public int? SquadNumber { get; init; }
 }
-
-/// <summary>
-/// Emergency contact information for a player
-/// </summary>
-/// <param name="Name">Full name of the emergency contact</param>
-/// <param name="Phone">Contact phone number</param>
-/// <param name="Relationship">Relationship to the player (e.g., Parent, Guardian, Sibling)</param>
-/// <param name="IsPrimary">Whether this is the primary emergency contact</param>
-public record EmergencyContactDto(
-    string Name,
-    string Phone,
-    string Relationship,
-    bool IsPrimary
-);

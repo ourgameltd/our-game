@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { apiClient } from '@/api';
-import type { PlayerDto, DevelopmentPlanDto, CreateDevelopmentPlanRequest, UpdateDevelopmentPlanRequest } from '@/api';
+import type { PlayerDto, DevelopmentPlanDetailDto, DevelopmentPlanGoalDetailDto, CreateDevelopmentPlanRequest, UpdateDevelopmentPlanRequest } from '@/api';
 import { developmentPlanStatuses, type DevelopmentPlanStatus } from '@data/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
@@ -44,7 +44,7 @@ export default function AddEditDevelopmentPlanPage() {
   const [playerError, setPlayerError] = useState<string | null>(null);
 
   // Plan state (edit mode)
-  const [plan, setPlan] = useState<DevelopmentPlanDto | null>(null);
+  const [plan, setPlan] = useState<DevelopmentPlanDetailDto | null>(null);
   const [planLoading, setPlanLoading] = useState(false);
   const [planError, setPlanError] = useState<string | null>(null);
 
@@ -119,18 +119,26 @@ export default function AddEditDevelopmentPlanPage() {
       setDescription(plan.description || '');
       setPeriodStart(parseApiDate(plan.periodStart));
       setPeriodEnd(parseApiDate(plan.periodEnd));
-      setStatus(plan.status || 'active');
-      setCoachNotes(plan.coachNotes || '');
+      // Type guard for defensive coding
+      const planStatus = plan.status;
+      const validStatus: DevelopmentPlanStatus = 
+        planStatus === 'active' || planStatus === 'completed' || planStatus === 'archived' 
+          ? planStatus 
+          : 'active';
+      setStatus(validStatus);
+      // Note: coachNotes field is not included in DevelopmentPlanDetailDto,
+      // so existing notes won't be pre-populated when editing
+      setCoachNotes('');
       setGoals(
         plan.goals.length > 0
-          ? plan.goals.map((g) => ({
+          ? plan.goals.map((g: DevelopmentPlanGoalDetailDto) => ({
               id: g.id,
-              goal: g.goal,
+              goal: g.title, // DevelopmentPlanGoalDetailDto uses 'title' instead of 'goal'
               actions: g.actions.length > 0 ? g.actions : [''],
-              startDate: parseApiDate(g.startDate),
+              startDate: '', // DevelopmentPlanGoalDetailDto doesn't have startDate, use empty or plan start
               targetDate: parseApiDate(g.targetDate),
               progress: g.progress,
-              completed: g.completed,
+              completed: g.status === 'completed', // Convert status string to boolean
               completedDate: g.completedDate ? parseApiDate(g.completedDate) : undefined,
             }))
           : [{ goal: '', actions: [''], startDate: '', targetDate: '', progress: 0, completed: false }]
@@ -227,17 +235,17 @@ export default function AddEditDevelopmentPlanPage() {
   let subtitle: string;
   if (isEditMode) {
     if (teamId && ageGroupId) {
-      backLink = Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId, teamId, playerId!);
+      backLink = Routes.teamPlayerDevelopmentPlan(clubId!, ageGroupId!, teamId!, playerId!, planId!);
     } else if (ageGroupId) {
-      backLink = Routes.playerDevelopmentPlan(clubId!, ageGroupId, playerId!);
+      backLink = Routes.playerDevelopmentPlan(clubId!, ageGroupId!, playerId!, planId!);
     } else {
       backLink = Routes.clubPlayers(clubId!);
     }
   } else {
     if (teamId && ageGroupId) {
-      backLink = Routes.teamPlayerDevelopmentPlans(clubId!, ageGroupId, teamId, playerId!);
+      backLink = Routes.teamPlayerDevelopmentPlans(clubId!, ageGroupId!, teamId!, playerId!);
     } else if (ageGroupId) {
-      backLink = Routes.playerDevelopmentPlans(clubId!, ageGroupId, playerId!);
+      backLink = Routes.playerDevelopmentPlans(clubId!, ageGroupId!, playerId!);
     } else {
       backLink = Routes.clubPlayers(clubId!);
     }

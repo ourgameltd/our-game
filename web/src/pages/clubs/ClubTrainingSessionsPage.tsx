@@ -99,11 +99,13 @@ export default function ClubTrainingSessionsPage() {
     const now = new Date();
     
     return allSessions.filter(session => {
+      const sessionDate = new Date(session.date);
+      
       // Status filter
-      if (filterStatus === 'upcoming' && new Date(session.date) < now) {
+      if (filterStatus === 'upcoming' && sessionDate < now) {
         return false;
       }
-      if (filterStatus === 'past' && new Date(session.date) >= now) {
+      if (filterStatus === 'past' && sessionDate >= now) {
         return false;
       }
 
@@ -189,7 +191,7 @@ export default function ClubTrainingSessionsPage() {
               </div>
             </div>
             <span className="md:hidden text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
-              {session.durationMinutes} mins
+              {session.durationMinutes || 0} mins
             </span>
           </div>
 
@@ -203,7 +205,7 @@ export default function ClubTrainingSessionsPage() {
           {/* Session Details */}
           <div className="flex-grow md:order-3">
             {/* Focus Areas */}
-            {session.focusAreas.length > 0 && (
+            {session.focusAreas && session.focusAreas.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
                 {session.focusAreas.map((area: string, idx: number) => (
                   <span
@@ -226,7 +228,7 @@ export default function ClubTrainingSessionsPage() {
           {/* Duration - desktop only */}
           <div className="hidden md:flex md:flex-shrink-0 md:w-[80px] md:order-4 justify-end">
             <span className="text-sm text-gray-600 dark:text-gray-400">
-              {session.durationMinutes}m
+              {session.durationMinutes || 0}m
             </span>
           </div>
 

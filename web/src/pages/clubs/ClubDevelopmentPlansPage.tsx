@@ -304,7 +304,7 @@ export default function ClubDevelopmentPlansPage() {
               {plansWithPlayers.map(({ plan, player }) => {
                 const ageGroupId = player.ageGroupIds?.[0];
                 const linkTo = ageGroupId
-                  ? Routes.playerDevelopmentPlan(clubId!, ageGroupId, player.id)
+                  ? Routes.playerDevelopmentPlan(clubId!, ageGroupId, player.id, plan.id)
                   : '#';
                 
                 return (
@@ -323,7 +323,7 @@ export default function ClubDevelopmentPlansPage() {
               {plansWithPlayers.map(({ plan, player }) => {
                 const ageGroupId = player.ageGroupIds?.[0];
                 const linkTo = ageGroupId
-                  ? Routes.playerDevelopmentPlan(clubId!, ageGroupId, player.id)
+                  ? Routes.playerDevelopmentPlan(clubId!, ageGroupId, player.id, plan.id)
                   : '#';
                 
                 return (

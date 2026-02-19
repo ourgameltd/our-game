@@ -7,7 +7,7 @@ import { Routes } from '@/utils/routes';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
 import PrinciplePanel from '@/components/tactics/PrinciplePanel';
 import PageTitle from '@/components/common/PageTitle';
-import { Tactic, TacticPrinciple, TacticalPositionOverride, PlayerDirection, FormationScope } from '@/types';
+import { Tactic, TacticPrinciple, TacticalPositionOverride, PlayerDirection, FormationScope, SquadSize } from '@/types';
 import type { ResolvedPosition } from '@/data/tactics';
 
 /**
@@ -42,7 +42,7 @@ function mapDtoToTactic(dto: TacticDetailDto): Tactic {
     name: dto.name,
     parentFormationId: dto.parentFormationId,
     parentTacticId: dto.parentTacticId,
-    squadSize: dto.squadSize,
+    squadSize: dto.squadSize as SquadSize,
     positionOverrides,
     principles,
     summary: dto.summary || '',
@@ -72,7 +72,7 @@ export default function TacticDetailPage() {
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
   const [selectedPrincipleId, setSelectedPrincipleId] = useState<string | null>(null);
 
-  const { data: tacticDto, loading, error } = useTactic(tacticId);
+  const { data: tacticDto, isLoading, error } = useTactic(tacticId);
 
   const tactic = tacticDto ? mapDtoToTactic(tacticDto) : undefined;
   const resolvedPositions = tacticDto ? mapResolvedPositions(tacticDto.resolvedPositions) : [];
@@ -117,7 +117,7 @@ export default function TacticDetailPage() {
   };
 
   // Error state - API failed
-  if (error && !loading) {
+  if (error && !isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -134,7 +134,7 @@ export default function TacticDetailPage() {
   }
 
   // Not found state - no data and not loading
-  if (!tactic && !loading) {
+  if (!tactic && !isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -160,7 +160,7 @@ export default function TacticDetailPage() {
   };
 
   // Loading state with section-level skeletons
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">

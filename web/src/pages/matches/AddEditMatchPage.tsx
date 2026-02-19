@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
 import { getResolvedPositions } from '@/data/tactics';
-import { weatherConditions, squadSizes, cardTypes, injurySeverities, coachRoleDisplay } from '@/constants/referenceData';
+import { weatherConditions, squadSizes, cardTypes, injurySeverities } from '@/constants/referenceData';
+import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { PlayerPosition, SquadSize, Tactic } from '@/types';
 import { Routes } from '@utils/routes';
-import { calculateTeamRatings, getAttributeQuality, groupAttributes } from '@utils/attributeHelpers';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupDetail } from '@/api/hooks';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById } from '@/api/hooks';
 import { apiClient, CreateMatchRequest, UpdateMatchRequest } from '@/api/client';
 import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
 
@@ -18,26 +18,22 @@ export default function AddEditMatchPage() {
 
   // Fetch data from API
   const { data: team, isLoading: teamLoading, error: teamError } = useTeamOverview(teamId);
-  const { data: ageGroup, isLoading: ageGroupLoading } = useAgeGroupDetail(ageGroupId);
+  const { data: ageGroup, isLoading: ageGroupLoading } = useAgeGroupById(ageGroupId);
   const { data: existingMatch, isLoading: matchLoading } = useMatch(isEditing ? matchId : undefined);
   const { data: teamPlayers = [], isLoading: playersLoading } = useTeamPlayers(teamId);
   const { data: teamCoaches = [], isLoading: coachesLoading } = useTeamCoaches(teamId);
   const { data: tacticsData, isLoading: tacticsLoading } = useTacticsByScope(clubId, ageGroupId, teamId);
   
-  const club = team?.club;
-
   // Get available seasons from age group
   const availableSeasons = ageGroup?.seasons || [];
   const defaultSeason = ageGroup?.defaultSeason || '';
 
-  // Get available kits (team kits take priority, then club kits)
-  const teamKits = team?.kits || [];
-  const clubKits = club?.kits || [];
-  const availableKits = [...teamKits, ...clubKits].filter(k => k.isActive);
+  // Get available kits - not available from API yet, using defaults
+  const availableKits: any[] = [];
 
   // Get all club players (for cross-team selection) - for now using teamPlayers
   // TODO: Add useClubPlayers hook when available
-  const allClubPlayers = teamPlayers;
+  const allClubPlayers = teamPlayers || [];
 
   // Loading and error states
   const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || tacticsLoading;
@@ -52,7 +48,7 @@ export default function AddEditMatchPage() {
               Error Loading Data
             </h2>
             <p className="text-red-700 dark:text-red-400 mb-4">
-              {hasError}
+              {hasError.message || String(hasError)}
             </p>
             <button
               onClick={() => navigate(Routes.matches(clubId!, ageGroupId!, teamId!))}
@@ -79,63 +75,44 @@ export default function AddEditMatchPage() {
     );
   }
 
-  // Check if team is archived
-  if (team?.isArchived && matchId === 'new') {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <main className="mx-auto px-4 py-4">
-          <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-orange-800 dark:text-orange-300 mb-2">
-              Cannot Schedule Match
-            </h2>
-            <p className="text-orange-700 dark:text-orange-400 mb-4">
-              This team is archived. You cannot schedule new matches for an archived team. Please unarchive the team first in Settings.
-            </p>
-            <button
-              onClick={() => navigate(Routes.matches(clubId!, ageGroupId!, teamId!))}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
-            >
-              Back to Matches
-            </button>
-          </div>
-        </main>
-      </div>
-    );
-  }
-
   // Form state
   const [seasonId, setSeasonId] = useState(existingMatch?.seasonId || defaultSeason);
-  const [squadSize, setSquadSize] = useState<SquadSize>(existingMatch?.squadSize || ageGroup?.defaultSquadSize || 11);
+  const [squadSize, setSquadSize] = useState<SquadSize>((existingMatch?.squadSize || ageGroup?.defaultSquadSize || 11) as SquadSize);
   const [opposition, setOpposition] = useState(existingMatch?.opposition || '');
   const [kickOffTime, setKickOffTime] = useState(
-    existingMatch?.kickOffTime ? existingMatch.kickOffTime.toISOString().slice(0, 16) : 
-    existingMatch?.date ? existingMatch.date.toISOString().slice(0, 16) : ''
+    existingMatch?.kickOffTime ? existingMatch.kickOffTime.slice(0, 16) : 
+    existingMatch?.matchDate ? existingMatch.matchDate.slice(0, 16) : ''
   );
   const [meetTime, setMeetTime] = useState(
-    existingMatch?.meetTime ? existingMatch.meetTime.toISOString().slice(0, 16) : ''
+    existingMatch?.meetTime ? existingMatch.meetTime.slice(0, 16) : ''
   );
   const [location, setLocation] = useState(existingMatch?.location || '');
   const [isHome, setIsHome] = useState(existingMatch?.isHome ?? true);
   const [competition, setCompetition] = useState(existingMatch?.competition || '');
-  const [kit, setKit] = useState(existingMatch?.kit?.primary || (availableKits.find(k => k.type === 'home')?.id || ''));
-  const [goalkeeperKit, setGoalkeeperKit] = useState(existingMatch?.kit?.goalkeeper || (availableKits.find(k => k.type === 'goalkeeper')?.id || ''));
+  const [kit, setKit] = useState(existingMatch?.primaryKitId?.toString() || '');
+  const [goalkeeperKit, setGoalkeeperKit] = useState(existingMatch?.secondaryKitId?.toString() || '');
   const [formationId, setFormationId] = useState(existingMatch?.lineup?.formationId || '');
   const [tacticId, setTacticId] = useState(existingMatch?.lineup?.tacticId || '');
-  const [weather, setWeather] = useState(existingMatch?.weather?.condition || '');
-  const [temperature, setTemperature] = useState(existingMatch?.weather?.temperature?.toString() || '');
+  const [weather, setWeather] = useState(existingMatch?.weatherCondition || '');
+  const [temperature, setTemperature] = useState(existingMatch?.weatherTemperature?.toString() || '');
   
   // Get formations filtered by squad size
   const availableFormations = getFormationsBySquadSize(squadSize);
   
   // Get tactics available for this team (including inherited from club and age group)
   const getAvailableTactics = (): Tactic[] => {
-    if (!tacticsData?.tactics) return [];
+    if (!tacticsData) return [];
     
-    return tacticsData.tactics.filter(tactic => {
-      // Must match squad size
-      if (tactic.squadSize !== squadSize) return false;
+    const allTactics = [...(tacticsData.scopeTactics || []), ...(tacticsData.inheritedTactics || [])];
+    const filtered = allTactics.filter(tactic => {
+      // Must match squad size - validate TacticListDto.squadSize (number) as SquadSize
+      const validSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
+      const isValidSquadSize = validSquadSizes.includes(tactic.squadSize as SquadSize);
+      if (!isValidSquadSize || tactic.squadSize !== squadSize) return false;
       return true;
     });
+    // Cast TacticListDto[] to Tactic[] - they're compatible except for squadSize type
+    return filtered as any as Tactic[];
   };
   
   const availableTactics = getAvailableTactics();
@@ -185,47 +162,65 @@ export default function AddEditMatchPage() {
   };
   
   // Match result state
-  const [homeScore, setHomeScore] = useState(existingMatch?.score?.home?.toString() || '');
-  const [awayScore, setAwayScore] = useState(existingMatch?.score?.away?.toString() || '');
+  const [homeScore, setHomeScore] = useState(existingMatch?.homeScore?.toString() || '');
+  const [awayScore, setAwayScore] = useState(existingMatch?.awayScore?.toString() || '');
   const [summary, setSummary] = useState(existingMatch?.report?.summary || '');
   
-  // Lineup state
+  // Lineup state - derive from MatchDetailDto.lineup.players (LineupPlayerDto[])
   const [startingPlayers, setStartingPlayers] = useState<{ playerId: string; position: PlayerPosition; squadNumber?: number }[]>(
-    existingMatch?.lineup?.starting || []
+    existingMatch?.lineup?.players?.filter(p => p.isStarting).map(p => ({
+      playerId: p.playerId,
+      position: p.position as PlayerPosition,
+      squadNumber: p.squadNumber
+    })) || []
   );
   const [substitutes, setSubstitutes] = useState<{ playerId: string; squadNumber?: number }[]>(
-    existingMatch?.lineup?.substitutes || []
+    existingMatch?.lineup?.players?.filter(p => !p.isStarting).map(p => ({
+      playerId: p.playerId,
+      squadNumber: p.squadNumber
+    })) || []
   );
   const [substitutions, setSubstitutions] = useState<{ minute: number; playerOut: string; playerIn: string }[]>(
-    existingMatch?.lineup?.substitutions || []
+    (existingMatch?.substitutions || []).map(s => ({
+      minute: s.minute,
+      playerOut: s.playerOutId,
+      playerIn: s.playerInId
+    }))
   );
   
   // Match events state
   const [goals, setGoals] = useState<{ playerId: string; minute: number; assist?: string }[]>(
-    existingMatch?.report?.goalScorers || []
+    existingMatch?.report?.goals || []
   );
   const [cards, setCards] = useState<{ playerId: string; type: 'yellow' | 'red'; minute: number; reason?: string }[]>(
-    existingMatch?.report?.cards || []
+    (existingMatch?.report?.cards || []).map(c => ({ ...c, type: (c.type === 'yellow' || c.type === 'red' ? c.type : 'yellow') as 'yellow' | 'red' }))
   );
   const [injuries, setInjuries] = useState<{ playerId: string; minute: number; description: string; severity: 'minor' | 'moderate' | 'serious' }[]>(
-    existingMatch?.report?.injuries || []
+    (existingMatch?.report?.injuries || []).map(i => ({
+      playerId: i.playerId,
+      minute: i.minute,
+      description: i.description || '',
+      severity: (['minor', 'moderate', 'serious'].includes(i.severity) ? i.severity : 'minor') as 'minor' | 'moderate' | 'serious'
+    }))
   );
   const [ratings, setRatings] = useState<{ playerId: string; rating: number }[]>(
-    existingMatch?.report?.performanceRatings || []
+    (existingMatch?.report?.performanceRatings || []).map(r => ({ ...r, rating: r.rating || 0 }))
   );
-  const [playerOfTheMatch, setPlayerOfTheMatch] = useState(existingMatch?.report?.playerOfTheMatch || '');
+  const [playerOfTheMatch, setPlayerOfTheMatch] = useState(existingMatch?.report?.playerOfMatchId || '');
   const [captainId, setCaptainId] = useState(existingMatch?.report?.captainId || '');
   const [isLocked, setIsLocked] = useState(existingMatch?.isLocked || false);
   const [notes, setNotes] = useState(existingMatch?.notes || '');
   
-  // Coach assignment state
-  const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>(existingMatch?.coachIds || []);
+  // Coach assignment state - filter out undefined IDs from TeamCoachDto
+  const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>(
+    (existingMatch?.coaches || []).map(c => c.id).filter((id): id is string => id !== undefined)
+  );
   const [showCoachModal, setShowCoachModal] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
-  // Attendance state
+  // Attendance state - derive from team players, not from DTO (attendance not in MatchDetailDto)
   const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>(
-    existingMatch?.attendance || teamPlayers.map(p => ({ playerId: p.id, status: 'pending' as const }))
+    (teamPlayers || []).map(p => ({ playerId: p.id, status: 'pending' as const }))
   );
 
   const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report' | 'attendance'>('details');
@@ -239,27 +234,27 @@ export default function AddEditMatchPage() {
   
   // Get coaches for this team and age group
   
-  // Get coaches that can be added (assigned coaches from API)
-  const availableCoachesForMatch = teamCoaches.filter(
-    coach => !assignedCoachIds.includes(coach.id)
+  // Get coaches that can be added (assigned coaches from API) - filter out undefined IDs
+  const availableCoachesForMatch = (teamCoaches || []).filter(
+    coach => coach.id !== undefined && !assignedCoachIds.includes(coach.id)
   );
   
-  // Get assigned coach details
-  const assignedCoaches = teamCoaches.filter(coach => assignedCoachIds.includes(coach.id));
+  // Get assigned coach details - filter out coaches with undefined IDs
+  const assignedCoaches = (teamCoaches || []).filter(coach => coach.id !== undefined && assignedCoachIds.includes(coach.id));
   
   // Auto-assign team coaches for new matches
   useEffect(() => {
-    if (!isEditing && teamCoaches.length > 0 && assignedCoachIds.length === 0) {
-      setAssignedCoachIds(teamCoaches.map(c => c.id));
+    if (!isEditing && teamCoaches && teamCoaches.length > 0 && assignedCoachIds.length === 0) {
+      setAssignedCoachIds(teamCoaches.map(c => c.id).filter((id): id is string => id !== undefined));
     }
-  }, [isEditing, teamCoaches.length]);
+  }, [isEditing, teamCoaches?.length]);
   
   // Modal filters
   const [modalSearchTerm, setModalSearchTerm] = useState('');
   const [modalAgeGroupFilter, setModalAgeGroupFilter] = useState<string>('all');
   const [modalTeamFilter, setModalTeamFilter] = useState<string>('all');
 
-  if (!team || !club) {
+  if (!team) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -272,12 +267,12 @@ export default function AddEditMatchPage() {
   }
 
   const getPlayerName = (playerId: string) => {
-    const player = teamPlayers.find(p => p.id === playerId);
+    const player = (teamPlayers || []).find(p => p.id === playerId);
     return player ? `${player.firstName} ${player.lastName}` : 'Unknown';
   };
   
   const getPlayerSquadNumber = (playerId: string): number | undefined => {
-    const player = teamPlayers.find(p => p.id === playerId);
+    const player = (teamPlayers || []).find(p => p.id === playerId);
     return player?.squadNumber;
   };
 
@@ -303,9 +298,6 @@ export default function AddEditMatchPage() {
     if (!substitutes.find(s => s.playerId === playerId) && !startingPlayers.find(p => p.playerId === playerId)) {
       // Get squad number from player data
       const squadNumber = getPlayerSquadNumber(playerId);
-      setSubstitutes([...substitutes, { playerId, squadNumber }]);
-    }
-  };
       setSubstitutes([...substitutes, { playerId, squadNumber }]);
     }
   };
@@ -486,51 +478,62 @@ export default function AddEditMatchPage() {
       
       const matchData: CreateMatchRequest | UpdateMatchRequest = {
         teamId: teamId!,
-        seasonId: seasonId || undefined,
+        seasonId: seasonId || defaultSeason,
         squadSize,
         opposition,
+        matchDate: new Date(kickOffTime).toISOString(),
         kickOffTime: new Date(kickOffTime).toISOString(),
         meetTime: meetTime ? new Date(meetTime).toISOString() : undefined,
         location,
         isHome,
         competition,
-        kit: {
-          primary: kit,
-          goalkeeper: goalkeeperKit || undefined
-        },
-        formationId: formationId || undefined,
-        tacticId: tacticId || undefined,
-        weather: weather || undefined,
-        temperature: temperature ? parseFloat(temperature) : undefined,
-        score: homeScore || awayScore ? {
-          home: parseInt(homeScore) || 0,
-          away: parseInt(awayScore) || 0
-        } : undefined,
+        primaryKitId: kit || undefined,
+        secondaryKitId: goalkeeperKit || undefined,
+        homeScore: homeScore ? parseInt(homeScore) : undefined,
+        awayScore: awayScore ? parseInt(awayScore) : undefined,
+        status: existingMatch?.status || 'scheduled',
+        weatherCondition: weather || undefined,
+        weatherTemperature: temperature ? parseFloat(temperature) : undefined,
         lineup: {
           formationId: formationId || undefined,
           tacticId: tacticId || undefined,
-          starting: startingPlayers,
-          substitutes,
-          substitutions
+          players: [
+            ...startingPlayers.map(p => ({ 
+              playerId: p.playerId, 
+              position: p.position, 
+              squadNumber: p.squadNumber, 
+              isStarting: true 
+            })), 
+            ...substitutes.map(s => ({ 
+              playerId: s.playerId, 
+              position: undefined, 
+              squadNumber: s.squadNumber, 
+              isStarting: false 
+            }))
+          ]
         },
         report: {
           summary: summary || undefined,
           captainId: captainId || undefined,
-          goalScorers: goals,
+          playerOfMatchId: playerOfTheMatch || undefined,
+          goals: goals,
           cards,
           injuries,
-          performanceRatings: ratings,
-          playerOfTheMatch: playerOfTheMatch || undefined
+          performanceRatings: ratings
         },
         coachIds: assignedCoachIds,
-        notes: notes || undefined,
-        attendance
+        substitutions: substitutions.map(s => ({
+          minute: s.minute,
+          playerOutId: s.playerOut,
+          playerInId: s.playerIn
+        })),
+        notes: notes || undefined
       };
 
       if (isEditing) {
-        await apiClient.matches.update(matchId!, matchData as UpdateMatchRequest);
+        await apiClient.matches.update(matchId!, matchData as any as UpdateMatchRequest);
       } else {
-        await apiClient.matches.create(matchData as CreateMatchRequest);
+        await apiClient.matches.create(matchData as any as CreateMatchRequest);
       }
       
       navigate(Routes.matches(clubId!, ageGroupId!, teamId!));
@@ -543,7 +546,7 @@ export default function AddEditMatchPage() {
   };
 
   const allPlayersInMatch = [...startingPlayers.map(p => p.playerId), ...substitutes.map(s => s.playerId)];
-  const availablePlayers = teamPlayers.filter(p => !allPlayersInMatch.includes(p.id));
+  const availablePlayers = (teamPlayers ?? []).filter(p => !allPlayersInMatch.includes(p.id));
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -555,7 +558,7 @@ export default function AddEditMatchPage() {
                 {isEditing ? 'Edit Match' : 'Add New Match'}
               </h2>
               <p className="text-gray-600 dark:text-gray-400">
-                {team.name} - {club.name}
+                {team.team.name}
               </p>
             </div>
             {isEditing && (
@@ -821,30 +824,19 @@ export default function AddEditMatchPage() {
                     ) : (
                       <>
                         <option value="">Select a kit</option>
-                        {teamKits.filter(k => k.isActive && k.type !== 'goalkeeper').length > 0 && (
-                          <optgroup label="Team Kits">
-                            {teamKits.filter(k => k.isActive && k.type !== 'goalkeeper').map(k => (
-                              <option key={k.id} value={k.id}>{k.name}</option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {clubKits.filter(k => k.isActive && k.type !== 'goalkeeper').length > 0 && (
-                          <optgroup label="Club Kits">
-                            {clubKits.filter(k => k.isActive && k.type !== 'goalkeeper').map(k => (
-                              <option key={k.id} value={k.id}>{k.name}</option>
-                            ))}
-                          </optgroup>
-                        )}
+                        {availableKits.map((k: any) => (
+                          <option key={k.id} value={k.id}>{k.name}</option>
+                        ))}
                       </>
                     )}
                   </select>
                   {availableKits.length === 0 && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      No custom kits defined. Using default kits based on club colors.
+                      No custom kits defined. Using default kits.
                     </p>
                   )}
                   {kit && availableKits.length > 0 && (() => {
-                    const selectedKit = availableKits.find(k => k.id === kit);
+                    const selectedKit = availableKits.find((k: any) => k.id === kit);
                     if (selectedKit) {
                       return (
                         <div className="mt-2 flex items-center gap-2">
@@ -893,29 +885,16 @@ export default function AddEditMatchPage() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Select goalkeeper kit (optional)</option>
-                    {availableKits.filter(k => k.type === 'goalkeeper').length > 0 ? (
-                      <>
-                        {teamKits.filter(k => k.isActive && k.type === 'goalkeeper').length > 0 && (
-                          <optgroup label="Team Goalkeeper Kits">
-                            {teamKits.filter(k => k.isActive && k.type === 'goalkeeper').map(k => (
-                              <option key={k.id} value={k.id}>{k.name}</option>
-                            ))}
-                          </optgroup>
-                        )}
-                        {clubKits.filter(k => k.isActive && k.type === 'goalkeeper').length > 0 && (
-                          <optgroup label="Club Goalkeeper Kits">
-                            {clubKits.filter(k => k.isActive && k.type === 'goalkeeper').map(k => (
-                              <option key={k.id} value={k.id}>{k.name}</option>
-                            ))}
-                          </optgroup>
-                        )}
-                      </>
+                    {availableKits.length > 0 ? (
+                      availableKits.map((k: any) => (
+                        <option key={k.id} value={k.id}>{k.name}</option>
+                      ))
                     ) : (
                       <option value="gk-default">Default Goalkeeper Kit</option>
                     )}
                   </select>
                   {goalkeeperKit && availableKits.length > 0 && (() => {
-                    const selectedGkKit = availableKits.find(k => k.id === goalkeeperKit);
+                    const selectedGkKit = availableKits.find((k: any) => k.id === goalkeeperKit);
                     if (selectedGkKit) {
                       return (
                         <div className="mt-2 flex items-center gap-2">
@@ -1043,26 +1022,26 @@ export default function AddEditMatchPage() {
                 {assignedCoaches.length > 0 ? (
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {assignedCoaches.map((coach) => {
-                      const isTeamCoach = teamCoaches.some(tc => tc.id === coach.id);
+                      const isTeamCoach = (teamCoaches || []).some(tc => tc.id === coach.id);
                       return (
                         <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          {coach.photo ? (
+                          {coach.photoUrl ? (
                             <img 
-                              src={coach.photo} 
-                              alt={`${coach.firstName} ${coach.lastName}`}
+                              src={coach.photoUrl} 
+                              alt={`${coach.firstName || ''} ${coach.lastName || ''}`}
                               className="w-12 h-12 rounded-full object-cover flex-shrink-0"
                             />
                           ) : (
                             <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                              {coach.firstName[0]}{coach.lastName[0]}
+                              {(coach.firstName || '?')[0]}{(coach.lastName || '?')[0]}
                             </div>
                           )}
                           <div className="min-w-0 flex-1">
                             <p className="font-medium text-gray-900 dark:text-white truncate">
-                              {coach.firstName} {coach.lastName}
+                              {coach.firstName || ''} {coach.lastName || ''}
                             </p>
                             <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                              {coachRoleDisplay[coach.role]}
+                              {coach.role ? coachRoleDisplay[coach.role] : 'Coach'}
                             </p>
                             {isTeamCoach && (
                               <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
@@ -1269,9 +1248,9 @@ export default function AddEditMatchPage() {
                             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
                               {player.position}
                             </span>
-                            {playerData?.photo && (
+                            {playerData?.photoUrl && (
                               <img 
-                                src={playerData.photo} 
+                                src={playerData.photoUrl} 
                                 alt={getPlayerName(player.playerId)}
                                 className="w-8 h-8 rounded-full object-cover"
                               />
@@ -1334,14 +1313,14 @@ export default function AddEditMatchPage() {
                         <button
                           key={player.id}
                           onClick={() => {
-                            const position = player.preferredPositions[0] || 'CM';
+                            const position = (player.preferredPositions?.[0] || 'CM') as PlayerPosition;
                             handleAddStartingPlayer(player.id, position);
                           }}
                           className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 hover:border-blue-500 dark:hover:border-blue-500 text-gray-900 dark:text-white flex items-center gap-2"
                         >
-                          {player.photo && (
+                          {player.photoUrl && (
                             <img 
-                              src={player.photo} 
+                              src={player.photoUrl} 
                               alt={`${player.firstName} ${player.lastName}`}
                               className="w-6 h-6 rounded-full object-cover"
                             />
@@ -1352,7 +1331,7 @@ export default function AddEditMatchPage() {
                               {player.overallRating}
                             </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">
-                              ({player.preferredPositions.join(', ')})
+                              ({player.preferredPositions?.join(', ') || 'N/A'})
                             </span>
                           </div>
                         </button>
@@ -1396,9 +1375,9 @@ export default function AddEditMatchPage() {
                               title="Squad number for this match (can differ from team default)"
                             />
                           )}
-                          {playerData?.photo && (
+                          {playerData?.photoUrl && (
                             <img 
-                              src={playerData.photo} 
+                              src={playerData.photoUrl} 
                               alt={getPlayerName(sub.playerId)}
                               className="w-8 h-8 rounded-full object-cover"
                             />
@@ -1449,9 +1428,9 @@ export default function AddEditMatchPage() {
                           onClick={() => handleAddSubstitute(player.id)}
                           className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 hover:border-yellow-500 dark:hover:border-yellow-500 text-gray-900 dark:text-white flex items-center gap-2"
                         >
-                          {player.photo && (
+                          {player.photoUrl && (
                             <img 
-                              src={player.photo} 
+                              src={player.photoUrl} 
                               alt={`${player.firstName} ${player.lastName}`}
                               className="w-6 h-6 rounded-full object-cover"
                             />
@@ -1549,200 +1528,8 @@ export default function AddEditMatchPage() {
               </div>
 
               {/* Squad Ratings Panel - Below the grid */}
-              {(() => {
-                const startingPlayerIds = startingPlayers.map(p => p.playerId);
-                const substitutePlayerIds = substitutes.map(s => s.playerId);
-                const allSelectedIds = [...startingPlayerIds, ...substitutePlayerIds];
-                
-                const selectedPlayerData = allClubPlayers.filter(p => allSelectedIds.includes(p.id));
-                const startingPlayerData = allClubPlayers.filter(p => startingPlayerIds.includes(p.id));
-                
-                if (startingPlayerData.length === 0) return null;
-                
-                const startingRatings = calculateTeamRatings(startingPlayerData);
-                const squadRatings = calculateTeamRatings(selectedPlayerData);
-                
-                // Calculate average attributes for the starting XI
-                const calculateAverageAttributes = (players: typeof startingPlayerData) => {
-                  if (players.length === 0) return null;
-                  
-                  const totals: Record<string, number> = {};
-                  players.forEach(player => {
-                    const grouped = groupAttributes(player.attributes);
-                    [...grouped.skills, ...grouped.physical, ...grouped.mental].forEach(attr => {
-                      totals[attr.name] = (totals[attr.name] || 0) + attr.rating;
-                    });
-                  });
-                  
-                  const averages: Record<string, number> = {};
-                  Object.entries(totals).forEach(([name, total]) => {
-                    averages[name] = Math.round(total / players.length);
-                  });
-                  
-                  return averages;
-                };
-                
-                const avgAttributes = calculateAverageAttributes(startingPlayerData);
-                
-                const getRatingColor = (rating: number) => {
-                  const quality = getAttributeQuality(rating);
-                  switch (quality) {
-                    case 'Excellent': return 'text-green-600 dark:text-green-400';
-                    case 'Very Good': return 'text-blue-600 dark:text-blue-400';
-                    case 'Good': return 'text-cyan-600 dark:text-cyan-400';
-                    case 'Fair': return 'text-yellow-600 dark:text-yellow-400';
-                    case 'Poor': return 'text-orange-600 dark:text-orange-400';
-                    default: return 'text-red-600 dark:text-red-400';
-                  }
-                };
-
-                const getRatingBgColor = (rating: number) => {
-                  const quality = getAttributeQuality(rating);
-                  switch (quality) {
-                    case 'Excellent': return 'bg-green-100 dark:bg-green-900/30';
-                    case 'Very Good': return 'bg-blue-100 dark:bg-blue-900/30';
-                    case 'Good': return 'bg-cyan-100 dark:bg-cyan-900/30';
-                    case 'Fair': return 'bg-yellow-100 dark:bg-yellow-900/30';
-                    case 'Poor': return 'bg-orange-100 dark:bg-orange-900/30';
-                    default: return 'bg-red-100 dark:bg-red-900/30';
-                  }
-                };
-
-                const getOverallBgColor = (rating: number) => {
-                  const quality = getAttributeQuality(rating);
-                  switch (quality) {
-                    case 'Excellent': return 'bg-green-600';
-                    case 'Very Good': return 'bg-blue-600';
-                    case 'Good': return 'bg-cyan-600';
-                    case 'Fair': return 'bg-yellow-500';
-                    case 'Poor': return 'bg-orange-500';
-                    default: return 'bg-red-500';
-                  }
-                };
-                
-                // Group attributes by category
-                const skillsAttrs = ['Ball Control', 'Crossing', 'Weak Foot', 'Dribbling', 'Finishing', 'Free Kick', 'Heading', 'Long Passing', 'Long Shot', 'Penalties', 'Short Passing', 'Shot Power', 'Sliding Tackle', 'Standing Tackle', 'Volleys'];
-                const physicalAttrs = ['Acceleration', 'Agility', 'Balance', 'Jumping', 'Pace', 'Reactions', 'Sprint Speed', 'Stamina', 'Strength'];
-                const mentalAttrs = ['Aggression', 'Attacking Position', 'Awareness', 'Communication', 'Composure', 'Defensive Positioning', 'Interceptions', 'Marking', 'Positivity', 'Positioning', 'Vision'];
-
-                return (
-                  <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    {/* Header with Overall Ratings */}
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg">📊</span>
-                        <div>
-                          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Squad Ratings</h4>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {startingPlayerData.length} starting{substitutes.length > 0 ? ` • ${selectedPlayerData.length} total` : ''}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="text-center">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center text-white font-bold text-xl ${getOverallBgColor(startingRatings.overall)}`}>
-                            {startingRatings.overall}
-                          </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Overall</p>
-                        </div>
-                        <div className="text-center">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRatingColor(startingRatings.skills)} ${getRatingBgColor(startingRatings.skills)}`}>
-                            {startingRatings.skills}
-                          </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Skills</p>
-                        </div>
-                        <div className="text-center">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRatingColor(startingRatings.physical)} ${getRatingBgColor(startingRatings.physical)}`}>
-                            {startingRatings.physical}
-                          </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Physical</p>
-                        </div>
-                        <div className="text-center">
-                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center font-bold text-lg ${getRatingColor(startingRatings.mental)} ${getRatingBgColor(startingRatings.mental)}`}>
-                            {startingRatings.mental}
-                          </div>
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Mental</p>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Attributes Table */}
-                    {avgAttributes && (
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-                        {/* Skills Column */}
-                        <div>
-                          <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 pb-1 border-b border-gray-200 dark:border-gray-600">
-                            ⚽ Skills
-                          </h5>
-                          <div className="space-y-1">
-                            {skillsAttrs.map(attr => {
-                              const rating = avgAttributes[attr] || 0;
-                              return (
-                                <div key={attr} className="flex justify-between items-center">
-                                  <span className="text-gray-600 dark:text-gray-400 truncate pr-2">{attr}</span>
-                                  <span className={`font-semibold ${getRatingColor(rating)}`}>{rating}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Physical Column */}
-                        <div>
-                          <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 pb-1 border-b border-gray-200 dark:border-gray-600">
-                            🏋️ Physical
-                          </h5>
-                          <div className="space-y-1">
-                            {physicalAttrs.map(attr => {
-                              const rating = avgAttributes[attr] || 0;
-                              return (
-                                <div key={attr} className="flex justify-between items-center">
-                                  <span className="text-gray-600 dark:text-gray-400 truncate pr-2">{attr}</span>
-                                  <span className={`font-semibold ${getRatingColor(rating)}`}>{rating}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* Mental Column */}
-                        <div>
-                          <h5 className="font-semibold text-gray-700 dark:text-gray-300 mb-2 pb-1 border-b border-gray-200 dark:border-gray-600">
-                            🧠 Mental
-                          </h5>
-                          <div className="space-y-1">
-                            {mentalAttrs.map(attr => {
-                              const rating = avgAttributes[attr] || 0;
-                              return (
-                                <div key={attr} className="flex justify-between items-center">
-                                  <span className="text-gray-600 dark:text-gray-400 truncate pr-2">{attr}</span>
-                                  <span className={`font-semibold ${getRatingColor(rating)}`}>{rating}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Full Squad Summary (if subs) */}
-                    {substitutes.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-gray-500 dark:text-gray-400">Full Squad ({squadRatings.playerCount})</span>
-                          <div className="flex items-center gap-2 text-xs">
-                            <span className={`font-semibold ${getRatingColor(squadRatings.overall)}`}>{squadRatings.overall} OVR</span>
-                            <span className="text-gray-300 dark:text-gray-600">|</span>
-                            <span className={`${getRatingColor(squadRatings.skills)}`}>{squadRatings.skills} SKL</span>
-                            <span className={`${getRatingColor(squadRatings.physical)}`}>{squadRatings.physical} PHY</span>
-                            <span className={`${getRatingColor(squadRatings.mental)}`}>{squadRatings.mental} MEN</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })()}
+              {/* Disabled: TeamPlayerDto doesn't include attributes/overallRating needed for rating calculations */}
+              {/* TODO: Enable when full player data with attributes is available */}
             </div>
           )}
 
@@ -2218,7 +2005,7 @@ export default function AddEditMatchPage() {
               </div>
 
               <div className="space-y-2">
-                {teamPlayers.map((player) => {
+                {(teamPlayers || []).map((player) => {
                   const playerAttendance = attendance.find(a => a.playerId === player.id);
                   const status = playerAttendance?.status || 'pending';
                   
@@ -2456,33 +2243,30 @@ export default function AddEditMatchPage() {
                         key={coach.id}
                         type="button"
                         onClick={() => {
-                          setAssignedCoachIds([...assignedCoachIds, coach.id]);
-                          setShowCoachModal(false);
+                          if (coach.id) {
+                            setAssignedCoachIds([...assignedCoachIds, coach.id]);
+                            setShowCoachModal(false);
+                          }
                         }}
                         className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-left"
                       >
-                        {coach.photo ? (
+                        {coach.photoUrl ? (
                           <img 
-                            src={coach.photo} 
-                            alt={`${coach.firstName} ${coach.lastName}`}
+                            src={coach.photoUrl} 
+                            alt={`${coach.firstName || ''} ${coach.lastName || ''}`}
                             className="w-10 h-10 rounded-full object-cover flex-shrink-0"
                           />
                         ) : (
                           <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
-                            {coach.firstName[0]}{coach.lastName[0]}
+                            {(coach.firstName || '?')[0]}{(coach.lastName || '?')[0]}
                           </div>
                         )}
                         <div className="min-w-0 flex-1">
                           <p className="font-medium text-gray-900 dark:text-white truncate">
-                            {coach.firstName} {coach.lastName}
+                            {coach.firstName || ''} {coach.lastName || ''}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {coachRoleDisplay[coach.role]}
-                            {coachTeams.length > 0 && (
-                              <span className="ml-2 text-xs">
-                                ({coachTeams.map(t => t.name).join(', ')})
-                              </span>
-                            )}
+                            {coach.role ? coachRoleDisplay[coach.role] : 'Coach'}
                           </p>
                         </div>
                         <Plus className="w-5 h-5 text-green-600 dark:text-green-400" />
@@ -2549,11 +2333,7 @@ export default function AddEditMatchPage() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                   >
                     <option value="all">All Age Groups</option>
-                    {sampleAgeGroups
-                      .filter(ag => ag.clubId === clubId)
-                      .map(ag => (
-                        <option key={ag.id} value={ag.id}>{ag.name}</option>
-                      ))}
+                    {/* TODO: Add age groups when useClubAgeGroups() hook is available */}
                   </select>
                 </div>
                 
@@ -2586,28 +2366,21 @@ export default function AddEditMatchPage() {
                       if (!fullName.includes(searchLower)) return false;
                     }
                     
-                    // Age group filter
-                    if (modalAgeGroupFilter !== 'all') {
-                      if (!p.ageGroupIds.includes(modalAgeGroupFilter)) return false;
-                    }
-                    
-                    // Team filter
-                    if (modalTeamFilter !== 'all') {
-                      if (!p.teamIds.includes(modalTeamFilter)) return false;
-                    }
+                    // Age group filter - skip (ageGroupIds not in TeamPlayerDto)
+                    // Team filter - skip (teamIds not in TeamPlayerDto)
                     
                     return true;
                   })
                   .map((player) => {
                     // TODO: Show team names when useClubTeams() hook is available
-                    const teamNames = team?.name || 'Team';
+                    const teamNames = team?.team?.name || 'Team';
                     
                     return (
                       <div key={player.id} className="relative">
                         <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 flex items-center gap-3">
-                          {player.photo ? (
+                          {player.photoUrl ? (
                             <img 
-                              src={player.photo} 
+                              src={player.photoUrl} 
                               alt={`${player.firstName} ${player.lastName}`}
                               className="w-12 h-12 rounded-full object-cover"
                             />
@@ -2627,7 +2400,7 @@ export default function AddEditMatchPage() {
                               {teamNames || 'No team'}
                             </div>
                             <div className="flex flex-wrap gap-1 mt-1">
-                              {player.preferredPositions.slice(0, 3).map(pos => (
+                              {(player.preferredPositions || []).slice(0, 3).map((pos: string) => (
                                 <span key={pos} className="text-xs px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
                                   {pos}
                                 </span>
@@ -2636,7 +2409,7 @@ export default function AddEditMatchPage() {
                           </div>
                           <button
                             onClick={() => {
-                              const position = player.preferredPositions[0] || 'CM';
+                              const position = ((player.preferredPositions || [])[0] || 'CM') as PlayerPosition;
                               if (crossTeamModalType === 'starting') {
                                 handleAddStartingPlayer(player.id, position);
                               } else {
@@ -2662,8 +2435,6 @@ export default function AddEditMatchPage() {
                       const fullName = `${p.firstName} ${p.lastName}`.toLowerCase();
                       if (!fullName.includes(searchLower)) return false;
                     }
-                    if (modalAgeGroupFilter !== 'all' && !p.ageGroupIds.includes(modalAgeGroupFilter)) return false;
-                    if (modalTeamFilter !== 'all' && !p.teamIds.includes(modalTeamFilter)) return false;
                     return true;
                   });
                 

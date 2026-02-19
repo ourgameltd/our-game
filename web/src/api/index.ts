@@ -58,6 +58,7 @@ export type {
   AgeGroupDetailDto,
   AgeGroupStatisticsDto,
   AgeGroupPerformerDto,
+  AgeGroupPlayerDto,
   AgeGroupCoachDto,
   AgeGroupCoachTeamDto,
   TeamWithStatsDto,
@@ -149,6 +150,8 @@ export type {
   AgeGroupDevelopmentPlanGoalSummaryDto,
   AgeGroupDevelopmentPlanPeriodDto,
   DevelopmentPlanDto,
+  DevelopmentPlanDetailDto,
+  DevelopmentPlanGoalDetailDto,
   DevelopmentGoalDto,
   CreateDevelopmentPlanRequest,
   CreateDevelopmentGoalRequest,
@@ -173,6 +176,7 @@ export type {
 
 // React hooks
 export {
+  useCurrentUser,
   useMyTeams,
   useTeamOverview,
   useTeamPlayers,
@@ -191,6 +195,7 @@ export {
   useAgeGroupsByClubId,
   useAgeGroupById,
   useAgeGroupStatistics,
+  useAgeGroupPlayers,
   useClubPlayers,
   useClubTeams,
   useClubCoaches,

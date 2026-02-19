@@ -2,7 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useEffect } from 'react';
 import { usePlayer, usePlayerRecentPerformances, usePlayerUpcomingMatches } from '@api/hooks';
 import { Routes } from '@utils/routes';
-import { useNavigation } from '@contexts/NavigationContext';
+import { useNavigation } from '@/contexts/NavigationContext';
 import PageTitle from '@components/common/PageTitle';
 import RecentPerformanceCard from '@components/player/RecentPerformanceCard';
 import MatchesCard from '@components/matches/MatchesCard';

@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useClub } from '@/api/hooks';
 import { useClubTrainingSessions } from '@/api/hooks';
 import { useAgeGroup } from '@/api/hooks';
+import { mapClubTrainingSessions } from '@/api/mappers';
 import PageTitle from '@components/common/PageTitle';
 import TrainingSessionsListContent from '@/components/training/TrainingSessionsListContent';
 
@@ -56,7 +57,7 @@ export default function AgeGroupTrainingSessionsPage() {
     );
   }
 
-  const sessions = sessionsData?.sessions || [];
+  const sessions = mapClubTrainingSessions(sessionsData?.sessions || []);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">

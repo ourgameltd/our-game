@@ -1477,7 +1477,7 @@ export interface DevelopmentPlanDetailDto {
   description?: string;
   periodStart: string;
   periodEnd: string;
-  status: string;
+  status: 'active' | 'completed' | 'archived';
   createdAt: string;
   playerId: string;
   playerName: string;

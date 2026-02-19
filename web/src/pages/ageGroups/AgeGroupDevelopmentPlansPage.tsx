@@ -304,7 +304,7 @@ export default function AgeGroupDevelopmentPlansPage() {
             {/* Mobile Card View */}
             <div className="grid grid-cols-1 gap-4 md:hidden">
               {plansWithPlayers.map(({ plan, player }) => {
-                const linkTo = Routes.playerDevelopmentPlan(clubId!, ageGroupId!, player.id);
+                const linkTo = Routes.playerDevelopmentPlan(clubId!, ageGroupId!, player.id, plan.id);
                 
                 return (
                   <DevelopmentPlanListCard
@@ -320,7 +320,7 @@ export default function AgeGroupDevelopmentPlansPage() {
             {/* Desktop Compact Row View */}
             <div className="hidden md:block bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
               {plansWithPlayers.map(({ plan, player }) => {
-                const linkTo = Routes.playerDevelopmentPlan(clubId!, ageGroupId!, player.id);
+                const linkTo = Routes.playerDevelopmentPlan(clubId!, ageGroupId!, player.id, plan.id);
                 
                 return (
                   <DevelopmentPlanTableRow

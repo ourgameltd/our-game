@@ -86,8 +86,10 @@ export default function TeamCoachesPage() {
   }
 
   // Get coaches from club who aren't already assigned to this team
-  const availableCoaches = clubCoaches.filter(
-    coach => !teamCoaches.some(tc => tc.id === coach.id)
+  const safeClubCoaches = clubCoaches || [];
+  const safeTeamCoaches = teamCoaches || [];
+  const availableCoaches = safeClubCoaches.filter(
+    coach => !safeTeamCoaches.some(tc => tc.id === coach.id)
   );
 
   const handleAssignCoach = async (coachId: string, role: string) => {
@@ -120,7 +122,7 @@ export default function TeamCoachesPage() {
           <div className="flex-grow">
             <PageTitle
               title="Coaching Staff"
-              badge={teamCoaches.length}
+              badge={safeTeamCoaches.length}
               subtitle="Assign coaches from the club to manage this team"
               action={!team.isArchived ? {
                 label: 'Assign Coach',
@@ -170,10 +172,10 @@ export default function TeamCoachesPage() {
         )}
 
         {/* All Coaches */}
-        {teamCoaches.length > 0 && (
+        {safeTeamCoaches.length > 0 && (
           <div className="mb-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-              {teamCoaches.map((coach) => (
+              {safeTeamCoaches.filter((coach): coach is typeof coach & { id: string } => coach.id !== undefined).map((coach) => (
                 <Link key={coach.id} to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
                   <CoachCard 
                     coach={{
@@ -225,7 +227,7 @@ export default function TeamCoachesPage() {
           </div>
         )}
 
-        {teamCoaches.length === 0 && (
+        {safeTeamCoaches.length === 0 && (
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
             <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">👨‍🏫</div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No coaches assigned yet</h3>
@@ -300,8 +302,8 @@ export default function TeamCoachesPage() {
                           coach={{
                             id: coach.id,
                             clubId: coach.clubId,
-                            firstName: coach.firstName,
-                            lastName: coach.lastName,
+                            firstName: coach.firstName || '',
+                            lastName: coach.lastName || '',
                             dateOfBirth: coach.dateOfBirth ? new Date(coach.dateOfBirth) : new Date(),
                             photo: coach.photo,
                             email: coach.email || '',

@@ -28,10 +28,10 @@ const mapApiSessionToUiSession = (dto: TeamTrainingSessionDto): TrainingSession 
 export default function TrainingSessionsListPage() {
   const { clubId, ageGroupId, teamId } = useParams();
   
-  const { data, loading, error } = useTeamTrainingSessions(teamId);
+  const { data, isLoading, error } = useTeamTrainingSessions(teamId);
 
   // Loading state
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -80,7 +80,7 @@ export default function TrainingSessionsListPage() {
 
   const team = data.team;
   const club = data.club;
-  const sessions = data.sessions.map(s => ({
+  const sessions = data.sessions.map((s: TeamTrainingSessionDto) => ({
     ...mapApiSessionToUiSession(s),
     teamId: team.id
   }));

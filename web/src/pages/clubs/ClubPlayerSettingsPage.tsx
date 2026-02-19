@@ -42,9 +42,6 @@ export default function ClubPlayerSettingsPage() {
         dateOfBirth: player.dateOfBirth ? player.dateOfBirth.split('T')[0] : '',
         photo: player.photoUrl || '',
         associationId: player.associationId || '',
-        email: '',
-        phoneNumber: '',
-        emergencyContact: '',
         preferredPositions: player.preferredPositions || [],
       });
       setSelectedTeams(player.teamIds || []);

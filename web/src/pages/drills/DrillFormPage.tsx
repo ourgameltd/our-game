@@ -9,17 +9,13 @@ import {
   useDrill,
   useCreateDrill,
   useUpdateDrill,
-  useCurrentUser,
   useClubById,
   useAgeGroupsByClubId,
   useClubTeams,
 } from '@/api';
 import type {
-  DrillDetailDto,
   CreateDrillRequest,
   UpdateDrillRequest,
-  CreateDrillLinkRequest,
-  UpdateDrillLinkRequest,
 } from '@/api';
 
 // ---------------------------------------------------------------------------
@@ -102,7 +98,6 @@ export default function DrillFormPage() {
   const { data: drillData, isLoading: isDrillLoading, error: fetchError } = useDrill(drillId);
   const { mutate: createDrill, isSubmitting: isCreating, data: createData, error: createError } = useCreateDrill();
   const { mutate: updateDrill, isSubmitting: isUpdating, data: updateData, error: updateError } = useUpdateDrill(drillId || '');
-  const { data: currentUser } = useCurrentUser();
   const { data: club } = useClubById(clubId);
   const { data: ageGroups } = useAgeGroupsByClubId(clubId);
   const { data: teams } = useClubTeams(clubId);

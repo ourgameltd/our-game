@@ -424,7 +424,11 @@ export const sampleReports: PlayerReport[] = [
 
 export const getReportsByPlayerId = (playerId: string): PlayerReport[] => {
   return sampleReports.filter(report => report.playerId === playerId)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    .sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
 };
 
 export const getLatestReportForPlayer = (playerId: string): PlayerReport | undefined => {
@@ -442,7 +446,11 @@ export const getReportsByClubId = (clubId: string): PlayerReport[] => {
   
   return sampleReports
     .filter(report => clubPlayerIds.includes(report.playerId))
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    .sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
 };
 
 export const getReportsByAgeGroupId = (clubId: string, ageGroupId: string): PlayerReport[] => {
@@ -455,7 +463,11 @@ export const getReportsByAgeGroupId = (clubId: string, ageGroupId: string): Play
   
   return sampleReports
     .filter(report => ageGroupPlayerIds.includes(report.playerId))
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    .sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
 };
 
 export const getReportsByTeamId = (clubId: string, ageGroupId: string, teamId: string): PlayerReport[] => {
@@ -469,6 +481,10 @@ export const getReportsByTeamId = (clubId: string, ageGroupId: string, teamId: s
   
   return sampleReports
     .filter(report => teamPlayerIds.includes(report.playerId))
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    .sort((a, b) => {
+      const dateA = a.createdAt instanceof Date ? a.createdAt : new Date(a.createdAt);
+      const dateB = b.createdAt instanceof Date ? b.createdAt : new Date(b.createdAt);
+      return dateB.getTime() - dateA.getTime();
+    });
 };
 

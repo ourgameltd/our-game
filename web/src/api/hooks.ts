@@ -48,6 +48,7 @@ import {
   TeamPlayerDto,
   TeamCoachDto,
   TeamMatchesDto,
+  TeamTrainingSessionsDto,
   UpdateAgeGroupRequest,
   UpdatePlayerRequest,
   UpdateClubRequest,
@@ -66,13 +67,10 @@ import {
   PlayerAbilityEvaluationDto,
   CreatePlayerAbilityEvaluationRequest,
   UpdatePlayerAbilityEvaluationRequest,
-  PlayerAlbumDto,
   PlayerRecentPerformanceDto,
   PlayerUpcomingMatchDto,
   PlayerReportSummaryDto,
   ReportCardDto,
-  DevelopmentActionDto,
-  SimilarProfessionalDto,
   AssignTeamCoachRequest,
   UpdateTeamCoachRoleRequest,
   TeamKitsDto,
@@ -115,7 +113,7 @@ export interface PlayerAlbumData {
  * Generic hook for API calls with loading/error states
  */
 function useApiCall<T>(
-  fetchFn: () => Promise<{ data?: T; success?: boolean; error?: { message?: string } }>,
+  fetchFn: () => Promise<{ data?: T; success?: boolean; statusCode?: number; error?: { message?: string } }>,
   dependencies: unknown[] = []
 ): UseApiState<T> {
   const [data, setData] = useState<T | null>(null);
@@ -479,52 +477,16 @@ export function useClubCoaches(
 
 /**
  * Hook to fetch training sessions for a club with optional filtering
+ * Returns ClubTrainingSessionDto directly as it includes team and age group metadata
  */
 export function useClubTrainingSessions(
   clubId: string | undefined,
   options?: { ageGroupId?: string; teamId?: string; status?: 'upcoming' | 'past' | 'all' }
-): UseApiState<{ sessions: TrainingSession[]; totalCount: number }> {
-  return useApiCall<{ sessions: TrainingSession[]; totalCount: number }>(
-    async () => {
-      const response = await apiClient.clubs.getTrainingSessions(clubId!, options);
-      if (response.success && response.data) {
-        // Map API DTOs to UI TrainingSession model
-        const mappedSessions = response.data.sessions.map(mapApiSessionToUiSession);
-        return {
-          success: true,
-          data: {
-            sessions: mappedSessions,
-            totalCount: response.data.totalCount
-          }
-        };
-      }
-      return { success: false, error: { message: response.error?.message } };
-    },
+): UseApiState<{ sessions: ClubTrainingSessionDto[]; totalCount: number }> {
+  return useApiCall<{ sessions: ClubTrainingSessionDto[]; totalCount: number }>(
+    () => apiClient.clubs.getTrainingSessions(clubId!, options),
     [clubId, options?.ageGroupId, options?.teamId, options?.status]
   );
-}
-
-/**
- * Helper function to map API DTO to UI TrainingSession model
- */
-function mapApiSessionToUiSession(apiSession: ClubTrainingSessionDto): TrainingSession {
-  return {
-    id: apiSession.id,
-    teamId: apiSession.teamId,
-    date: new Date(apiSession.date),
-    meetTime: apiSession.meetTime ? new Date(apiSession.meetTime) : undefined,
-    duration: apiSession.durationMinutes || 0,
-    location: apiSession.location || '',
-    focusAreas: apiSession.focusAreas || [],
-    drillIds: apiSession.drillIds || [],
-    attendance: (apiSession.attendance || []).map((att) => ({
-      playerId: att.playerId,
-      status: att.status as 'confirmed' | 'declined' | 'maybe' | 'pending',
-      notes: att.notes || undefined
-    })),
-    status: apiSession.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled',
-    isLocked: apiSession.isLocked || false
-  };
 }
 
 /**

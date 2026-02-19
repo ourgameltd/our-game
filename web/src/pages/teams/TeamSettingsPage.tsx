@@ -55,7 +55,7 @@ export default function TeamSettingsPage() {
     if (teamPlayers.length > 0) {
       setSquadNumbers(
         teamPlayers.map(player => ({
-          playerId: player.playerId,
+          playerId: player.id,
           squadNumber: player.squadNumber
         }))
       );
@@ -162,7 +162,6 @@ export default function TeamSettingsPage() {
 
     const isCurrentlyArchived = team.isArchived;
     const action = isCurrentlyArchived ? 'unarchive' : 'archive';
-    const actionPast = isCurrentlyArchived ? 'unarchived' : 'archived';
     
     if (confirm(`Are you sure you want to ${action} this team? ${isCurrentlyArchived ? 'This will make it active again.' : 'This will lock the team and prevent modifications.'}`)) {
       try {
@@ -370,17 +369,17 @@ export default function TeamSettingsPage() {
               <div className="space-y-2">
                 {teamPlayers
                   .sort((a, b) => {
-                    const numA = squadNumbers.find(s => s.playerId === a.playerId)?.squadNumber ?? 999;
-                    const numB = squadNumbers.find(s => s.playerId === b.playerId)?.squadNumber ?? 999;
+                    const numA = squadNumbers.find(s => s.playerId === a.id)?.squadNumber ?? 999;
+                    const numB = squadNumbers.find(s => s.playerId === b.id)?.squadNumber ?? 999;
                     return numA - numB;
                   })
                   .map(player => {
-                    const assignment = squadNumbers.find(a => a.playerId === player.playerId);
+                    const assignment = squadNumbers.find(a => a.playerId === player.id);
                     const isDuplicate = assignment?.squadNumber !== undefined && duplicates.includes(assignment.squadNumber);
                     
                     return (
                       <div 
-                        key={player.playerId} 
+                        key={player.id} 
                         className={`flex items-center gap-4 p-3 rounded-lg border ${
                           isDuplicate 
                             ? 'bg-red-50 dark:bg-red-900/10 border-red-300 dark:border-red-700' 
@@ -389,15 +388,15 @@ export default function TeamSettingsPage() {
                       >
                         {/* Player Photo */}
                         <div className="flex-shrink-0">
-                          {player.photo ? (
+                          {player.photoUrl ? (
                             <img 
-                              src={player.photo} 
-                              alt={player.playerName}
+                              src={player.photoUrl} 
+                              alt={`${player.firstName || ''} ${player.lastName || ''}`.trim()}
                               className="w-10 h-10 rounded-full object-cover"
                             />
                           ) : (
                             <div className="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 flex items-center justify-center text-gray-600 dark:text-gray-300 text-sm font-medium">
-                              {player.playerName.split(' ').map(n => n[0]).join('')}
+                              {`${player.firstName || ''} ${player.lastName || ''}`.trim().split(' ').map((n: string) => n[0]).join('')}
                             </div>
                           )}
                         </div>
@@ -405,7 +404,7 @@ export default function TeamSettingsPage() {
                         {/* Player Name & Position */}
                         <div className="flex-grow min-w-0">
                           <p className="font-medium text-gray-900 dark:text-white truncate">
-                            {player.playerName}
+                            {`${player.firstName || ''} ${player.lastName || ''}`.trim()}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             {player.preferredPositions?.join(', ') || 'No position'}
@@ -419,7 +418,7 @@ export default function TeamSettingsPage() {
                             min="1"
                             max="99"
                             value={assignment?.squadNumber ?? ''}
-                            onChange={(e) => handleSquadNumberChange(player.playerId, e.target.value)}
+                            onChange={(e) => handleSquadNumberChange(player.id, e.target.value)}
                             disabled={team.isArchived || isUpdatingSquadNumbers}
                             placeholder="#"
                             className={`w-full px-3 py-2 text-center font-bold text-lg border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${

@@ -169,12 +169,8 @@ export default function PlayerReportCardsPage() {
                     id: report.playerId,
                     firstName: report.firstName,
                     lastName: report.lastName,
-                    nickname: undefined,
                     photo: report.photoUrl || undefined,
-                    preferredPositions: report.preferredPositions,
-                    ageGroupIds: [],
-                    clubId: clubId,
-                    teamIds: []
+                    preferredPositions: report.preferredPositions
                   }}
                   linkTo={getReportCardLink(report.id)}
                 />
@@ -213,12 +209,8 @@ export default function PlayerReportCardsPage() {
                     id: report.playerId,
                     firstName: report.firstName,
                     lastName: report.lastName,
-                    nickname: undefined,
                     photo: report.photoUrl || undefined,
-                    preferredPositions: report.preferredPositions,
-                    ageGroupIds: [],
-                    clubId: clubId,
-                    teamIds: []
+                    preferredPositions: report.preferredPositions
                   }}
                   linkTo={getReportCardLink(report.id)}
                 />

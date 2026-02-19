@@ -11,7 +11,6 @@ export default function AddEditReportCardPage() {
   
   const [isLoading, setIsLoading] = useState(true);
   const [player, setPlayer] = useState<any>(null);
-  const [report, setReport] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
@@ -52,7 +51,6 @@ export default function AddEditReportCardPage() {
           const reportResponse = await apiClient.reports.getById(reportId);
           if (reportResponse.success && reportResponse.data) {
             const reportData = reportResponse.data;
-            setReport(reportData);
             
             // Populate form with existing data
             setPeriodStart(reportData.periodStart || '');

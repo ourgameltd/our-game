@@ -179,7 +179,7 @@ export default function PlayerReportCardPage() {
             subtitle={`${player?.firstName} ${player?.lastName}`}
             backLink={backLink}
             image={{
-              src: player?.photo || '',
+              src: player?.photoUrl || '',
               alt: `${player?.firstName} ${player?.lastName}`,
               initials: `${player?.firstName?.[0] || ''}${player?.lastName?.[0] || ''}`,
               colorClass: 'from-blue-500 to-blue-600'

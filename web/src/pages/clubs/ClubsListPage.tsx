@@ -9,13 +9,13 @@ export default function ClubsListPage() {
   const { isLoading: authLoading } = useAuth();
 
   // Fetch current user profile
-  const { data: currentUser, isLoading: currentUserLoading, error: currentUserError } = useCurrentUser();
+  const { data: currentUser, isLoading: currentUserLoading } = useCurrentUser();
 
   // Fetch clubs the current user has access to
   const { data: myClubs, isLoading: myClubsLoading, error: myClubsError } = useMyClubs();
 
   // Fetch the current user's own player profile (if they are a player)
-  const { data: myPlayer, isLoading: myPlayerLoading, error: myPlayerError } = usePlayer(currentUser?.playerId);
+  const { data: myPlayer, isLoading: myPlayerLoading } = usePlayer(currentUser?.playerId);
 
   // Fetch teams the current user has access to
   const { data: myTeams, isLoading: myTeamsLoading, error: myTeamsError } = useMyTeams();

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Kit } from '@/types';
+import { CreateTeamKitRequest, UpdateTeamKitRequest } from '@/api/client';
 import {
   useTeamKits,
   useTeamOverview,
@@ -8,8 +9,6 @@ import {
   useCreateTeamKit,
   useUpdateTeamKit,
   useDeleteTeamKit,
-  CreateTeamKitRequest,
-  UpdateTeamKitRequest,
 } from '@/api/hooks';
 import KitBuilder from '@/components/kit/KitBuilder';
 import KitCard from '@/components/kit/KitCard';
@@ -56,9 +55,9 @@ export default function TeamKitsPage() {
   const { data: clubKits, isLoading: clubKitsLoading, error: clubKitsError } = useClubKits(teamOverview?.team.clubId);
   
   // Mutation hooks
-  const { createKit, isSubmitting: isCreating, error: createError } = useCreateTeamKit(teamId);
-  const { updateKit, isSubmitting: isUpdating, error: updateError } = useUpdateTeamKit(teamId);
-  const { deleteKit, isSubmitting: isDeleting, error: deleteError } = useDeleteTeamKit(teamId);
+  const { createKit, error: createError } = useCreateTeamKit(teamId);
+  const { updateKit, error: updateError } = useUpdateTeamKit(teamId);
+  const { deleteKit, error: deleteError } = useDeleteTeamKit(teamId);
   
   // Local UI state
   const [showBuilder, setShowBuilder] = useState(false);

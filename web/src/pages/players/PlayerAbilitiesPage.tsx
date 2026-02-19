@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { usePlayerAbilities, useCreatePlayerAbilityEvaluation } from '@api/hooks';
 import { CreatePlayerAbilityEvaluationRequest } from '@api/client';
-import { groupAttributes, getQualityColor, calculateOverallRating } from '@utils/attributeHelpers';
+import { groupAttributes, getQualityColor } from '@utils/attributeHelpers';
 import { PlayerAttributes } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';

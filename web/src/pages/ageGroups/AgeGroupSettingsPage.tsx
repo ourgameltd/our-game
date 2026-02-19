@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAgeGroupById, useUpdateAgeGroup } from '@/api';
-import type { AgeGroupDetailDto, UpdateAgeGroupRequest } from '@/api';
+import type { UpdateAgeGroupRequest } from '@/api';
 import { teamLevels, squadSizes, type AgeGroupLevel } from '@/constants/referenceData';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
