@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import PageTitle from '@components/common/PageTitle';
-import { Routes } from '@utils/routes';
+import { Routes, areAllParamsValid } from '@utils/routes';
 import { useMyTeams, useMyChildren, useCurrentUser, useMyClubs, usePlayer } from '@/api/hooks';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -80,10 +80,41 @@ export default function ClubsListPage() {
                         // Get the first age group for the route
                         const firstAgeGroupId = player.ageGroups.length > 0 ? player.ageGroups[0].id : '';
                         
+                        // Only render link if all required IDs are valid
+                        if (!areAllParamsValid(player.clubId, firstAgeGroupId, player.id)) {
+                          return (
+                            <div
+                              key={player.id}
+                              className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 opacity-60 cursor-not-allowed"
+                              title="Missing player information"
+                            >
+                              {player.photo ? (
+                                <img 
+                                  src={player.photo} 
+                                  alt={`${player.firstName} ${player.lastName}`}
+                                  className="w-12 h-12 rounded-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-12 h-12 rounded-full bg-gray-400 flex items-center justify-center text-white font-semibold">
+                                  {player.firstName[0]}{player.lastName[0]}
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">
+                                  {player.firstName} {player.lastName}
+                                </p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                  {player.club?.shortName} • {preferredPositions.join(', ')}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        }
+                        
                         return (
                           <Link
                             key={player.id}
-                            to={Routes.player(player.clubId, firstAgeGroupId, player.id)}
+                            to={Routes.player(player.clubId as string, firstAgeGroupId as string, player.id)}
                             className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
                           >
                             {player.photo ? (
@@ -131,11 +162,43 @@ export default function ClubsListPage() {
                   <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {myProfile.map((player) => {
                       const club = myClubsList.find(c => c.id === player.clubId);
+                      const firstAgeGroupId = player.ageGroupIds && player.ageGroupIds.length > 0 ? player.ageGroupIds[0] : '';
+                      
+                      // Only render link if all required IDs are valid
+                      if (!areAllParamsValid(player.clubId, firstAgeGroupId, player.id)) {
+                        return (
+                          <div
+                            key={player.id}
+                            className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 opacity-60 cursor-not-allowed"
+                            title="Missing player information"
+                          >
+                            {player.photoUrl ? (
+                              <img 
+                                src={player.photoUrl} 
+                                alt={`${player.firstName} ${player.lastName}`}
+                                className="w-12 h-12 rounded-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-gray-400 flex items-center justify-center text-white font-semibold">
+                                {player.firstName[0]}{player.lastName[0]}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">
+                                {player.firstName} {player.lastName}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                                {club?.shortName} • {player.preferredPositions.join(', ')}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      }
                       
                       return (
                         <Link
                           key={player.id}
-                          to={Routes.player(player.clubId ?? '', player.ageGroupIds[0], player.id)}
+                          to={Routes.player(player.clubId as string, firstAgeGroupId as string, player.id)}
                           className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
                         >
                           {player.photoUrl ? (
@@ -193,14 +256,44 @@ export default function ClubsListPage() {
               {hasMyTeams && (
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {myTeamsList.map((team) => {
-                    if (!team.id || !team.clubId || !team.ageGroupId) {
-                      return null;
+                    // Only render link if all required IDs are valid
+                    if (!areAllParamsValid(team.id, team.clubId, team.ageGroupId)) {
+                      return (
+                        <div
+                          key={team.id}
+                          className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 opacity-60 cursor-not-allowed"
+                          title="Missing team information"
+                        >
+                          {team.club?.logo ? (
+                            <img 
+                              src={team.club.logo} 
+                              alt={`${team.club.name} logo`}
+                              className="w-12 h-12 rounded object-cover"
+                            />
+                          ) : (
+                            <div 
+                              className="w-12 h-12 rounded flex items-center justify-center text-sm font-bold text-white"
+                              style={{ backgroundColor: team.colors?.primary || team.club?.primaryColor || '#9ca3af' }}
+                            >
+                              {(team.name || '').substring(0, 2)}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">
+                              {team.name}
+                            </p>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
+                              {team.club?.shortName} • {team.season}
+                            </p>
+                          </div>
+                        </div>
+                      );
                     }
                     
                     return (
                       <Link
                         key={team.id}
-                        to={Routes.team(team.clubId, team.ageGroupId, team.id)}
+                        to={Routes.team(team.clubId as string, team.ageGroupId as string, team.id as string)}
                         className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
                       >
                         {team.club?.logo ? (
@@ -263,44 +356,51 @@ export default function ClubsListPage() {
           {/* Clubs Grid - From API */}
           {!myClubsLoading && !myClubsError && hasClubs && (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myClubsList.map((club) => (
-                <Link
-                  key={club.id}
-                  to={Routes.club(club.id!)}
-                  className="card-hover group"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    {club.logo ? (
-                      <img 
-                        src={club.logo} 
-                        alt={`${club.name} logo`}
-                        className="w-20 h-20 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-700"
-                      />
-                    ) : (
-                      <div 
-                        className="w-20 h-20 rounded-lg flex items-center justify-center text-3xl font-bold text-white"
-                        style={{ backgroundColor: club.primaryColor || '#3b82f6' }}
-                      >
-                        {club.shortName}
+              {myClubsList.map((club) => {
+                // Only render link if club ID is valid
+                if (!club.id) {
+                  return null;
+                }
+                
+                return (
+                  <Link
+                    key={club.id}
+                    to={Routes.club(club.id)}
+                    className="card-hover group"
+                  >
+                    <div className="flex items-center gap-4 mb-4">
+                      {club.logo ? (
+                        <img 
+                          src={club.logo} 
+                          alt={`${club.name} logo`}
+                          className="w-20 h-20 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-700"
+                        />
+                      ) : (
+                        <div 
+                          className="w-20 h-20 rounded-lg flex items-center justify-center text-3xl font-bold text-white"
+                          style={{ backgroundColor: club.primaryColor || '#3b82f6' }}
+                        >
+                          {club.shortName}
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                          {club.name}
+                        </h3>
+                      </div>
+                    </div>
+                    
+                    {club.foundedYear && (
+                      <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">Founded</span>
+                          <span className="font-medium text-gray-900 dark:text-white">{club.foundedYear}</span>
+                        </div>
                       </div>
                     )}
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                        {club.name}
-                      </h3>
-                    </div>
-                  </div>
-                  
-                  {club.foundedYear && (
-                    <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-gray-600 dark:text-gray-400">Founded</span>
-                        <span className="font-medium text-gray-900 dark:text-white">{club.foundedYear}</span>
-                      </div>
-                    </div>
-                  )}
-                </Link>
-              ))}
+                  </Link>
+                );
+              })}
             </div>
           )}
         </div>

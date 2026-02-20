@@ -1,10 +1,11 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
 import type { ClubCoachDto, ClubTeamDto } from '@/api';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
+import { useRequiredParams } from '@utils/routeParams';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
 import type { Coach } from '@/types';
@@ -63,7 +64,9 @@ function mapApiCoachToCoach(apiCoach: ClubCoachDto): Coach {
 }
 
 export default function ClubCoachesPage() {
-  const { clubId } = useParams();
+  // Validate route parameters
+  const params = useRequiredParams(['clubId'], { returnNullOnError: true });
+  const clubId = params.clubId;
   const navigate = useNavigate();
 
   // API state
@@ -194,6 +197,26 @@ export default function ClubCoachesPage() {
     return teams.filter(team => team.ageGroupId === filterAgeGroup);
   }, [teams, filterAgeGroup]);
 
+  // Invalid parameters state
+  if (!clubId) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Invalid Page Parameters</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Club ID is required to view this page.
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              The URL may be malformed or contain invalid values.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -224,7 +247,7 @@ export default function ClubCoachesPage() {
               label: 'Add New Coach',
               icon: 'plus',
               title: 'Add New Coach',
-              onClick: () => navigate(Routes.coachSettings(clubId!, 'new')),
+              onClick: () => navigate(Routes.coachSettings(clubId, 'new')),
               variant: 'success'
             }}
           />
@@ -394,7 +417,7 @@ export default function ClubCoachesPage() {
         {!coachesLoading && filteredCoaches.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {filteredCoaches.map((coach) => (
-              <Link key={coach.id} to={Routes.coach(clubId!, coach.id)}>
+              <Link key={coach.id} to={Routes.coach(clubId, coach.id)}>
                 <CoachCard 
                   coach={coach} 
                   badges={
@@ -423,7 +446,7 @@ export default function ClubCoachesPage() {
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No coaches yet</h3>
             <p className="text-gray-600 dark:text-gray-400 mb-4">Get started by adding your first coach to the club</p>
             <button 
-              onClick={() => navigate(Routes.coachSettings(clubId!, 'new'))}
+              onClick={() => navigate(Routes.coachSettings(clubId, 'new'))}
               className="btn-success btn-md flex items-center gap-2 mx-auto" 
               title="Add First Coach"
             >

@@ -1,4 +1,5 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useRequiredParams } from '@utils/routeParams';
 import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
@@ -76,7 +77,9 @@ function mapApiPlayerToPlayer(apiPlayer: ClubPlayerDto): Player {
 import PlayerCard from '@components/player/PlayerCard';
 
 export default function ClubPlayersPage() {
-  const { clubId } = useParams();
+  // Validate route parameters
+  const params = useRequiredParams(['clubId'], { returnNullOnError: true });
+  const clubId = params.clubId;
   const navigate = useNavigate();
 
   // API state
@@ -221,6 +224,26 @@ export default function ClubPlayersPage() {
     });
   }, [allPlayers, searchName, filterAgeGroup, filterPosition, filterTeam, showArchived]);
 
+  // Invalid parameters state
+  if (!clubId) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Invalid Page Parameters</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Club ID is required to view this page.
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              The URL may be malformed or contain invalid values.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -251,7 +274,7 @@ export default function ClubPlayersPage() {
               label: 'Add New Player',
               icon: 'plus',
               title: 'Add New Player',
-              onClick: () => navigate(Routes.clubPlayerSettings(clubId!, 'new')),
+              onClick: () => navigate(Routes.clubPlayerSettings(clubId, 'new')),
               variant: 'success'
             }}
           />
@@ -426,7 +449,7 @@ export default function ClubPlayersPage() {
         {!playersLoading && filteredPlayers.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {filteredPlayers.map((player) => (
-              <Link key={player.id} to={Routes.player(clubId!, player.ageGroupIds[0], player.id)}>
+              <Link key={player.id} to={player.ageGroupIds[0] ? Routes.player(clubId, player.ageGroupIds[0], player.id) : '#'}>
                 <PlayerCard 
                   player={player}
                   badges={

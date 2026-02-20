@@ -30,6 +30,7 @@ import { getCoachById } from '@data/coaches';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { Routes, areAllParamsValid, isValidParam } from '@/utils/routes';
 import type { UserProfile } from '@/api/users';
 
 export default function MobileNavigation() {
@@ -329,12 +330,12 @@ export default function MobileNavigation() {
           {/* Hierarchical Navigation */}
           <ul className="mobile-nav-menu">
             {/* Age Group Level - Show full options only if we're at age group level */}
-            {ageGroup && currentLevel === 'ageGroup' && (
+            {ageGroup && currentLevel === 'ageGroup' && areAllParamsValid(clubId, ageGroupId) && (
               <li className="mobile-nav-item">
                 <div>
                   <div className="flex items-center">
                     <Link 
-                      to={`/dashboard/${clubId}/age-groups/${ageGroupId}`}
+                      to={Routes.ageGroup(clubId as string, ageGroupId as string)}
                       className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -368,8 +369,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/players`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players`) ? 'active' : ''}`}
+                                to={Routes.ageGroupPlayers(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupPlayers(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
                                 <UserCircle className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Players</span>
@@ -377,8 +378,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/coaches`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/coaches`) ? 'active' : ''}`}
+                                to={Routes.ageGroupCoaches(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupCoaches(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Coaches</span>
@@ -403,8 +404,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/matches`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/matches`) ? 'active' : ''}`}
+                                to={Routes.ageGroupMatches(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupMatches(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Matches</span>
@@ -412,8 +413,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/training`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/training`) ? 'active' : ''}`}
+                                to={Routes.ageGroupTrainingSessions(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupTrainingSessions(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
                                 <Dumbbell className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Training</span>
@@ -438,8 +439,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`) && !location.pathname.includes('/drill') ? 'active' : ''}`}
+                                to={Routes.ageGroupTactics(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupTactics(clubId as string, ageGroupId as string)) && !location.pathname.includes('/drill') ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Formations</span>
@@ -447,8 +448,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/drills`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/drills`) ? 'active' : ''}`}
+                                to={Routes.ageGroupDrills(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupDrills(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Drills</span>
@@ -456,8 +457,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/drill-templates`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/drill-templates`) ? 'active' : ''}`}
+                                to={Routes.ageGroupDrillTemplates(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupDrillTemplates(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Sessions</span>
@@ -482,8 +483,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams`) ? 'active' : ''}`}
+                                to={Routes.teams(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.teams(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
                                 <Users className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Teams</span>
@@ -491,8 +492,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/report-cards`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/report-cards`) ? 'active' : ''}`}
+                                to={Routes.ageGroupReportCards(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupReportCards(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Report Cards</span>
@@ -508,12 +509,12 @@ export default function MobileNavigation() {
             )}
 
             {/* Club Level - Show full options only if we're at club level or below */}
-            {club && currentLevel === 'club' && (
+            {club && currentLevel === 'club' && isValidParam(clubId) && (
               <li className="mobile-nav-item">
                 <div>
                   <div className="flex items-center">
                     <Link 
-                      to={`/dashboard/${clubId}`}
+                      to={Routes.club(clubId as string)}
                       className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -555,8 +556,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/players`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/players`) ? 'active' : ''}`}
+                                to={Routes.clubPlayers(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubPlayers(clubId as string)) ? 'active' : ''}`}
                               >
                                 <UserCircle className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Players</span>
@@ -564,8 +565,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/coaches`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/coaches`) ? 'active' : ''}`}
+                                to={Routes.clubCoaches(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubCoaches(clubId as string)) ? 'active' : ''}`}
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Coaches</span>
@@ -590,8 +591,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/matches`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/matches`) ? 'active' : ''}`}
+                                to={Routes.clubMatches(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubMatches(clubId as string)) ? 'active' : ''}`}
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Matches</span>
@@ -599,8 +600,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/training`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/training`) ? 'active' : ''}`}
+                                to={Routes.clubTraining(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubTraining(clubId as string)) ? 'active' : ''}`}
                               >
                                 <Dumbbell className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Training</span>
@@ -625,8 +626,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/tactics`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/tactics`) && !location.pathname.includes('/drill') ? 'active' : ''}`}
+                                to={Routes.clubTactics(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.clubTactics(clubId as string)) && !location.pathname.includes('/drill') ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Formations</span>
@@ -634,8 +635,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/drills`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/drills`) ? 'active' : ''}`}
+                                to={Routes.drills(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.drills(clubId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Drills</span>
@@ -643,8 +644,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/drill-templates`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/drill-templates`) ? 'active' : ''}`}
+                                to={Routes.drillTemplates(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.drillTemplates(clubId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Sessions</span>
@@ -669,8 +670,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups`) ? 'active' : ''}`}
+                                to={Routes.ageGroups(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroups(clubId as string)) ? 'active' : ''}`}
                               >
                                 <Users className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Age Groups</span>
@@ -678,8 +679,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/ethos`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/ethos`) ? 'active' : ''}`}
+                                to={Routes.clubEthos(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubEthos(clubId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Ethos</span>
@@ -687,8 +688,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/kits`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/kits`) ? 'active' : ''}`}
+                                to={Routes.clubKits(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubKits(clubId as string)) ? 'active' : ''}`}
                               >
                                 <Shirt className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Kits</span>
@@ -696,8 +697,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/report-cards`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/report-cards`) ? 'active' : ''}`}
+                                to={Routes.clubReportCards(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubReportCards(clubId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Report Cards</span>
@@ -713,14 +714,14 @@ export default function MobileNavigation() {
             )}
 
             {/* Player Level - Show full options only if we're at player level */}
-            {player && currentLevel === 'player' && (
+            {player && currentLevel === 'player' && areAllParamsValid(clubId, ageGroupId, playerId) && (
               <li className="mobile-nav-item">
                 <div>
                   <div className="flex items-center">
                     <Link 
-                      to={teamId 
-                        ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}`
-                        : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}`
+                      to={isValidParam(teamId) 
+                        ? Routes.teamPlayer(clubId as string, ageGroupId as string, teamId as string, playerId as string)
+                        : Routes.player(clubId as string, ageGroupId as string, playerId as string)
                       }
                       className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
@@ -741,14 +742,14 @@ export default function MobileNavigation() {
                     <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                       <li className="mobile-nav-item">
                         <Link 
-                          to={teamId 
-                            ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`
-                            : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`
+                          to={isValidParam(teamId) 
+                            ? Routes.teamPlayerAbilities(clubId as string, ageGroupId as string, teamId as string, playerId as string)
+                            : Routes.playerAbilities(clubId as string, ageGroupId as string, playerId as string)
                           }
                           className={`mobile-nav-link pl-8 ${
-                            teamId 
-                              ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`)
-                              : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`)
+                            isValidParam(teamId)
+                              ? isActive(Routes.teamPlayerAbilities(clubId as string, ageGroupId as string, teamId as string, playerId as string))
+                              : isActive(Routes.playerAbilities(clubId as string, ageGroupId as string, playerId as string))
                           } ? 'active' : ''}`}
                         >
                           <Shield className="mobile-nav-icon" />
@@ -757,14 +758,14 @@ export default function MobileNavigation() {
                       </li>
                       <li className="mobile-nav-item">
                         <Link 
-                          to={teamId 
-                            ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`
-                            : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans`
+                          to={isValidParam(teamId) 
+                            ? Routes.teamPlayerDevelopmentPlans(clubId as string, ageGroupId as string, teamId as string, playerId as string)
+                            : Routes.playerDevelopmentPlans(clubId as string, ageGroupId as string, playerId as string)
                           }
                           className={`mobile-nav-link pl-8 ${
-                            teamId 
-                              ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`)
-                              : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans`)
+                            isValidParam(teamId)
+                              ? isActive(Routes.teamPlayerDevelopmentPlans(clubId as string, ageGroupId as string, teamId as string, playerId as string))
+                              : isActive(Routes.playerDevelopmentPlans(clubId as string, ageGroupId as string, playerId as string))
                           } ? 'active' : ''}`}
                         >
                           <Shield className="mobile-nav-icon" />
@@ -773,14 +774,14 @@ export default function MobileNavigation() {
                       </li>
                       <li className="mobile-nav-item">
                         <Link 
-                          to={teamId 
-                            ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-cards`
-                            : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-cards`
+                          to={isValidParam(teamId) 
+                            ? Routes.teamPlayerReportCards(clubId as string, ageGroupId as string, teamId as string, playerId as string)
+                            : Routes.playerReportCards(clubId as string, ageGroupId as string, playerId as string)
                           }
                           className={`mobile-nav-link pl-8 ${
-                            teamId 
-                              ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-cards`)
-                              : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-cards`)
+                            isValidParam(teamId)
+                              ? isActive(Routes.teamPlayerReportCards(clubId as string, ageGroupId as string, teamId as string, playerId as string))
+                              : isActive(Routes.playerReportCards(clubId as string, ageGroupId as string, playerId as string))
                           } ? 'active' : ''}`}
                         >
                           <FileText className="mobile-nav-icon" />
@@ -789,14 +790,14 @@ export default function MobileNavigation() {
                       </li>
                       <li className="mobile-nav-item">
                         <Link 
-                          to={teamId 
-                            ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`
-                            : `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`
+                          to={isValidParam(teamId) 
+                            ? Routes.teamPlayerAlbum(clubId as string, ageGroupId as string, teamId as string, playerId as string)
+                            : Routes.playerAlbum(clubId as string, ageGroupId as string, playerId as string)
                           }
                           className={`mobile-nav-link pl-8 ${
-                            teamId 
-                              ? isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`)
-                              : isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`)
+                            isValidParam(teamId)
+                              ? isActive(Routes.teamPlayerAlbum(clubId as string, ageGroupId as string, teamId as string, playerId as string))
+                              : isActive(Routes.playerAlbum(clubId as string, ageGroupId as string, playerId as string))
                           } ? 'active' : ''}`}
                         >
                           <FileText className="mobile-nav-icon" />
@@ -810,13 +811,13 @@ export default function MobileNavigation() {
             )}
 
             {/* Coach Level - Show full options only if we're at coach level */}
-            {coach && currentLevel === 'coach' && (
+            {coach && currentLevel === 'coach' && areAllParamsValid(clubId, ageGroupId, coachId) && (
               <li className="mobile-nav-item">
                 <div>
                   <Link 
-                    to={teamId 
-                      ? `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches/${coachId}`
-                      : `/dashboard/${clubId}/age-groups/${ageGroupId}/coaches/${coachId}`
+                    to={isValidParam(teamId) 
+                      ? Routes.teamCoach(clubId as string, ageGroupId as string, teamId as string, coachId as string)
+                      : Routes.ageGroupCoach(clubId as string, ageGroupId as string, coachId as string)
                     }
                     className="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                   >
@@ -830,12 +831,12 @@ export default function MobileNavigation() {
             )}
 
             {/* Team Level - Show full options only if we're at team level */}
-            {team && currentLevel === 'team' && (
+            {team && currentLevel === 'team' && areAllParamsValid(clubId, ageGroupId, teamId) && (
               <li className="mobile-nav-item">
                 <div>
                   <div className="flex items-center">
                     <Link 
-                      to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
+                      to={Routes.team(clubId as string, ageGroupId as string, teamId as string)}
                       className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
                       <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
@@ -877,8 +878,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`) ? 'active' : ''}`}
+                                to={Routes.teamSquad(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.teamSquad(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
                               >
                                 <UserCircle className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Players</span>
@@ -886,8 +887,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches`) ? 'active' : ''}`}
+                                to={Routes.teamCoaches(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.teamCoaches(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Coaches</span>
@@ -912,8 +913,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`) ? 'active' : ''}`}
+                                to={Routes.matches(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.matches(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Matches</span>
@@ -921,8 +922,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training`) ? 'active' : ''}`}
+                                to={Routes.teamTrainingSessions(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.teamTrainingSessions(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
                               >
                                 <Dumbbell className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Training</span>
@@ -947,8 +948,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`) && !location.pathname.includes('/drill') ? 'active' : ''}`}
+                                to={Routes.teamTactics(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.teamTactics(clubId as string, ageGroupId as string, teamId as string)) && !location.pathname.includes('/drill') ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Formations</span>
@@ -956,8 +957,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills`) ? 'active' : ''}`}
+                                to={Routes.teamDrills(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.teamDrills(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Drills</span>
@@ -965,8 +966,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates`}
-                                className={`mobile-nav-link pl-8 ${location.pathname.includes(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates`) ? 'active' : ''}`}
+                                to={Routes.teamDrillTemplates(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.teamDrillTemplates(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Sessions</span>
@@ -991,8 +992,8 @@ export default function MobileNavigation() {
                           <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/kits`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/kits`) ? 'active' : ''}`}
+                                to={Routes.teamKits(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.teamKits(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
                               >
                                 <Shirt className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Kits</span>
@@ -1000,8 +1001,8 @@ export default function MobileNavigation() {
                             </li>
                             <li className="mobile-nav-item">
                               <Link 
-                                to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/report-cards`}
-                                className={`mobile-nav-link pl-8 ${isActive(`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/report-cards`) ? 'active' : ''}`}
+                                to={Routes.teamReportCards(clubId as string, ageGroupId as string, teamId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.teamReportCards(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Report Cards</span>
@@ -1027,13 +1028,13 @@ export default function MobileNavigation() {
                 </h3>
               </div>
               <ul className="mobile-nav-menu">
-                {clubId && (
+                {club && isValidParam(clubId) && (
                   <li className="mobile-nav-item">
                     <Link 
-                      to={`/dashboard/${clubId}`}
+                      to={Routes.club(clubId as string)}
                       className="mobile-nav-link"
                     >
-                      {club?.logo ? (
+                      {club.logo ? (
                         <img 
                           src={club.logo} 
                           alt={`${club.name} logo`}
@@ -1042,14 +1043,14 @@ export default function MobileNavigation() {
                       ) : (
                         <Home className="mobile-nav-icon" />
                       )}
-                      <span className="mobile-nav-text">{club?.shortName}</span>
+                      <span className="mobile-nav-text">{club.shortName}</span>
                     </Link>
                   </li>
                 )}
-                {ageGroup && ageGroupId && currentLevel !== 'ageGroup' && (
+                {ageGroup && areAllParamsValid(clubId, ageGroupId) && currentLevel !== 'ageGroup' && (
                   <li className="mobile-nav-item">
                     <Link 
-                      to={`/dashboard/${clubId}/age-groups/${ageGroupId}`}
+                      to={Routes.ageGroup(clubId as string, ageGroupId as string)}
                       className="mobile-nav-link"
                     >
                       <Users className="mobile-nav-icon" />
@@ -1057,10 +1058,10 @@ export default function MobileNavigation() {
                     </Link>
                   </li>
                 )}
-                {team && teamId && currentLevel !== 'team' && (
+                {team && areAllParamsValid(clubId, ageGroupId, teamId) && currentLevel !== 'team' && (
                   <li className="mobile-nav-item">
                     <Link 
-                      to={`/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`}
+                      to={Routes.team(clubId as string, ageGroupId as string, teamId as string)}
                       className="mobile-nav-link"
                     >
                       <div 

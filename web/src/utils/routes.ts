@@ -2,6 +2,38 @@
  * Route utility functions for consistent URL generation across the application
  */
 
+/**
+ * Validates that a route parameter is defined and not a string literal 'undefined' or 'null'
+ * @param value - The parameter value to validate
+ * @param paramName - Name of the parameter for error messages
+ * @returns The validated string
+ * @throws Error if the parameter is invalid
+ */
+function validateParam(value: string | undefined, paramName: string): string {
+  if (!value || value === 'undefined' || value === 'null') {
+    throw new Error(`Route parameter "${paramName}" is required but was ${value === undefined ? 'undefined' : `"${value}"`}`);
+  }
+  return value;
+}
+
+/**
+ * Checks if a parameter is valid (defined and not a string literal 'undefined' or 'null')
+ * @param value - The parameter value to check
+ * @returns true if the parameter is valid, false otherwise
+ */
+export function isValidParam(value: string | undefined | null): value is string {
+  return !!value && value !== 'undefined' && value !== 'null';
+}
+
+/**
+ * Validates all parameters in an array and returns true only if all are valid
+ * @param params - Array of parameter values to validate
+ * @returns true if all parameters are valid
+ */
+export function areAllParamsValid(...params: (string | undefined | null)[]): boolean {
+  return params.every(p => isValidParam(p));
+}
+
 export class Routes {
   // Home
   static home(): string {
@@ -18,105 +50,105 @@ export class Routes {
   }
 
   static club(clubId: string): string {
-    return `/dashboard/${clubId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}`;
   }
 
   static clubOverview(clubId: string): string {
-    return `/dashboard/${clubId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}`;
   }
 
   static clubEthos(clubId: string): string {
-    return `/dashboard/${clubId}/ethos`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/ethos`;
   }
 
   static clubPlayers(clubId: string): string {
-    return `/dashboard/${clubId}/players`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/players`;
   }
 
   static clubPlayerSettings(clubId: string, playerId: string): string {
-    return `/dashboard/${clubId}/players/${playerId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/players/${validateParam(playerId, 'playerId')}/settings`;
   }
 
   static clubPlayerAlbum(clubId: string, playerId: string): string {
-    return `/dashboard/${clubId}/players/${playerId}/album`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/players/${validateParam(playerId, 'playerId')}/album`;
   }
 
   static clubCoaches(clubId: string): string {
-    return `/dashboard/${clubId}/coaches`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/coaches`;
   }
 
   static clubKits(clubId: string): string {
-    return `/dashboard/${clubId}/kits`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/kits`;
   }
 
   static clubTraining(clubId: string): string {
-    return `/dashboard/${clubId}/training`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/training`;
   }
 
   static clubSettings(clubId: string): string {
-    return `/dashboard/${clubId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/settings`;
   }
 
   // Age Groups
   static ageGroups(clubId: string): string {
-    return `/dashboard/${clubId}/age-groups`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups`;
   }
 
   static ageGroup(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}`;
   }
 
   static ageGroupPlayers(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players`;
   }
 
   static ageGroupCoaches(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/coaches`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/coaches`;
   }
 
   static ageGroupSettings(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/settings`;
   }
 
   static ageGroupNew(clubId: string): string {
-    return `/dashboard/${clubId}/age-groups/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/new`;
   }
 
   static ageGroupEdit(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/edit`;
   }
 
   // Teams
   static teams(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams`;
   }
 
   static team(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}`;
   }
 
   static teamSquad(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/squad`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/squad`;
   }
 
   static teamCoaches(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/coaches`;
   }
 
   static teamKits(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/kits`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/kits`;
   }
 
   static teamSettings(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/settings`;
   }
 
   static teamNew(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/new`;
   }
 
   static teamEdit(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/edit`;
   }
 
   // Players
@@ -125,7 +157,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}`;
   }
 
   static playerAbilities(
@@ -133,7 +165,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/abilities`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/abilities`;
   }
 
   static playerReportCard(
@@ -141,7 +173,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-card`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/report-card`;
   }
 
   static playerReportCardDetail(
@@ -150,7 +182,7 @@ export class Routes {
     playerId: string,
     reportId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-cards/${reportId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/report-cards/${validateParam(reportId, 'reportId')}`;
   }
 
   static playerReportCards(
@@ -158,7 +190,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-cards`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/report-cards`;
   }
 
   static editPlayerReportCard(
@@ -167,7 +199,7 @@ export class Routes {
     playerId: string,
     reportId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-cards/${reportId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/report-cards/${validateParam(reportId, 'reportId')}/edit`;
   }
 
   static newPlayerReportCard(
@@ -175,7 +207,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/report-cards/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/report-cards/new`;
   }
 
   static playerDevelopmentPlan(
@@ -184,7 +216,7 @@ export class Routes {
     playerId: string,
     planId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans/${planId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/development-plans/${validateParam(planId, 'planId')}`;
   }
 
   static playerDevelopmentPlans(
@@ -192,7 +224,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/development-plans`;
   }
 
   static editPlayerDevelopmentPlan(
@@ -201,7 +233,7 @@ export class Routes {
     playerId: string,
     planId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans/${planId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/development-plans/${validateParam(planId, 'planId')}/edit`;
   }
 
   static newPlayerDevelopmentPlan(
@@ -209,7 +241,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/development-plans/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/development-plans/new`;
   }
 
   static playerAlbum(
@@ -217,7 +249,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/album`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/album`;
   }
 
   static playerSettings(
@@ -225,7 +257,7 @@ export class Routes {
     ageGroupId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/players/${playerId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/settings`;
   }
 
   // Players - Team Context
@@ -235,7 +267,7 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}`;
   }
 
   static teamPlayerAbilities(
@@ -244,7 +276,7 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/abilities`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/abilities`;
   }
 
   static teamPlayerReportCard(
@@ -253,7 +285,7 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-card`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/report-card`;
   }
 
   static teamPlayerReportCardDetail(
@@ -263,7 +295,7 @@ export class Routes {
     playerId: string,
     reportId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-cards/${reportId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/report-cards/${validateParam(reportId, 'reportId')}`;
   }
 
   static teamPlayerReportCards(
@@ -272,7 +304,7 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-cards`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/report-cards`;
   }
 
   static editTeamPlayerReportCard(
@@ -282,7 +314,7 @@ export class Routes {
     playerId: string,
     reportId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-cards/${reportId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/report-cards/${validateParam(reportId, 'reportId')}/edit`;
   }
 
   static newTeamPlayerReportCard(
@@ -291,7 +323,7 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/report-cards/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/report-cards/new`;
   }
 
   static teamPlayerDevelopmentPlan(
@@ -301,7 +333,7 @@ export class Routes {
     playerId: string,
     planId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans/${planId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/development-plans/${validateParam(planId, 'planId')}`;
   }
 
   static teamPlayerDevelopmentPlans(
@@ -310,7 +342,7 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/development-plans`;
   }
 
   static editTeamPlayerDevelopmentPlan(
@@ -320,7 +352,7 @@ export class Routes {
     playerId: string,
     planId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans/${planId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/development-plans/${validateParam(planId, 'planId')}/edit`;
   }
 
   static newTeamPlayerDevelopmentPlan(
@@ -329,7 +361,7 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/development-plans/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/development-plans/new`;
   }
 
   static teamPlayerAlbum(
@@ -338,7 +370,7 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/album`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/album`;
   }
 
   static teamPlayerSettings(
@@ -347,55 +379,55 @@ export class Routes {
     teamId: string,
     playerId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/players/${playerId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/settings`;
   }
 
   // Coaches
   static coach(clubId: string, coachId: string): string {
-    return `/dashboard/${clubId}/coaches/${coachId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/coaches/${validateParam(coachId, 'coachId')}`;
   }
 
   static coachSettings(clubId: string, coachId: string): string {
-    return `/dashboard/${clubId}/coaches/${coachId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/coaches/${validateParam(coachId, 'coachId')}/settings`;
   }
 
   // Coaches - Age Group Context
   static ageGroupCoach(clubId: string, ageGroupId: string, coachId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/coaches/${coachId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/coaches/${validateParam(coachId, 'coachId')}`;
   }
 
   static ageGroupCoachSettings(clubId: string, ageGroupId: string, coachId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/coaches/${coachId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/coaches/${validateParam(coachId, 'coachId')}/settings`;
   }
 
   // Coaches - Team Context
   static teamCoach(clubId: string, ageGroupId: string, teamId: string, coachId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches/${coachId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/coaches/${validateParam(coachId, 'coachId')}`;
   }
 
   static teamCoachSettings(clubId: string, ageGroupId: string, teamId: string, coachId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/coaches/${coachId}/settings`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/coaches/${validateParam(coachId, 'coachId')}/settings`;
   }
 
   // Matches
   static clubMatches(clubId: string): string {
-    return `/dashboard/${clubId}/matches`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/matches`;
   }
 
   static ageGroupMatches(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/matches`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/matches`;
   }
 
   static ageGroupTrainingSessions(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/training`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/training`;
   }
 
   static matches(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/matches`;
   }
 
   static matchNew(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/matches/new`;
   }
 
   static matchEdit(
@@ -404,7 +436,7 @@ export class Routes {
     teamId: string,
     matchId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches/${matchId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/matches/${validateParam(matchId, 'matchId')}/edit`;
   }
 
   static matchReport(
@@ -413,58 +445,58 @@ export class Routes {
     teamId: string,
     matchId: string
   ): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches/${matchId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/matches/${validateParam(matchId, 'matchId')}`;
   }
 
   // Tactics - Club Level
   static clubTactics(clubId: string): string {
-    return `/dashboard/${clubId}/tactics`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/tactics`;
   }
 
   static clubTacticNew(clubId: string): string {
-    return `/dashboard/${clubId}/tactics/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/tactics/new`;
   }
 
   static clubTacticDetail(clubId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/tactics/${tacticId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/tactics/${validateParam(tacticId, 'tacticId')}`;
   }
 
   static clubTacticEdit(clubId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/tactics/${tacticId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/tactics/${validateParam(tacticId, 'tacticId')}/edit`;
   }
 
   // Tactics - Age Group Level
   static ageGroupTactics(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/tactics`;
   }
 
   static ageGroupTacticNew(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/tactics/new`;
   }
 
   static ageGroupTacticDetail(clubId: string, ageGroupId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/${tacticId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/tactics/${validateParam(tacticId, 'tacticId')}`;
   }
 
   static ageGroupTacticEdit(clubId: string, ageGroupId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/tactics/${tacticId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/tactics/${validateParam(tacticId, 'tacticId')}/edit`;
   }
 
   // Tactics - Team Level
   static teamTactics(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/tactics`;
   }
 
   static teamTacticNew(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/tactics/new`;
   }
 
   static teamTacticDetail(clubId: string, ageGroupId: string, teamId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/${tacticId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/tactics/${validateParam(tacticId, 'tacticId')}`;
   }
 
   static teamTacticEdit(clubId: string, ageGroupId: string, teamId: string, tacticId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics/${tacticId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/tactics/${validateParam(tacticId, 'tacticId')}/edit`;
   }
 
   // Formations
@@ -473,7 +505,7 @@ export class Routes {
   }
 
   static formation(formationId: string): string {
-    return `/formations/${formationId}`;
+    return `/formations/${validateParam(formationId, 'formationId')}`;
   }
 
   // Training
@@ -482,152 +514,152 @@ export class Routes {
   }
 
   static trainingSession(sessionId: string): string {
-    return `/training/${sessionId}`;
+    return `/training/${validateParam(sessionId, 'sessionId')}`;
   }
 
   // Drills Library - Club Level
   static drills(clubId: string): string {
-    return `/dashboard/${clubId}/drills`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/drills`;
   }
 
   static drillNew(clubId: string): string {
-    return `/dashboard/${clubId}/drills/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/drills/new`;
   }
 
   static drill(clubId: string, drillId: string): string {
-    return `/dashboard/${clubId}/drills/${drillId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/drills/${validateParam(drillId, 'drillId')}`;
   }
 
   static drillEdit(clubId: string, drillId: string): string {
-    return `/dashboard/${clubId}/drills/${drillId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/drills/${validateParam(drillId, 'drillId')}/edit`;
   }
 
   // Drill Templates (Session Plans) - Club Level
   static drillTemplates(clubId: string): string {
-    return `/dashboard/${clubId}/drill-templates`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/drill-templates`;
   }
 
   static drillTemplateNew(clubId: string): string {
-    return `/dashboard/${clubId}/drill-templates/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/drill-templates/new`;
   }
 
   static drillTemplate(clubId: string, templateId: string): string {
-    return `/dashboard/${clubId}/drill-templates/${templateId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/drill-templates/${validateParam(templateId, 'templateId')}`;
   }
 
   static drillTemplateEdit(clubId: string, templateId: string): string {
-    return `/dashboard/${clubId}/drill-templates/${templateId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/drill-templates/${validateParam(templateId, 'templateId')}/edit`;
   }
 
   // Drills Library - Age Group Level
   static ageGroupDrills(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/drills`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/drills`;
   }
 
   static ageGroupDrillNew(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/drills/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/drills/new`;
   }
 
   static ageGroupDrill(clubId: string, ageGroupId: string, drillId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/drills/${drillId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/drills/${validateParam(drillId, 'drillId')}`;
   }
 
   static ageGroupDrillEdit(clubId: string, ageGroupId: string, drillId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/drills/${drillId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/drills/${validateParam(drillId, 'drillId')}/edit`;
   }
 
   // Drill Templates - Age Group Level
   static ageGroupDrillTemplates(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/drill-templates`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/drill-templates`;
   }
 
   static ageGroupDrillTemplateNew(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/drill-templates/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/drill-templates/new`;
   }
 
   static ageGroupDrillTemplate(clubId: string, ageGroupId: string, templateId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/drill-templates/${templateId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/drill-templates/${validateParam(templateId, 'templateId')}`;
   }
 
   static ageGroupDrillTemplateEdit(clubId: string, ageGroupId: string, templateId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/drill-templates/${templateId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/drill-templates/${validateParam(templateId, 'templateId')}/edit`;
   }
 
   // Drills Library - Team Level
   static teamDrills(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/drills`;
   }
 
   static teamDrillNew(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/drills/new`;
   }
 
   static teamDrill(clubId: string, ageGroupId: string, teamId: string, drillId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills/${drillId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/drills/${validateParam(drillId, 'drillId')}`;
   }
 
   static teamDrillEdit(clubId: string, ageGroupId: string, teamId: string, drillId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills/${drillId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/drills/${validateParam(drillId, 'drillId')}/edit`;
   }
 
   // Drill Templates - Team Level
   static teamDrillTemplates(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/drill-templates`;
   }
 
   static teamDrillTemplateNew(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/drill-templates/new`;
   }
 
   static teamDrillTemplate(clubId: string, ageGroupId: string, teamId: string, templateId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates/${templateId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/drill-templates/${validateParam(templateId, 'templateId')}`;
   }
 
   static teamDrillTemplateEdit(clubId: string, ageGroupId: string, teamId: string, templateId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates/${templateId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/drill-templates/${validateParam(templateId, 'templateId')}/edit`;
   }
 
   // Team Training Sessions
   static teamTrainingSessions(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/training`;
   }
 
   static teamTrainingSessionNew(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training/new`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/training/new`;
   }
 
   static teamTrainingSession(clubId: string, ageGroupId: string, teamId: string, sessionId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training/${sessionId}`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/training/${validateParam(sessionId, 'sessionId')}`;
   }
 
   static teamTrainingSessionEdit(clubId: string, ageGroupId: string, teamId: string, sessionId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/training/${sessionId}/edit`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/training/${validateParam(sessionId, 'sessionId')}/edit`;
   }
 
   // Report Cards (Management)
   static clubReportCards(clubId: string): string {
-    return `/dashboard/${clubId}/report-cards`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/report-cards`;
   }
 
   static ageGroupReportCards(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/report-cards`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/report-cards`;
   }
 
   static teamReportCards(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/report-cards`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/report-cards`;
   }
 
   // Development Plans (Management)
   static clubDevelopmentPlans(clubId: string): string {
-    return `/dashboard/${clubId}/development-plans`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/development-plans`;
   }
 
   static ageGroupDevelopmentPlans(clubId: string, ageGroupId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/development-plans`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/development-plans`;
   }
 
   static teamDevelopmentPlans(clubId: string, ageGroupId: string, teamId: string): string {
-    return `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/development-plans`;
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/development-plans`;
   }
 
   // Auth

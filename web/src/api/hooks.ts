@@ -80,6 +80,22 @@ import {
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 
+/**
+ * Validates if an ID is valid for API calls.
+ * Returns false for:
+ * - undefined, null, or empty string
+ * - String literals "undefined" or "null"
+ * - Non-UUID format (basic check)
+ */
+function isValidId(id: string | undefined): id is string {
+  if (!id || id === '' || id === 'undefined' || id === 'null') {
+    return false;
+  }
+  // Basic UUID format check (allows both with and without dashes)
+  const uuidRegex = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
+  return uuidRegex.test(id);
+}
+
 // Generic hook state
 interface UseApiState<T> {
   data: T | null;
@@ -111,16 +127,24 @@ export interface PlayerAlbumData {
 
 /**
  * Generic hook for API calls with loading/error states
+ * @param fetchFn - Function to fetch data from API
+ * @param dependencies - Dependencies array for useCallback
+ * @param enabled - Whether to actually make the API call (defaults to true)
  */
 function useApiCall<T>(
   fetchFn: () => Promise<{ data?: T; success?: boolean; statusCode?: number; error?: { message?: string } }>,
-  dependencies: unknown[] = []
+  dependencies: unknown[] = [],
+  enabled: boolean = true
 ): UseApiState<T> {
   const [data, setData] = useState<T | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(enabled);
   const [error, setError] = useState<Error | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (!enabled) {
+      setIsLoading(false);
+      return;
+    }
     setIsLoading(true);
     setError(null);
     try {
@@ -137,7 +161,7 @@ function useApiCall<T>(
     } finally {
       setIsLoading(false);
     }
-  }, dependencies);
+  }, [...dependencies, enabled]);
 
   useEffect(() => {
     fetchData();
@@ -165,13 +189,9 @@ export function useMyTeams(): UseApiState<TeamListItemDto[]> {
  */
 export function useTeamPlayers(teamId: string | undefined, includeArchived?: boolean): UseApiState<TeamPlayerDto[]> {
   return useApiCall<TeamPlayerDto[]>(
-    () => {
-      if (!teamId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.teams.getPlayers(teamId, includeArchived);
-    },
-    [teamId, includeArchived]
+    () => apiClient.teams.getPlayers(teamId!, includeArchived),
+    [teamId, includeArchived],
+    isValidId(teamId)
   );
 }
 
@@ -180,13 +200,9 @@ export function useTeamPlayers(teamId: string | undefined, includeArchived?: boo
  */
 export function useTeamCoaches(teamId: string | undefined): UseApiState<TeamCoachDto[]> {
   return useApiCall<TeamCoachDto[]>(
-    () => {
-      if (!teamId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.teams.getCoaches(teamId);
-    },
-    [teamId]
+    () => apiClient.teams.getCoaches(teamId!),
+    [teamId],
+    isValidId(teamId)
   );
 }
 
@@ -195,13 +211,9 @@ export function useTeamCoaches(teamId: string | undefined): UseApiState<TeamCoac
  */
 export function useTeamDevelopmentPlans(teamId: string | undefined): UseApiState<TeamDevelopmentPlanDto[]> {
   return useApiCall<TeamDevelopmentPlanDto[]>(
-    () => {
-      if (!teamId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.teams.getDevelopmentPlans(teamId);
-    },
-    [teamId]
+    () => apiClient.teams.getDevelopmentPlans(teamId!),
+    [teamId],
+    isValidId(teamId)
   );
 }
 
@@ -213,13 +225,9 @@ export function useTeamMatches(
   options?: { status?: string; dateFrom?: string; dateTo?: string }
 ): UseApiState<TeamMatchesDto> {
   return useApiCall<TeamMatchesDto>(
-    () => {
-      if (!teamId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.teams.getMatches(teamId, options);
-    },
-    [teamId, options?.status, options?.dateFrom, options?.dateTo]
+    () => apiClient.teams.getMatches(teamId!, options),
+    [teamId, options?.status, options?.dateFrom, options?.dateTo],
+    isValidId(teamId)
   );
 }
 
@@ -231,13 +239,9 @@ export function useTeamTrainingSessions(
   options?: { status?: string; dateFrom?: string; dateTo?: string }
 ): UseApiState<TeamTrainingSessionsDto> {
   return useApiCall<TeamTrainingSessionsDto>(
-    () => {
-      if (!teamId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.teams.getTrainingSessions(teamId, options);
-    },
-    [teamId, options?.status, options?.dateFrom, options?.dateTo]
+    () => apiClient.teams.getTrainingSessions(teamId!, options),
+    [teamId, options?.status, options?.dateFrom, options?.dateTo],
+    isValidId(teamId)
   );
 }
 
@@ -246,13 +250,9 @@ export function useTeamTrainingSessions(
  */
 export function useTeamKits(teamId: string | undefined): UseApiState<TeamKitsDto> {
   return useApiCall<TeamKitsDto>(
-    () => {
-      if (!teamId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.teams.getKits(teamId);
-    },
-    [teamId]
+    () => apiClient.teams.getKits(teamId!),
+    [teamId],
+    isValidId(teamId)
   );
 }
 
@@ -262,7 +262,8 @@ export function useTeamKits(teamId: string | undefined): UseApiState<TeamKitsDto
 export function useTeamReportCards(teamId: string | undefined): UseApiState<ClubReportCardDto[]> {
   return useApiCall<ClubReportCardDto[]>(
     () => apiClient.teams.getReportCards(teamId!),
-    [teamId]
+    [teamId],
+    isValidId(teamId)
   );
 }
 
@@ -272,13 +273,9 @@ export function useTeamReportCards(teamId: string | undefined): UseApiState<Club
  */
 export function useTeamOverview(teamId: string | undefined): UseApiState<TeamOverviewDto> {
   return useApiCall<TeamOverviewDto>(
-    () => {
-      if (!teamId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.teams.getOverview(teamId);
-    },
-    [teamId]
+    () => apiClient.teams.getOverview(teamId!),
+    [teamId],
+    isValidId(teamId)
   );
 }
 
@@ -288,7 +285,8 @@ export function useTeamOverview(teamId: string | undefined): UseApiState<TeamOve
 export function useTeamsByAgeGroupId(ageGroupId: string | undefined): UseApiState<TeamWithStatsDto[]> {
   return useApiCall<TeamWithStatsDto[]>(
     () => apiClient.teams.getByAgeGroupId(ageGroupId!),
-    [ageGroupId]
+    [ageGroupId],
+    isValidId(ageGroupId)
   );
 }
 
@@ -336,7 +334,8 @@ export function useMyChildren(): UseApiState<ChildPlayerDto[]> {
 export function useClubById(clubId: string | undefined): UseApiState<ClubDetailDto> {
   return useApiCall<ClubDetailDto>(
     () => apiClient.clubs.getClubById(clubId!),
-    [clubId]
+    [clubId],
+    isValidId(clubId)
   );
 }
 
@@ -346,12 +345,14 @@ export function useClub(clubId: string | undefined): UseApiState<ClubDetailDto> 
   return useClubById(clubId);
 }
 
-/** * Hook to fetch club statistics
+/**
+ * Hook to fetch club statistics
  */
 export function useClubStatistics(clubId: string | undefined): UseApiState<ClubStatisticsDto> {
   return useApiCall<ClubStatisticsDto>(
     () => apiClient.clubs.getClubStatistics(clubId!),
-    [clubId]
+    [clubId],
+    isValidId(clubId)
   );
 }
 
@@ -364,7 +365,8 @@ export function useAgeGroupsByClubId(
 ): UseApiState<AgeGroupListDto[]> {
   return useApiCall<AgeGroupListDto[]>(
     () => apiClient.clubs.getAgeGroups(clubId!, includeArchived),
-    [clubId, includeArchived]
+    [clubId, includeArchived],
+    isValidId(clubId)
   );
 }
 
@@ -378,7 +380,8 @@ export function useAgeGroupsByClubId(
 export function useAgeGroup(ageGroupId: string | undefined): UseApiState<AgeGroupDetailDto> {
   return useApiCall<AgeGroupDetailDto>(
     () => apiClient.ageGroups.getById(ageGroupId!),
-    [ageGroupId]
+    [ageGroupId],
+    isValidId(ageGroupId)
   );
 }
 
@@ -395,7 +398,8 @@ export function useAgeGroupById(ageGroupId: string | undefined): UseApiState<Age
 export function useAgeGroupStatistics(ageGroupId: string | undefined): UseApiState<AgeGroupStatisticsDto> {
   return useApiCall<AgeGroupStatisticsDto>(
     () => apiClient.ageGroups.getStatistics(ageGroupId!),
-    [ageGroupId]
+    [ageGroupId],
+    isValidId(ageGroupId)
   );
 }
 
@@ -408,7 +412,8 @@ export function useAgeGroupPlayers(
 ): UseApiState<AgeGroupPlayerDto[]> {
   return useApiCall<AgeGroupPlayerDto[]>(
     () => apiClient.ageGroups.getPlayers(ageGroupId!, includeArchived),
-    [ageGroupId, includeArchived]
+    [ageGroupId, includeArchived],
+    isValidId(ageGroupId)
   );
 }
 
@@ -418,7 +423,8 @@ export function useAgeGroupPlayers(
 export function useAgeGroupReportCards(ageGroupId: string | undefined): UseApiState<ClubReportCardDto[]> {
   return useApiCall<ClubReportCardDto[]>(
     () => apiClient.ageGroups.getReportCards(ageGroupId!),
-    [ageGroupId]
+    [ageGroupId],
+    isValidId(ageGroupId)
   );
 }
 
@@ -428,7 +434,8 @@ export function useAgeGroupReportCards(ageGroupId: string | undefined): UseApiSt
 export function useAgeGroupDevelopmentPlans(ageGroupId: string | undefined): UseApiState<AgeGroupDevelopmentPlanSummaryDto[]> {
   return useApiCall<AgeGroupDevelopmentPlanSummaryDto[]>(
     () => apiClient.ageGroups.getDevelopmentPlans(ageGroupId!),
-    [ageGroupId]
+    [ageGroupId],
+    isValidId(ageGroupId)
   );
 }
 
@@ -445,7 +452,8 @@ export function useClubPlayers(
 ): UseApiState<ClubPlayerDto[]> {
   return useApiCall<ClubPlayerDto[]>(
     () => apiClient.clubs.getPlayers(clubId!, includeArchived),
-    [clubId, includeArchived]
+    [clubId, includeArchived],
+    isValidId(clubId)
   );
 }
 
@@ -458,7 +466,8 @@ export function useClubTeams(
 ): UseApiState<ClubTeamDto[]> {
   return useApiCall<ClubTeamDto[]>(
     () => apiClient.clubs.getTeams(clubId!, includeArchived),
-    [clubId, includeArchived]
+    [clubId, includeArchived],
+    isValidId(clubId)
   );
 }
 
@@ -471,7 +480,8 @@ export function useClubCoaches(
 ): UseApiState<ClubCoachDto[]> {
   return useApiCall<ClubCoachDto[]>(
     () => apiClient.clubs.getCoaches(clubId!, includeArchived),
-    [clubId, includeArchived]
+    [clubId, includeArchived],
+    isValidId(clubId)
   );
 }
 
@@ -485,7 +495,8 @@ export function useClubTrainingSessions(
 ): UseApiState<{ sessions: ClubTrainingSessionDto[]; totalCount: number }> {
   return useApiCall<{ sessions: ClubTrainingSessionDto[]; totalCount: number }>(
     () => apiClient.clubs.getTrainingSessions(clubId!, options),
-    [clubId, options?.ageGroupId, options?.teamId, options?.status]
+    [clubId, options?.ageGroupId, options?.teamId, options?.status],
+    isValidId(clubId)
   );
 }
 
@@ -498,7 +509,8 @@ export function useClubMatches(
 ): UseApiState<ClubMatchesDto> {
   return useApiCall<ClubMatchesDto>(
     () => apiClient.clubs.getMatches(clubId!, options),
-    [clubId, options?.ageGroupId, options?.teamId, options?.status]
+    [clubId, options?.ageGroupId, options?.teamId, options?.status],
+    isValidId(clubId)
   );
 }
 
@@ -508,7 +520,8 @@ export function useClubMatches(
 export function useClubKits(clubId: string | undefined): UseApiState<ClubKitDto[]> {
   return useApiCall<ClubKitDto[]>(
     () => apiClient.clubs.getKits(clubId!),
-    [clubId]
+    [clubId],
+    isValidId(clubId)
   );
 }
 
@@ -518,7 +531,8 @@ export function useClubKits(clubId: string | undefined): UseApiState<ClubKitDto[
 export function useClubReportCards(clubId: string | undefined): UseApiState<ClubReportCardDto[]> {
   return useApiCall<ClubReportCardDto[]>(
     () => apiClient.clubs.getReportCards(clubId!),
-    [clubId]
+    [clubId],
+    isValidId(clubId)
   );
 }
 
@@ -528,7 +542,8 @@ export function useClubReportCards(clubId: string | undefined): UseApiState<Club
 export function useClubDevelopmentPlans(clubId: string | undefined): UseApiState<ClubDevelopmentPlanDto[]> {
   return useApiCall<ClubDevelopmentPlanDto[]>(
     () => apiClient.clubs.getDevelopmentPlans(clubId!),
-    [clubId]
+    [clubId],
+    isValidId(clubId)
   );
 }
 
@@ -545,20 +560,21 @@ export function useTacticsByScope(
   ageGroupId?: string,
   teamId?: string
 ): UseApiState<TacticsByScopeResponseDto> {
+  // Enabled when at least clubId is valid
+  const enabled = isValidId(clubId);
+  
   return useApiCall<TacticsByScopeResponseDto>(
     () => {
-      if (!clubId) {
-        return Promise.resolve({ success: false, error: { message: 'Club ID is required' } });
-      }
       if (teamId && ageGroupId) {
-        return apiClient.tactics.getByTeam(clubId, ageGroupId, teamId);
+        return apiClient.tactics.getByTeam(clubId!, ageGroupId, teamId);
       }
       if (ageGroupId) {
-        return apiClient.tactics.getByAgeGroup(clubId, ageGroupId);
+        return apiClient.tactics.getByAgeGroup(clubId!, ageGroupId);
       }
-      return apiClient.tactics.getByClub(clubId);
+      return apiClient.tactics.getByClub(clubId!);
     },
-    [clubId, ageGroupId, teamId]
+    [clubId, ageGroupId, teamId],
+    enabled
   );
 }
 
@@ -576,20 +592,21 @@ export function useDrillsByScope(
   teamId?: string,
   options?: { category?: string; search?: string }
 ): UseApiState<DrillsByScopeResponseDto> {
+  // Enabled when at least clubId is valid
+  const enabled = isValidId(clubId);
+  
   return useApiCall<DrillsByScopeResponseDto>(
     () => {
-      if (!clubId) {
-        return Promise.resolve({ success: false, error: { message: 'Club ID is required' } });
-      }
       if (teamId && ageGroupId) {
-        return apiClient.drills.getByTeam(clubId, ageGroupId, teamId, options);
+        return apiClient.drills.getByTeam(clubId!, ageGroupId, teamId, options);
       }
       if (ageGroupId) {
-        return apiClient.drills.getByAgeGroup(clubId, ageGroupId, options);
+        return apiClient.drills.getByAgeGroup(clubId!, ageGroupId, options);
       }
-      return apiClient.drills.getByClub(clubId, options);
+      return apiClient.drills.getByClub(clubId!, options);
     },
-    [clubId, ageGroupId, teamId, options?.category, options?.search]
+    [clubId, ageGroupId, teamId, options?.category, options?.search],
+    enabled
   );
 }
 
@@ -599,13 +616,9 @@ export function useDrillsByScope(
  */
 export function useDrill(drillId: string | undefined): UseApiState<DrillDetailDto> {
   return useApiCall<DrillDetailDto>(
-    () => {
-      if (!drillId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.drills.getById(drillId);
-    },
-    [drillId]
+    () => apiClient.drills.getById(drillId!),
+    [drillId],
+    isValidId(drillId)
   );
 }
 
@@ -701,20 +714,21 @@ export function useDrillTemplatesByScope(
   teamId?: string,
   options?: { category?: string; search?: string; attributes?: string[] }
 ): UseApiState<DrillTemplatesByScopeResponseDto> {
+  // Enabled when at least clubId is valid
+  const enabled = isValidId(clubId);
+  
   return useApiCall<DrillTemplatesByScopeResponseDto>(
     () => {
-      if (!clubId) {
-        return Promise.resolve({ success: false, error: { message: 'Club ID is required' } });
-      }
       if (teamId && ageGroupId) {
-        return apiClient.drillTemplates.getByTeam(clubId, ageGroupId, teamId, options);
+        return apiClient.drillTemplates.getByTeam(clubId!, ageGroupId, teamId, options);
       }
       if (ageGroupId) {
-        return apiClient.drillTemplates.getByAgeGroup(clubId, ageGroupId, options);
+        return apiClient.drillTemplates.getByAgeGroup(clubId!, ageGroupId, options);
       }
-      return apiClient.drillTemplates.getByClub(clubId, options);
+      return apiClient.drillTemplates.getByClub(clubId!, options);
     },
-    [clubId, ageGroupId, teamId, options?.category, options?.search, options?.attributes?.join(',')]
+    [clubId, ageGroupId, teamId, options?.category, options?.search, options?.attributes?.join(',')],
+    enabled
   );
 }
 
@@ -724,13 +738,9 @@ export function useDrillTemplatesByScope(
  */
 export function useDrillTemplateById(templateId: string | undefined): UseApiState<DrillTemplateDetailDto> {
   return useApiCall<DrillTemplateDetailDto>(
-    () => {
-      if (!templateId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.drillTemplates.getById(templateId);
-    },
-    [templateId]
+    () => apiClient.drillTemplates.getById(templateId!),
+    [templateId],
+    isValidId(templateId)
   );
 }
 
@@ -822,13 +832,9 @@ export function useUpdateDrillTemplate(templateId: string): UseMutationState<Dri
  */
 export function usePlayer(playerId: string | undefined): UseApiState<PlayerDto> {
   return useApiCall<PlayerDto>(
-    () => {
-      if (!playerId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.players.getById(playerId);
-    },
-    [playerId]
+    () => apiClient.players.getById(playerId!),
+    [playerId],
+    isValidId(playerId)
   );
 }
 
@@ -838,13 +844,9 @@ export function usePlayer(playerId: string | undefined): UseApiState<PlayerDto> 
  */
 export function usePlayerAbilities(playerId: string | undefined): UseApiState<PlayerAbilitiesDto> {
   return useApiCall<PlayerAbilitiesDto>(
-    () => {
-      if (!playerId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.players.getAbilities(playerId);
-    },
-    [playerId]
+    () => apiClient.players.getAbilities(playerId!),
+    [playerId],
+    isValidId(playerId)
   );
 }
 
@@ -975,13 +977,9 @@ export function usePlayerRecentPerformances(
   limit?: number
 ): UseApiState<PlayerRecentPerformanceDto[]> {
   return useApiCall<PlayerRecentPerformanceDto[]>(
-    () => {
-      if (!playerId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.players.getRecentPerformances(playerId, limit);
-    },
-    [playerId, limit]
+    () => apiClient.players.getRecentPerformances(playerId!, limit),
+    [playerId, limit],
+    isValidId(playerId)
   );
 }
 
@@ -994,13 +992,9 @@ export function usePlayerUpcomingMatches(
   limit?: number
 ): UseApiState<PlayerUpcomingMatchDto[]> {
   return useApiCall<PlayerUpcomingMatchDto[]>(
-    () => {
-      if (!playerId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.players.getUpcomingMatches(playerId, limit);
-    },
-    [playerId, limit]
+    () => apiClient.players.getUpcomingMatches(playerId!, limit),
+    [playerId, limit],
+    isValidId(playerId)
   );
 }
 
@@ -1010,13 +1004,9 @@ export function usePlayerUpcomingMatches(
  */
 export function usePlayerReports(playerId: string | undefined): UseApiState<PlayerReportSummaryDto[]> {
   return useApiCall<PlayerReportSummaryDto[]>(
-    () => {
-      if (!playerId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.players.getReports(playerId);
-    },
-    [playerId]
+    () => apiClient.players.getReports(playerId!),
+    [playerId],
+    isValidId(playerId)
   );
 }
 
@@ -1028,10 +1018,7 @@ export function usePlayerReports(playerId: string | undefined): UseApiState<Play
 export function usePlayerAlbum(playerId: string | undefined): UseApiState<PlayerAlbumData> {
   return useApiCall<PlayerAlbumData>(
     async () => {
-      if (!playerId) {
-        return Promise.resolve({ success: true });
-      }
-      const response = await apiClient.players.getAlbum(playerId);
+      const response = await apiClient.players.getAlbum(playerId!);
       if (response.success && response.data) {
         return {
           success: true,
@@ -1058,7 +1045,8 @@ export function usePlayerAlbum(playerId: string | undefined): UseApiState<Player
       }
       return { success: false, error: { message: response.error?.message } };
     },
-    [playerId]
+    [playerId],
+    isValidId(playerId)
   );
 }
 
@@ -1072,13 +1060,9 @@ export function usePlayerAlbum(playerId: string | undefined): UseApiState<Player
  */
 export function useCoach(coachId: string | undefined): UseApiState<CoachDetailDto> {
   return useApiCall<CoachDetailDto>(
-    () => {
-      if (!coachId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.coaches.getById(coachId);
-    },
-    [coachId]
+    () => apiClient.coaches.getById(coachId!),
+    [coachId],
+    isValidId(coachId)
   );
 }
 
@@ -1091,13 +1075,9 @@ export function useCoach(coachId: string | undefined): UseApiState<CoachDetailDt
  */
 export function useDevelopmentPlan(planId: string | undefined): UseApiState<DevelopmentPlanDetailDto> {
   return useApiCall<DevelopmentPlanDetailDto>(
-    () => {
-      if (!planId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.developmentPlans.getById(planId);
-    },
-    [planId]
+    () => apiClient.developmentPlans.getById(planId!),
+    [planId],
+    isValidId(planId)
   );
 }
 
@@ -1110,14 +1090,13 @@ export function useDevelopmentPlan(planId: string | undefined): UseApiState<Deve
  * Only fetches if matchId is defined and not "new".
  */
 export function useMatch(matchId: string | undefined): UseApiState<MatchDetailDto> {
+  // Don't fetch for "new" matches or invalid IDs
+  const enabled = isValidId(matchId) && matchId !== 'new';
+  
   return useApiCall<MatchDetailDto>(
-    () => {
-      if (!matchId || matchId === 'new') {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.matches.getById(matchId);
-    },
-    [matchId]
+    () => apiClient.matches.getById(matchId!),
+    [matchId],
+    enabled
   );
 }
 
@@ -1128,13 +1107,9 @@ export function useMatch(matchId: string | undefined): UseApiState<MatchDetailDt
  */
 export function useMatchReport(matchId: string | undefined): UseApiState<MatchDetailDto> {
   return useApiCall<MatchDetailDto>(
-    () => {
-      if (!matchId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.matches.getReport(matchId);
-    },
-    [matchId]
+    () => apiClient.matches.getReport(matchId!),
+    [matchId],
+    isValidId(matchId)
   );
 }
 
@@ -1148,13 +1123,9 @@ export function useMatchReport(matchId: string | undefined): UseApiState<MatchDe
  */
 export function useReportCard(reportId: string | undefined): UseApiState<ReportCardDto> {
   return useApiCall<ReportCardDto>(
-    () => {
-      if (!reportId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.reports.getById(reportId);
-    },
-    [reportId]
+    () => apiClient.reports.getById(reportId!),
+    [reportId],
+    isValidId(reportId)
   );
 }
 
@@ -1367,13 +1338,9 @@ export function useUpdateMatch(matchId: string): UseMutationState<MatchDetailDto
  */
 export function useTactic(tacticId: string | undefined): UseApiState<TacticDetailDto> {
   return useApiCall<TacticDetailDto>(
-    () => {
-      if (!tacticId) {
-        return Promise.resolve({ success: true });
-      }
-      return apiClient.tactics.getById(tacticId);
-    },
-    [tacticId]
+    () => apiClient.tactics.getById(tacticId!),
+    [tacticId],
+    isValidId(tacticId)
   );
 }
 
@@ -1508,12 +1475,12 @@ export function useUpdateTeam(teamId: string): UseMutationState<TeamOverviewTeam
  * Maps API TrainingSessionDetailDto to UI TrainingSession type.
  */
 export function useTrainingSession(sessionId: string | undefined): UseApiState<TrainingSession> {
+  // Don't fetch for "new" sessions or invalid IDs
+  const enabled = isValidId(sessionId) && sessionId !== 'new';
+  
   return useApiCall<TrainingSession>(
     async () => {
-      if (!sessionId || sessionId === 'new') {
-        return Promise.resolve({ success: true });
-      }
-      const response = await apiClient.trainingSessions.getById(sessionId);
+      const response = await apiClient.trainingSessions.getById(sessionId!);
       if (response.success && response.data) {
         return {
           success: true,
@@ -1522,7 +1489,8 @@ export function useTrainingSession(sessionId: string | undefined): UseApiState<T
       }
       return { success: false, error: { message: response.error?.message } };
     },
-    [sessionId]
+    [sessionId],
+    enabled
   );
 }
 

@@ -1,5 +1,5 @@
-import { useParams, Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Plus, AlertCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { 
   useTeamOverview, 
@@ -14,18 +14,30 @@ import PlayerCard from '@components/player/PlayerCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { Player, PlayerAttributes } from '@/types';
+import { useRequiredParams } from '@utils/routeParams';
 
 export default function TeamPlayersPage() {
-  const { clubId, ageGroupId, teamId } = useParams();
   const [showArchived, setShowArchived] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 
-  // Fetch data from API
+  // Extract and validate route parameters
+  let clubId: string | undefined = undefined;
+  let ageGroupId: string | undefined = undefined;
+  let teamId: string | undefined = undefined;
+  let paramError: Error | null = null;
+
+  try {
+    const params = useRequiredParams(['clubId', 'ageGroupId', 'teamId']);
+    clubId = params.clubId;
+    ageGroupId = params.ageGroupId;
+    teamId = params.teamId;
+  } catch (error) {
+    paramError = error as Error;
+  }
+
+  // Fetch data from API - only make calls if we have valid params
   const teamOverview = useTeamOverview(teamId);
-  const ageGroupPlayersData = useAgeGroupPlayers(
-    teamOverview.data?.team?.ageGroupId, 
-    showArchived
-  );
+  const ageGroupPlayersData = useAgeGroupPlayers(ageGroupId, showArchived);
   const teamPlayersData = useTeamPlayers(teamId, showArchived);
   
   // Mutations
@@ -147,6 +159,35 @@ export default function TeamPlayersPage() {
     const squadNumber = getNextSquadNumber();
     await addPlayerMutation.addPlayer({ playerId, squadNumber });
   };
+
+  // Parameter validation error
+  if (paramError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">
+                  Invalid Route Parameters
+                </h2>
+                <p className="text-red-700 dark:text-red-400 mb-4">
+                  {paramError.message}
+                </p>
+                <Link 
+                  to={Routes.dashboard()}
+                  className="inline-block bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  Return to Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // Loading state
   if (teamOverview.isLoading || ageGroupPlayersData.isLoading || teamPlayersData.isLoading) {

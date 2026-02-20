@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useState, useMemo, useEffect } from 'react';
 import { useAgeGroupPlayers } from '@/api/hooks';
 import { 
@@ -12,26 +12,48 @@ import {
 import PlayerCard from '@components/player/PlayerCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
+import { useRequiredParams } from '@utils/routeParams';
 import { Player, PlayerAttributes } from '@/types';
 
 export default function AgeGroupPlayersPage() {
-  const { clubId, ageGroupId } = useParams();
+  // Validate route parameters
+  const params = useRequiredParams(['clubId', 'ageGroupId'], { returnNullOnError: true });
+  const clubId = params.clubId;
+  const ageGroupId = params.ageGroupId;
+  
   const [showArchived, setShowArchived] = useState(false);
   
   // Fetch age group details
   const [ageGroup, setAgeGroup] = useState<{ name: string } | null>(null);
+  const [ageGroupLoading, setAgeGroupLoading] = useState(true);
+  const [ageGroupError, setAgeGroupError] = useState<string | null>(null);
+  
   useEffect(() => {
-    if (ageGroupId) {
-      apiClient.ageGroups.getById(ageGroupId).then((response: ApiResponse<AgeGroupDetailDto>) => {
+    if (!ageGroupId) {
+      setAgeGroupLoading(false);
+      setAgeGroupError('Invalid age group ID');
+      return;
+    }
+    
+    setAgeGroupLoading(true);
+    apiClient.ageGroups.getById(ageGroupId)
+      .then((response: ApiResponse<AgeGroupDetailDto>) => {
         if (response.success && response.data) {
           setAgeGroup({ name: response.data.name });
+          setAgeGroupError(null);
+        } else {
+          setAgeGroupError(response.error?.message || 'Failed to load age group');
         }
-      });
-    }
+      })
+      .catch((err) => {
+        console.error('Failed to fetch age group:', err);
+        setAgeGroupError('Failed to load age group');
+      })
+      .finally(() => setAgeGroupLoading(false));
   }, [ageGroupId]);
   
   // Fetch players from API
-  const { data: playersData, isLoading, error } = useAgeGroupPlayers(ageGroupId, showArchived);
+  const { data: playersData, isLoading, error } = useAgeGroupPlayers(ageGroupId || '', showArchived);
   
   // Map API data to Player type
   const ageGroupPlayers = useMemo<Player[]>(() => {
@@ -109,8 +131,30 @@ export default function AgeGroupPlayersPage() {
     }));
   }, [playersData]);
 
+  // Invalid parameters state
+  if (!clubId || !ageGroupId) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Invalid Page Parameters</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              {!clubId && !ageGroupId && 'Club ID and Age Group ID are required to view this page.'}
+              {!clubId && ageGroupId && 'Club ID is required to view this page.'}
+              {clubId && !ageGroupId && 'Age Group ID is required to view this page.'}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              The URL may be malformed or contain invalid values.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   // Loading skeleton
-  if (isLoading) {
+  if (isLoading || ageGroupLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -145,14 +189,18 @@ export default function AgeGroupPlayersPage() {
   }
 
   // Error state
-  if (error) {
+  if (error || ageGroupError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
             <div className="text-red-500 text-5xl mb-4">⚠️</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Error loading players</h3>
-            <p className="text-gray-600 dark:text-gray-400">{error.message}</p>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              {ageGroupError ? 'Error loading age group' : 'Error loading players'}
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              {ageGroupError || error?.message}
+            </p>
           </div>
         </main>
       </div>
@@ -160,7 +208,17 @@ export default function AgeGroupPlayersPage() {
   }
 
   if (!ageGroup) {
-    return <div>Age Group not found</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-gray-400 text-5xl mb-4">🔍</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Age Group not found</h3>
+            <p className="text-gray-600 dark:text-gray-400">The requested age group could not be found.</p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -188,12 +246,12 @@ export default function AgeGroupPlayersPage() {
         </div>
 
         {/* Players List */}
-        {ageGroupPlayers.length > 0 && (
+        {ageGroupPlayers.length > 0 && clubId && ageGroupId && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {ageGroupPlayers.map((player) => (
               <Link
                 key={player.id}
-                to={Routes.player(clubId!, ageGroupId!, player.id)}
+                to={Routes.player(clubId, ageGroupId, player.id)}
               >
                 <PlayerCard 
                   player={player}
@@ -214,12 +272,14 @@ export default function AgeGroupPlayersPage() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Players will appear here once they are assigned to teams in this age group
             </p>
-            <Link
-              to={Routes.teams(clubId!, ageGroupId!)}
-              className="btn-primary btn-md inline-block"
-            >
-              View Teams
-            </Link>
+            {clubId && ageGroupId && (
+              <Link
+                to={Routes.teams(clubId, ageGroupId)}
+                className="btn-primary btn-md inline-block"
+              >
+                View Teams
+              </Link>
+            )}
           </div>
         )}
       </main>

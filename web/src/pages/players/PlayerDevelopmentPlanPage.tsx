@@ -25,7 +25,7 @@ export default function PlayerDevelopmentPlanPage() {
         setEntityName('club', plan.clubId, plan.clubName);
       }
     }
-  }, [plan, setEntityName]);
+  }, [plan?.id, plan?.title, plan?.playerId, plan?.playerName, plan?.teamId, plan?.teamName, plan?.ageGroupId, plan?.ageGroupName, plan?.clubId, plan?.clubName, setEntityName]);
 
   // Error state
   if (error) {

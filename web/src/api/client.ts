@@ -2164,6 +2164,83 @@ const axiosInstance: AxiosInstance = axios.create({
   },
 });
 
+// Safety net: Track warnings to avoid console spam in production
+const invalidUrlWarnings = new Set<string>();
+const MAX_WARNINGS_PER_URL = 3;
+
+/**
+ * Captures the current stack trace, excluding the capture function itself
+ */
+function captureStackTrace(): string {
+  const stack = new Error().stack || '';
+  // Remove the first 3 lines (Error, captureStackTrace, and the interceptor)
+  const lines = stack.split('\n').slice(3);
+  return lines.join('\n');
+}
+
+// Add request interceptor to detect invalid URL patterns
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const url = config.url || '';
+    const fullUrl = config.baseURL ? `${config.baseURL}${url}` : url;
+    
+    // Check for invalid patterns in the URL
+    const invalidPatterns = [
+      { pattern: '/undefined/', description: 'undefined parameter' },
+      { pattern: '/null/', description: 'null parameter' },
+      { pattern: '//', description: 'empty/missing segment (double slash)' },
+    ];
+    
+    const foundInvalid = invalidPatterns.find(({ pattern }) => fullUrl.includes(pattern));
+    
+    if (foundInvalid) {
+      const errorDetails = {
+        method: config.method?.toUpperCase(),
+        url: fullUrl,
+        invalidPattern: foundInvalid.pattern,
+        description: foundInvalid.description,
+        hint: 'Check that all route parameters are defined before making the API call.',
+      };
+
+      // Development mode: REJECT the request immediately with a descriptive error
+      if (import.meta.env.DEV) {
+        const stackTrace = captureStackTrace();
+        const error = new Error(
+          `[API Safety Net] Invalid URL detected: "${foundInvalid.pattern}" (${foundInvalid.description})\n` +
+          `URL: ${fullUrl}\n` +
+          `Method: ${errorDetails.method}\n\n` +
+          `Stack trace:\n${stackTrace}`
+        );
+        error.name = 'InvalidUrlError';
+        console.error('[API Safety Net] Request blocked:', errorDetails, '\n\nStack trace:', stackTrace);
+        return Promise.reject(error);
+      }
+      
+      // Production mode: Log warning but allow request (safety fallback)
+      const warningKey = `${config.method?.toUpperCase()}: ${fullUrl}`;
+      const warningCount = invalidUrlWarnings.has(warningKey) 
+        ? parseInt(warningKey.split(':')[0]) || 0 
+        : 0;
+      
+      if (warningCount < MAX_WARNINGS_PER_URL) {
+        const stackTrace = captureStackTrace();
+        console.warn(
+          `[API Safety Net] Detected invalid URL pattern "${foundInvalid.pattern}" in request:`,
+          errorDetails,
+          '\n\nStack trace:',
+          stackTrace
+        );
+        invalidUrlWarnings.add(warningKey);
+      }
+    }
+    
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
 /**
  * Handle API errors and return a typed ApiResponse with error details
  */

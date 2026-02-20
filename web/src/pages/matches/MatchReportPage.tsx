@@ -21,7 +21,7 @@ export default function MatchReportPage() {
         setEntityName('ageGroup', match.ageGroupId, match.ageGroupName);
       }
     }
-  }, [match, setEntityName]);
+  }, [match?.teamId, match?.teamName, match?.clubId, match?.clubName, match?.ageGroupId, match?.ageGroupName, setEntityName]);
 
   // Error state
   if (error) {

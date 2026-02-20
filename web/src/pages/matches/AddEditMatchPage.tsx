@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
 import { getResolvedPositions } from '@/data/tactics';
@@ -39,6 +39,207 @@ export default function AddEditMatchPage() {
   const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || tacticsLoading;
   const hasError = teamError;
 
+  // Form initialization state - CRITICAL: Must be called before any conditional returns
+  const [isFormInitialized, setIsFormInitialized] = useState(false);
+  const currentMatchIdRef = useRef<string | undefined>(matchId);
+  const currentTeamIdRef = useRef<string | undefined>(teamId);
+
+  // Form state - CRITICAL: All useState must be called before any conditional returns
+  const [seasonId, setSeasonId] = useState('');
+  const [squadSize, setSquadSize] = useState<SquadSize>(11);
+  const [opposition, setOpposition] = useState('');
+  const [kickOffTime, setKickOffTime] = useState('');
+  const [meetTime, setMeetTime] = useState('');
+  const [location, setLocation] = useState('');
+  const [isHome, setIsHome] = useState(true);
+  const [competition, setCompetition] = useState('');
+  const [kit, setKit] = useState('');
+  const [goalkeeperKit, setGoalkeeperKit] = useState('');
+  const [formationId, setFormationId] = useState('');
+  const [tacticId, setTacticId] = useState('');
+  const [weather, setWeather] = useState('');
+  const [temperature, setTemperature] = useState('');
+  
+  // Match result state
+  const [homeScore, setHomeScore] = useState('');
+  const [awayScore, setAwayScore] = useState('');
+  const [summary, setSummary] = useState('');
+  
+  // Lineup state - derive from MatchDetailDto.lineup.players (LineupPlayerDto[])
+  const [startingPlayers, setStartingPlayers] = useState<{ playerId: string; position: PlayerPosition; squadNumber?: number }[]>([]);
+  const [substitutes, setSubstitutes] = useState<{ playerId: string; squadNumber?: number }[]>([]);
+  const [substitutions, setSubstitutions] = useState<{ minute: number; playerOut: string; playerIn: string }[]>([]);
+  
+  // Match events state
+  const [goals, setGoals] = useState<{ playerId: string; minute: number; assist?: string }[]>([]);
+  const [cards, setCards] = useState<{ playerId: string; type: 'yellow' | 'red'; minute: number; reason?: string }[]>([]);
+  const [injuries, setInjuries] = useState<{ playerId: string; minute: number; description: string; severity: 'minor' | 'moderate' | 'serious' }[]>([]);
+  const [ratings, setRatings] = useState<{ playerId: string; rating: number }[]>([]);
+  const [playerOfTheMatch, setPlayerOfTheMatch] = useState('');
+  const [captainId, setCaptainId] = useState('');
+  const [isLocked, setIsLocked] = useState(false);
+  const [notes, setNotes] = useState('');
+  
+  // Coach assignment state - filter out undefined IDs from TeamCoachDto
+  const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>([]);
+  const [showCoachModal, setShowCoachModal] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  
+  // Attendance state - derive from team players, not from DTO (attendance not in MatchDetailDto)
+  const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>([]);
+
+  const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report' | 'attendance'>('details');
+  
+  // Position swap state - tracks the array index in startingPlayers for precise swapping
+  const [selectedPlayerIndexForSwap, setSelectedPlayerIndexForSwap] = useState<number | null>(null);
+  
+  // Cross-team player selection modal
+  const [showCrossTeamModal, setShowCrossTeamModal] = useState(false);
+  const [crossTeamModalType, setCrossTeamModalType] = useState<'starting' | 'substitute'>('starting');
+  
+  // Modal filters
+  const [modalSearchTerm, setModalSearchTerm] = useState('');
+  const [modalAgeGroupFilter, setModalAgeGroupFilter] = useState<string>('all');
+  const [modalTeamFilter, setModalTeamFilter] = useState<string>('all');
+
+  // Initialize form when data loads or when navigating to a different match
+  useEffect(() => {
+    // Check if route parameters changed
+    const routeChanged = currentMatchIdRef.current !== matchId || currentTeamIdRef.current !== teamId;
+    if (routeChanged) {
+      // Reset initialization flag when route changes
+      setIsFormInitialized(false);
+      currentMatchIdRef.current = matchId;
+      currentTeamIdRef.current = teamId;
+    }
+
+    // Only initialize if not loading, not already initialized, and we have the necessary data
+    if (isLoading || isFormInitialized) return;
+    
+    // For editing: wait for existingMatch data
+    if (isEditing && !existingMatch) return;
+    
+    // For new match: wait for ageGroup data
+    if (!isEditing && !ageGroup) return;
+
+    // Initialize form fields from existingMatch (when editing) or defaults (when adding)
+    if (isEditing && existingMatch) {
+      setSeasonId(existingMatch.seasonId || defaultSeason);
+      setSquadSize((existingMatch.squadSize || ageGroup?.defaultSquadSize || 11) as SquadSize);
+      setOpposition(existingMatch.opposition || '');
+      setKickOffTime(
+        existingMatch.kickOffTime ? existingMatch.kickOffTime.slice(0, 16) : 
+        existingMatch.matchDate ? existingMatch.matchDate.slice(0, 16) : ''
+      );
+      setMeetTime(existingMatch.meetTime ? existingMatch.meetTime.slice(0, 16) : '');
+      setLocation(existingMatch.location || '');
+      setIsHome(existingMatch.isHome ?? true);
+      setCompetition(existingMatch.competition || '');
+      setKit(existingMatch.primaryKitId?.toString() || '');
+      setGoalkeeperKit(existingMatch.secondaryKitId?.toString() || '');
+      setFormationId(existingMatch.lineup?.formationId || '');
+      setTacticId(existingMatch.lineup?.tacticId || '');
+      setWeather(existingMatch.weatherCondition || '');
+      setTemperature(existingMatch.weatherTemperature?.toString() || '');
+      setHomeScore(existingMatch.homeScore?.toString() || '');
+      setAwayScore(existingMatch.awayScore?.toString() || '');
+      setSummary(existingMatch.report?.summary || '');
+      setStartingPlayers(
+        existingMatch.lineup?.players?.filter(p => p.isStarting).map(p => ({
+          playerId: p.playerId,
+          position: p.position as PlayerPosition,
+          squadNumber: p.squadNumber
+        })) || []
+      );
+      setSubstitutes(
+        existingMatch.lineup?.players?.filter(p => !p.isStarting).map(p => ({
+          playerId: p.playerId,
+          squadNumber: p.squadNumber
+        })) || []
+      );
+      setSubstitutions(
+        (existingMatch.substitutions || []).map(s => ({
+          minute: s.minute,
+          playerOut: s.playerOutId,
+          playerIn: s.playerInId
+        }))
+      );
+      setGoals(existingMatch.report?.goals || []);
+      setCards(
+        (existingMatch.report?.cards || []).map(c => ({ 
+          ...c, 
+          type: (c.type === 'yellow' || c.type === 'red' ? c.type : 'yellow') as 'yellow' | 'red' 
+        }))
+      );
+      setInjuries(
+        (existingMatch.report?.injuries || []).map(i => ({
+          playerId: i.playerId,
+          minute: i.minute,
+          description: i.description || '',
+          severity: (['minor', 'moderate', 'serious'].includes(i.severity) ? i.severity : 'minor') as 'minor' | 'moderate' | 'serious'
+        }))
+      );
+      setRatings(
+        (existingMatch.report?.performanceRatings || []).map(r => ({ ...r, rating: r.rating || 0 }))
+      );
+      setPlayerOfTheMatch(existingMatch.report?.playerOfMatchId || '');
+      setCaptainId(existingMatch.report?.captainId || '');
+      setIsLocked(existingMatch.isLocked || false);
+      setNotes(existingMatch.notes || '');
+      setAssignedCoachIds(
+        (existingMatch.coaches || []).map(c => c.id).filter((id): id is string => id !== undefined)
+      );
+    } else {
+      // New match - set defaults
+      setSeasonId(defaultSeason);
+      setSquadSize((ageGroup?.defaultSquadSize || 11) as SquadSize);
+      setOpposition('');
+      setKickOffTime('');
+      setMeetTime('');
+      setLocation('');
+      setIsHome(true);
+      setCompetition('');
+      setKit('');
+      setGoalkeeperKit('');
+      setFormationId('');
+      setTacticId('');
+      setWeather('');
+      setTemperature('');
+      setHomeScore('');
+      setAwayScore('');
+      setSummary('');
+      setStartingPlayers([]);
+      setSubstitutes([]);
+      setSubstitutions([]);
+      setGoals([]);
+      setCards([]);
+      setInjuries([]);
+      setRatings([]);
+      setPlayerOfTheMatch('');
+      setCaptainId('');
+      setIsLocked(false);
+      setNotes('');
+      setAssignedCoachIds([]);
+    }
+
+    // Initialize attendance from team players
+    if (teamPlayers && teamPlayers.length > 0) {
+      setAttendance(teamPlayers.map(p => ({ playerId: p.id, status: 'pending' as const })));
+    }
+
+    setIsFormInitialized(true);
+  }, [isLoading, isFormInitialized, isEditing, existingMatch, ageGroup, defaultSeason, teamPlayers, matchId, teamId]);
+
+  // Auto-assign team coaches for new matches
+  useEffect(() => {
+    // Only run if form is initialized to avoid running during initial loading
+    if (!isFormInitialized) return;
+    if (!isEditing && teamCoaches && teamCoaches.length > 0 && assignedCoachIds.length === 0) {
+      setAssignedCoachIds(teamCoaches.map(c => c.id).filter((id): id is string => id !== undefined));
+    }
+  }, [isFormInitialized, isEditing, teamCoaches, assignedCoachIds.length]);
+
+  // NOW we can safely do conditional returns - all hooks have been called
   if (hasError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -62,7 +263,7 @@ export default function AddEditMatchPage() {
     );
   }
 
-  if (isLoading) {
+  if (isLoading || !isFormInitialized) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -75,26 +276,17 @@ export default function AddEditMatchPage() {
     );
   }
 
-  // Form state
-  const [seasonId, setSeasonId] = useState(existingMatch?.seasonId || defaultSeason);
-  const [squadSize, setSquadSize] = useState<SquadSize>((existingMatch?.squadSize || ageGroup?.defaultSquadSize || 11) as SquadSize);
-  const [opposition, setOpposition] = useState(existingMatch?.opposition || '');
-  const [kickOffTime, setKickOffTime] = useState(
-    existingMatch?.kickOffTime ? existingMatch.kickOffTime.slice(0, 16) : 
-    existingMatch?.matchDate ? existingMatch.matchDate.slice(0, 16) : ''
-  );
-  const [meetTime, setMeetTime] = useState(
-    existingMatch?.meetTime ? existingMatch.meetTime.slice(0, 16) : ''
-  );
-  const [location, setLocation] = useState(existingMatch?.location || '');
-  const [isHome, setIsHome] = useState(existingMatch?.isHome ?? true);
-  const [competition, setCompetition] = useState(existingMatch?.competition || '');
-  const [kit, setKit] = useState(existingMatch?.primaryKitId?.toString() || '');
-  const [goalkeeperKit, setGoalkeeperKit] = useState(existingMatch?.secondaryKitId?.toString() || '');
-  const [formationId, setFormationId] = useState(existingMatch?.lineup?.formationId || '');
-  const [tacticId, setTacticId] = useState(existingMatch?.lineup?.tacticId || '');
-  const [weather, setWeather] = useState(existingMatch?.weatherCondition || '');
-  const [temperature, setTemperature] = useState(existingMatch?.weatherTemperature?.toString() || '');
+  if (!team) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="card">
+            <h2 className="text-xl font-semibold mb-4">Team not found</h2>
+          </div>
+        </main>
+      </div>
+    );
+  }
   
   // Get formations filtered by squad size
   const availableFormations = getFormationsBySquadSize(squadSize);
@@ -161,79 +353,6 @@ export default function AddEditMatchPage() {
     }
   };
   
-  // Match result state
-  const [homeScore, setHomeScore] = useState(existingMatch?.homeScore?.toString() || '');
-  const [awayScore, setAwayScore] = useState(existingMatch?.awayScore?.toString() || '');
-  const [summary, setSummary] = useState(existingMatch?.report?.summary || '');
-  
-  // Lineup state - derive from MatchDetailDto.lineup.players (LineupPlayerDto[])
-  const [startingPlayers, setStartingPlayers] = useState<{ playerId: string; position: PlayerPosition; squadNumber?: number }[]>(
-    existingMatch?.lineup?.players?.filter(p => p.isStarting).map(p => ({
-      playerId: p.playerId,
-      position: p.position as PlayerPosition,
-      squadNumber: p.squadNumber
-    })) || []
-  );
-  const [substitutes, setSubstitutes] = useState<{ playerId: string; squadNumber?: number }[]>(
-    existingMatch?.lineup?.players?.filter(p => !p.isStarting).map(p => ({
-      playerId: p.playerId,
-      squadNumber: p.squadNumber
-    })) || []
-  );
-  const [substitutions, setSubstitutions] = useState<{ minute: number; playerOut: string; playerIn: string }[]>(
-    (existingMatch?.substitutions || []).map(s => ({
-      minute: s.minute,
-      playerOut: s.playerOutId,
-      playerIn: s.playerInId
-    }))
-  );
-  
-  // Match events state
-  const [goals, setGoals] = useState<{ playerId: string; minute: number; assist?: string }[]>(
-    existingMatch?.report?.goals || []
-  );
-  const [cards, setCards] = useState<{ playerId: string; type: 'yellow' | 'red'; minute: number; reason?: string }[]>(
-    (existingMatch?.report?.cards || []).map(c => ({ ...c, type: (c.type === 'yellow' || c.type === 'red' ? c.type : 'yellow') as 'yellow' | 'red' }))
-  );
-  const [injuries, setInjuries] = useState<{ playerId: string; minute: number; description: string; severity: 'minor' | 'moderate' | 'serious' }[]>(
-    (existingMatch?.report?.injuries || []).map(i => ({
-      playerId: i.playerId,
-      minute: i.minute,
-      description: i.description || '',
-      severity: (['minor', 'moderate', 'serious'].includes(i.severity) ? i.severity : 'minor') as 'minor' | 'moderate' | 'serious'
-    }))
-  );
-  const [ratings, setRatings] = useState<{ playerId: string; rating: number }[]>(
-    (existingMatch?.report?.performanceRatings || []).map(r => ({ ...r, rating: r.rating || 0 }))
-  );
-  const [playerOfTheMatch, setPlayerOfTheMatch] = useState(existingMatch?.report?.playerOfMatchId || '');
-  const [captainId, setCaptainId] = useState(existingMatch?.report?.captainId || '');
-  const [isLocked, setIsLocked] = useState(existingMatch?.isLocked || false);
-  const [notes, setNotes] = useState(existingMatch?.notes || '');
-  
-  // Coach assignment state - filter out undefined IDs from TeamCoachDto
-  const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>(
-    (existingMatch?.coaches || []).map(c => c.id).filter((id): id is string => id !== undefined)
-  );
-  const [showCoachModal, setShowCoachModal] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  
-  // Attendance state - derive from team players, not from DTO (attendance not in MatchDetailDto)
-  const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>(
-    (teamPlayers || []).map(p => ({ playerId: p.id, status: 'pending' as const }))
-  );
-
-  const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report' | 'attendance'>('details');
-  
-  // Position swap state - tracks the array index in startingPlayers for precise swapping
-  const [selectedPlayerIndexForSwap, setSelectedPlayerIndexForSwap] = useState<number | null>(null);
-  
-  // Cross-team player selection modal
-  const [showCrossTeamModal, setShowCrossTeamModal] = useState(false);
-  const [crossTeamModalType, setCrossTeamModalType] = useState<'starting' | 'substitute'>('starting');
-  
-  // Get coaches for this team and age group
-  
   // Get coaches that can be added (assigned coaches from API) - filter out undefined IDs
   const availableCoachesForMatch = (teamCoaches || []).filter(
     coach => coach.id !== undefined && !assignedCoachIds.includes(coach.id)
@@ -241,30 +360,7 @@ export default function AddEditMatchPage() {
   
   // Get assigned coach details - filter out coaches with undefined IDs
   const assignedCoaches = (teamCoaches || []).filter(coach => coach.id !== undefined && assignedCoachIds.includes(coach.id));
-  
-  // Auto-assign team coaches for new matches
-  useEffect(() => {
-    if (!isEditing && teamCoaches && teamCoaches.length > 0 && assignedCoachIds.length === 0) {
-      setAssignedCoachIds(teamCoaches.map(c => c.id).filter((id): id is string => id !== undefined));
-    }
-  }, [isEditing, teamCoaches?.length]);
-  
-  // Modal filters
-  const [modalSearchTerm, setModalSearchTerm] = useState('');
-  const [modalAgeGroupFilter, setModalAgeGroupFilter] = useState<string>('all');
-  const [modalTeamFilter, setModalTeamFilter] = useState<string>('all');
 
-  if (!team) {
-    return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <main className="mx-auto px-4 py-4">
-          <div className="card">
-            <h2 className="text-xl font-semibold mb-4">Team not found</h2>
-          </div>
-        </main>
-      </div>
-    );
-  }
 
   const getPlayerName = (playerId: string) => {
     const player = (teamPlayers || []).find(p => p.id === playerId);

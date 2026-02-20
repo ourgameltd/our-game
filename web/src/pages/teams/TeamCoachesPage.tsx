@@ -1,4 +1,4 @@
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Plus, Loader2, AlertCircle } from 'lucide-react';
 import { useTeamOverview, useTeamCoaches, useClubCoaches, useAssignTeamCoach, useRemoveTeamCoach } from '@/api/hooks';
@@ -6,17 +6,34 @@ import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { mapUiRoleToApi } from '@/api/mappers';
+import { useRequiredParams } from '@utils/routeParams';
 
 export default function TeamCoachesPage() {
-  const { clubId, ageGroupId, teamId } = useParams();
+  // Extract and validate route parameters
+  let clubId: string | undefined = undefined;
+  let ageGroupId: string | undefined = undefined;
+  let teamId: string | undefined = undefined;
+  let paramError: Error | null = null;
+
+  try {
+    const params = useRequiredParams(['clubId', 'ageGroupId', 'teamId']);
+    clubId = params.clubId;
+    ageGroupId = params.ageGroupId;
+    teamId = params.teamId;
+  } catch (error) {
+    paramError = error as Error;
+    clubId = undefined;
+    ageGroupId = undefined;
+    teamId = undefined;
+  }
   
-  // Fetch team data
+  // Fetch team data - only make calls if we have valid params
   const { data: teamOverview, isLoading: teamLoading, error: teamError } = useTeamOverview(teamId);
   const team = teamOverview?.team;
   
-  // Fetch coaches data
+  // Fetch coaches data - use clubId from route params, not from team data
   const { data: teamCoaches = [], isLoading: coachesLoading, error: coachesError } = useTeamCoaches(teamId);
-  const { data: clubCoaches = [], isLoading: clubCoachesLoading, error: clubCoachesError } = useClubCoaches(team?.clubId);
+  const { data: clubCoaches = [], isLoading: clubCoachesLoading, error: clubCoachesError } = useClubCoaches(clubId);
   
   // Mutation hooks
   const { assignCoach, isSubmitting: isAssigning, error: assignError } = useAssignTeamCoach(teamId);
@@ -28,6 +45,35 @@ export default function TeamCoachesPage() {
 
   // Loading state
   const isLoading = teamLoading || coachesLoading;
+
+  // Parameter validation error
+  if (paramError) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">
+                  Invalid Route Parameters
+                </h2>
+                <p className="text-red-700 dark:text-red-400 mb-4">
+                  {paramError.message}
+                </p>
+                <Link 
+                  to={Routes.dashboard()}
+                  className="inline-block bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors"
+                >
+                  Return to Dashboard
+                </Link>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   // Error handling
   if (teamError || coachesError) {

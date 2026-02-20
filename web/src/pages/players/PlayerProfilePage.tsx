@@ -30,7 +30,7 @@ export default function PlayerProfilePage() {
         setEntityName('ageGroup', player.ageGroupId, player.ageGroupName);
       }
     }
-  }, [player, setEntityName]);
+  }, [player?.id, player?.firstName, player?.lastName, player?.clubId, player?.clubName, player?.teamId, player?.teamName, player?.ageGroupId, player?.ageGroupName, setEntityName]);
 
   // Error handling - 404 or player not found
   if (playerError || (!playerLoading && !player)) {

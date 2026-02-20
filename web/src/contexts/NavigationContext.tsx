@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useMemo, ReactNode } from 'react';
 
 interface NavigationContextType {
   isDesktopOpen: boolean;
@@ -14,28 +14,36 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
   const [isDesktopOpen, setIsDesktopOpen] = useState(true);
   const [entityNames, setEntityNames] = useState<Record<string, string>>({});
 
-  const toggleDesktopNav = () => {
-    setIsDesktopOpen(!isDesktopOpen);
-  };
+  const toggleDesktopNav = useCallback(() => {
+    setIsDesktopOpen(prev => !prev);
+  }, []);
 
-  const setEntityName = (type: string, id: string, name: string) => {
+  const setEntityName = useCallback((type: string, id: string, name: string) => {
     const key = `${type}:${id}`;
-    setEntityNames(prev => ({ ...prev, [key]: name }));
-  };
+    setEntityNames(prev => {
+      // Idempotent: only update if the value is different
+      if (prev[key] === name) {
+        return prev;
+      }
+      return { ...prev, [key]: name };
+    });
+  }, []);
 
-  const getEntityName = (type: string, id: string): string | undefined => {
+  const getEntityName = useCallback((type: string, id: string): string | undefined => {
     const key = `${type}:${id}`;
     return entityNames[key];
-  };
+  }, [entityNames]);
+
+  const value = useMemo(() => ({
+    isDesktopOpen, 
+    setIsDesktopOpen, 
+    toggleDesktopNav,
+    setEntityName,
+    getEntityName
+  }), [isDesktopOpen, toggleDesktopNav, setEntityName, getEntityName]);
 
   return (
-    <NavigationContext.Provider value={{ 
-      isDesktopOpen, 
-      setIsDesktopOpen, 
-      toggleDesktopNav,
-      setEntityName,
-      getEntityName
-    }}>
+    <NavigationContext.Provider value={value}>
       {children}
     </NavigationContext.Provider>
   );

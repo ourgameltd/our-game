@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
 using OurGame.Application.UseCases.Teams.Queries.GetTrainingSessionsByTeamId.DTOs;
@@ -45,7 +46,7 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
             WHERE t.Id = @teamId";
 
         var teamInfo = await _db.Database
-            .SqlQueryRaw<TeamInfoRaw>(teamInfoSql, query.TeamId)
+            .SqlQueryRaw<TeamInfoRaw>(teamInfoSql, new SqlParameter("@teamId", query.TeamId))
             .FirstOrDefaultAsync(cancellationToken);
 
         if (teamInfo == null)
@@ -83,7 +84,7 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
             FROM TrainingSessions ts
             WHERE ts.TeamId = @teamId";
 
-        var parameters = new List<object> { query.TeamId };
+        var parameters = new List<SqlParameter> { new SqlParameter("@teamId", query.TeamId) };
         var paramIndex = 0;
 
         // Apply status filter
@@ -112,7 +113,7 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
                 if (statusValue >= 0)
                 {
                     sessionSql += $" AND ts.Status = @status{paramIndex}";
-                    parameters.Add(statusValue);
+                    parameters.Add(new SqlParameter($"@status{paramIndex}", statusValue));
                     paramIndex++;
                 }
             }
@@ -122,14 +123,14 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
         if (query.DateFrom.HasValue)
         {
             sessionSql += $" AND ts.SessionDate >= @dateFrom{paramIndex}";
-            parameters.Add(query.DateFrom.Value);
+            parameters.Add(new SqlParameter($"@dateFrom{paramIndex}", query.DateFrom.Value));
             paramIndex++;
         }
 
         if (query.DateTo.HasValue)
         {
             sessionSql += $" AND ts.SessionDate <= @dateTo{paramIndex}";
-            parameters.Add(query.DateTo.Value);
+            parameters.Add(new SqlParameter($"@dateTo{paramIndex}", query.DateTo.Value));
             paramIndex++;
         }
 

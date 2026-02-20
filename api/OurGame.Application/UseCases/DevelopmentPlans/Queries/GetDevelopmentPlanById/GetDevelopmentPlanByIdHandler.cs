@@ -59,7 +59,7 @@ public class GetDevelopmentPlanByIdHandler : IRequestHandler<GetDevelopmentPlanB
             ) pt_ranked ON pt_ranked.PlayerId = p.Id AND pt_ranked.RowNum = 1
             LEFT JOIN Teams t ON t.Id = pt_ranked.TeamId
             LEFT JOIN AgeGroups ag ON ag.Id = t.AgeGroupId
-            WHERE dp.Id = @p0";
+            WHERE dp.Id = {0}";
 
         var plan = await _db.Database
             .SqlQueryRaw<PlanDetailRaw>(planSql, query.PlanId)
@@ -81,7 +81,7 @@ public class GetDevelopmentPlanByIdHandler : IRequestHandler<GetDevelopmentPlanB
                 dg.Completed,
                 dg.Progress
             FROM DevelopmentGoals dg
-            WHERE dg.PlanId = @p0
+            WHERE dg.PlanId = {0}
             ORDER BY dg.TargetDate";
 
         var goals = await _db.Database

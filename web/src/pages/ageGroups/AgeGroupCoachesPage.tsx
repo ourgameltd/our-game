@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { apiClient } from '@/api';
 import type { AgeGroupCoachDto, AgeGroupDetailDto } from '@/api';
 import type { Coach } from '@/types';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
+import { useRequiredParams } from '@utils/routeParams';
 
 export default function AgeGroupCoachesPage() {
-  const { clubId, ageGroupId } = useParams();
+  const params = useRequiredParams(['clubId', 'ageGroupId'], { returnNullOnError: true });
+  const clubId = params.clubId;
+  const ageGroupId = params.ageGroupId;
   
   const [ageGroup, setAgeGroup] = useState<AgeGroupDetailDto | null>(null);
   const [ageGroupLoading, setAgeGroupLoading] = useState(true);
@@ -90,6 +93,28 @@ export default function AgeGroupCoachesPage() {
     };
   };
 
+  // Invalid parameters state
+  if (!clubId || !ageGroupId) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Invalid Page Parameters</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              {!clubId && !ageGroupId && 'Club ID and Age Group ID are required to view this page.'}
+              {!clubId && ageGroupId && 'Club ID is required to view this page.'}
+              {clubId && !ageGroupId && 'Age Group ID is required to view this page.'}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              The URL may be malformed or contain invalid values.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -123,10 +148,10 @@ export default function AgeGroupCoachesPage() {
               <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
             ))}
           </div>
-        ) : coaches.length > 0 ? (
+        ) : coaches.length > 0 && clubId && ageGroupId ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {coaches.map((coach) => (
-              <Link key={coach.id} to={Routes.ageGroupCoach(clubId!, ageGroupId!, coach.id)}>
+              <Link key={coach.id} to={Routes.ageGroupCoach(clubId, ageGroupId, coach.id)}>
                 <CoachCard coach={coach} />
               </Link>
             ))}

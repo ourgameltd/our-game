@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { apiClient } from '@/api';
 import type {
@@ -16,9 +16,12 @@ import NeedsSupportCard from '../../components/players/NeedsSupportCard';
 import TeamListCard from '../../components/team/TeamListCard';
 import PageTitle from '../../components/common/PageTitle';
 import { Routes } from '@utils/routes';
+import { useRequiredParams } from '@utils/routeParams';
 
 const AgeGroupOverviewPage: React.FC = () => {
-  const { clubId, ageGroupId } = useParams<{ clubId: string; ageGroupId: string }>();
+  const params = useRequiredParams(['clubId', 'ageGroupId'], { returnNullOnError: true });
+  const clubId = params.clubId;
+  const ageGroupId = params.ageGroupId;
   const navigate = useNavigate();
   
   const [ageGroup, setAgeGroup] = useState<AgeGroupDetailDto | null>(null);
@@ -192,6 +195,28 @@ const AgeGroupOverviewPage: React.FC = () => {
 
   const isArchived = ageGroupModel?.isArchived ?? false;
 
+  // Invalid parameters state
+  if (!clubId || !ageGroupId) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Invalid Page Parameters</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              {!clubId && !ageGroupId && 'Club ID and Age Group ID are required to view this page.'}
+              {!clubId && ageGroupId && 'Club ID is required to view this page.'}
+              {clubId && !ageGroupId && 'Age Group ID is required to view this page.'}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              The URL may be malformed or contain invalid values.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -210,7 +235,7 @@ const AgeGroupOverviewPage: React.FC = () => {
                   label: 'Settings',
                   icon: 'settings',
                   title: 'Settings',
-                  onClick: () => navigate(Routes.ageGroupSettings(clubId!, ageGroupId!)),
+                  onClick: () => navigate(Routes.ageGroupSettings(clubId, ageGroupId)),
                   variant: 'primary'
                 }}
               />
@@ -263,9 +288,9 @@ const AgeGroupOverviewPage: React.FC = () => {
         <div className="mb-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Teams</h3>
-            {!isArchived && (
+            {!isArchived && clubId && ageGroupId && (
               <Link
-                to={Routes.teamNew(clubId!, ageGroupId!)}
+                to={Routes.teamNew(clubId, ageGroupId)}
                 className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
               >
                 <Plus className="w-5 h-5" />
@@ -293,16 +318,20 @@ const AgeGroupOverviewPage: React.FC = () => {
                   club={clubModel}
                   ageGroup={ageGroupModel}
                   stats={teams[index].stats}
-                  onClick={team.isArchived ? undefined : () => navigate(Routes.team(clubId!, ageGroupId!, team.id))}
+                  onClick={team.isArchived ? undefined : () => {
+                    if (clubId && ageGroupId) {
+                      navigate(Routes.team(clubId, ageGroupId, team.id));
+                    }
+                  }}
                 />
               ))}
             </div>
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
               <p className="text-gray-600 dark:text-gray-400 mb-4">No teams yet in this age group</p>
-              {!isArchived && (
+              {!isArchived && clubId && ageGroupId && (
                 <Link
-                  to={Routes.teamNew(clubId!, ageGroupId!)}
+                  to={Routes.teamNew(clubId, ageGroupId)}
                   className="inline-flex px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
                 >
                   Create First Team
@@ -323,28 +352,30 @@ const AgeGroupOverviewPage: React.FC = () => {
               type="upcoming"
               matches={upcomingMatches}
               limit={3}
-              viewAllLink={Routes.ageGroupMatches(clubId!, ageGroupId!)}
+              viewAllLink={clubId && ageGroupId ? Routes.ageGroupMatches(clubId, ageGroupId) : '#'}
               showTeamInfo={true}
               getTeamInfo={(match) => ({
                 teamName: stats?.upcomingMatches.find(m => m.id === match.id)?.teamName || 'Unknown',
                 ageGroupName: stats?.upcomingMatches.find(m => m.id === match.id)?.ageGroupName || 'Unknown'
               })}
               getMatchLink={(matchId, match) => {
-                return Routes.matchReport(clubId!, ageGroupId!, match.teamId, matchId);
+                if (!clubId || !ageGroupId) return '#';
+                return Routes.matchReport(clubId, ageGroupId, match.teamId, matchId);
               }}
             />
             <MatchesCard 
               type="results"
               matches={previousResults}
               limit={3}
-              viewAllLink={Routes.ageGroupMatches(clubId!, ageGroupId!)}
+              viewAllLink={clubId && ageGroupId ? Routes.ageGroupMatches(clubId, ageGroupId) : '#'}
               showTeamInfo={true}
               getTeamInfo={(match) => ({
                 teamName: stats?.previousResults.find(m => m.id === match.id)?.teamName || 'Unknown',
                 ageGroupName: stats?.previousResults.find(m => m.id === match.id)?.ageGroupName || 'Unknown'
               })}
               getMatchLink={(matchId, match) => {
-                return Routes.matchReport(clubId!, ageGroupId!, match.teamId, matchId);
+                if (!clubId || !ageGroupId) return '#';
+                return Routes.matchReport(clubId, ageGroupId, match.teamId, matchId);
               }}
             />
           </>
@@ -366,7 +397,10 @@ const AgeGroupOverviewPage: React.FC = () => {
                 averageRating: p.averageRating,
                 matchesPlayed: p.matchesPlayed
               }))}
-              getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
+              getPlayerLink={(playerId) => {
+                if (!clubId || !ageGroupId) return '#';
+                return Routes.player(clubId, ageGroupId, playerId);
+              }}
             />
             <NeedsSupportCard 
               performers={(stats?.underperforming ?? []).map(p => ({
@@ -376,7 +410,10 @@ const AgeGroupOverviewPage: React.FC = () => {
                 averageRating: p.averageRating,
                 matchesPlayed: p.matchesPlayed
               }))}
-              getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
+              getPlayerLink={(playerId) => {
+                if (!clubId || !ageGroupId) return '#';
+                return Routes.player(clubId, ageGroupId, playerId);
+              }}
             />
           </>
         )}

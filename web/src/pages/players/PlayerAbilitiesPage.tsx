@@ -25,7 +25,7 @@ export default function PlayerAbilitiesPage() {
     if (abilities) {
       setEntityName('player', abilities.playerId, `${abilities.firstName} ${abilities.lastName}`);
     }
-  }, [abilities, setEntityName]);
+  }, [abilities?.playerId, abilities?.firstName, abilities?.lastName, setEntityName]);
   
   // Theme-aware chart colors
   const chartColors = {

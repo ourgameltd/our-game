@@ -1,5 +1,6 @@
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
+import { useRequiredParams } from '@utils/routeParams';
 import { Plus } from 'lucide-react';
 import { apiClient } from '@/api';
 import type { 
@@ -16,7 +17,9 @@ import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 
 export default function ClubOverviewPage() {
-  const { clubId } = useParams();
+  // Validate route parameters
+  const params = useRequiredParams(['clubId'], { returnNullOnError: true });
+  const clubId = params.clubId;
   const navigate = useNavigate();
   
   const [club, setClub] = useState<ClubDetailDto | null>(null);
@@ -100,6 +103,26 @@ export default function ClubOverviewPage() {
       })
       .finally(() => setAgeGroupsLoading(false));
   }, [clubId]);
+
+  // Invalid parameters state
+  if (!clubId) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4">
+          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
+            <div className="text-red-500 text-5xl mb-4">⚠️</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Invalid Page Parameters</h3>
+            <p className="text-gray-600 dark:text-gray-400">
+              Club ID is required to view this page.
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
+              The URL may be malformed or contain invalid values.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
   if (clubLoading || statsLoading || ageGroupsLoading) {
     return (
@@ -200,7 +223,7 @@ export default function ClubOverviewPage() {
             label: 'Settings',
             icon: 'settings',
             title: 'Settings',
-            onClick: () => navigate(Routes.clubSettings(clubId!)),
+            onClick: () => navigate(Routes.clubSettings(clubId)),
             variant: 'primary'
           }}
         />
@@ -221,7 +244,7 @@ export default function ClubOverviewPage() {
               winRate: stats.winRate,
               goalDifference: stats.goalDifference
             }}
-            onPlayerCountClick={() => navigate(Routes.clubPlayers(clubId!))}
+            onPlayerCountClick={() => navigate(Routes.clubPlayers(clubId))}
             additionalInfo={`${ageGroups.length} age groups`}
           />
         )}
@@ -231,7 +254,7 @@ export default function ClubOverviewPage() {
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Age Groups</h3>
             <Link
-              to={Routes.ageGroupNew(clubId!)}
+              to={Routes.ageGroupNew(clubId)}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
             >
               <Plus className="w-5 h-5" />
@@ -250,7 +273,7 @@ export default function ClubOverviewPage() {
                 return (
                   <Link
                     key={ageGroup.id}
-                    to={Routes.ageGroup(clubId!, ageGroup.id)}
+                    to={Routes.ageGroup(clubId, ageGroup.id)}
                     className="block"
                   >
                     <AgeGroupListCard
@@ -306,7 +329,7 @@ export default function ClubOverviewPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
               <p className="text-gray-600 dark:text-gray-400 mb-4">No age groups yet in this club</p>
               <Link
-                to={Routes.ageGroupNew(clubId!)}
+                to={Routes.ageGroupNew(clubId)}
                 className="inline-flex px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
               >
                 Create First Age Group
@@ -321,7 +344,7 @@ export default function ClubOverviewPage() {
               type="upcoming"
               matches={upcomingMatches}
               limit={3}
-              viewAllLink={Routes.clubMatches(clubId!)}
+              viewAllLink={Routes.clubMatches(clubId)}
               showTeamInfo={true}
               getTeamInfo={(match) => ({
                 teamName: stats.upcomingMatches.find(m => m.id === match.id)?.teamName || 'Unknown',
@@ -330,7 +353,7 @@ export default function ClubOverviewPage() {
               getMatchLink={(matchId) => {
                 const matchData = stats.upcomingMatches.find(m => m.id === matchId);
                 if (matchData) {
-                  return Routes.matchReport(clubId!, matchData.ageGroupId, matchData.teamId, matchId);
+                  return Routes.matchReport(clubId, matchData.ageGroupId, matchData.teamId, matchId);
                 }
                 return '#';
               }}
@@ -339,7 +362,7 @@ export default function ClubOverviewPage() {
               type="results"
               matches={previousResults}
               limit={3}
-              viewAllLink={Routes.clubMatches(clubId!)}
+              viewAllLink={Routes.clubMatches(clubId)}
               showTeamInfo={true}
               getTeamInfo={(match) => ({
                 teamName: stats.previousResults.find(m => m.id === match.id)?.teamName || 'Unknown',
@@ -348,7 +371,7 @@ export default function ClubOverviewPage() {
               getMatchLink={(matchId) => {
                 const matchData = stats.previousResults.find(m => m.id === matchId);
                 if (matchData) {
-                  return Routes.matchReport(clubId!, matchData.ageGroupId, matchData.teamId, matchId);
+                  return Routes.matchReport(clubId, matchData.ageGroupId, matchData.teamId, matchId);
                 }
                 return '#';
               }}
