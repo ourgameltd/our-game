@@ -50,6 +50,13 @@ export interface UserProfile {
   coachId?: string;
 }
 
+// Update Current User Request
+export interface UpdateCurrentUserRequest {
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 // Team colors DTO
 export interface TeamColorsDto {
   primary?: string;
@@ -2284,6 +2291,18 @@ export const apiClient = {
     getCurrentUser: async (): Promise<ApiResponse<UserProfile>> => {
       const response = await axiosInstance.get<ApiResponse<UserProfile>>('/v1/users/me');
       return response.data;
+    },
+
+    /**
+     * Update current authenticated user's profile
+     */
+    updateCurrentUser: async (request: UpdateCurrentUserRequest): Promise<ApiResponse<UserProfile>> => {
+      try {
+        const response = await axiosInstance.put('/v1/users/me', request);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
 
     /**

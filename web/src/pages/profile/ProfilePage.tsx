@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Calendar, Shield, Save, Moon, Sun, Monitor } from 'lucide-react';
+import { User, Mail, Calendar, Shield, Save, Moon, Sun, Monitor, Loader2 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentUser, UserProfile } from '@/api/users';
+import { useUpdateCurrentUser, UpdateCurrentUserRequest } from '@/api';
 import PageTitle from '@components/common/PageTitle';
 
 export default function ProfilePage() {
@@ -18,6 +19,10 @@ export default function ProfilePage() {
     lastName: '',
     email: '',
   });
+  
+  // Mutation hook for updating profile
+  const { updateCurrentUser, data: updatedProfile, isSubmitting, error } = useUpdateCurrentUser();
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Fetch user profile
   useEffect(() => {
@@ -43,17 +48,29 @@ export default function ProfilePage() {
     fetchProfile();
   }, [isAuthenticated, isLoading]);
 
-  const handleSave = () => {
-    // In real app, save to backend here
-    if (userProfile) {
-      setUserProfile({
-        ...userProfile,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-      });
+  // Handle successful profile update
+  useEffect(() => {
+    if (updatedProfile) {
+      setUserProfile(updatedProfile);
+      setIsEditing(false);
+      setSuccessMessage('Profile updated successfully!');
+      
+      // Clear success message after 4 seconds
+      const timeout = setTimeout(() => setSuccessMessage(null), 4000);
+      return () => clearTimeout(timeout);
     }
-    setIsEditing(false);
+  }, [updatedProfile]);
+
+  const handleSave = async () => {
+    setSuccessMessage(null);
+    
+    const request: UpdateCurrentUserRequest = {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      email: formData.email,
+    };
+    
+    await updateCurrentUser(request);
   };
 
   const handleCancel = () => {
@@ -65,6 +82,7 @@ export default function ProfilePage() {
       });
     }
     setIsEditing(false);
+    setSuccessMessage(null);
   };
 
   if (isLoadingProfile || isLoading) {
@@ -94,6 +112,31 @@ export default function ProfilePage() {
           title="My Profile"
           subtitle="Manage your account settings and preferences"
         />
+
+        {/* Success message */}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-sm text-green-800 dark:text-green-300">{successMessage}</p>
+          </div>
+        )}
+
+        {/* Error banner */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm font-medium text-red-800 dark:text-red-300">
+              {error.message}
+            </p>
+            {error.validationErrors && (
+              <ul className="mt-2 list-disc list-inside text-sm text-red-700 dark:text-red-400">
+                {Object.entries(error.validationErrors).map(([field, errors]) =>
+                  errors.map((msg, i) => (
+                    <li key={`${field}-${i}`}>{field}: {msg}</li>
+                  ))
+                )}
+              </ul>
+            )}
+          </div>
+        )}
 
         {/* Profile Card */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 mb-4 transition-colors">
@@ -186,14 +229,25 @@ export default function ProfilePage() {
             <div className="flex space-x-2 mt-4 pt-6 border-t border-gray-200 dark:border-gray-700">
               <button
                 onClick={handleSave}
-                className="flex-1 flex items-center justify-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors"
+                disabled={isSubmitting}
+                className="flex-1 flex items-center justify-center space-x-2 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                <Save className="w-4 h-4" />
-                <span>Save Changes</span>
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>Save Changes</span>
+                  </>
+                )}
               </button>
               <button
                 onClick={handleCancel}
-                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                disabled={isSubmitting}
+                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Cancel
               </button>

@@ -305,6 +305,45 @@ export function useCurrentUser(): UseApiState<UserProfile> {
 }
 
 /**
+ * Hook to update the current user's profile.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useUpdateCurrentUser(): UseMutationState<UserProfile> & {
+  updateCurrentUser: (request: import('./client').UpdateCurrentUserRequest) => Promise<void>;
+} {
+  const [data, setData] = useState<UserProfile | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const updateCurrentUser = useCallback(async (request: import('./client').UpdateCurrentUserRequest): Promise<void> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<UserProfile> = await apiClient.users.updateCurrentUser(request);
+      if (response.success && response.data) {
+        setData(response.data);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update profile',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return { updateCurrentUser, isSubmitting, data, error };
+}
+
+/**
  * Hook to fetch clubs for the current authenticated user
  */
 export function useMyClubs(): UseApiState<MyClubListItemDto[]> {

@@ -4,9 +4,9 @@
  * Provides API calls for user profile operations.
  */
 
-import { apiClient, UserProfile } from './client';
+import { apiClient, UserProfile, UpdateCurrentUserRequest } from './client';
 
-export type { UserProfile };
+export type { UserProfile, UpdateCurrentUserRequest };
 
 /**
  * Get current authenticated user's profile
@@ -28,4 +28,17 @@ export async function getCurrentUser(): Promise<UserProfile> {
     console.error('getCurrentUser: Error:', error);
     throw error;
   }
+}
+
+/**
+ * Update current authenticated user's profile
+ * @param request - Profile update data
+ * @returns Updated user profile
+ */
+export async function updateCurrentUser(request: UpdateCurrentUserRequest): Promise<UserProfile> {
+  const response = await apiClient.users.updateCurrentUser(request);
+  if (!response.success) {
+    throw new Error(response.error?.message || 'Failed to update profile');
+  }
+  return response.data!;
 }
