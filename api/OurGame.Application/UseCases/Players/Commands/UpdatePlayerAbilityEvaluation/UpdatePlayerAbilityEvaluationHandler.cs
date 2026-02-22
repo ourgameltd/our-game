@@ -53,15 +53,21 @@ public class UpdatePlayerAbilityEvaluationHandler : IRequestHandler<UpdatePlayer
             ", command.AzureUserId)
             .FirstOrDefaultAsync(cancellationToken);
 
+        // Use the original coach who created the evaluation
         if (coachResult == null)
         {
-            throw new ForbiddenException("User is not authorized to update evaluations. Only coaches can perform evaluations.");
-        }
-
-        // Verify user is the coach who created the evaluation
-        if (evaluationCheck.EvaluatedBy != coachResult.CoachId)
-        {
-            throw new ForbiddenException("Only the coach who created this evaluation can update it.");
+            coachResult = await _db.Database
+                .SqlQueryRaw<CoachLookupResult>(@"
+                    SELECT c.Id as CoachId, c.FirstName, c.LastName
+                    FROM Coaches c
+                    WHERE c.Id = {0} AND c.IsArchived = 0
+                ", evaluationCheck.EvaluatedBy)
+                .FirstOrDefaultAsync(cancellationToken);
+                
+            if (coachResult == null)
+            {
+                throw new ValidationException("System", "Original coach not found.");
+            }
         }
 
         // Validate ratings are within range (0-99)

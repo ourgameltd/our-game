@@ -48,24 +48,7 @@ public class GetPlayerAbilitiesHandler : IRequestHandler<GetPlayerAbilitiesQuery
             return null;
         }
 
-        // 2. Verify user has access to this player (must be in same club)
-        var userClubSql = @"
-            SELECT COUNT(1)
-            FROM Users u
-            INNER JOIN Coaches c ON c.UserId = u.Id
-            INNER JOIN CoachClubs cc ON cc.CoachId = c.Id
-            WHERE u.AzureUserId = {0} AND cc.ClubId = {1}";
-
-        var hasAccess = await _db.Database
-            .SqlQueryRaw<int>(userClubSql, query.AzureUserId, player.ClubId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (hasAccess == 0)
-        {
-            return null;
-        }
-
-        // 3. Fetch player attributes
+        // 2. Fetch player attributes
         var attributesSql = @"
             SELECT 
                 BallControl,

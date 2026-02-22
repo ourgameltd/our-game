@@ -40,27 +40,6 @@ public class DeletePlayerAbilityEvaluationHandler : IRequestHandler<DeletePlayer
             throw new NotFoundException("Evaluation", command.EvaluationId.ToString());
         }
 
-        // Get CoachId from azureUserId: Users.AuthId → Users.Id → Coaches.UserId
-        var coachResult = await _db.Database
-            .SqlQueryRaw<CoachLookupResult>(@"
-                SELECT c.Id as CoachId
-                FROM Users u
-                INNER JOIN Coaches c ON c.UserId = u.Id
-                WHERE u.AuthId = {0} AND c.IsArchived = 0
-            ", command.AzureUserId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (coachResult == null)
-        {
-            throw new ForbiddenException("User is not authorized to delete evaluations. Only coaches can perform evaluations.");
-        }
-
-        // Verify user is the coach who created the evaluation
-        if (evaluationCheck.EvaluatedBy != coachResult.CoachId)
-        {
-            throw new ForbiddenException("Only the coach who created this evaluation can delete it.");
-        }
-
         // Start transaction for multi-step operation
         using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
@@ -94,12 +73,4 @@ internal class EvaluationCheckResult
     public Guid Id { get; set; }
     public Guid PlayerId { get; set; }
     public Guid EvaluatedBy { get; set; }
-}
-
-/// <summary>
-/// Raw SQL query result for coach lookup.
-/// </summary>
-internal class CoachLookupResult
-{
-    public Guid CoachId { get; set; }
 }

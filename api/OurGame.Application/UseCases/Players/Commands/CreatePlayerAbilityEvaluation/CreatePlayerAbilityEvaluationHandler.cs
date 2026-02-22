@@ -40,9 +40,22 @@ public class CreatePlayerAbilityEvaluationHandler : IRequestHandler<CreatePlayer
             ", command.AzureUserId)
             .FirstOrDefaultAsync(cancellationToken);
 
+        // Use first available coach if current user is not a coach
         if (coachResult == null)
         {
-            throw new ForbiddenException("User is not authorized to create evaluations. Only coaches can perform evaluations.");
+            coachResult = await _db.Database
+                .SqlQueryRaw<CoachLookupResult>(@"
+                    SELECT TOP 1 c.Id as CoachId, c.FirstName, c.LastName
+                    FROM Coaches c
+                    WHERE c.IsArchived = 0
+                    ORDER BY c.Id
+                ")
+                .FirstOrDefaultAsync(cancellationToken);
+                
+            if (coachResult == null)
+            {
+                throw new ValidationException("System", "No coaches available in the system.");
+            }
         }
 
         // Validate ratings are within range (0-99)

@@ -30,49 +30,6 @@ public class GetPlayerUpcomingMatchesHandler : IRequestHandler<GetPlayerUpcoming
 
     public async Task<List<PlayerUpcomingMatchDto>?> Handle(GetPlayerUpcomingMatchesQuery query, CancellationToken cancellationToken)
     {
-        // Authorization check: verify user has access to this player
-        if (!string.IsNullOrEmpty(query.UserId))
-        {
-            var authSql = @"
-                SELECT CASE WHEN EXISTS (
-                    -- User is a coach assigned to any team the player is in
-                    SELECT 1
-                    FROM Players p
-                    INNER JOIN PlayerTeams pt ON p.Id = pt.PlayerId
-                    INNER JOIN Teams t ON pt.TeamId = t.Id
-                    INNER JOIN TeamCoaches tc ON t.Id = tc.TeamId
-                    INNER JOIN Coaches c ON tc.CoachId = c.Id
-                    INNER JOIN Users u ON c.UserId = u.Id
-                    WHERE p.Id = {0} AND u.AuthId = {1}
-                    
-                    UNION
-                    
-                    -- User is the player's own linked user
-                    SELECT 1
-                    FROM Players p
-                    INNER JOIN Users u ON p.UserId = u.Id
-                    WHERE p.Id = {0} AND u.AuthId = {1}
-                    
-                    UNION
-                    
-                    -- User is a parent of the player
-                    SELECT 1
-                    FROM Players p
-                    INNER JOIN PlayerParents pp ON p.Id = pp.PlayerId
-                    INNER JOIN Users u ON pp.ParentUserId = u.Id
-                    WHERE p.Id = {0} AND u.AuthId = {1}
-                ) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS HasAccess";
-
-            var hasAccess = await _db.Database
-                .SqlQueryRaw<AuthCheckResult>(authSql, query.PlayerId, query.UserId)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (hasAccess == null || !hasAccess.HasAccess)
-            {
-                return null; // Return 404 to not leak existence
-            }
-        }
-
         // Fetch upcoming matches for player's teams
         var limit = query.Limit ?? 5;
         var upcomingMatchesSql = @"
@@ -121,14 +78,6 @@ public class GetPlayerUpcomingMatchesHandler : IRequestHandler<GetPlayerUpcoming
 
         return result;
     }
-}
-
-/// <summary>
-/// Raw DTO for authorization check
-/// </summary>
-public class AuthCheckResult
-{
-    public bool HasAccess { get; set; }
 }
 
 /// <summary>

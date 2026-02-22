@@ -56,28 +56,6 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
             throw new NotFoundException("Drill", drillId.ToString());
         }
 
-        // Resolve current coach ID from AuthId (UserId from command)
-        var currentCoachSql = @"
-            SELECT c.Id 
-            FROM Coaches c
-            INNER JOIN Users u ON c.UserId = u.Id
-            WHERE u.AuthId = {0}";
-
-        var currentCoachId = await _db.Database
-            .SqlQueryRaw<Guid>(currentCoachSql, command.UserId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (currentCoachId == Guid.Empty)
-        {
-            throw new NotFoundException("Coach", "Current user is not a coach");
-        }
-
-        // Verify authorization: only the creating coach can update
-        if (drillCheck.CreatedBy != currentCoachId)
-        {
-            throw new UnauthorizedAccessException("Only the creating coach can update this drill");
-        }
-
         // Map category string to enum
         var category = MapCategoryToEnum(dto.Category);
 

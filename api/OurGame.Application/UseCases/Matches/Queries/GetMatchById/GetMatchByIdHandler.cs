@@ -26,54 +26,6 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
 
     public async Task<MatchDetailDto?> Handle(GetMatchByIdQuery query, CancellationToken cancellationToken)
     {
-        // Authorization check: if userId is provided, verify user has access to this match
-        if (!string.IsNullOrEmpty(query.UserId))
-        {
-            var authSql = @"
-                SELECT CASE WHEN EXISTS (
-                    -- User is a coach for one of the teams in the match
-                    SELECT 1
-                    FROM Matches m
-                    INNER JOIN Teams t ON m.TeamId = t.Id
-                    INNER JOIN TeamCoaches tc ON t.Id = tc.TeamId
-                    INNER JOIN Coaches c ON tc.CoachId = c.Id
-                    INNER JOIN Users u ON c.UserId = u.Id
-                    WHERE m.Id = {0} AND u.AuthId = {1}
-                    
-                    UNION
-                    
-                    -- User is a player in one of the teams
-                    SELECT 1
-                    FROM Matches m
-                    INNER JOIN Teams t ON m.TeamId = t.Id
-                    INNER JOIN PlayerTeams pt ON t.Id = pt.TeamId
-                    INNER JOIN Players p ON pt.PlayerId = p.Id
-                    INNER JOIN Users u ON p.UserId = u.Id
-                    WHERE m.Id = {0} AND u.AuthId = {1}
-                    
-                    UNION
-                    
-                    -- User is a parent of a player in one of the teams
-                    SELECT 1
-                    FROM Matches m
-                    INNER JOIN Teams t ON m.TeamId = t.Id
-                    INNER JOIN PlayerTeams pt ON t.Id = pt.TeamId
-                    INNER JOIN Players p ON pt.PlayerId = p.Id
-                    INNER JOIN PlayerParents pp ON p.Id = pp.PlayerId
-                    INNER JOIN Users u ON pp.ParentUserId = u.Id
-                    WHERE m.Id = {0} AND u.AuthId = {1}
-                ) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END AS HasAccess";
-
-            var hasAccess = await _db.Database
-                .SqlQueryRaw<AuthCheckResult>(authSql, query.MatchId, query.UserId)
-                .FirstOrDefaultAsync(cancellationToken);
-
-            if (hasAccess == null || !hasAccess.HasAccess)
-            {
-                return null; // Return 404 to not leak existence
-            }
-        }
-
         // 1. Fetch the match with team/age-group/club context
         var matchSql = @"
             SELECT 
@@ -582,9 +534,5 @@ public class RatingRaw
     public decimal? Rating { get; set; }
 }
 
-public class AuthCheckResult
-{
-    public bool HasAccess { get; set; }
-}
 
 #endregion

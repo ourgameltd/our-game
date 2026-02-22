@@ -69,6 +69,20 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
                 }
             }
         }
+        
+        // Use first available coach if user is not a coach
+        if (coachId == null)
+        {
+            var firstCoachSql = "SELECT TOP 1 Id FROM Coaches WHERE IsArchived = 0 ORDER BY Id";
+            var firstCoachId = await _db.Database
+                .SqlQueryRaw<Guid>(firstCoachSql)
+                .FirstOrDefaultAsync(cancellationToken);
+                
+            if (firstCoachId != Guid.Empty)
+            {
+                coachId = firstCoachId;
+            }
+        }
 
         // Generate IDs and timestamps
         var drillId = Guid.NewGuid();
