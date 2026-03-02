@@ -533,8 +533,6 @@ export default function AddEditMatchPage() {
     
     if (confirmComplete) {
       setIsLocked(true);
-      // In a real app, this would update the backend
-      console.log('Match completed and locked');
     }
   };
 

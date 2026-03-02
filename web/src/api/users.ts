@@ -13,12 +13,8 @@ export type { UserProfile, UpdateCurrentUserRequest };
  * @returns Current user's profile information
  */
 export async function getCurrentUser(): Promise<UserProfile> {
-  console.log('getCurrentUser: Making request to /api/v1/users/me');
-  
   try {
     const result = await apiClient.users.getCurrentUser();
-    console.log('getCurrentUser: Result:', result);
-    
     if (!result.success || !result.data) {
       throw new Error(result.error?.message || 'Failed to fetch current user');
     }

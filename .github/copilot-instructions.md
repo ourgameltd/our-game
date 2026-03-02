@@ -46,6 +46,7 @@ OurGame is a comprehensive, responsive, mobile-first web portal for football clu
 - **EF Core CLI**: Database migrations and scaffolding
 - **Docker**: Local SQL Server container
 - **Storybook**: Component development
+- **Playwright**: E2E testing for critical user journeys (run with `npm run test:e2e:with-setup`)
 
 ## Application Structure
 
@@ -194,6 +195,58 @@ Dashboard
 5. **Vite**: Run with `npm run dev` in `/web`
 6. **SWA CLI**: Use `swa start` to link frontend and backend locally
 
+### End-to-End Testing with Playwright
+
+#### Running E2E Tests
+The E2E test suite uses Playwright to test critical user journeys in a browser environment:
+
+- **Full test suite with DB setup**: `npm run test:e2e:with-setup` (recommended)
+  - Automatically runs the seeder to ensure database has current test data
+  - Runs all Playwright tests headless
+- **Tests only** (no DB setup): `npm run test:e2e`
+- **Interactive UI mode**: `npm run test:e2e:ui`
+- **Debug mode**: `npm run test:e2e:debug`
+
+#### Prerequisites for E2E Testing
+Before running E2E tests, ensure the following services are running:
+
+1. **Docker SQL Server**: Must be running on localhost:1433
+   ```bash
+   docker ps  # Verify SQL Server container is running
+   ```
+2. **Azure Functions**: Backend API must be running locally
+   ```bash
+   cd api/OurGame.Api
+   func start
+   ```
+3. **SWA CLI**: Frontend and backend proxy must be running
+   ```bash
+   cd web
+   swa start  # Starts on http://localhost:4280
+   ```
+
+#### Test Data
+E2E tests use real seeded data from the database:
+
+- **Test User**: Michael Law (AuthId: `00000001000000000000000000000101`)
+- **Email**: michael@michaellaw.me
+- **Roles**: Authenticated, Coach, Player
+- **Data Source**: Seeded via `OurGame.Seeder` from `OurGame.Persistence.Data.SeedData`
+
+The authentication setup ([web/tests/auth.setup.ts](../web/tests/auth.setup.ts)) configures the SWA CLI emulator to authenticate as this user for all tests.
+
+#### For AI Coding Agents
+When making changes to authentication, user profile, or other critical flows:
+
+1. Run `npm run test:e2e:with-setup` to verify your changes haven't broken existing functionality
+2. Tests are defined in `/web/tests/*.spec.ts`
+3. Shared authentication setup is in `/web/tests/auth.setup.ts`
+4. If tests fail, check:
+   - Database is seeded with current data
+   - Azure Functions backend is running
+   - SWA CLI is running on port 4280
+   - No breaking API changes without corresponding test updates
+
 ### Bicep Infrastructure
 - **File**: `/infrastructure/main.bicep`
 - **Current Resources**: Static Web App, Azure Functions, Storage Account, App Insights
@@ -241,7 +294,7 @@ Dashboard
 ### Testing
 - **Unit Tests**: Required for business logic
 - **Integration Tests**: Test Azure Functions endpoints
-- **E2E Tests**: Playwright tests for critical user journeys
+- **E2E Tests**: Playwright tests for critical user journeys (see "End-to-End Testing with Playwright" section)
 
 ---
 

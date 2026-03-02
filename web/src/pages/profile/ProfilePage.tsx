@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { User, Mail, Calendar, Shield, Save, Moon, Sun, Monitor, Loader2 } from 'lucide-react';
+import { User, Mail, Calendar, Save, Moon, Sun, Monitor, Loader2 } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentUser, UserProfile } from '@/api/users';
@@ -176,10 +176,6 @@ export default function ProfilePage() {
                     `${userProfile.firstName} ${userProfile.lastName}`
                   )}
                 </h2>
-                <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400 mt-1">
-                  <Shield className="w-4 h-4" />
-                  <span className="text-sm">{userProfile.role}</span>
-                </div>
               </div>
             </div>
             {!isEditing && (

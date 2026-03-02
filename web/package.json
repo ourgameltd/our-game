@@ -13,7 +13,12 @@
     "build-storybook": "storybook build",
     "screenshots": "node scripts/capture-screenshots.js",
     "screenshots:clean": "node -e \"require('fs').rmSync('screenshots', {recursive: true, force: true})\"",
-    "generate:api": "echo 'NSwag client generation - requires openapi.json from running API. Start API with func start, then run: npx @hey-api/openapi-ts -i http://localhost:7071/api/openapi/v3.json -o src/api/generated -c axios'"
+    "generate:api": "echo 'NSwag client generation - requires openapi.json from running API. Start API with func start, then run: npx @hey-api/openapi-ts -i http://localhost:7071/api/openapi/v3.json -o src/api/generated -c axios'",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:db:setup": "cd ../api/OurGame.Seeder && dotnet run",
+    "test:e2e:with-setup": "npm run test:e2e:db:setup && npm run test:e2e"
   },
   "dependencies": {
     "@tailwindcss/typography": "^0.5.19",
@@ -37,6 +42,7 @@
     "@storybook/react": "^8.2.0",
     "@storybook/react-vite": "^8.2.0",
     "@storybook/test": "^8.2.0",
+    "@types/node": "^25.3.3",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

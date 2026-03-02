@@ -1,0 +1,2 @@
+# Ignore auth storage state files (may contain sensitive session data)
+*.json
