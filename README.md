@@ -39,6 +39,56 @@ dotnet restore
 dotnet build --configuration Release
 ```
 
+### VS Code Local Dev (Containers + SWA CLI)
+
+This repository now includes VS Code tasks and launch configurations for running SQL Server, Azurite, and API in Docker containers while the frontend runs via SWA CLI on the host.
+
+### Local Infrastructure (Single Docker Compose)
+
+Start SQL Server + Azurite + API together:
+
+```bash
+docker compose -f docker-compose.local.yml up -d
+```
+
+Stop them together:
+
+```bash
+docker compose -f docker-compose.local.yml down
+```
+
+Note: on Apple Silicon, SQL Server runs under `linux/amd64` emulation in this compose file.
+Host access to SQL Server from this stack is on `localhost:14330`.
+
+#### 1. One-time setup
+
+1. Install dependencies:
+   ```bash
+   cd web
+   npm install
+   ```
+
+#### 2. Start services in separate terminals (VS Code Tasks)
+
+From `Terminal` -> `Run Task`:
+
+- `Infra: Start Local Stack`
+- `Web: SWA CLI` (http://localhost:4280)
+
+Or run `Dev: Start Backend Containers + SWA` to start both together.
+
+#### 3. API endpoint when running in containers
+
+The Functions API is exposed at `http://localhost:7071/api/...` from the `api` container.
+
+#### 4. Optional browser launch
+
+Use `Web: Launch Browser (SWA)`.
+
+#### 5. Stop local stack
+
+Run task: `Infra: Stop Local Stack`.
+
 ### Run locally with Azure Static Web Apps CLI
 
 The Azure Static Web Apps CLI provides local development with automatic API routing without CORS issues.

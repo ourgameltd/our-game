@@ -259,6 +259,13 @@ typings/
 **/*.Server/ModelManifest.xml
 _Pvt_Extensions
 
+# Azure Functions local settings
+api/OurGame.Api/local.settings.json
+
+# Local Docker volume data
+.sqldata/
+.azurite/
+
 # Paket dependency manager
 .paket/paket.exe
 paket-files/

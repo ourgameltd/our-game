@@ -1,0 +1,13 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Web: Launch Browser (SWA)",
+      "type": "pwa-chrome",
+      "request": "launch",
+      "url": "http://localhost:4280",
+      "webRoot": "${workspaceFolder}/web/src",
+      "preLaunchTask": "Web: SWA CLI"
+    }
+  ]
+}

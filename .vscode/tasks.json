@@ -1,0 +1,98 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Infra: Start Local Stack",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "compose",
+        "-p",
+        "infrastructure",
+        "-f",
+        "docker-compose.local.yml",
+        "up",
+        "-d"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "infra"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Infra: Stop Local Stack",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "compose",
+        "-p",
+        "infrastructure",
+        "-f",
+        "docker-compose.local.yml",
+        "down"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "infra"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Web: SWA CLI",
+      "type": "shell",
+      "command": "npx",
+      "args": [
+        "swa",
+        "start",
+        "--config",
+        "swa-cli.config.json"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "web"
+      }
+    },
+    {
+      "label": "DB: Seed",
+      "type": "shell",
+      "command": "docker",
+      "args": [
+        "compose",
+        "-p",
+        "infrastructure",
+        "-f",
+        "docker-compose.local.yml",
+        "--profile",
+        "seed",
+        "run",
+        "--no-deps",
+        "--rm",
+        "seeder"
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "infra"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Dev: Start Backend Containers + SWA",
+      "dependsOrder": "parallel",
+      "dependsOn": [
+        "Infra: Start Local Stack",
+        "Web: SWA CLI"
+      ],
+      "problemMatcher": []
+    }
+  ]
+}
