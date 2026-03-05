@@ -7,7 +7,10 @@ SA_PASSWORD="${SA_PASSWORD:-YourStrong@Passw0rd}"
 DB_NAME="${DB_NAME:-OurGame}"
 HOST_PORT="${HOST_PORT:-1433}"
 IMAGE="${IMAGE:-mcr.microsoft.com/mssql/server:2022-latest}"
+# SQL Server 2022 container is commonly linux/amd64; override if you use a different image.
+IMAGE_PLATFORM="${IMAGE_PLATFORM:-linux/amd64}"
 RUN_SEED="${RUN_SEED:-true}"
+DOTNET_ROLL_FORWARD_VALUE="${DOTNET_ROLL_FORWARD_VALUE:-Major}"
 
 if ! command -v docker >/dev/null 2>&1; then
   echo "Error: docker is not installed or not available in PATH."
@@ -25,6 +28,7 @@ if docker ps -a --format '{{.Names}}' | grep -Fxq "$CONTAINER_NAME"; then
 else
   echo "Creating SQL Server container '$CONTAINER_NAME' on port $HOST_PORT..."
   docker run \
+    --platform "$IMAGE_PLATFORM" \
     --name "$CONTAINER_NAME" \
     -e "ACCEPT_EULA=Y" \
     -e "MSSQL_SA_PASSWORD=$SA_PASSWORD" \
@@ -61,8 +65,12 @@ if [[ "$RUN_SEED" == "true" ]]; then
 
   echo "Running OurGame seeder..."
   CONNECTION_STRING="Server=localhost,$HOST_PORT;Database=$DB_NAME;User Id=sa;Password=$SA_PASSWORD;TrustServerCertificate=True"
-  CONNECTIONSTRINGS__DEFAULTCONNECTION="$CONNECTION_STRING" \
-    dotnet run --project api/OurGame.Seeder/OurGame.Seeder.csproj
+  (
+    cd api
+    DOTNET_ROLL_FORWARD="$DOTNET_ROLL_FORWARD_VALUE" \
+      CONNECTIONSTRINGS__DEFAULTCONNECTION="$CONNECTION_STRING" \
+      dotnet run --project OurGame.Seeder/OurGame.Seeder.csproj
+  )
 fi
 
 echo "Done."
