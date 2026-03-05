@@ -1,14 +1,5 @@
 {
 	"servers": {
-		"ado": {
-			"type": "stdio",
-			"command": "npx",
-			"args": [
-				"-y",
-				"@azure-devops/mcp@next",
-				"bandce"
-			]
-		},
 		"microsoftdocs/mcp": {
 			"type": "http",
 			"url": "https://learn.microsoft.com/api/mcp"
