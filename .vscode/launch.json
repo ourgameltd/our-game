@@ -1,6 +1,28 @@
 {
   "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "API: Run + Attach Function App (Host)",
+      "configurations": [
+        "API: Run Function App (Host, wait for debugger)",
+        "API: Attach to Function Worker"
+      ],
+      "stopAll": true
+    }
+  ],
   "configurations": [
+    {
+      "name": "API: Run Function App (Host, wait for debugger)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "cd ${workspaceFolder}/api/OurGame.Api && func start --port 7071 --dotnet-isolated-debug"
+    },
+    {
+      "name": "API: Attach to Function Worker",
+      "type": "coreclr",
+      "request": "attach",
+      "processId": "${command:pickProcess}"
+    },
     {
       "name": "Web: Launch Browser (SWA)",
       "type": "pwa-chrome",
