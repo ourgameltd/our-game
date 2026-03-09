@@ -2,12 +2,14 @@ using MediatR;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using OurGame.Api.Extensions;
 using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Players.Queries.GetPlayerRecentPerformances;
 using OurGame.Application.UseCases.Players.Queries.GetPlayerRecentPerformances.DTOs;
+using OurGame.Persistence.Models;
 using System.Net;
 
 namespace OurGame.Api.Functions.Players;
@@ -19,11 +21,13 @@ public class GetPlayerRecentPerformancesFunction
 {
     private readonly IMediator _mediator;
     private readonly ILogger<GetPlayerRecentPerformancesFunction> _logger;
+    private readonly OurGameContext _db;
 
-    public GetPlayerRecentPerformancesFunction(IMediator mediator, ILogger<GetPlayerRecentPerformancesFunction> logger)
+    public GetPlayerRecentPerformancesFunction(IMediator mediator, ILogger<GetPlayerRecentPerformancesFunction> logger, OurGameContext db)
     {
         _mediator = mediator;
         _logger = logger;
+        _db = db;
     }
 
     /// <summary>
@@ -102,19 +106,21 @@ public class GetPlayerRecentPerformancesFunction
             limit = Math.Max(1, Math.Min(parsedLimit, 50)); // Clamp between 1 and 50
         }
 
-        var performances = await _mediator.Send(new GetPlayerRecentPerformancesQuery(playerGuid, azureUserId, limit));
-
-        // Handler returns empty list if unauthorized or player not found
-        if (performances.Count == 0)
+        // Check if player exists
+        var playerExists = await _db.Players.AnyAsync(p => p.Id == playerGuid);
+        if (!playerExists)
         {
-            // Check if this is authorization failure vs no performances
-            // For simplicity, we return 404 if empty (could be either scenario)
+            _logger.LogWarning("Player not found: {PlayerId}", playerGuid);
             var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
             await notFoundResponse.WriteAsJsonAsync(ApiResponse<List<PlayerRecentPerformanceDto>>.ErrorResponse(
-                "Player not found or no performances available", 404));
+                "Player not found", 404));
             return notFoundResponse;
         }
 
+        // Get player performances (may be empty if player has no completed matches yet)
+        var performances = await _mediator.Send(new GetPlayerRecentPerformancesQuery(playerGuid, azureUserId, limit));
+
+        // Return 200 OK with performances (even if empty array)
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<PlayerRecentPerformanceDto>>.SuccessResponse(performances));
         return response;

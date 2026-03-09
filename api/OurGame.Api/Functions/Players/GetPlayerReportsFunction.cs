@@ -90,17 +90,14 @@ public class GetPlayerReportsFunction
 
         var reports = await _mediator.Send(new GetPlayerReportsQuery(playerGuid, azureUserId));
 
-        if (reports == null)
-        {
-            _logger.LogWarning("Player not found or unauthorized: {PlayerId}", playerGuid);
-            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFoundResponse.WriteAsJsonAsync(ApiResponse<List<PlayerReportSummaryDto>>.ErrorResponse(
-                "Player not found", 404));
-            return notFoundResponse;
-        }
+        // Treat null as empty result - player exists but has no reports
+        // Note: Player not found or authorization failures should be handled by throwing exceptions in the handler
+        var reportsList = reports ?? new List<PlayerReportSummaryDto>();
+
+        _logger.LogInformation("Retrieved {Count} reports for player {PlayerId}", reportsList.Count, playerGuid);
 
         var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(ApiResponse<List<PlayerReportSummaryDto>>.SuccessResponse(reports));
+        await response.WriteAsJsonAsync(ApiResponse<List<PlayerReportSummaryDto>>.SuccessResponse(reportsList));
         return response;
     }
 }

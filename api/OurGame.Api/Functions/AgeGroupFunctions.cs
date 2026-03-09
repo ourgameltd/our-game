@@ -184,7 +184,6 @@ public class AgeGroupFunctions
     [OpenApiParameter(name: "includeArchived", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Include archived players (default: false)")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<AgeGroupPlayerDto>>), Description = "Players retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<List<AgeGroupPlayerDto>>), Description = "User not authenticated")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<List<AgeGroupPlayerDto>>), Description = "No players found for this age group")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<AgeGroupPlayerDto>>), Description = "Invalid age group ID format")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<AgeGroupPlayerDto>>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetPlayersByAgeGroupId(
@@ -211,14 +210,6 @@ public class AgeGroupFunctions
         var includeArchived = bool.TryParse(includeArchivedParam, out var includeArchivedValue) && includeArchivedValue;
 
         var players = await _mediator.Send(new GetPlayersByAgeGroupIdQuery(ageGroupGuid, includeArchived));
-
-        if (players == null || players.Count == 0)
-        {
-            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFoundResponse.WriteAsJsonAsync(ApiResponse<List<AgeGroupPlayerDto>>.ErrorResponse(
-                "No players found for this age group", 404));
-            return notFoundResponse;
-        }
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<AgeGroupPlayerDto>>.SuccessResponse(players));

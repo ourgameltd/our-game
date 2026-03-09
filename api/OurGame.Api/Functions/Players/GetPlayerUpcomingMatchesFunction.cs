@@ -104,17 +104,12 @@ public class GetPlayerUpcomingMatchesFunction
 
         var matches = await _mediator.Send(new GetPlayerUpcomingMatchesQuery(playerGuid, azureUserId, limit));
 
-        if (matches == null)
-        {
-            _logger.LogWarning("Player not found or unauthorized: {PlayerId}", playerGuid);
-            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFoundResponse.WriteAsJsonAsync(ApiResponse<List<PlayerUpcomingMatchDto>>.ErrorResponse(
-                "Player not found", 404));
-            return notFoundResponse;
-        }
+        // Return 200 OK with matches (empty array if null = no upcoming matches)
+        // Authorization and player existence are validated by the query handler
+        var result = matches ?? new List<PlayerUpcomingMatchDto>();
 
         var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(ApiResponse<List<PlayerUpcomingMatchDto>>.SuccessResponse(matches));
+        await response.WriteAsJsonAsync(ApiResponse<List<PlayerUpcomingMatchDto>>.SuccessResponse(result));
         return response;
     }
 }
