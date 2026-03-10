@@ -32,7 +32,7 @@ using OurGame.Application.UseCases.Teams.Commands.UpdateTeam;
 using OurGame.Application.UseCases.Teams.Commands.UpdateTeam.DTOs;
 using OurGame.Application.UseCases.Teams.Commands.ArchiveTeam;
 using OurGame.Application.UseCases.Teams.Commands.ArchiveTeam.DTOs;
-using OurGame.Application.UseCases.Teams.Commands.UpdateTeamPlayerSquadNumber;
+using OurGame.Application.UseCases.Teams.Commands.UpdateTeamSquadNumbers;
 using OurGame.Api.Functions.Teams;
 using OurGame.Application.UseCases.Teams.Queries.GetTrainingSessionsByTeamId;
 using OurGame.Application.UseCases.Teams.Queries.GetTrainingSessionsByTeamId.DTOs;
@@ -807,7 +807,7 @@ public class TeamFunctions
                 return badRequestResponse;
             }
 
-            // Check for duplicate squad numbers in the request
+            // Check for duplicate squad numbers in the request (validation also done in handler)
             var assignedNumbers = dto.Assignments
                 .Where(a => a.SquadNumber.HasValue)
                 .Select(a => a.SquadNumber!.Value)
@@ -828,37 +828,31 @@ public class TeamFunctions
                 return badRequestResponse;
             }
 
-            // Update each assignment
-            foreach (var assignment in dto.Assignments)
+            // Convert DTO to command assignments
+            var assignments = dto.Assignments
+                .Select(a => new SquadNumberAssignment(a.PlayerId, a.SquadNumber))
+                .ToList();
+
+            // Execute bulk update atomically via command handler
+            var command = new UpdateTeamSquadNumbersCommand(teamGuid, assignments, azureUserId);
+            var result = await _mediator.Send(command);
+
+            if (result.IsNotFound)
             {
-                if (assignment.SquadNumber.HasValue)
-                {
-                    var command = new UpdateTeamPlayerSquadNumberCommand(
-                        teamGuid,
-                        assignment.PlayerId,
-                        assignment.SquadNumber.Value,
-                        azureUserId);
+                var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+                await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                    result.ErrorMessage ?? "Team or one or more players not found",
+                    (int)HttpStatusCode.NotFound));
+                return notFoundResponse;
+            }
 
-                    var result = await _mediator.Send(command);
-
-                    if (result.IsNotFound)
-                    {
-                        var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
-                        await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
-                            result.ErrorMessage ?? "Player or team not found",
-                            (int)HttpStatusCode.NotFound));
-                        return notFoundResponse;
-                    }
-
-                    if (result.IsFailure)
-                    {
-                        var failureResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-                        await failureResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
-                            result.ErrorMessage ?? "Failed to update squad number",
-                            (int)HttpStatusCode.BadRequest));
-                        return failureResponse;
-                    }
-                }
+            if (result.IsFailure)
+            {
+                var failureResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await failureResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                    result.ErrorMessage ?? "Failed to update squad numbers",
+                    (int)HttpStatusCode.BadRequest));
+                return failureResponse;
             }
 
             _logger.LogInformation("Squad numbers updated successfully for team: {TeamId}", teamGuid);
