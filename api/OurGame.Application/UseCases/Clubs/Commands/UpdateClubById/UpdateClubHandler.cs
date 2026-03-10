@@ -59,9 +59,10 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
             errors.Add("Venue", new[] { "Venue is required." });
 
         // 3. Validate founded year range
-        if (dto.Founded.HasValue && (dto.Founded.Value < 1850 || dto.Founded.Value > 2026))
+        var currentYear = DateTime.UtcNow.Year;
+        if (dto.Founded.HasValue && (dto.Founded.Value < 1850 || dto.Founded.Value > currentYear))
         {
-            errors.Add("Founded", new[] { "Founded year must be between 1850 and 2026." });
+            errors.Add("Founded", new[] { $"Founded year must be between 1850 and {currentYear}." });
         }
 
         // 4. Validate color formats

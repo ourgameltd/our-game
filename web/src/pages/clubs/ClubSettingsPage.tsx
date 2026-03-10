@@ -150,6 +150,15 @@ export default function ClubSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Convert founded from string to number (or undefined if empty)
+    let foundedYear: number | undefined = undefined;
+    if (formData.founded.trim()) {
+      const parsed = parseInt(formData.founded, 10);
+      if (!isNaN(parsed)) {
+        foundedYear = parsed;
+      }
+    }
+
     const request: UpdateClubRequest = {
       name: formData.name,
       shortName: formData.shortName,
@@ -161,7 +170,7 @@ export default function ClubSettingsPage() {
       country: formData.country,
       venue: formData.venue,
       address: formData.address,
-      founded: formData.founded,
+      founded: foundedYear,
       history: formData.history,
       ethos: formData.ethos,
       principles: formData.principles

@@ -1803,7 +1803,7 @@ export interface UpdateClubRequest {
   country: string;
   venue: string;
   address: string;
-  founded: string;
+  founded?: number | null;
   history: string;
   ethos: string;
   principles: string[];

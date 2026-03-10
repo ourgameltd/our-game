@@ -90,13 +90,26 @@ public class UpdateClubFunction
             return badRequestResponse;
         }
 
-        var dto = await req.ReadFromJsonAsync<UpdateClubRequestDto>();
-        if (dto == null)
+        UpdateClubRequestDto? dto;
+        try
         {
-            _logger.LogWarning("Failed to deserialize UpdateClubRequestDto");
+            dto = await req.ReadFromJsonAsync<UpdateClubRequestDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize UpdateClubRequestDto: result was null");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            _logger.LogWarning(ex, "JSON deserialization error in UpdateClub");
             var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
             await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ErrorResponse(
-                "Invalid request body",
+                "Invalid request body: " + ex.Message,
                 (int)HttpStatusCode.BadRequest));
             return badRequestResponse;
         }
@@ -126,6 +139,15 @@ public class UpdateClubFunction
                 "Validation failed",
                 ex.Errors));
             return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unhandled error during UpdateClub for clubId: {ClubId}", clubId);
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ErrorResponse(
+                "An unexpected error occurred",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
         }
     }
 }
