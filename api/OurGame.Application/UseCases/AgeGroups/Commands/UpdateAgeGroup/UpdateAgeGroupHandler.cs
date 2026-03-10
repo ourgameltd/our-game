@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Extensions;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetAgeGroupById.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
@@ -89,7 +90,7 @@ public class UpdateAgeGroupHandler : IRequestHandler<UpdateAgeGroupCommand, AgeG
         var levelInt = (int)level;
         var now = DateTime.UtcNow;
         var description = dto.Description ?? string.Empty;
-        var seasonsString = string.Join(",", seasons);
+        var seasonsString = AgeGroupSeasonX.SerializeSeasons(seasons);
 
         // Update using parameterized SQL
         var rowsAffected = await _db.Database.ExecuteSqlInterpolatedAsync($@"

@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAgeGroupById, useUpdateAgeGroup } from '@/api';
-import type { UpdateAgeGroupRequest } from '@/api';
+import type { UpdateAgeGroupRequest, ArchiveAgeGroupRequest } from '@/api';
+import { apiClient } from '@/api/client';
 import { teamLevels, squadSizes, type AgeGroupLevel } from '@/constants/referenceData';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
@@ -46,6 +47,27 @@ export default function AgeGroupSettingsPage() {
         return validLevels.includes(level) ? (level as AgeGroupLevel) : 'youth';
       };
 
+      // Runtime season guard: handle if seasons is accidentally a string
+      let parsedSeasons: string[] = [];
+      if (ageGroup.seasons) {
+        if (Array.isArray(ageGroup.seasons)) {
+          parsedSeasons = [...ageGroup.seasons];
+        } else if (typeof ageGroup.seasons === 'string') {
+          // Defensive coding: try JSON.parse first, fallback to CSV split
+          try {
+            const parsed = JSON.parse(ageGroup.seasons);
+            parsedSeasons = Array.isArray(parsed) ? parsed : [ageGroup.seasons];
+          } catch {
+            // Fallback to comma-separated values
+            parsedSeasons = ageGroup.seasons.split(',').map(s => s.trim()).filter(Boolean);
+          }
+        }
+      }
+      // If still empty, use fallback
+      if (parsedSeasons.length === 0) {
+        parsedSeasons = [ageGroup.season || '2024/25'];
+      }
+
       setFormData({
         name: ageGroup.name || '',
         code: ageGroup.code || '',
@@ -54,8 +76,8 @@ export default function AgeGroupSettingsPage() {
         defaultSquadSize: ageGroup.defaultSquadSize || 11,
         description: ageGroup.description || '',
       });
-      setSeasons(ageGroup.seasons?.length ? [...ageGroup.seasons] : [ageGroup.season || '2024/25']);
-      setDefaultSeason(ageGroup.defaultSeason || ageGroup.seasons?.[0] || ageGroup.season || '2024/25');
+      setSeasons(parsedSeasons);
+      setDefaultSeason(ageGroup.defaultSeason || parsedSeasons[0] || ageGroup.season || '2024/25');
       setIsFormInitialized(true);
     }
   }, [ageGroup, isFormInitialized]);
@@ -197,6 +219,8 @@ export default function AgeGroupSettingsPage() {
     if (seasons.some(s => !s.trim())) {
       newErrors.seasons = 'Season names cannot be empty';
     }
+    // Validation: Ensure defaultSeason is in the seasons list
+    // This prevents saving invalid state after backend fixes season data structure
     if (defaultSeason && !seasons.includes(defaultSeason)) {
       newErrors.defaultSeason = 'Default season must be one of the listed seasons';
     }
@@ -232,14 +256,31 @@ export default function AgeGroupSettingsPage() {
     navigate(Routes.ageGroup(clubId!, ageGroupId!));
   };
 
-  const handleArchive = () => {
+  const handleArchive = async () => {
     const isCurrentlyArchived = ageGroup?.isArchived;
     const action = isCurrentlyArchived ? 'unarchive' : 'archive';
     const actionPast = isCurrentlyArchived ? 'unarchived' : 'archived';
     
     if (confirm(`Are you sure you want to ${action} this age group? ${isCurrentlyArchived ? 'This will make it active again.' : 'This will lock the age group and prevent modifications.'}`)) {
-      alert(`Age group ${actionPast} successfully! (Demo - not saved to backend)`);
-      navigate(Routes.ageGroup(clubId!, ageGroupId!));
+      try {
+        const request: ArchiveAgeGroupRequest = {
+          isArchived: !isCurrentlyArchived
+        };
+        const response = await apiClient.ageGroups.archive(ageGroupId!, request);
+        
+        if (response.success || response.statusCode === 204) {
+          setSuccessMessage(`Age group ${actionPast} successfully!`);
+          // Navigate back after a short delay to show the success message
+          setTimeout(() => {
+            navigate(Routes.ageGroup(clubId!, ageGroupId!));
+          }, 1500);
+        } else {
+          setSubmitError(response.error?.message || `Failed to ${action} age group`);
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : `Failed to ${action} age group`;
+        setSubmitError(errorMessage);
+      }
     }
   };
 

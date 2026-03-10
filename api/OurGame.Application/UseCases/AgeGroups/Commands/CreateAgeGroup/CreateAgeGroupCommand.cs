@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Extensions;
 using OurGame.Application.UseCases.AgeGroups.Commands.CreateAgeGroup.DTOs;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetAgeGroupById.DTOs;
 using OurGame.Persistence.Enums;
@@ -55,11 +56,12 @@ public class CreateAgeGroupHandler : IRequestHandler<CreateAgeGroupCommand, AgeG
         var newId = Guid.NewGuid();
         var now = DateTime.UtcNow;
         var description = dto.Description ?? string.Empty;
+        var seasonsJson = AgeGroupSeasonX.SerializeSeasons(new[] { dto.Season });
 
         // Insert using parameterized SQL
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
             INSERT INTO AgeGroups (Id, ClubId, Name, Code, Level, CurrentSeason, Seasons, DefaultSeason, DefaultSquadSize, Description, IsArchived, CreatedAt, UpdatedAt)
-            VALUES ({newId}, {dto.ClubId}, {dto.Name}, {dto.Code}, {levelInt}, {dto.Season}, {dto.Season}, {dto.Season}, {squadSize}, {description}, {false}, {now}, {now})
+            VALUES ({newId}, {dto.ClubId}, {dto.Name}, {dto.Code}, {levelInt}, {dto.Season}, {seasonsJson}, {dto.Season}, {squadSize}, {description}, {false}, {now}, {now})
         ", cancellationToken);
 
         // Query back the created age group using existing pattern

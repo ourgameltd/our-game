@@ -24,6 +24,10 @@ const AddEditTeamPage: React.FC = () => {
   const isLoading = clubLoading || ageGroupLoading || (isEditing && teamLoading);
   const existingTeam = overview?.team;
 
+  // Get available seasons from age group
+  const availableSeasons = ageGroup?.seasons || [];
+  const defaultSeason = ageGroup?.defaultSeason || '';
+
   const [formData, setFormData] = useState({
     name: '',
     shortName: '',
@@ -40,27 +44,38 @@ const AddEditTeamPage: React.FC = () => {
   useEffect(() => {
     if (isInitialized) return;
 
-    if (isEditing && existingTeam) {
+    if (isEditing && existingTeam && ageGroup) {
+      // Determine initial season value for editing
+      let initialSeason = existingTeam.season || defaultSeason || availableSeasons[0] || '2024/25';
+      
+      // If team has a season not in the age group list, keep it (legacy season)
+      if (availableSeasons.length > 0 && !availableSeasons.includes(initialSeason) && existingTeam.season) {
+        initialSeason = existingTeam.season;
+      }
+      
       setFormData({
         name: existingTeam.name || '',
         shortName: existingTeam.shortName || '',
         level: (existingTeam.level || 'youth') as TeamLevel,
-        season: existingTeam.season || '',
+        season: initialSeason,
         primaryColor: existingTeam.colors?.primary || '#DC2626',
         secondaryColor: existingTeam.colors?.secondary || '#FFFFFF',
       });
       setIsInitialized(true);
     } else if (!isEditing && club && ageGroup) {
+      // Determine initial season value for new team
+      const initialSeason = defaultSeason || availableSeasons[0] || '2024/25';
+      
       setFormData(prev => ({
         ...prev,
         level: (ageGroup.level || 'youth') as TeamLevel,
-        season: ageGroup.season || '',
+        season: initialSeason,
         primaryColor: club.colors?.primary || '#DC2626',
         secondaryColor: club.colors?.secondary || '#FFFFFF',
       }));
       setIsInitialized(true);
     }
-  }, [isEditing, existingTeam, club, ageGroup, isInitialized]);
+  }, [isEditing, existingTeam, club, ageGroup, isInitialized, defaultSeason, availableSeasons]);
 
   // Map validation errors from API to form fields
   useEffect(() => {
@@ -360,17 +375,35 @@ const AddEditTeamPage: React.FC = () => {
               <label htmlFor="season" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Season *
               </label>
-              <input
-                type="text"
+              <select
                 id="season"
                 name="season"
                 value={formData.season}
                 onChange={handleChange}
-                placeholder="e.g., 2024/25"
                 className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
                   errors.season ? 'border-red-500' : 'border-gray-300'
                 }`}
-              />
+              >
+                {/* Show legacy season if team has one not in age group list */}
+                {isEditing && existingTeam?.season && availableSeasons.length > 0 && !availableSeasons.includes(existingTeam.season) && (
+                  <option value={existingTeam.season}>{existingTeam.season} (Legacy)</option>
+                )}
+                {/* Show available seasons from age group */}
+                {availableSeasons.length > 0 ? (
+                  availableSeasons.map(season => (
+                    <option key={season} value={season}>
+                      {season}{season === defaultSeason ? ' (Default)' : ''}
+                    </option>
+                  ))
+                ) : (
+                  /* Fallback if no seasons available from age group */
+                  defaultSeason ? (
+                    <option value={defaultSeason}>{defaultSeason} (Default)</option>
+                  ) : (
+                    <option value="2024/25">2024/25</option>
+                  )
+                )}
+              </select>
               {errors.season && (
                 <p className="mt-1 text-sm text-red-500">{errors.season}</p>
               )}

@@ -1842,6 +1842,10 @@ export interface ArchiveTeamRequest {
   isArchived: boolean;
 }
 
+export interface ArchiveAgeGroupRequest {
+  isArchived: boolean;
+}
+
 export interface UpdateCoachRequest {
   firstName: string;
   lastName: string;
@@ -2813,6 +2817,21 @@ export const apiClient = {
       try {
         const response = await axiosInstance.put<ApiResponse<AgeGroupDetailDto>>(
           `/v1/age-groups/${ageGroupId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Archive or unarchive an age group
+     */
+    archive: async (ageGroupId: string, request: ArchiveAgeGroupRequest): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<void>>(
+          `/v1/age-groups/${ageGroupId}/archive`,
           request
         );
         return response.data;

@@ -4,7 +4,7 @@ import { teamLevels } from '@/constants/referenceData';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
-import { useTeamOverview, useTeamPlayers, useUpdateTeam, useUpdateTeamSquadNumbers, useArchiveTeam } from '@/api/hooks';
+import { useTeamOverview, useTeamPlayers, useUpdateTeam, useUpdateTeamSquadNumbers, useArchiveTeam, useAgeGroupById } from '@/api/hooks';
 import type { SquadNumberAssignment } from '@/api/client';
 
 export default function TeamSettingsPage() {
@@ -16,6 +16,7 @@ export default function TeamSettingsPage() {
   // Fetch team data
   const { data: teamData, isLoading: isLoadingTeam } = useTeamOverview(teamId);
   const { data: players, isLoading: isLoadingPlayers, refetch: refetchPlayers } = useTeamPlayers(teamId);
+  const { data: ageGroup, isLoading: isLoadingAgeGroup } = useAgeGroupById(ageGroupId);
   
   // API mutations
   const { updateTeam, isSubmitting: isUpdatingTeam, error: updateError } = useUpdateTeam(teamId!);
@@ -24,6 +25,10 @@ export default function TeamSettingsPage() {
 
   const team = teamData?.team;
   const teamPlayers = players || [];
+
+  // Get available seasons from age group
+  const availableSeasons = ageGroup?.seasons || [];
+  const defaultSeason = ageGroup?.defaultSeason || '';
 
   const [formData, setFormData] = useState({
     name: '',
@@ -34,19 +39,29 @@ export default function TeamSettingsPage() {
     secondaryColor: '#ffffff'
   });
 
-  // Initialize form data when team loads
+  // Initialize form data when team and age group load
   useEffect(() => {
-    if (team) {
+    if (team && ageGroup) {
+      // Determine initial season value
+      let initialSeason = team.season || defaultSeason || availableSeasons[0] || '2024/25';
+      
+      // If team has a season not in the age group list, keep it (legacy season)
+      // Otherwise ensure it's one of the available seasons
+      if (availableSeasons.length > 0 && !availableSeasons.includes(initialSeason) && team.season) {
+        // Team has a legacy season - keep it
+        initialSeason = team.season;
+      }
+      
       setFormData({
         name: team.name || '',
         shortName: team.shortName || '',
         level: team.level || 'youth',
-        season: team.season || '2024/25',
+        season: initialSeason,
         primaryColor: team.colors?.primary || '#1a472a',
         secondaryColor: team.colors?.secondary || '#ffffff'
       });
     }
-  }, [team]);
+  }, [team, ageGroup, defaultSeason, availableSeasons]);
 
   // Initialize squad numbers from team data
   const [squadNumbers, setSquadNumbers] = useState<SquadNumberAssignment[]>([]);
@@ -62,7 +77,7 @@ export default function TeamSettingsPage() {
     }
   }, [teamPlayers]);
 
-  if (isLoadingTeam || isLoadingPlayers) {
+  if (isLoadingTeam || isLoadingPlayers || isLoadingAgeGroup) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -261,16 +276,34 @@ export default function TeamSettingsPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   Season *
                 </label>
-                <input
-                  type="text"
+                <select
                   name="season"
                   value={formData.season}
                   onChange={handleInputChange}
                   required
                   disabled={team.isArchived || isUpdatingTeam}
-                  placeholder="e.g., 2024/25"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                />
+                >
+                  {/* Show legacy season if team has one not in age group list */}
+                  {team.season && availableSeasons.length > 0 && !availableSeasons.includes(team.season) && (
+                    <option value={team.season}>{team.season} (Legacy)</option>
+                  )}
+                  {/* Show available seasons from age group */}
+                  {availableSeasons.length > 0 ? (
+                    availableSeasons.map(season => (
+                      <option key={season} value={season}>
+                        {season}{season === defaultSeason ? ' (Default)' : ''}
+                      </option>
+                    ))
+                  ) : (
+                    /* Fallback if no seasons available from age group */
+                    defaultSeason ? (
+                      <option value={defaultSeason}>{defaultSeason} (Default)</option>
+                    ) : (
+                      <option value="2024/25">2024/25</option>
+                    )
+                  )}
+                </select>
               </div>
             </div>
           </div>

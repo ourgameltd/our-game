@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
+using OurGame.Application.Extensions;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetAgeGroupById.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
@@ -61,9 +62,7 @@ public class GetAgeGroupByIdHandler : IRequestHandler<GetAgeGroupByIdQuery, AgeG
             Code = ageGroup.Code ?? string.Empty,
             Level = levelName.ToLowerInvariant(),
             Season = ageGroup.CurrentSeason ?? string.Empty,
-            Seasons = ageGroup.Seasons != null
-                ? ageGroup.Seasons.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()).ToList()
-                : new List<string>(),
+            Seasons = AgeGroupSeasonX.ParseSeasons(ageGroup.Seasons),
             DefaultSeason = ageGroup.DefaultSeason ?? string.Empty,
             DefaultSquadSize = ageGroup.DefaultSquadSize,
             Description = ageGroup.Description,
