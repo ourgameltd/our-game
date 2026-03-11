@@ -49,17 +49,20 @@ export default function AgeGroupSettingsPage() {
 
       // Runtime season guard: handle if seasons is accidentally a string
       let parsedSeasons: string[] = [];
-      if (ageGroup.seasons) {
-        if (Array.isArray(ageGroup.seasons)) {
-          parsedSeasons = [...ageGroup.seasons];
-        } else if (typeof ageGroup.seasons === 'string') {
+      const seasonsValue = ageGroup.seasons as string[] | string | undefined;
+      if (seasonsValue) {
+        if (Array.isArray(seasonsValue)) {
+          parsedSeasons = [...seasonsValue];
+        } else if (typeof seasonsValue === 'string') {
           // Defensive coding: try JSON.parse first, fallback to CSV split
           try {
-            const parsed = JSON.parse(ageGroup.seasons);
-            parsedSeasons = Array.isArray(parsed) ? parsed : [ageGroup.seasons];
+            const parsed: unknown = JSON.parse(seasonsValue);
+            parsedSeasons = Array.isArray(parsed)
+              ? parsed.filter((season): season is string => typeof season === 'string')
+              : [seasonsValue];
           } catch {
             // Fallback to comma-separated values
-            parsedSeasons = ageGroup.seasons.split(',').map(s => s.trim()).filter(Boolean);
+            parsedSeasons = seasonsValue.split(',').map((season: string) => season.trim()).filter(Boolean);
           }
         }
       }

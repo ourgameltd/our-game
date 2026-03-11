@@ -14,6 +14,7 @@ export { apiClient, getApiBaseUrl } from './client';
 export type {
   ApiResponse,
   UpdateAgeGroupRequest,
+  ArchiveAgeGroupRequest,
   UserProfile,
   UpdateCurrentUserRequest,
   TeamListItemDto,
