@@ -38,6 +38,7 @@ public record MatchDetailDto
     public MatchReportDetailDto? Report { get; init; }
     public List<MatchCoachDetailDto> Coaches { get; init; } = new();
     public List<MatchSubstitutionDetailDto> Substitutions { get; init; } = new();
+    public List<MatchAttendanceDetailDto> Attendance { get; init; } = new();
 }
 
 /// <summary>

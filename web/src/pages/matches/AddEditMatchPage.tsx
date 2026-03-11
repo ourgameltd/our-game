@@ -7,7 +7,7 @@ import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { PlayerPosition, SquadSize, Tactic } from '@/types';
 import { Routes } from '@utils/routes';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById } from '@/api/hooks';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits } from '@/api/hooks';
 import { apiClient, CreateMatchRequest, UpdateMatchRequest } from '@/api/client';
 import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
 
@@ -23,20 +23,21 @@ export default function AddEditMatchPage() {
   const { data: teamPlayers = [], isLoading: playersLoading } = useTeamPlayers(teamId);
   const { data: teamCoaches = [], isLoading: coachesLoading } = useTeamCoaches(teamId);
   const { data: tacticsData, isLoading: tacticsLoading } = useTacticsByScope(clubId, ageGroupId, teamId);
+  const { data: teamKitsData, isLoading: kitsLoading } = useTeamKits(teamId);
   
   // Get available seasons from age group
   const availableSeasons = ageGroup?.seasons || [];
   const defaultSeason = ageGroup?.defaultSeason || '';
 
-  // Get available kits - not available from API yet, using defaults
-  const availableKits: any[] = [];
+  // Get available kits from API
+  const availableKits = teamKitsData?.kits || [];
 
   // Get all club players (for cross-team selection) - for now using teamPlayers
   // TODO: Add useClubPlayers hook when available
   const allClubPlayers = teamPlayers || [];
 
   // Loading and error states
-  const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || tacticsLoading;
+  const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || tacticsLoading || kitsLoading;
   const hasError = teamError;
 
   // Form initialization state - CRITICAL: Must be called before any conditional returns
@@ -71,7 +72,7 @@ export default function AddEditMatchPage() {
   const [substitutions, setSubstitutions] = useState<{ minute: number; playerOut: string; playerIn: string }[]>([]);
   
   // Match events state
-  const [goals, setGoals] = useState<{ playerId: string; minute: number; assist?: string }[]>([]);
+  const [goals, setGoals] = useState<{ playerId: string; minute: number; assistPlayerId?: string }[]>([]);
   const [cards, setCards] = useState<{ playerId: string; type: 'yellow' | 'red'; minute: number; reason?: string }[]>([]);
   const [injuries, setInjuries] = useState<{ playerId: string; minute: number; description: string; severity: 'minor' | 'moderate' | 'serious' }[]>([]);
   const [ratings, setRatings] = useState<{ playerId: string; rating: number }[]>([]);
@@ -136,7 +137,7 @@ export default function AddEditMatchPage() {
       setIsHome(existingMatch.isHome ?? true);
       setCompetition(existingMatch.competition || '');
       setKit(existingMatch.primaryKitId?.toString() || '');
-      setGoalkeeperKit(existingMatch.secondaryKitId?.toString() || '');
+      setGoalkeeperKit(existingMatch.goalkeeperKitId?.toString() || '');
       setFormationId(existingMatch.lineup?.formationId || '');
       setTacticId(existingMatch.lineup?.tacticId || '');
       setWeather(existingMatch.weatherCondition || '');
@@ -164,7 +165,13 @@ export default function AddEditMatchPage() {
           playerIn: s.playerInId
         }))
       );
-      setGoals(existingMatch.report?.goals || []);
+      setGoals(
+        (existingMatch.report?.goals || []).map(g => ({
+          playerId: g.playerId,
+          minute: g.minute,
+          assistPlayerId: g.assistPlayerId
+        }))
+      );
       setCards(
         (existingMatch.report?.cards || []).map(c => ({ 
           ...c, 
@@ -187,7 +194,7 @@ export default function AddEditMatchPage() {
       setIsLocked(existingMatch.isLocked || false);
       setNotes(existingMatch.notes || '');
       setAssignedCoachIds(
-        (existingMatch.coaches || []).map(c => c.id).filter((id): id is string => id !== undefined)
+        (existingMatch.coaches || []).map(c => c.coachId).filter((id): id is string => id !== undefined)
       );
     } else {
       // New match - set defaults
@@ -222,8 +229,16 @@ export default function AddEditMatchPage() {
       setAssignedCoachIds([]);
     }
 
-    // Initialize attendance from team players
-    if (teamPlayers && teamPlayers.length > 0) {
+    // Initialize attendance
+    if (isEditing && existingMatch && existingMatch.attendance && existingMatch.attendance.length > 0) {
+      // Load attendance from existing match
+      setAttendance(existingMatch.attendance.map(a => ({
+        playerId: a.playerId,
+        status: a.status as 'confirmed' | 'declined' | 'maybe' | 'pending',
+        notes: a.notes
+      })));
+    } else if (teamPlayers && teamPlayers.length > 0) {
+      // Initialize from team players with default "pending" status
       setAttendance(teamPlayers.map(p => ({ playerId: p.id, status: 'pending' as const })));
     }
 
@@ -417,7 +432,7 @@ export default function AddEditMatchPage() {
   };
 
   const handleAddGoal = () => {
-    setGoals([...goals, { playerId: '', minute: 0 }]);
+    setGoals([...goals, { playerId: '', minute: 0, assistPlayerId: undefined }]);
   };
 
   const handleRemoveGoal = (index: number) => {
@@ -582,7 +597,7 @@ export default function AddEditMatchPage() {
         isHome,
         competition,
         primaryKitId: kit || undefined,
-        secondaryKitId: goalkeeperKit || undefined,
+        goalkeeperKitId: goalkeeperKit || undefined,
         homeScore: homeScore ? parseInt(homeScore) : undefined,
         awayScore: awayScore ? parseInt(awayScore) : undefined,
         status: existingMatch?.status || 'scheduled',
@@ -621,11 +636,20 @@ export default function AddEditMatchPage() {
           playerOutId: s.playerOut,
           playerInId: s.playerIn
         })),
+        attendance: attendance.map(a => ({
+          playerId: a.playerId,
+          status: a.status,
+          notes: a.notes || undefined
+        })),
         notes: notes || undefined
       };
 
       if (isEditing) {
-        await apiClient.matches.update(matchId!, matchData as any as UpdateMatchRequest);
+        const updateData: UpdateMatchRequest = {
+          ...matchData as any,
+          isLocked: isLocked
+        };
+        await apiClient.matches.update(matchId!, updateData);
       } else {
         await apiClient.matches.create(matchData as any as CreateMatchRequest);
       }
@@ -641,6 +665,9 @@ export default function AddEditMatchPage() {
 
   const allPlayersInMatch = [...startingPlayers.map(p => p.playerId), ...substitutes.map(s => s.playerId)];
   const availablePlayers = (teamPlayers ?? []).filter(p => !allPlayersInMatch.includes(p.id));
+  
+  // Players available for events (goals/cards/injuries) - fallback to all team players when lineup is empty
+  const playersForEvents = allPlayersInMatch.length > 0 ? allPlayersInMatch : (teamPlayers || []).map(p => p.id);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -909,28 +936,20 @@ export default function AddEditMatchPage() {
                     disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {availableKits.length === 0 ? (
-                      <>
-                        <option value="home-default">Home Kit (Default)</option>
-                        <option value="away-default">Away Kit (Default)</option>
-                        <option value="third-default">Third Kit (Default)</option>
-                      </>
-                    ) : (
-                      <>
-                        <option value="">Select a kit</option>
-                        {availableKits.map((k: any) => (
-                          <option key={k.id} value={k.id}>{k.name}</option>
-                        ))}
-                      </>
-                    )}
+                    <option value="">Select a kit</option>
+                    {availableKits
+                      .filter(k => k.type !== 'goalkeeper')
+                      .map(k => (
+                        <option key={k.id} value={k.id}>{k.name}</option>
+                      ))}
                   </select>
                   {availableKits.length === 0 && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      No custom kits defined. Using default kits.
+                      No kits defined for this team.
                     </p>
                   )}
-                  {kit && availableKits.length > 0 && (() => {
-                    const selectedKit = availableKits.find((k: any) => k.id === kit);
+                  {kit && (() => {
+                    const selectedKit = availableKits.find(k => k.id === kit);
                     if (selectedKit) {
                       return (
                         <div className="mt-2 flex items-center gap-2">
@@ -979,16 +998,14 @@ export default function AddEditMatchPage() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Select goalkeeper kit (optional)</option>
-                    {availableKits.length > 0 ? (
-                      availableKits.map((k: any) => (
+                    {availableKits
+                      .filter(k => k.type === 'goalkeeper')
+                      .map(k => (
                         <option key={k.id} value={k.id}>{k.name}</option>
-                      ))
-                    ) : (
-                      <option value="gk-default">Default Goalkeeper Kit</option>
-                    )}
+                      ))}
                   </select>
-                  {goalkeeperKit && availableKits.length > 0 && (() => {
-                    const selectedGkKit = availableKits.find((k: any) => k.id === goalkeeperKit);
+                  {goalkeeperKit && (() => {
+                    const selectedGkKit = availableKits.find(k => k.id === goalkeeperKit);
                     if (selectedGkKit) {
                       return (
                         <div className="mt-2 flex items-center gap-2">
@@ -1371,6 +1388,7 @@ export default function AddEditMatchPage() {
                               </button>
                             )}
                             <button
+                              type="button"
                               onClick={() => handleRemoveStartingPlayer(player.playerId)}
                               disabled={isLocked}
                               className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1389,6 +1407,7 @@ export default function AddEditMatchPage() {
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-gray-900 dark:text-white">Add Starting Player</h4>
                       <button
+                        type="button"
                         onClick={() => {
                           setCrossTeamModalType('starting');
                           setModalSearchTerm('');
@@ -1405,6 +1424,7 @@ export default function AddEditMatchPage() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {availablePlayers.map(player => (
                         <button
+                          type="button"
                           key={player.id}
                           onClick={() => {
                             const position = (player.preferredPositions?.[0] || 'CM') as PlayerPosition;
@@ -1486,6 +1506,7 @@ export default function AddEditMatchPage() {
                           )}
                         </div>
                         <button
+                          type="button"
                           onClick={() => handleRemoveSubstitute(sub.playerId)}
                           disabled={isLocked}
                           className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1502,6 +1523,7 @@ export default function AddEditMatchPage() {
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-gray-900 dark:text-white">Add Substitute</h4>
                       <button
+                        type="button"
                         onClick={() => {
                           setCrossTeamModalType('substitute');
                           setModalSearchTerm('');
@@ -1518,6 +1540,7 @@ export default function AddEditMatchPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {availablePlayers.map(player => (
                         <button
+                          type="button"
                           key={player.id}
                           onClick={() => handleAddSubstitute(player.id)}
                           className="text-left px-3 py-2 bg-white dark:bg-gray-800 rounded border border-gray-200 dark:border-gray-700 hover:border-yellow-500 dark:hover:border-yellow-500 text-gray-900 dark:text-white flex items-center gap-2"
@@ -1666,7 +1689,7 @@ export default function AddEditMatchPage() {
                             className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                           >
                             <option value="">Select player</option>
-                            {allPlayersInMatch.map(pId => (
+                            {playersForEvents.map(pId => (
                               <option key={pId} value={pId}>
                                 {getPlayerName(pId)}
                               </option>
@@ -1676,16 +1699,16 @@ export default function AddEditMatchPage() {
                         <div>
                           <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Assist (Optional)</label>
                           <select
-                            value={goal.assist || ''}
+                            value={goal.assistPlayerId || ''}
                             onChange={(e) => {
                               const newGoals = [...goals];
-                              newGoals[index].assist = e.target.value;
+                              newGoals[index].assistPlayerId = e.target.value || undefined;
                               setGoals(newGoals);
                             }}
                             className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                           >
                             <option value="">None</option>
-                            {allPlayersInMatch.map(pId => (
+                            {playersForEvents.map(pId => (
                               <option key={pId} value={pId}>
                                 {getPlayerName(pId)}
                               </option>
@@ -1694,6 +1717,7 @@ export default function AddEditMatchPage() {
                         </div>
                         <div className="flex items-end">
                           <button
+                            type="button"
                             onClick={() => handleRemoveGoal(index)}
                             disabled={isLocked}
                             className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1706,6 +1730,7 @@ export default function AddEditMatchPage() {
                   ))}
                 </div>
                 <button
+                  type="button"
                   onClick={handleAddGoal}
                   disabled={isLocked}
                   className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
@@ -1751,7 +1776,7 @@ export default function AddEditMatchPage() {
                             className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                           >
                             <option value="">Select player</option>
-                            {allPlayersInMatch.map(pId => (
+                            {playersForEvents.map(pId => (
                               <option key={pId} value={pId}>
                                 {getPlayerName(pId)}
                               </option>
@@ -1790,6 +1815,7 @@ export default function AddEditMatchPage() {
                         </div>
                         <div className="flex items-end">
                           <button
+                            type="button"
                             onClick={() => handleRemoveCard(index)}
                             disabled={isLocked}
                             className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1802,6 +1828,7 @@ export default function AddEditMatchPage() {
                   ))}
                 </div>
                 <button
+                  type="button"
                   onClick={handleAddCard}
                   disabled={isLocked}
                   className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
@@ -1847,7 +1874,7 @@ export default function AddEditMatchPage() {
                             className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
                           >
                             <option value="">Select player</option>
-                            {allPlayersInMatch.map(pId => (
+                            {playersForEvents.map(pId => (
                               <option key={pId} value={pId}>
                                 {getPlayerName(pId)}
                               </option>
@@ -1886,6 +1913,7 @@ export default function AddEditMatchPage() {
                         </div>
                         <div className="flex items-end">
                           <button
+                            type="button"
                             onClick={() => handleRemoveInjury(index)}
                             disabled={isLocked}
                             className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1898,6 +1926,7 @@ export default function AddEditMatchPage() {
                   ))}
                 </div>
                 <button
+                  type="button"
                   onClick={handleAddInjury}
                   disabled={isLocked}
                   className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
@@ -1974,6 +2003,7 @@ export default function AddEditMatchPage() {
                         </div>
                         <div className="flex items-end">
                           <button
+                            type="button"
                             onClick={() => handleRemoveSubstitution(index)}
                             disabled={isLocked}
                             className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -1986,6 +2016,7 @@ export default function AddEditMatchPage() {
                   ))}
                 </div>
                 <button
+                  type="button"
                   onClick={handleAddSubstitution}
                   disabled={isLocked}
                   className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
@@ -2389,6 +2420,7 @@ export default function AddEditMatchPage() {
                 </h2>
               </div>
               <button
+                type="button"
                 onClick={() => setShowCrossTeamModal(false)}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
               >
@@ -2502,6 +2534,7 @@ export default function AddEditMatchPage() {
                             </div>
                           </div>
                           <button
+                            type="button"
                             onClick={() => {
                               const position = ((player.preferredPositions || [])[0] || 'CM') as PlayerPosition;
                               if (crossTeamModalType === 'starting') {

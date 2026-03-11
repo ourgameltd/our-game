@@ -78,6 +78,11 @@ public record UpdateMatchRequest
     /// Substitutions are replaced entirely on update
     /// </summary>
     public List<UpdateMatchSubstitutionRequest> Substitutions { get; init; } = new();
+
+    /// <summary>
+    /// Player attendance records are replaced entirely on update
+    /// </summary>
+    public List<UpdateMatchAttendanceRequest>? Attendance { get; init; }
 }
 
 /// <summary>

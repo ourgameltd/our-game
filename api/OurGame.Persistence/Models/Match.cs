@@ -56,6 +56,8 @@ public partial class Match
 
     public virtual Kit GoalkeeperKit { get; set; }
 
+    public virtual ICollection<MatchAttendance> MatchAttendances { get; set; } = new List<MatchAttendance>();
+
     public virtual ICollection<MatchCoach> MatchCoaches { get; set; } = new List<MatchCoach>();
 
     public virtual ICollection<MatchLineup> MatchLineups { get; set; } = new List<MatchLineup>();

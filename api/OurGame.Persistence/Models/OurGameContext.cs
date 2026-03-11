@@ -59,6 +59,8 @@ public partial class OurGameContext : DbContext
 
     public virtual DbSet<Match> Matches { get; set; }
 
+    public virtual DbSet<MatchAttendance> MatchAttendances { get; set; }
+
     public virtual DbSet<MatchCoach> MatchCoaches { get; set; }
 
     public virtual DbSet<MatchLineup> MatchLineups { get; set; }

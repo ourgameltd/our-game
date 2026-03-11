@@ -1903,6 +1903,7 @@ export interface MatchDetailDto {
   report?: MatchReportDetailDto;
   coaches: MatchCoachDetailDto[];
   substitutions: MatchSubstitutionDetailDto[];
+  attendance: MatchAttendanceDetailDto[];
 }
 
 export interface MatchLineupDto {
@@ -1992,6 +1993,14 @@ export interface MatchSubstitutionDetailDto {
   playerInName: string;
 }
 
+export interface MatchAttendanceDetailDto {
+  id: string;
+  playerId: string;
+  playerName: string;
+  status: string;
+  notes?: string;
+}
+
 // Create Match Request DTOs
 
 export interface CreateMatchRequest {
@@ -2018,6 +2027,7 @@ export interface CreateMatchRequest {
   report?: CreateMatchReportRequest;
   coachIds: string[];
   substitutions: CreateMatchSubstitutionRequest[];
+  attendance?: CreateMatchAttendanceRequest[];
 }
 
 export interface CreateMatchLineupRequest {
@@ -2074,6 +2084,12 @@ export interface CreateMatchSubstitutionRequest {
   playerInId: string;
 }
 
+export interface CreateMatchAttendanceRequest {
+  playerId: string;
+  status: string;
+  notes?: string;
+}
+
 // Update Match Request DTOs
 
 export interface UpdateMatchRequest {
@@ -2100,6 +2116,7 @@ export interface UpdateMatchRequest {
   report?: UpdateMatchReportRequest;
   coachIds: string[];
   substitutions: UpdateMatchSubstitutionRequest[];
+  attendance?: UpdateMatchAttendanceRequest[];
 }
 
 export interface UpdateMatchLineupRequest {
@@ -2154,6 +2171,12 @@ export interface UpdateMatchSubstitutionRequest {
   minute: number;
   playerOutId: string;
   playerInId: string;
+}
+
+export interface UpdateMatchAttendanceRequest {
+  playerId: string;
+  status: string;
+  notes?: string;
 }
 
 

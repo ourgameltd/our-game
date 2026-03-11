@@ -138,6 +138,24 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
             ", cancellationToken);
         }
 
+        // Replace attendance
+        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM MatchAttendances WHERE MatchId = {matchId}
+        ", cancellationToken);
+
+        if (dto.Attendance != null && dto.Attendance.Any())
+        {
+            foreach (var attendance in dto.Attendance)
+            {
+                var attendanceId = Guid.NewGuid();
+                var attendanceNotes = attendance.Notes ?? string.Empty;
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO MatchAttendances (Id, MatchId, PlayerId, Status, Notes, CreatedAt, UpdatedAt)
+                    VALUES ({attendanceId}, {matchId}, {attendance.PlayerId}, {attendance.Status}, {attendanceNotes}, {now}, {now})
+                ", cancellationToken);
+            }
+        }
+
         // Replace match report and its children
         // Delete children first (goals, cards, injuries, ratings), then the report
         await _db.Database.ExecuteSqlInterpolatedAsync($@"

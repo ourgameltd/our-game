@@ -149,7 +149,24 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             .SqlQueryRaw<SubstitutionRaw>(subsSql, query.MatchId)
             .ToListAsync(cancellationToken);
 
-        // 6. Fetch match report
+        // 6. Fetch attendance
+        var attendanceSql = @"
+            SELECT 
+                ma.Id,
+                ma.PlayerId,
+                p.FirstName + ' ' + p.LastName AS PlayerName,
+                ma.Status,
+                ma.Notes
+            FROM MatchAttendances ma
+            INNER JOIN Players p ON ma.PlayerId = p.Id
+            WHERE ma.MatchId = {0}
+            ORDER BY p.LastName, p.FirstName";
+
+        var attendance = await _db.Database
+            .SqlQueryRaw<MatchAttendanceRaw>(attendanceSql, query.MatchId)
+            .ToListAsync(cancellationToken);
+
+        // 7. Fetch match report
         var reportSql = @"
             SELECT 
                 mr.Id,
@@ -169,7 +186,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             .SqlQueryRaw<ReportRaw>(reportSql, query.MatchId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        // 7. Fetch report child data (goals, cards, injuries, ratings) if report exists
+        // 8. Fetch report child data (goals, cards, injuries, ratings) if report exists
         var goals = new List<GoalRaw>();
         var cards = new List<CardRaw>();
         var injuries = new List<InjuryRaw>();
@@ -357,6 +374,14 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 PlayerOutName = s.PlayerOutName ?? string.Empty,
                 PlayerInId = s.PlayerInId,
                 PlayerInName = s.PlayerInName ?? string.Empty
+            }).ToList(),
+            Attendance = attendance.Select(a => new MatchAttendanceDetailDto
+            {
+                Id = a.Id,
+                PlayerId = a.PlayerId,
+                PlayerName = a.PlayerName ?? string.Empty,
+                Status = a.Status ?? string.Empty,
+                Notes = a.Notes
             }).ToList()
         };
     }
@@ -534,5 +559,13 @@ public class RatingRaw
     public decimal? Rating { get; set; }
 }
 
+public class MatchAttendanceRaw
+{
+    public Guid Id { get; set; }
+    public Guid PlayerId { get; set; }
+    public string? PlayerName { get; set; }
+    public string? Status { get; set; }
+    public string? Notes { get; set; }
+}
 
 #endregion

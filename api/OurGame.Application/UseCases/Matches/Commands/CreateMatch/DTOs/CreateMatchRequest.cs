@@ -79,6 +79,11 @@ public record CreateMatchRequest
     /// Substitutions made during the match
     /// </summary>
     public List<CreateMatchSubstitutionRequest> Substitutions { get; init; } = new();
+
+    /// <summary>
+    /// Player attendance records for the match
+    /// </summary>
+    public List<CreateMatchAttendanceRequest>? Attendance { get; init; }
 }
 
 /// <summary>
