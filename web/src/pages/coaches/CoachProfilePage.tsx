@@ -163,12 +163,17 @@ export default function CoachProfilePage() {
   };
 
   // Helper to safely parse specializations (handles both arrays and JSON strings)
-  const getSpecializations = (coach: any) => {
+  const getSpecializations = (coach: { specializations?: unknown } | null | undefined): string[] => {
     if (!coach?.specializations) return [];
-    if (Array.isArray(coach.specializations)) return coach.specializations;
+    if (Array.isArray(coach.specializations)) {
+      return coach.specializations.filter((specialization): specialization is string => typeof specialization === 'string');
+    }
     if (typeof coach.specializations === 'string') {
       try {
-        return JSON.parse(coach.specializations);
+        const parsed = JSON.parse(coach.specializations);
+        return Array.isArray(parsed)
+          ? parsed.filter((specialization): specialization is string => typeof specialization === 'string')
+          : [];
       } catch {
         return [];
       }
