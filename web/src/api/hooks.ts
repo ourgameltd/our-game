@@ -79,6 +79,7 @@ import {
   UpdateTeamKitRequest,
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
+import { normalizeCoachDetail } from './mappers';
 
 /**
  * Validates if an ID is valid for API calls.
@@ -1096,10 +1097,20 @@ export function usePlayerAlbum(playerId: string | undefined): UseApiState<Player
 /**
  * Hook to fetch a coach by ID with full profile details.
  * Only fetches if coachId is defined.
+ * Applies normalization to ensure consistent field names.
  */
 export function useCoach(coachId: string | undefined): UseApiState<CoachDetailDto> {
   return useApiCall<CoachDetailDto>(
-    () => apiClient.coaches.getById(coachId!),
+    async () => {
+      const response = await apiClient.coaches.getById(coachId!);
+      if (response.success && response.data) {
+        return {
+          success: true,
+          data: normalizeCoachDetail(response.data)
+        };
+      }
+      return { success: false, error: { message: response.error?.message } };
+    },
     [coachId],
     isValidId(coachId)
   );
@@ -1666,7 +1677,7 @@ export function useUpdateCoach(coachId: string): UseMutationState<CoachDetailDto
     try {
       const response: ApiResponse<CoachDetailDto> = await apiClient.coaches.update(coachId, request);
       if (response.success && response.data) {
-        setData(response.data);
+        setData(normalizeCoachDetail(response.data));
       } else {
         setError({
           message: response.error?.message || 'Failed to update coach',

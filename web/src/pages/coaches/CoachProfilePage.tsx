@@ -91,13 +91,13 @@ export default function CoachProfilePage() {
 
   // Resolve context names from coach's team assignments when available
   const contextAgeGroupName = ageGroupId && coach
-    ? coach.teams.find(t => t.ageGroupId === ageGroupId)?.ageGroupName
-      ?? coach.ageGroupCoordinatorRoles.find(r => r.ageGroupId === ageGroupId)?.ageGroupName
+    ? coach.teams?.find(t => t.ageGroupId === ageGroupId)?.ageGroupName
+      ?? coach.ageGroupCoordinatorRoles?.find(r => r.ageGroupId === ageGroupId)?.ageGroupName
       ?? 'Age Group'
     : null;
 
   const contextTeamName = teamId && coach
-    ? coach.teams.find(t => t.teamId === teamId)?.teamName ?? 'Team'
+    ? coach.teams?.find(t => t.teamId === teamId)?.teamName ?? 'Team'
     : null;
 
   // Determine back link based on context (team, age group, or club)
@@ -160,6 +160,20 @@ export default function CoachProfilePage() {
     if (coach) {
       alert(`Invite sent to ${coach.email}! (Demo - not actually sent)`);
     }
+  };
+
+  // Helper to safely parse specializations (handles both arrays and JSON strings)
+  const getSpecializations = (coach: any) => {
+    if (!coach?.specializations) return [];
+    if (Array.isArray(coach.specializations)) return coach.specializations;
+    if (typeof coach.specializations === 'string') {
+      try {
+        return JSON.parse(coach.specializations);
+      } catch {
+        return [];
+      }
+    }
+    return [];
   };
 
   return (
@@ -244,7 +258,7 @@ export default function CoachProfilePage() {
           ) : (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
               <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Assigned Teams</h2>
-              {coach.teams.length > 0 ? (
+              {coach.teams && coach.teams.length > 0 ? (
                 <div className="space-y-2">
                   {coach.teams.map(team => (
                     <div key={team.teamId} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -267,11 +281,11 @@ export default function CoachProfilePage() {
           {isLoading ? (
             <SpecializationsSkeleton />
           ) : (
-            coach && coach.specializations && coach.specializations.length > 0 && (
+            getSpecializations(coach).length > 0 && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
                 <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Specializations</h2>
                 <div className="flex flex-wrap gap-2">
-                  {coach.specializations.map((spec, index) => (
+                  {getSpecializations(coach).map((spec, index) => (
                     <span key={index} className="badge-secondary">
                       {spec}
                     </span>

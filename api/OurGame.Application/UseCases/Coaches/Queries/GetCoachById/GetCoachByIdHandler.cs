@@ -140,8 +140,25 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
             return new List<string>();
         }
 
+        // Try to parse as JSON array first (e.g., ["Youth Development","Tactical Training"])
+        var trimmed = specializations.Trim();
+        if (trimmed.StartsWith("[") && trimmed.EndsWith("]"))
+        {
+            try
+            {
+                var parsed = System.Text.Json.JsonSerializer.Deserialize<List<string>>(trimmed);
+                return parsed ?? new List<string>();
+            }
+            catch
+            {
+                // Fall through to comma-separated parsing
+            }
+        }
+
+        // Fallback: Specializations are stored as comma-separated values
         return specializations
-            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Split(',', StringSplitOptions.RemoveEmptyEntries)
+            .Select(s => s.Trim())
             .ToList();
     }
 }

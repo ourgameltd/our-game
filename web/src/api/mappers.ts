@@ -4,7 +4,7 @@
  * Note: Mappers will be added here as needed when more endpoints are implemented.
  */
 
-import type { ClubTrainingSessionDto } from './client';
+import type { ClubTrainingSessionDto, CoachDetailDto } from './client';
 import type { TrainingSession } from '@/types';
 
 /**
@@ -69,3 +69,27 @@ export function mapUiRoleToApi(uiRole: string): string {
   };
   return roleMap[uiRole] || uiRole;
 }
+
+/**
+ * Normalize coach detail response from backend to match frontend expectations
+ * 
+ * Backend returns:
+ * - photoUrl → maps to photo
+ * - teamAssignments → maps to teams
+ * - coordinatorRoles → maps to ageGroupCoordinatorRoles
+ * 
+ * This function handles the field name mapping and gracefully handles missing data.
+ */
+export function normalizeCoachDetail(backendResponse: any): CoachDetailDto {
+  return {
+    ...backendResponse,
+    photo: backendResponse.photoUrl || backendResponse.photo || undefined,
+    teams: backendResponse.teamAssignments || backendResponse.teams || [],
+    ageGroupCoordinatorRoles: backendResponse.coordinatorRoles || backendResponse.ageGroupCoordinatorRoles || [],
+    // Remove old field names to avoid confusion
+    photoUrl: undefined,
+    teamAssignments: undefined,
+    coordinatorRoles: undefined,
+  };
+}
+

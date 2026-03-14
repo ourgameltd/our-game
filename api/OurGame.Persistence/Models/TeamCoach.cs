@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Models;
 
@@ -12,6 +13,8 @@ public partial class TeamCoach
     public Guid TeamId { get; set; }
 
     public Guid CoachId { get; set; }
+
+    public CoachRole Role { get; set; }
 
     public DateTime AssignedAt { get; set; }
 

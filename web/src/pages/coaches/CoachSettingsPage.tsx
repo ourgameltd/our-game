@@ -1,10 +1,12 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useCoach, useClubTeams, useUpdateCoach, UpdateCoachRequest, ClubTeamDto } from '@/api';
+import { useCoach, useClubTeams, useClubCoaches, useUpdateCoach, UpdateCoachRequest, ClubTeamDto } from '@/api';
+import { mapApiRoleToUi, mapUiRoleToApi } from '@/api/mappers';
 import { coachRoles } from '@data/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
+import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -82,9 +84,10 @@ export default function CoachSettingsPage() {
     isNewCoach ? undefined : coachId
   );
   const { data: allTeams, isLoading: isLoadingTeams } = useClubTeams(clubId);
+  const { data: clubCoaches, isLoading: isLoadingClubCoaches } = useClubCoaches(clubId);
   const { updateCoach, isSubmitting, error: submitError } = useUpdateCoach(coachId || '');
 
-  const isLoading = isLoadingCoach || isLoadingTeams;
+  const isLoading = isLoadingCoach || isLoadingTeams || isLoadingClubCoaches;
 
   // Form state
   const [formInitialized, setFormInitialized] = useState(false);
@@ -96,7 +99,7 @@ export default function CoachSettingsPage() {
   const [associationId, setAssociationId] = useState('');
   const [role, setRole] = useState('assistant-coach');
   const [biography, setBiography] = useState('');
-  const [specializations, setSpecializations] = useState('');
+  const [specializations, setSpecializations] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
   const [photo, setPhoto] = useState('');
   const [photoPreview, setPhotoPreview] = useState('');
@@ -113,9 +116,9 @@ export default function CoachSettingsPage() {
         coach.dateOfBirth ? new Date(coach.dateOfBirth).toISOString().split('T')[0] : ''
       );
       setAssociationId(coach.associationId || '');
-      setRole(coach.role || 'assistant-coach');
+      setRole(mapApiRoleToUi(coach.role || 'AssistantCoach'));
       setBiography(coach.biography || '');
-      setSpecializations(coach.specializations?.join(', ') || '');
+      setSpecializations(coach.specializations ?? []);
       setSelectedTeams(coach.teams?.map(t => t.teamId) || []);
       setPhoto(coach.photo || '');
       setPhotoPreview(coach.photo || '');
@@ -173,9 +176,9 @@ export default function CoachSettingsPage() {
       phone: phone || undefined,
       dateOfBirth: dateOfBirth || undefined,
       associationId: associationId || undefined,
-      role,
+      role: mapUiRoleToApi(role),
       biography: biography || undefined,
-      specializations: specializations.split(',').map(s => s.trim()).filter(Boolean),
+      specializations,
       teamIds: selectedTeams,
       photo: photo || undefined,
     };
@@ -237,6 +240,23 @@ export default function CoachSettingsPage() {
 
   const roleOptions = coachRoles;
   const teamGroups = groupTeamsByAgeGroup(allTeams || []);
+
+  // Extract unique specializations from all club coaches for typeahead options
+  const specializationOptions = [
+    ...new Set(
+      [
+        // Include current coach's specializations so they don't disappear
+        ...(coach?.specializations ?? []),
+        // Include all other coaches' specializations
+        ...(clubCoaches ?? []).flatMap(c => c.specializations ?? [])
+      ]
+        .map(s => s.trim())
+        .filter(Boolean)
+        .map(s => s.toLowerCase())
+    )
+  ]
+    .map(s => s.charAt(0).toUpperCase() + s.slice(1)) // Capitalize first letter
+    .sort();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -489,19 +509,13 @@ export default function CoachSettingsPage() {
                 </div>
               </div>
               <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Specializations
-                </label>
-                <input
-                  type="text"
+                <MultiSelectTypeahead
+                  label="Specializations"
+                  options={specializationOptions}
                   value={specializations}
-                  onChange={(e) => setSpecializations(e.target.value)}
-                  placeholder="Youth Development, Tactical Training, etc."
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  onChange={setSpecializations}
+                  placeholder="Select or search specializations..."
                 />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Separate multiple specializations with commas
-                </p>
               </div>
             </div>
 

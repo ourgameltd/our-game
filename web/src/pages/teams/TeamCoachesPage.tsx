@@ -32,7 +32,7 @@ export default function TeamCoachesPage() {
   const team = teamOverview?.team;
   
   // Fetch coaches data - use clubId from route params, not from team data
-  const { data: teamCoaches = [], isLoading: coachesLoading, error: coachesError } = useTeamCoaches(teamId);
+  const { data: teamCoaches = [], isLoading: coachesLoading, error: coachesError, refetch: refetchTeamCoaches } = useTeamCoaches(teamId);
   const { data: clubCoaches = [], isLoading: clubCoachesLoading, error: clubCoachesError } = useClubCoaches(clubId);
   
   // Mutation hooks
@@ -42,6 +42,7 @@ export default function TeamCoachesPage() {
   // Local state
   const [showAddModal, setShowAddModal] = useState(false);
   const [removingCoachId, setRemovingCoachId] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Loading state
   const isLoading = teamLoading || coachesLoading;
@@ -144,6 +145,9 @@ export default function TeamCoachesPage() {
         coachId,
         role: mapUiRoleToApi(role) // Convert UI role (head-coach) to API role (HeadCoach)
       });
+      await refetchTeamCoaches();
+      setSuccessMessage('Coach assigned successfully');
+      setTimeout(() => setSuccessMessage(null), 4000);
       setShowAddModal(false);
     } catch (err) {
       console.error('Failed to assign coach:', err);
@@ -154,6 +158,9 @@ export default function TeamCoachesPage() {
     setRemovingCoachId(coachId);
     try {
       await removeCoach(coachId);
+      await refetchTeamCoaches();
+      setSuccessMessage('Coach removed successfully');
+      setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
       console.error('Failed to remove coach:', err);
     } finally {
@@ -194,6 +201,15 @@ export default function TeamCoachesPage() {
           </div>
         )}
 
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-sm text-green-800 dark:text-green-300">
+              ✓ {successMessage}
+            </p>
+          </div>
+        )}
+
         {/* Error Messages */}
         {assignError && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -210,9 +226,14 @@ export default function TeamCoachesPage() {
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800 dark:text-red-300">
-                Failed to remove coach: {removeError.message}
-              </p>
+              <div>
+                <p className="text-sm font-medium text-red-800 dark:text-red-300 mb-1">
+                  Failed to remove coach
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-400">
+                  {removeError.message.replace(/^Failed to remove coach:?\s*/i, '')}
+                </p>
+              </div>
             </div>
           </div>
         )}

@@ -14,7 +14,8 @@ public static class TeamCoachSeedData
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.Reds2014_Id, 
-                CoachId = CoachSeedData.MichaelLaw_Id, 
+                CoachId = CoachSeedData.MichaelLaw_Id,
+                Role = CoachRole.HeadCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
@@ -23,7 +24,8 @@ public static class TeamCoachSeedData
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.Reds2014_Id, 
-                CoachId = CoachSeedData.MichaelRobertson_Id, 
+                CoachId = CoachSeedData.MichaelRobertson_Id,
+                Role = CoachRole.HeadCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
@@ -32,14 +34,16 @@ public static class TeamCoachSeedData
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.Reds2014_Id, 
-                CoachId = CoachSeedData.DavidCampbell_Id, 
+                CoachId = CoachSeedData.DavidCampbell_Id,
+                Role = CoachRole.GoalkeeperCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new TeamCoach 
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.Blues2014_Id, 
-                CoachId = CoachSeedData.DavidCampbell_Id, 
+                CoachId = CoachSeedData.DavidCampbell_Id,
+                Role = CoachRole.GoalkeeperCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
@@ -48,7 +52,8 @@ public static class TeamCoachSeedData
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.Blues2014_Id, 
-                CoachId = CoachSeedData.EmmaWilson_Id, 
+                CoachId = CoachSeedData.EmmaWilson_Id,
+                Role = CoachRole.HeadCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
@@ -57,7 +62,8 @@ public static class TeamCoachSeedData
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.FirstTeam_Id, 
-                CoachId = CoachSeedData.JamesAnderson_Id, 
+                CoachId = CoachSeedData.JamesAnderson_Id,
+                Role = CoachRole.HeadCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             },
 
@@ -66,21 +72,24 @@ public static class TeamCoachSeedData
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.Reds2014_Id, 
-                CoachId = CoachSeedData.LauraThomson_Id, 
+                CoachId = CoachSeedData.LauraThomson_Id,
+                Role = CoachRole.FitnessCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new TeamCoach 
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.Blues2014_Id, 
-                CoachId = CoachSeedData.LauraThomson_Id, 
+                CoachId = CoachSeedData.LauraThomson_Id,
+                Role = CoachRole.FitnessCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             },
             new TeamCoach 
             { 
                 Id = Guid.NewGuid(),
                 TeamId = TeamSeedData.Reds2013_Id, 
-                CoachId = CoachSeedData.LauraThomson_Id, 
+                CoachId = CoachSeedData.LauraThomson_Id,
+                Role = CoachRole.FitnessCoach,
                 AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
             }
         };

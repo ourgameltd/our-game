@@ -2406,6 +2406,14 @@ export const apiClient = {
         const response = await axiosInstance.delete<ApiResponse<void>>(
           `/v1/teams/${teamId}/players/${playerId}`
         );
+        // Handle 204 No Content response
+        if (response.status === 204) {
+          return {
+            success: true,
+            statusCode: 204,
+            data: undefined
+          };
+        }
         return response.data;
       } catch (error) {
         return handleApiError(error);
@@ -2520,6 +2528,14 @@ export const apiClient = {
         const response = await axiosInstance.delete<ApiResponse<void>>(
           `/v1/teams/${teamId}/coaches/${coachId}`
         );
+        // Handle 204 No Content response
+        if (response.status === 204) {
+          return {
+            success: true,
+            statusCode: 204,
+            data: undefined
+          };
+        }
         return response.data;
       } catch (error) {
         return handleApiError(error);
@@ -2603,6 +2619,14 @@ export const apiClient = {
         const response = await axiosInstance.delete<ApiResponse<void>>(
           `/v1/teams/${teamId}/kits/${kitId}`
         );
+        // Handle 204 No Content response
+        if (response.status === 204) {
+          return {
+            success: true,
+            statusCode: 204,
+            data: undefined
+          };
+        }
         return response.data;
       } catch (error) {
         return handleApiError(error);
@@ -3220,6 +3244,7 @@ export const apiClient = {
      * Delete an ability evaluation
      */
     deleteAbilityEvaluation: async (playerId: string, evaluationId: string): Promise<void> => {
+      // No need to check status for 204 - void return type handles it naturally
       await axiosInstance.delete(`/v1/players/${playerId}/abilities/evaluations/${evaluationId}`);
     },
 
