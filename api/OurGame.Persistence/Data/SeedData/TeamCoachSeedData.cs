@@ -7,91 +7,20 @@ public static class TeamCoachSeedData
 {
     public static List<TeamCoach> GetTeamCoaches()
     {
-        return new List<TeamCoach>
+        var now = DateTime.UtcNow;
+
+        var uniqueAssignments = UserSeedData.GetDataset().Admins
+            .GroupBy(admin => $"{TeamSeedData.NormalizeTeamName(admin.Team)}|{UserSeedData.NormalizeName(admin.Name)}")
+            .Select(group => group.First())
+            .ToList();
+
+        return uniqueAssignments.Select(admin => new TeamCoach
         {
-            // Michael Law - Reds 2014 (head coach)
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.Reds2014_Id, 
-                CoachId = CoachSeedData.MichaelLaw_Id,
-                Role = CoachRole.HeadCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-
-            // Michael Robertson - Reds 2014 (head coach from TypeScript coaches data)
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.Reds2014_Id, 
-                CoachId = CoachSeedData.MichaelRobertson_Id,
-                Role = CoachRole.HeadCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-
-            // David Campbell - Multiple teams (goalkeeper coach)
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.Reds2014_Id, 
-                CoachId = CoachSeedData.DavidCampbell_Id,
-                Role = CoachRole.GoalkeeperCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.Blues2014_Id, 
-                CoachId = CoachSeedData.DavidCampbell_Id,
-                Role = CoachRole.GoalkeeperCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-
-            // Emma Wilson - Blues 2014 (head coach)
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.Blues2014_Id, 
-                CoachId = CoachSeedData.EmmaWilson_Id,
-                Role = CoachRole.HeadCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-
-            // James Anderson - Senior Team (head coach)
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.FirstTeam_Id, 
-                CoachId = CoachSeedData.JamesAnderson_Id,
-                Role = CoachRole.HeadCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-
-            // Laura Thomson - Multiple teams (fitness coach)
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.Reds2014_Id, 
-                CoachId = CoachSeedData.LauraThomson_Id,
-                Role = CoachRole.FitnessCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.Blues2014_Id, 
-                CoachId = CoachSeedData.LauraThomson_Id,
-                Role = CoachRole.FitnessCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            },
-            new TeamCoach 
-            { 
-                Id = Guid.NewGuid(),
-                TeamId = TeamSeedData.Reds2013_Id, 
-                CoachId = CoachSeedData.LauraThomson_Id,
-                Role = CoachRole.FitnessCoach,
-                AssignedAt = new DateTime(2024, 8, 1, 0, 0, 0, DateTimeKind.Utc)
-            }
-        };
+            Id = UserSeedData.CreateDeterministicGuid($"team-coach|{TeamSeedData.NormalizeTeamName(admin.Team)}|{UserSeedData.NormalizeName(admin.Name)}"),
+            TeamId = TeamSeedData.GetTeamIdByName(admin.Team),
+            CoachId = CoachSeedData.GetCoachIdByAdminName(admin.Name),
+            Role = CoachRole.HeadCoach,
+            AssignedAt = now
+        }).ToList();
     }
 }

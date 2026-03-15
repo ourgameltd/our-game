@@ -4,8 +4,22 @@ using Microsoft.Extensions.DependencyInjection;
 using OurGame.Persistence;
 using OurGame.Persistence.Models;
 
+var cleanMode = args.Contains("--clean", StringComparer.OrdinalIgnoreCase);
+
 Console.WriteLine("OurGame Database Seeder");
 Console.WriteLine("======================");
+if (cleanMode)
+{
+    Console.WriteLine("🧹 Running in CLEAN mode — all existing data will be deleted before seeding");
+}
+Console.WriteLine();
+
+// Diagnostic: show seed data source info
+var dataset = OurGame.Persistence.Data.SeedData.UserSeedData.GetDataset();
+Console.WriteLine("📊 Seed data source diagnostics:");
+Console.WriteLine($"  Players in JSON: {dataset.Players.Count}");
+Console.WriteLine($"  Guardians in JSON: {dataset.Guardians.Count}");
+Console.WriteLine($"  Admins in JSON: {dataset.Admins.Count}");
 Console.WriteLine();
 
 // Find the OurGame.Api directory
@@ -86,6 +100,63 @@ try
         {
             Console.WriteLine("✅ Database is up to date");
         }
+    }
+    
+    // Clean existing data if --clean flag is specified
+    if (cleanMode)
+    {
+        Console.WriteLine("🧹 Cleaning existing data...");
+        
+        // Disable all FK constraints, delete all data, re-enable constraints
+        // This avoids needing to know the exact FK dependency order
+        await context.Database.ExecuteSqlRawAsync(
+            "EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'");
+        
+        // Delete from all seeded tables (order doesn't matter with constraints disabled)
+        string[] tablesToClean =
+        [
+            "DevelopmentGoals", "DevelopmentPlans",
+            "ReportDevelopmentActions", "SimilarProfessionals", "PlayerReports",
+            "ProgressNotes", "TrainingObjectives", "TrainingPlans",
+            "PositionOverrides", "EvaluationAttributes", "AttributeEvaluations",
+            "SessionCoaches", "Injuries", "EmergencyContacts",
+            "PerformanceRatings", "Cards", "Goals", "MatchReports",
+            "MatchSubstitutions", "LineupPlayers", "MatchCoaches", "MatchLineups",
+            "PlayerParents", "PlayerImages", "AgeGroupCoordinators",
+            "AppliedTemplates", "SessionAttendances", "SessionDrills", "TemplateDrills",
+            "Matches", "TrainingSessions", "DrillTemplates", "DrillLinks", "Drills",
+            "TacticPrinciples", "FormationPositions", "Formations",
+            "FormationClubs", "FormationAgeGroups", "FormationTeams", "FormationUsers",
+            "Kits", "PlayerAttributes", "PlayerAgeGroups", "PlayerTeams",
+            "Players", "TeamCoaches", "Teams", "Coaches", "Users",
+            "AgeGroupCoordinators", "AgeGroups", "Clubs",
+            "PersonalSessionDrills", "PersonalSessions",
+            "KitOrderItems", "KitOrders", "MatchAttendances",
+            "DrillAgeGroups", "DrillClubs", "DrillTeams", "DrillUsers",
+            "DrillTemplateAgeGroups", "DrillTemplateClubs", "DrillTemplateTeams", "DrillTemplateUsers"
+        ];
+        
+        foreach (var table in tablesToClean)
+        {
+            try
+            {
+                // Table names are from a hardcoded array — safe to concatenate
+                #pragma warning disable EF1002
+                await context.Database.ExecuteSqlRawAsync("DELETE FROM [" + table + "]");
+                #pragma warning restore EF1002
+            }
+            catch
+            {
+                // Table may not exist yet — skip silently
+            }
+        }
+        
+        // Re-enable all FK constraints
+        await context.Database.ExecuteSqlRawAsync(
+            "EXEC sp_MSforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'");
+        
+        Console.WriteLine("✅ Existing data cleaned");
+        Console.WriteLine();
     }
     
     Console.WriteLine("⏳ Seeding database...");
@@ -511,6 +582,10 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"❌ Error seeding database: {ex.Message}");
+    if (ex.InnerException != null)
+    {
+        Console.WriteLine($"  Inner: {ex.InnerException.Message}");
+    }
     Console.WriteLine(ex.StackTrace);
     return 1;
 }

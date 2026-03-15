@@ -10,34 +10,6 @@ public static class TrainingPlanSeedData
     
     public static List<TrainingPlan> GetTrainingPlans()
     {
-        var now = DateTime.UtcNow;
-        
-        return new List<TrainingPlan>
-        {
-            // Training plan for Carlos Silva - focusing on aerial ability and defensive work rate
-            new TrainingPlan
-            {
-                Id = Plan1_CarlosSilva_Id,
-                PlayerId = PlayerSeedData.MasonEvans_Id, // Using existing player
-                CreatedBy = CoachSeedData.MichaelRobertson_Id,
-                PeriodStart = new DateOnly(2024, 12, 1),
-                PeriodEnd = new DateOnly(2025, 2, 28),
-                Status = "active",
-                CreatedAt = new DateTime(2024, 12, 1, 0, 0, 0, DateTimeKind.Utc),
-                UpdatedAt = new DateTime(2024, 12, 6, 0, 0, 0, DateTimeKind.Utc)
-            },
-            // Training plan for another player - goal contributions
-            new TrainingPlan
-            {
-                Id = Plan2_MasonEvans_Id,
-                PlayerId = PlayerSeedData.NoahAnderson_Id,
-                CreatedBy = CoachSeedData.MichaelRobertson_Id,
-                PeriodStart = new DateOnly(2024, 12, 1),
-                PeriodEnd = new DateOnly(2025, 2, 28),
-                Status = "active",
-                CreatedAt = new DateTime(2024, 12, 1, 0, 0, 0, DateTimeKind.Utc),
-                UpdatedAt = new DateTime(2024, 12, 1, 0, 0, 0, DateTimeKind.Utc)
-            }
-        };
+        return new List<TrainingPlan>();
     }
 }

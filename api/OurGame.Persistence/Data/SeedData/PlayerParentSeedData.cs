@@ -1,5 +1,4 @@
 using OurGame.Persistence.Models;
-using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -7,29 +6,16 @@ public static class PlayerParentSeedData
 {
     public static List<PlayerParent> GetPlayerParents()
     {
-        return new List<PlayerParent>
+        var uniqueRelationships = UserSeedData.GetDataset().Guardians
+            .GroupBy(guardian => $"{UserSeedData.NormalizeName(guardian.Player)}|{UserSeedData.NormalizeName(guardian.Name)}")
+            .Select(group => group.First())
+            .ToList();
+
+        return uniqueRelationships.Select(guardian => new PlayerParent
         {
-            // Oliver Thompson - parent user (would need to exist in Users table)
-            new PlayerParent
-            {
-                Id = Guid.NewGuid(),
-                PlayerId = PlayerSeedData.OliverThompson_Id,
-                ParentUserId = UserSeedData.ParentUser_Id
-            },
-            // James Wilson - parent user
-            new PlayerParent
-            {
-                Id = Guid.NewGuid(),
-                PlayerId = PlayerSeedData.JamesWilson_Id,
-                ParentUserId = UserSeedData.DemoUser_Id
-            },
-            // Michael Law - parent of Oliver Thompson
-            new PlayerParent
-            {
-                Id = Guid.NewGuid(),
-                PlayerId = PlayerSeedData.OliverThompson_Id,
-                ParentUserId = UserSeedData.MichaelLaw_Id
-            }
-        };
+            Id = UserSeedData.CreateDeterministicGuid($"player-parent|{UserSeedData.NormalizeName(guardian.Player)}|{UserSeedData.NormalizeName(guardian.Name)}"),
+            PlayerId = PlayerSeedData.GetPlayerIdByName(guardian.Player),
+            ParentUserId = UserSeedData.GetGuardianUserId(guardian.Name)
+        }).ToList();
     }
 }

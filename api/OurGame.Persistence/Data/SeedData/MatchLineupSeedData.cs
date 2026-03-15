@@ -9,17 +9,6 @@ public static class MatchLineupSeedData
     
     public static List<MatchLineup> GetMatchLineups()
     {
-        var now = DateTime.UtcNow;
-        
-        return new List<MatchLineup>
-        {
-            new MatchLineup
-            {
-                Id = Match3_Lineup_Id,
-                MatchId = MatchSeedData.Match3_Id,
-                FormationId = FormationSeedData.Formation_442_Classic_Id,
-                TacticId = null,
-            }
-        };
+        return new List<MatchLineup>();
     }
 }

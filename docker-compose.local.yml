@@ -33,5 +33,5 @@ services:
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=OurGame;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True"
     depends_on:
       - sqlserver
-    command: ["dotnet", "run", "--project", "OurGame.Seeder"]
+    command: ["dotnet", "run", "--project", "OurGame.Seeder", "--", "--clean"]
     restart: "no"

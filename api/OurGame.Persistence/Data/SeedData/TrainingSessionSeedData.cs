@@ -12,52 +12,6 @@ public static class TrainingSessionSeedData
 
     public static List<TrainingSession> GetTrainingSessions()
     {
-        var now = DateTime.UtcNow;
-        
-        return new List<TrainingSession>
-        {
-            new TrainingSession
-            {
-                Id = Session1_Technical_Id,
-                TeamId = TeamSeedData.Reds2014_Id,
-                SessionDate = new DateTime(2026, 1, 2, 10, 0, 0, DateTimeKind.Utc),
-                MeetTime = new DateTime(2026, 1, 2, 9, 30, 0, DateTimeKind.Utc),
-                DurationMinutes = 75,
-                Location = "Community Sports Ground - Pitch 2",
-                FocusAreas = "[\"Passing & Movement\",\"Build-up Play\",\"Team Shape\"]",
-                Notes = "Post-Christmas training session! Let's shake off those mince pies. Focus on passing drills and possession game.",
-                Status = SessionStatus.Scheduled,
-                CreatedAt = now,
-                UpdatedAt = now
-            },
-            new TrainingSession
-            {
-                Id = Session2_Tactical_Id,
-                TeamId = TeamSeedData.Reds2014_Id,
-                SessionDate = new DateTime(2025, 12, 30, 18, 0, 0, DateTimeKind.Utc),
-                MeetTime = new DateTime(2025, 12, 30, 17, 30, 0, DateTimeKind.Utc),
-                DurationMinutes = 90,
-                Location = "Community Sports Ground - Pitch 1",
-                FocusAreas = "[\"Tactical Awareness\",\"Set Pieces\",\"Defensive Shape\"]",
-                Notes = "Focus on defensive organization ahead of the cup match on Saturday.",
-                Status = SessionStatus.Scheduled,
-                CreatedAt = now,
-                UpdatedAt = now
-            },
-            new TrainingSession
-            {
-                Id = Session3_Fitness_Id,
-                TeamId = TeamSeedData.Reds2014_Id,
-                SessionDate = new DateTime(2025, 1, 15, 18, 0, 0, DateTimeKind.Utc),
-                MeetTime = new DateTime(2025, 1, 15, 17, 45, 0, DateTimeKind.Utc),
-                DurationMinutes = 75,
-                Location = "Community Sports Ground - Pitch 2",
-                FocusAreas = "[\"Technical Skills\",\"Finishing\",\"First Touch\"]",
-                Notes = "Focus on shooting technique this week. Bring shin pads.",
-                Status = SessionStatus.Scheduled,
-                CreatedAt = now,
-                UpdatedAt = now
-            }
-        };
+        return new List<TrainingSession>();
     }
 }
