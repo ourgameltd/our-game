@@ -9,6 +9,7 @@ public static class UserSeedData
 {
     // Test user for E2E tests - DO NOT REMOVE
     public static readonly Guid MichaelLaw_Id = Guid.Parse("00000001-0000-0000-0000-000000000102");
+    private const string TestUserNormalizedName = "michael law";
 
     private static readonly string DatasetPath = Path.Combine(
         AppContext.BaseDirectory,
@@ -55,6 +56,12 @@ public static class UserSeedData
 
     public static Guid GetUserIdByName(string name)
     {
+        // Map "Michael Law" from JSON data to the hardcoded test user
+        if (NormalizeName(name) == TestUserNormalizedName)
+        {
+            return MichaelLaw_Id;
+        }
+
         return CreateDeterministicGuid($"user|{NormalizeName(name)}");
     }
 
@@ -111,6 +118,12 @@ public static class UserSeedData
 
         foreach (var profile in mergedProfilesByName.Values.OrderBy(profile => profile.Name, StringComparer.OrdinalIgnoreCase))
         {
+            // Skip "Michael Law" - already added as the hardcoded test user above
+            if (NormalizeName(profile.Name) == TestUserNormalizedName)
+            {
+                continue;
+            }
+
             var userId = GetUserIdByName(profile.Name);
             var (firstName, lastName) = SplitName(profile.Name);
 

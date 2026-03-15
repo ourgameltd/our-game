@@ -22,11 +22,7 @@ import {
   Calendar,
   Dumbbell
 } from 'lucide-react';
-import { getClubById } from '@data/clubs';
-import { getTeamById } from '@data/teams';
-import { getAgeGroupById } from '@data/ageGroups';
-import { getPlayerById } from '@data/players';
-import { getCoachById } from '@data/coaches';
+import { useClubById, useTeamOverview, useAgeGroup, usePlayer, useCoach } from '@/api/hooks';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -65,11 +61,17 @@ export default function MobileNavigation() {
   const playerId = playerMatch?.params.playerId || teamPlayerMatch?.params.playerId;
   const coachId = ageGroupCoachMatch?.params.coachId || teamCoachMatch?.params.coachId;
 
-  const club = clubId ? getClubById(clubId) : null;
-  const team = teamId ? getTeamById(teamId) : null;
-  const ageGroup = ageGroupId ? getAgeGroupById(ageGroupId) : null;
-  const player = playerId ? getPlayerById(playerId) : null;
-  const coach = coachId ? getCoachById(coachId) : undefined;
+  const { data: clubData } = useClubById(clubId);
+  const { data: teamOverviewData } = useTeamOverview(teamId);
+  const { data: ageGroupData } = useAgeGroup(ageGroupId);
+  const { data: playerData } = usePlayer(playerId);
+  const { data: coachData } = useCoach(coachId);
+
+  const club = clubData ?? null;
+  const team = teamOverviewData?.team ?? null;
+  const ageGroup = ageGroupData ?? null;
+  const player = playerData ?? null;
+  const coach = coachData ?? undefined;
 
   // Determine which level we're currently at
   const currentLevel = playerId ? 'player' : coachId ? 'coach' : teamId ? 'team' : ageGroupId ? 'ageGroup' : clubId ? 'club' : 'clubs';
@@ -150,10 +152,10 @@ export default function MobileNavigation() {
     
     // Player pages
     if (player) {
-      if (path.includes('/development')) return { title: 'Player Development', image: player.photo };
-      if (path.includes('/album')) return { title: 'Photo Album', image: player.photo };
-      if (path.includes('/settings')) return { title: 'Player Settings', image: player.photo };
-      return { title: `${player.firstName} ${player.lastName}`, image: player.photo };
+      if (path.includes('/development')) return { title: 'Player Development', image: player.photoUrl };
+      if (path.includes('/album')) return { title: 'Photo Album', image: player.photoUrl };
+      if (path.includes('/settings')) return { title: 'Player Settings', image: player.photoUrl };
+      return { title: `${player.firstName} ${player.lastName}`, image: player.photoUrl };
     }
     
     // Coach pages
@@ -570,41 +572,6 @@ export default function MobileNavigation() {
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Coaches</span>
-                              </Link>
-                            </li>
-                          </ul>
-                        )}
-                      </li>
-                      {/* Scheduling Section */}
-                      <li className="mobile-nav-item">
-                        <button
-                          onClick={() => setIsSchedulingExpanded(!isSchedulingExpanded)}
-                          className={`mobile-nav-link pl-8 w-full justify-between ${isSchedulingPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
-                        >
-                          <span className="flex items-center gap-4">
-                            <Calendar className="mobile-nav-icon" />
-                            <span className="mobile-nav-text">Scheduling</span>
-                          </span>
-                          {isSchedulingExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </button>
-                        {isSchedulingExpanded && (
-                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                            <li className="mobile-nav-item">
-                              <Link 
-                                to={Routes.clubMatches(clubId as string)}
-                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubMatches(clubId as string)) ? 'active' : ''}`}
-                              >
-                                <Shield className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Matches</span>
-                              </Link>
-                            </li>
-                            <li className="mobile-nav-item">
-                              <Link 
-                                to={Routes.clubTraining(clubId as string)}
-                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubTraining(clubId as string)) ? 'active' : ''}`}
-                              >
-                                <Dumbbell className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Training</span>
                               </Link>
                             </li>
                           </ul>
