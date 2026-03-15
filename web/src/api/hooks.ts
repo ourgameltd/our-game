@@ -28,6 +28,7 @@ import {
   ClubTrainingSessionDto,
   ClubMatchesDto,
   ClubKitDto,
+  CreateClubKitRequest,
   ClubReportCardDto,
   ClubDevelopmentPlanDto,
   AgeGroupDevelopmentPlanSummaryDto,
@@ -77,6 +78,7 @@ import {
   TeamKitDto,
   CreateTeamKitRequest,
   UpdateTeamKitRequest,
+  UpdateClubKitRequest,
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 import { normalizeCoachDetail } from './mappers';
@@ -2026,6 +2028,150 @@ export function useDeleteTeamKit(teamId: string | undefined): UseMutationState<v
       setIsSubmitting(false);
     }
   }, [teamId, refetchKits]);
+
+  return { deleteKit, isSubmitting, data, error, refetchKits };
+}
+
+// ============================================================
+// Club Kit Mutation Hooks
+// ============================================================
+
+/**
+ * Hook to create a kit for a club.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ * Automatically refetches club kits on success.
+ */
+export function useCreateClubKit(clubId: string | undefined): UseMutationState<ClubKitDto> & {
+  createKit: (request: CreateClubKitRequest) => Promise<void>;
+  refetchKits: () => Promise<void>;
+} {
+  const [data, setData] = useState<ClubKitDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchKits } = useClubKits(clubId);
+
+  const createKit = useCallback(async (request: CreateClubKitRequest): Promise<void> => {
+    if (!clubId) {
+      setError({ message: 'Club ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<ClubKitDto> = await apiClient.clubs.createKit(clubId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+        await refetchKits();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create kit',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId, refetchKits]);
+
+  return { createKit, isSubmitting, data, error, refetchKits };
+}
+
+/**
+ * Hook to update a kit for a club.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ * Automatically refetches club kits on success.
+ */
+export function useUpdateClubKit(clubId: string | undefined): UseMutationState<ClubKitDto> & {
+  updateKit: (kitId: string, request: UpdateClubKitRequest) => Promise<void>;
+  refetchKits: () => Promise<void>;
+} {
+  const [data, setData] = useState<ClubKitDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchKits } = useClubKits(clubId);
+
+  const updateKit = useCallback(async (kitId: string, request: UpdateClubKitRequest): Promise<void> => {
+    if (!clubId) {
+      setError({ message: 'Club ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<ClubKitDto> = await apiClient.clubs.updateKit(clubId, kitId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+        await refetchKits();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update kit',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId, refetchKits]);
+
+  return { updateKit, isSubmitting, data, error, refetchKits };
+}
+
+/**
+ * Hook to delete a kit for a club.
+ * Returns a mutation function, submitting state, and error.
+ * Automatically refetches club kits on success.
+ */
+export function useDeleteClubKit(clubId: string | undefined): UseMutationState<void> & {
+  deleteKit: (kitId: string) => Promise<void>;
+  refetchKits: () => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+  const { refetch: refetchKits } = useClubKits(clubId);
+
+  const deleteKit = useCallback(async (kitId: string): Promise<void> => {
+    if (!clubId) {
+      setError({ message: 'Club ID is required' });
+      return;
+    }
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.clubs.deleteKit(clubId, kitId);
+      if (response.success || response.statusCode === 204) {
+        setData(undefined);
+        await refetchKits();
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to delete kit',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId, refetchKits]);
 
   return { deleteKit, isSubmitting, data, error, refetchKits };
 }

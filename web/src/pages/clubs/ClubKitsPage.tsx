@@ -1,7 +1,15 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Kit } from '@/types';
-import { apiClient, ClubKitDto, ClubDetailDto } from '@/api';
+import {
+  ClubKitDto,
+  useClubById,
+  useClubKits,
+  useCreateClubKit,
+  useUpdateClubKit,
+  useDeleteClubKit,
+} from '@/api';
+import { CreateClubKitRequest, UpdateClubKitRequest } from '@/api/client';
 import KitBuilder from '@/components/kit/KitBuilder';
 import KitCard from '@/components/kit/KitCard';
 import PageTitle from '@components/common/PageTitle';
@@ -54,61 +62,42 @@ function mapApiKitToKit(apiKit: ClubKitDto): Kit {
 
 export default function ClubKitsPage() {
   const { clubId } = useParams();
-  
-  // API state
-  const [apiKits, setApiKits] = useState<ClubKitDto[]>([]);
-  const [kitsLoading, setKitsLoading] = useState(true);
-  const [kitsError, setKitsError] = useState<string | null>(null);
-  
-  const [club, setClub] = useState<ClubDetailDto | null>(null);
-  const [clubLoading, setClubLoading] = useState(true);
-  const [clubError, setClubError] = useState<string | null>(null);
-  
+
+  const {
+    data: apiKits,
+    isLoading: kitsLoading,
+    error: kitsError,
+    refetch: refetchKits,
+  } = useClubKits(clubId);
+  const { data: club, isLoading: clubLoading, error: clubError } = useClubById(clubId);
+
+  const {
+    createKit,
+    data: createdKit,
+    error: createError,
+  } = useCreateClubKit(clubId);
+  const {
+    updateKit,
+    data: updatedKit,
+    error: updateError,
+  } = useUpdateClubKit(clubId);
+  const { deleteKit, error: deleteError } = useDeleteClubKit(clubId);
+
   // Local state for UI
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingKit, setEditingKit] = useState<Kit | undefined>();
 
-  // Fetch data from API
   useEffect(() => {
-    if (!clubId) return;
+    if (!createdKit && !updatedKit) {
+      return;
+    }
 
-    // Fetch kits
-    setKitsLoading(true);
-    apiClient.clubs.getKits(clubId)
-      .then((response) => {
-        if (response.success && response.data) {
-          setApiKits(response.data);
-          setKitsError(null);
-        } else {
-          setKitsError(response.error?.message || 'Failed to load kits');
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch kits:', err);
-        setKitsError('Failed to load kits from API');
-      })
-      .finally(() => setKitsLoading(false));
-
-    // Fetch club
-    setClubLoading(true);
-    apiClient.clubs.getClubById(clubId)
-      .then((response) => {
-        if (response.success && response.data) {
-          setClub(response.data);
-          setClubError(null);
-        } else {
-          setClubError(response.error?.message || 'Failed to load club');
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch club:', err);
-        setClubError('Failed to load club from API');
-      })
-      .finally(() => setClubLoading(false));
-  }, [clubId]);
+    setShowBuilder(false);
+    setEditingKit(undefined);
+  }, [createdKit, updatedKit]);
 
   // Map API kits to Kit type for component compatibility
-  const kits = apiKits.map(mapApiKitToKit);
+  const kits = (apiKits ?? []).map(mapApiKitToKit);
 
   // Show club not found error
   if (!clubLoading && (clubError || !club)) {
@@ -116,40 +105,41 @@ export default function ClubKitsPage() {
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
           <div className="card">
-            <h2 className="text-xl font-semibold mb-4">{clubError || 'Club not found'}</h2>
+            <h2 className="text-xl font-semibold mb-4">{clubError?.message || 'Club not found'}</h2>
           </div>
         </main>
       </div>
     );
   }
 
-  const handleSaveKit = (kitData: Omit<Kit, 'id'>) => {
+  const handleSaveKit = async (kitData: Omit<Kit, 'id'>) => {
     if (editingKit) {
-      // Update existing kit - demo only, not saved to backend
-      const updatedKits = apiKits.map(k => 
-        k.id === editingKit.id 
-          ? { ...k, ...kitData } 
-          : k
-      );
-      setApiKits(updatedKits);
-      alert('Kit updated successfully! (Demo - not saved to backend)');
-    } else {
-      // Create new kit - demo only, not saved to backend
-      const newKit: ClubKitDto = {
-        id: `kit-${Date.now()}`,
+      const request: UpdateClubKitRequest = {
         name: kitData.name,
         type: kitData.type,
         shirtColor: kitData.shirtColor,
         shortsColor: kitData.shortsColor,
         socksColor: kitData.socksColor,
         season: kitData.season,
-        isActive: kitData.isActive
+        isActive: kitData.isActive,
       };
-      setApiKits([...apiKits, newKit]);
-      alert('Kit created successfully! (Demo - not saved to backend)');
+
+      await updateKit(editingKit.id, request);
+      await refetchKits();
+    } else {
+      const request: CreateClubKitRequest = {
+        name: kitData.name,
+        type: kitData.type,
+        shirtColor: kitData.shirtColor,
+        shortsColor: kitData.shortsColor,
+        socksColor: kitData.socksColor,
+        season: kitData.season,
+        isActive: kitData.isActive,
+      };
+
+      await createKit(request);
+      await refetchKits();
     }
-    setShowBuilder(false);
-    setEditingKit(undefined);
   };
 
   const handleEditKit = (kit: Kit) => {
@@ -157,10 +147,10 @@ export default function ClubKitsPage() {
     setShowBuilder(true);
   };
 
-  const handleDeleteKit = (kitId: string) => {
+  const handleDeleteKit = async (kitId: string) => {
     if (confirm('Are you sure you want to delete this kit?')) {
-      setApiKits(apiKits.filter(k => k.id !== kitId));
-      alert('Kit deleted successfully! (Demo - not saved to backend)');
+      await deleteKit(kitId);
+      await refetchKits();
     }
   };
 
@@ -191,6 +181,14 @@ export default function ClubKitsPage() {
               onSave={handleSaveKit}
               onCancel={handleCancel}
             />
+
+            {(createError || updateError) && (
+              <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mt-4">
+                <p className="text-red-700 dark:text-red-300">
+                  {createError?.message || updateError?.message}
+                </p>
+              </div>
+            )}
           </div>
         )}
 
@@ -206,7 +204,13 @@ export default function ClubKitsPage() {
         {/* Error State */}
         {!showBuilder && !kitsLoading && kitsError && (
           <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-            <p className="text-red-700 dark:text-red-300">{kitsError}</p>
+            <p className="text-red-700 dark:text-red-300">{kitsError.message}</p>
+          </div>
+        )}
+
+        {!showBuilder && deleteError && (
+          <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mb-4">
+            <p className="text-red-700 dark:text-red-300">{deleteError.message}</p>
           </div>
         )}
 

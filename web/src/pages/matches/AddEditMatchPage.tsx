@@ -7,7 +7,7 @@ import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { PlayerPosition, SquadSize, Tactic } from '@/types';
 import { Routes } from '@utils/routes';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits } from '@/api/hooks';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits } from '@/api/hooks';
 import { apiClient, CreateMatchRequest, UpdateMatchRequest } from '@/api/client';
 import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
 
@@ -24,20 +24,36 @@ export default function AddEditMatchPage() {
   const { data: teamCoaches = [], isLoading: coachesLoading } = useTeamCoaches(teamId);
   const { data: tacticsData, isLoading: tacticsLoading } = useTacticsByScope(clubId, ageGroupId, teamId);
   const { data: teamKitsData, isLoading: kitsLoading } = useTeamKits(teamId);
+  const { data: clubKits = [], isLoading: clubKitsLoading } = useClubKits(clubId);
   
   // Get available seasons from age group
   const availableSeasons = ageGroup?.seasons || [];
   const defaultSeason = ageGroup?.defaultSeason || '';
 
-  // Get available kits from API
-  const availableKits = teamKitsData?.kits || [];
+  const teamKits = teamKitsData?.kits || [];
+  const inheritedClubKits = clubKits || [];
+  const availableKits = (() => {
+    const mergedKits = new Map<string, (typeof teamKits)[number]>();
+
+    for (const source of [teamKits, inheritedClubKits]) {
+      for (const currentKit of source) {
+        if (!mergedKits.has(currentKit.id)) {
+          mergedKits.set(currentKit.id, currentKit);
+        }
+      }
+    }
+
+    return Array.from(mergedKits.values());
+  })();
+  const availableOutfieldKits = availableKits.filter(currentKit => currentKit.type !== 'goalkeeper');
+  const availableGoalkeeperKits = availableKits.filter(currentKit => currentKit.type === 'goalkeeper');
 
   // Get all club players (for cross-team selection) - for now using teamPlayers
   // TODO: Add useClubPlayers hook when available
   const allClubPlayers = teamPlayers || [];
 
   // Loading and error states
-  const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || tacticsLoading || kitsLoading;
+  const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || tacticsLoading || kitsLoading || clubKitsLoading;
   const hasError = teamError;
 
   // Form initialization state - CRITICAL: Must be called before any conditional returns
@@ -56,6 +72,8 @@ export default function AddEditMatchPage() {
   const [competition, setCompetition] = useState('');
   const [kit, setKit] = useState('');
   const [goalkeeperKit, setGoalkeeperKit] = useState('');
+  const selectedKit = availableKits.find(currentKit => currentKit.id === kit);
+  const selectedGoalkeeperKit = availableKits.find(currentKit => currentKit.id === goalkeeperKit);
   const [formationId, setFormationId] = useState('');
   const [tacticId, setTacticId] = useState('');
   const [weather, setWeather] = useState('');
@@ -936,55 +954,47 @@ export default function AddEditMatchPage() {
                     disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="">Select a kit</option>
-                    {availableKits
-                      .filter(k => k.type !== 'goalkeeper')
-                      .map(k => (
+                    <option value="">Select a team or club kit</option>
+                    {availableOutfieldKits.map(k => (
                         <option key={k.id} value={k.id}>{k.name}</option>
                       ))}
                   </select>
-                  {availableKits.length === 0 && (
+                  {availableOutfieldKits.length === 0 && (
                     <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      No kits defined for this team.
+                      No team or club match kits are available for this fixture.
                     </p>
                   )}
-                  {kit && (() => {
-                    const selectedKit = availableKits.find(k => k.id === kit);
-                    if (selectedKit) {
-                      return (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
-                          <div className="flex items-center gap-1">
-                            <div className="flex flex-col items-center">
-                              <div 
-                                className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                                style={{ backgroundColor: selectedKit.shirtColor }}
-                                title="Shirt"
-                              />
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
-                            </div>
-                            <div className="flex flex-col items-center">
-                              <div 
-                                className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                                style={{ backgroundColor: selectedKit.shortsColor }}
-                                title="Shorts"
-                              />
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
-                            </div>
-                            <div className="flex flex-col items-center">
-                              <div 
-                                className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                                style={{ backgroundColor: selectedKit.socksColor }}
-                                title="Socks"
-                              />
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
-                            </div>
-                          </div>
+                  {selectedKit && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
+                      <div className="flex items-center gap-1">
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                            style={{ backgroundColor: selectedKit.shirtColor }}
+                            title="Shirt"
+                          />
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
                         </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                            style={{ backgroundColor: selectedKit.shortsColor }}
+                            title="Shorts"
+                          />
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                            style={{ backgroundColor: selectedKit.socksColor }}
+                            title="Socks"
+                          />
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
@@ -997,50 +1007,47 @@ export default function AddEditMatchPage() {
                     disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <option value="">Select goalkeeper kit (optional)</option>
-                    {availableKits
-                      .filter(k => k.type === 'goalkeeper')
-                      .map(k => (
+                    <option value="">Select a team or club goalkeeper kit (optional)</option>
+                    {availableGoalkeeperKits.map(k => (
                         <option key={k.id} value={k.id}>{k.name}</option>
                       ))}
                   </select>
-                  {goalkeeperKit && (() => {
-                    const selectedGkKit = availableKits.find(k => k.id === goalkeeperKit);
-                    if (selectedGkKit) {
-                      return (
-                        <div className="mt-2 flex items-center gap-2">
-                          <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
-                          <div className="flex items-center gap-1">
-                            <div className="flex flex-col items-center">
-                              <div 
-                                className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                                style={{ backgroundColor: selectedGkKit.shirtColor }}
-                                title="Shirt"
-                              />
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
-                            </div>
-                            <div className="flex flex-col items-center">
-                              <div 
-                                className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                                style={{ backgroundColor: selectedGkKit.shortsColor }}
-                                title="Shorts"
-                              />
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
-                            </div>
-                            <div className="flex flex-col items-center">
-                              <div 
-                                className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                                style={{ backgroundColor: selectedGkKit.socksColor }}
-                                title="Socks"
-                              />
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
-                            </div>
-                          </div>
+                  {availableGoalkeeperKits.length === 0 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      No team or club goalkeeper kits are available for this fixture.
+                    </p>
+                  )}
+                  {selectedGoalkeeperKit && (
+                    <div className="mt-2 flex items-center gap-2">
+                      <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
+                      <div className="flex items-center gap-1">
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                            style={{ backgroundColor: selectedGoalkeeperKit.shirtColor }}
+                            title="Shirt"
+                          />
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
                         </div>
-                      );
-                    }
-                    return null;
-                  })()}
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                            style={{ backgroundColor: selectedGoalkeeperKit.shortsColor }}
+                            title="Shorts"
+                          />
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
+                        </div>
+                        <div className="flex flex-col items-center">
+                          <div 
+                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                            style={{ backgroundColor: selectedGoalkeeperKit.socksColor }}
+                            title="Socks"
+                          />
+                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>

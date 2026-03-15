@@ -6,16 +6,73 @@ namespace OurGame.Persistence.Data.SeedData;
 public static class KitSeedData
 {
     // Vale FC Kit IDs
-    public static readonly Guid ValeHomeKit_Id = Guid.Parse("9a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d");
-    public static readonly Guid ValeAwayKit_Id = Guid.Parse("9b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e");
-    public static readonly Guid ValeGKKit_Id = Guid.Parse("9d4e5f6a-7b8c-9d0e-1f2a-3b4c5d6e7f8a");
-    
-    // Renton United Kit IDs
-    public static readonly Guid RentonHomeKit_Id = Guid.Parse("8a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d");
-    public static readonly Guid RentonGKKit_Id = Guid.Parse("8b2c3d4e-5f6a-7b8c-9d0e-1f2a3b4c5d6e");
+    public static readonly Guid ValeHomeKit_Id = UserSeedData.CreateDeterministicGuid("kit|vale-fc|2024/25|home");
+    public static readonly Guid ValeAwayKit_Id = UserSeedData.CreateDeterministicGuid("kit|vale-fc|2024/25|away");
+    public static readonly Guid ValeHomeGoalkeeperKit_Id = UserSeedData.CreateDeterministicGuid("kit|vale-fc|2024/25|goalkeeper|home");
+    public static readonly Guid ValeAwayGoalkeeperKit_Id = UserSeedData.CreateDeterministicGuid("kit|vale-fc|2024/25|goalkeeper|away");
 
     public static List<Kit> GetKits()
     {
-        return new List<Kit>();
+        var now = DateTime.UtcNow;
+
+        return new List<Kit>
+        {
+            new Kit
+            {
+                Id = ValeHomeKit_Id,
+                ClubId = ClubSeedData.ValeFC_Id,
+                TeamId = null,
+                Name = "Vale Home Kit",
+                Type = KitType.Home,
+                ShirtColor = "#352065",
+                ShortsColor = "#352065",
+                SocksColor = "#352065",
+                Season = "2024/25",
+                IsActive = true,
+                CreatedAt = now
+            },
+            new Kit
+            {
+                Id = ValeAwayKit_Id,
+                ClubId = ClubSeedData.ValeFC_Id,
+                TeamId = null,
+                Name = "Vale Away Kit",
+                Type = KitType.Away,
+                ShirtColor = "#87CEEB",
+                ShortsColor = "#87CEEB",
+                SocksColor = "#87CEEB",
+                Season = "2024/25",
+                IsActive = true,
+                CreatedAt = now
+            },
+            new Kit
+            {
+                Id = ValeHomeGoalkeeperKit_Id,
+                ClubId = ClubSeedData.ValeFC_Id,
+                TeamId = null,
+                Name = "Vale Home Goalkeeper Kit",
+                Type = KitType.Goalkeeper,
+                ShirtColor = "#FFD700",
+                ShortsColor = "#FFD700",
+                SocksColor = "#FFD700",
+                Season = "2024/25",
+                IsActive = true,
+                CreatedAt = now
+            },
+            new Kit
+            {
+                Id = ValeAwayGoalkeeperKit_Id,
+                ClubId = ClubSeedData.ValeFC_Id,
+                TeamId = null,
+                Name = "Vale Away Goalkeeper Kit",
+                Type = KitType.Goalkeeper,
+                ShirtColor = "#32CD32",
+                ShortsColor = "#32CD32",
+                SocksColor = "#32CD32",
+                Season = "2024/25",
+                IsActive = true,
+                CreatedAt = now
+            }
+        };
     }
 }

@@ -921,6 +921,26 @@ export interface ClubKitDto {
   isActive: boolean;
 }
 
+export interface CreateClubKitRequest {
+  name: string;
+  type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
+  shirtColor: string;
+  shortsColor: string;
+  socksColor: string;
+  season?: string;
+  isActive?: boolean;
+}
+
+export interface UpdateClubKitRequest {
+  name: string;
+  type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
+  shirtColor: string;
+  shortsColor: string;
+  socksColor: string;
+  season?: string;
+  isActive?: boolean;
+}
+
 // Club Report Card DTOs
 export interface ClubReportCardPeriodDto {
   start?: string;
@@ -2758,6 +2778,57 @@ export const apiClient = {
     getKits: async (clubId: string): Promise<ApiResponse<ClubKitDto[]>> => {
       const response = await axiosInstance.get<ApiResponse<ClubKitDto[]>>(`/v1/clubs/${clubId}/kits`);
       return response.data;
+    },
+
+    /**
+     * Create a new kit for a club
+     */
+    createKit: async (clubId: string, request: CreateClubKitRequest): Promise<ApiResponse<ClubKitDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<ClubKitDto>>(
+          `/v1/clubs/${clubId}/kits`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update an existing club kit
+     */
+    updateKit: async (clubId: string, kitId: string, request: UpdateClubKitRequest): Promise<ApiResponse<ClubKitDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<ClubKitDto>>(
+          `/v1/clubs/${clubId}/kits/${kitId}`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Delete a club kit
+     */
+    deleteKit: async (clubId: string, kitId: string): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.delete<ApiResponse<void>>(
+          `/v1/clubs/${clubId}/kits/${kitId}`
+        );
+        if (response.status === 204) {
+          return {
+            success: true,
+            statusCode: 204,
+            data: undefined
+          };
+        }
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
 
     /**

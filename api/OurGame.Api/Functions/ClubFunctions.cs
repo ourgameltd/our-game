@@ -20,6 +20,11 @@ using OurGame.Application.UseCases.Clubs.Queries.GetTrainingSessionsByClubId;
 using OurGame.Application.UseCases.Clubs.Queries.GetTrainingSessionsByClubId.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries.GetMatchesByClubId;
 using OurGame.Application.UseCases.Clubs.Queries.GetMatchesByClubId.DTOs;
+using OurGame.Application.UseCases.Clubs.Commands.CreateClubKit;
+using OurGame.Application.UseCases.Clubs.Commands.CreateClubKit.DTOs;
+using OurGame.Application.UseCases.Clubs.Commands.UpdateClubKit;
+using OurGame.Application.UseCases.Clubs.Commands.UpdateClubKit.DTOs;
+using OurGame.Application.UseCases.Clubs.Commands.DeleteClubKit;
 using OurGame.Application.UseCases.Clubs.Queries.GetKitsByClubId;
 using OurGame.Application.UseCases.Clubs.Queries.GetKitsByClubId.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries.GetReportCardsByClubId;
@@ -423,6 +428,245 @@ public class ClubFunctions
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<ClubKitDto>>.SuccessResponse(kits));
         return response;
+    }
+
+    /// <summary>
+    /// Create a new club-level kit.
+    /// </summary>
+    [Function("CreateClubKit")]
+    [OpenApiOperation(operationId: "CreateClubKit", tags: new[] { "Clubs", "Kits" }, Summary = "Create club kit", Description = "Creates a new club-level kit. Team kits are not supported by this endpoint")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(CreateClubKitRequestDto), Required = true, Description = "Kit details")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Created, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "Kit created successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "Invalid request data")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "Club not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> CreateClubKit(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/clubs/{clubId}/kits")] HttpRequestData req,
+        string clubId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(clubId, out var clubGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ErrorResponse(
+                "Invalid club ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<CreateClubKitRequestDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize CreateClubKitRequestDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new CreateClubKitCommand(clubGuid, dto);
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Club kit created successfully: {KitId} for club {ClubId}", result.Id, clubGuid);
+            var successResponse = req.CreateResponse(HttpStatusCode.Created);
+            successResponse.Headers.Add("Location", $"/v1/clubs/{clubGuid}/kits/{result.Id}");
+            await successResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.SuccessResponse(result, (int)HttpStatusCode.Created));
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during CreateClubKit");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error during CreateClubKit");
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ValidationErrorResponse(
+                "Validation failed",
+                ex.Errors));
+            return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating club kit");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ErrorResponse(
+                "An error occurred while creating the club kit",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Update an existing club-level kit.
+    /// </summary>
+    [Function("UpdateClubKit")]
+    [OpenApiOperation(operationId: "UpdateClubKit", tags: new[] { "Clubs", "Kits" }, Summary = "Update club kit", Description = "Updates an existing club-level kit. Team kits are not supported by this endpoint")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club ID")]
+    [OpenApiParameter(name: "kitId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The kit ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(UpdateClubKitRequestDto), Required = true, Description = "Updated kit details")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "Kit updated successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "Invalid request data")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "Club or kit not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<ClubKitDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> UpdateClubKit(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "v1/clubs/{clubId}/kits/{kitId}")] HttpRequestData req,
+        string clubId,
+        string kitId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(clubId, out var clubGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ErrorResponse(
+                "Invalid club ID format", 400));
+            return badRequestResponse;
+        }
+
+        if (!Guid.TryParse(kitId, out var kitGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ErrorResponse(
+                "Invalid kit ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<UpdateClubKitRequestDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize UpdateClubKitRequestDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new UpdateClubKitCommand(clubGuid, kitGuid, dto);
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Club kit updated successfully: {KitId} for club {ClubId}", kitGuid, clubGuid);
+            var successResponse = req.CreateResponse(HttpStatusCode.OK);
+            await successResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.SuccessResponse(result));
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during UpdateClubKit");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error during UpdateClubKit");
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ValidationErrorResponse(
+                "Validation failed",
+                ex.Errors));
+            return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating club kit");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<ClubKitDto>.ErrorResponse(
+                "An error occurred while updating the club kit",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Delete a club-level kit.
+    /// </summary>
+    [Function("DeleteClubKit")]
+    [OpenApiOperation(operationId: "DeleteClubKit", tags: new[] { "Clubs", "Kits" }, Summary = "Delete club kit", Description = "Deletes a club-level kit. Team kits are not supported by this endpoint")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club ID")]
+    [OpenApiParameter(name: "kitId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The kit ID")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Kit deleted successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Invalid ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Club or kit not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Internal server error")]
+    public async Task<HttpResponseData> DeleteClubKit(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "v1/clubs/{clubId}/kits/{kitId}")] HttpRequestData req,
+        string clubId,
+        string kitId)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(clubId, out var clubGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Invalid club ID format", 400));
+            return badRequestResponse;
+        }
+
+        if (!Guid.TryParse(kitId, out var kitGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Invalid kit ID format", 400));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var command = new DeleteClubKitCommand(clubGuid, kitGuid);
+            await _mediator.Send(command);
+
+            _logger.LogInformation("Club kit deleted successfully: {KitId} for club {ClubId}", kitGuid, clubGuid);
+            var successResponse = req.CreateResponse(HttpStatusCode.NoContent);
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Resource not found during DeleteClubKit");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error deleting club kit");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "An error occurred while deleting the club kit",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
     }
 
     /// <summary>

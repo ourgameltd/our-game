@@ -1,0 +1,50 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - button "Collapse sidebar" [ref=e4] [cursor=pointer]:
+      - img [ref=e5]
+    - generic [ref=e8]:
+      - link "Go to Dashboard" [ref=e9] [cursor=pointer]:
+        - /url: /dashboard
+        - img [ref=e10]
+      - link "Michael Law" [ref=e13] [cursor=pointer]:
+        - /url: /profile
+        - img [ref=e15]
+        - generic [ref=e19]: Michael Law
+    - generic [ref=e20]:
+      - list
+      - heading "Navigate To" [level=3] [ref=e23]
+      - list [ref=e24]:
+        - listitem [ref=e25]:
+          - link "Vale Football Club logo Vale FC" [ref=e26] [cursor=pointer]:
+            - /url: /dashboard/8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b
+            - img "Vale Football Club logo" [ref=e27]
+            - generic [ref=e28]: Vale FC
+        - listitem [ref=e29]:
+          - link "2014s" [ref=e30] [cursor=pointer]:
+            - /url: /dashboard/8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b/age-groups/1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d
+            - img [ref=e31]
+            - generic [ref=e36]: 2014s
+      - list [ref=e38]:
+        - listitem [ref=e39]:
+          - 'button "Theme: System" [ref=e40] [cursor=pointer]':
+            - img [ref=e41]
+            - generic [ref=e47]: "Theme: System"
+        - listitem [ref=e48]:
+          - link "Help & Support" [ref=e49] [cursor=pointer]:
+            - /url: /help
+            - img [ref=e50]
+            - generic [ref=e53]: Help & Support
+        - listitem [ref=e54]:
+          - link "Logout" [ref=e55] [cursor=pointer]:
+            - /url: /.auth/logout?post_logout_redirect_uri=/
+            - img [ref=e56]
+            - generic [ref=e59]: Logout
+  - main [ref=e63]:
+    - generic [ref=e64]:
+      - heading "Error Loading Data" [level=2] [ref=e65]
+      - paragraph [ref=e66]: Request failed with status code 404
+      - button "Back to Matches" [ref=e67] [cursor=pointer]
+```

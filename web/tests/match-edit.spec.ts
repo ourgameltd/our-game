@@ -1,4 +1,147 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, Page } from '@playwright/test';
+
+async function stubMatchEditPageDependencies(page: Page, options: {
+  clubId: string;
+  ageGroupId: string;
+  teamId: string;
+}) {
+  const { clubId, ageGroupId, teamId } = options;
+
+  await page.route('**/api/v1/users/me', async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: {
+        success: true,
+        data: {
+          id: '00000000-0000-0000-0000-000000000001',
+          azureUserId: '00000001000000000000000000000101',
+          email: 'michael@michaellaw.me',
+          firstName: 'Michael',
+          lastName: 'Law',
+          role: 'coach',
+          photo: '',
+          preferences: '{}',
+          createdAt: '2026-03-01T10:00:00.000Z',
+          updatedAt: '2026-03-01T10:00:00.000Z',
+        },
+      },
+    });
+  });
+
+  await page.route(`**/api/v1/teams/${teamId}/overview`, async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: {
+        success: true,
+        data: {
+          team: {
+            id: teamId,
+            clubId,
+            ageGroupId,
+            name: 'Reds',
+            shortName: 'Reds',
+            level: 'development',
+            season: '2024/25',
+            colors: {
+              primary: '#cc0000',
+              secondary: '#ffffff',
+            },
+            isArchived: false,
+          },
+          statistics: {
+            playerCount: 2,
+            matchesPlayed: 0,
+            wins: 0,
+            draws: 0,
+            losses: 0,
+            winRate: 0,
+            goalDifference: 0,
+            upcomingMatches: [],
+            previousResults: [],
+            topPerformers: [],
+            underperforming: [],
+          },
+          upcomingTrainingSessions: [],
+        },
+      },
+    });
+  });
+
+  await page.route(`**/api/v1/age-groups/${ageGroupId}`, async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: {
+        success: true,
+        data: {
+          id: ageGroupId,
+          clubId,
+          name: '2014s',
+          code: '2014',
+          level: 'youth',
+          season: '2024/25',
+          seasons: ['2024/25'],
+          defaultSeason: '2024/25',
+          defaultSquadSize: 7,
+          isArchived: false,
+        },
+      },
+    });
+  });
+
+  await page.route(`**/api/v1/teams/${teamId}/players**`, async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: {
+        success: true,
+        data: [
+          {
+            id: 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa',
+            firstName: 'Oliver',
+            lastName: 'Thompson',
+            preferredPositions: ['GK'],
+            squadNumber: 1,
+          },
+          {
+            id: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb',
+            firstName: 'James',
+            lastName: 'Wilson',
+            preferredPositions: ['CM'],
+            squadNumber: 8,
+          },
+        ],
+      },
+    });
+  });
+
+  await page.route(`**/api/v1/teams/${teamId}/coaches`, async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: {
+        success: true,
+        data: [],
+      },
+    });
+  });
+
+  await page.route(`**/api/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/tactics`, async route => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      json: {
+        success: true,
+        data: {
+          scopeTactics: [],
+          inheritedTactics: [],
+        },
+      },
+    });
+  });
+}
 
 /**
  * E2E tests for Match Edit Page
@@ -18,6 +161,10 @@ test.describe('Match Edit Page', () => {
   const matchId = 'a5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0'; // Match 5 - unlocked match
 
   const matchEditUrl = `/dashboard/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/matches/${matchId}/edit`;
+  const kitField = (page: Page) =>
+    page.locator('label').filter({ hasText: /^Kit$/ }).locator('..');
+  const goalkeeperKitField = (page: Page) =>
+    page.locator('label').filter({ hasText: /^Goalkeeper Kit$/ }).locator('..');
 
   test('buttons don\'t accidentally submit the form', async ({ page }) => {
     // Track any PUT requests to the matches endpoint
@@ -226,76 +373,182 @@ test.describe('Match Edit Page', () => {
     expect(cleanupResponse.status()).toBe(200);
   });
 
-  test('kit dropdowns show real API data', async ({ page }) => {
-    // Navigate to match edit page
-    await page.goto(matchEditUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  test('kit dropdowns include inherited club kits, dedupe duplicates, and preserve selected club kits', async ({ page }) => {
+    const sharedKitId = '11111111-1111-1111-1111-111111111111';
+    const inheritedClubKitId = '22222222-2222-2222-2222-222222222222';
+    const inheritedGoalkeeperKitId = '33333333-3333-3333-3333-333333333333';
+    const pageErrors: string[] = [];
 
-    // Wait for page to load
+    page.on('pageerror', error => {
+      pageErrors.push(error.message);
+    });
+
+    await stubMatchEditPageDependencies(page, { clubId, ageGroupId, teamId });
+
+    await page.route(`**/api/v1/teams/${teamId}/kits`, async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        json: {
+          success: true,
+          data: {
+            teamId,
+            teamName: 'Reds',
+            clubId,
+            clubName: 'Vale FC',
+            kits: [
+              {
+                id: '66666666-6666-6666-6666-666666666666',
+                name: 'Team Match Kit',
+                type: 'home',
+                shirtColor: '#cc0000',
+                shortsColor: '#ffffff',
+                socksColor: '#cc0000',
+                season: '2024/25',
+                isActive: true,
+              },
+              {
+                id: sharedKitId,
+                name: 'Shared Duplicate Kit',
+                type: 'home',
+                shirtColor: '#111111',
+                shortsColor: '#222222',
+                socksColor: '#333333',
+                season: '2024/25',
+                isActive: true,
+              },
+            ],
+          },
+        },
+      });
+    });
+
+    await page.route(`**/api/v1/clubs/${clubId}/kits`, async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        json: {
+          success: true,
+          data: [
+            {
+              id: sharedKitId,
+              name: 'Shared Duplicate Kit',
+              type: 'home',
+              shirtColor: '#111111',
+              shortsColor: '#222222',
+              socksColor: '#333333',
+              season: '2024/25',
+              isActive: true,
+            },
+            {
+              id: inheritedClubKitId,
+              name: 'Inherited Club Home Kit',
+              type: 'away',
+              shirtColor: '#0044cc',
+              shortsColor: '#f7f7f7',
+              socksColor: '#0044cc',
+              season: '2024/25',
+              isActive: true,
+            },
+            {
+              id: inheritedGoalkeeperKitId,
+              name: 'Inherited Club Goalkeeper Kit',
+              type: 'goalkeeper',
+              shirtColor: '#ffdd00',
+              shortsColor: '#222222',
+              socksColor: '#ffdd00',
+              season: '2024/25',
+              isActive: true,
+            },
+          ],
+        },
+      });
+    });
+
+    await page.route(`**/api/v1/matches/${matchId}`, async route => {
+      if (route.request().method() !== 'GET') {
+        await route.continue();
+        return;
+      }
+
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        json: {
+          success: true,
+          data: {
+            id: matchId,
+            teamId,
+            ageGroupId,
+            clubId,
+            clubName: 'Vale FC',
+            teamName: 'Reds',
+            ageGroupName: '2014s',
+            seasonId: '2024/25',
+            squadSize: 7,
+            opposition: 'Test Opposition',
+            matchDate: '2026-03-20T10:00:00.000Z',
+            meetTime: '2026-03-20T09:15:00.000Z',
+            kickOffTime: '2026-03-20T10:00:00.000Z',
+            location: 'Vale Park',
+            isHome: true,
+            competition: 'League Match',
+            primaryKitId: inheritedClubKitId,
+            goalkeeperKitId: inheritedGoalkeeperKitId,
+            status: 'scheduled',
+            isLocked: false,
+            notes: '',
+            createdAt: '2026-03-01T10:00:00.000Z',
+            updatedAt: '2026-03-01T10:00:00.000Z',
+            lineup: {
+              id: '44444444-4444-4444-4444-444444444444',
+              players: [],
+            },
+            report: {
+              id: '55555555-5555-5555-5555-555555555555',
+              goals: [],
+              cards: [],
+              injuries: [],
+              performanceRatings: [],
+            },
+            coaches: [],
+            substitutions: [],
+            attendance: [],
+          },
+        },
+      });
+    });
+
+    await page.goto(matchEditUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await expect(page).toHaveURL(new RegExp(`${matchId}/edit$`));
     await expect(page.getByRole('heading', { name: /Edit Match/i })).toBeVisible({ timeout: 15000 });
 
-    // Wait for kit dropdowns to load
-    await page.waitForTimeout(1000);
+    const outfieldKitField = kitField(page);
+    const gkKitField = goalkeeperKitField(page);
+    const kitSelect = outfieldKitField.locator('select');
+    const goalkeeperKitSelect = gkKitField.locator('select');
 
-    // Find the "Kit" select dropdown (main kit)
-    const kitSelect = page.locator('select').filter({ 
-      has: page.locator('option:has-text("Kit"), option:has-text("kit")') 
-    }).first();
+    await expect(kitSelect).toBeVisible();
+    await expect(goalkeeperKitSelect).toBeVisible();
 
-    // Alternative: Find by label association
-    const kitSelectAlt = page.locator('label:has-text("Kit")').locator('..').locator('select').first();
-    
-    // Try to find kit select (try both approaches)
-    let currentKitSelect = kitSelect;
-    if (!await kitSelect.isVisible({ timeout: 2000 }).catch(() => false)) {
-      currentKitSelect = kitSelectAlt;
-    }
+    await expect(kitSelect).toHaveValue(inheritedClubKitId);
+    await expect(goalkeeperKitSelect).toHaveValue(inheritedGoalkeeperKitId);
 
-    if (await currentKitSelect.isVisible({ timeout: 2000 }).catch(() => false)) {
-      // Get all options in the kit select
-      const kitOptions = await currentKitSelect.locator('option').all();
-      
-      // Should have more than just a placeholder
-      expect(kitOptions.length).toBeGreaterThan(1);
+    await expect(kitSelect.locator(`option[value="${sharedKitId}"]`)).toHaveCount(1);
+    await expect(kitSelect.locator(`option[value="${inheritedClubKitId}"]`)).toHaveCount(1);
+    await expect(goalkeeperKitSelect.locator(`option[value="${inheritedGoalkeeperKitId}"]`)).toHaveCount(1);
 
-      // Check that options have actual values (not hardcoded strings like "home-default")
-      let hasRealData = false;
-      for (const option of kitOptions) {
-        const value = await option.getAttribute('value');
-        const text = await option.textContent();
-        
-        // Real API data would have UUIDs or meaningful IDs, not hardcoded strings
-        if (value && value !== '' && !value.includes('home-default') && !value.includes('away-default')) {
-          hasRealData = true;
-          break;
-        }
-      }
+    await expect(kitSelect.locator('option')).toContainText(['Inherited Club Home Kit']);
+    await expect(goalkeeperKitSelect.locator('option')).toContainText(['Inherited Club Goalkeeper Kit']);
 
-      expect(hasRealData).toBe(true);
-    }
+    await expect(outfieldKitField.locator('div[title="Shirt"]')).toHaveCSS('background-color', 'rgb(0, 68, 204)');
+    await expect(outfieldKitField.locator('div[title="Shorts"]')).toHaveCSS('background-color', 'rgb(247, 247, 247)');
+    await expect(outfieldKitField.locator('div[title="Socks"]')).toHaveCSS('background-color', 'rgb(0, 68, 204)');
 
-    // Find the "Goalkeeper Kit" select dropdown
-    const gkKitSelect = page.locator('label:has-text("Goalkeeper Kit")').locator('..').locator('select').first();
-
-    if (await gkKitSelect.isVisible({ timeout: 2000 }).catch(() => false)) {
-      // Get all options in the GK kit select
-      const gkKitOptions = await gkKitSelect.locator('option').all();
-      
-      // Should have more than just a placeholder
-      expect(gkKitOptions.length).toBeGreaterThan(1);
-
-      // Verify options have real data
-      let hasRealData = false;
-      for (const option of gkKitOptions) {
-        const value = await option.getAttribute('value');
-        
-        if (value && value !== '' && !value.includes('gk-default')) {
-          hasRealData = true;
-          break;
-        }
-      }
-
-      expect(hasRealData).toBe(true);
-    }
+    await expect(gkKitField.locator('div[title="Shirt"]')).toHaveCSS('background-color', 'rgb(255, 221, 0)');
+    await expect(gkKitField.locator('div[title="Shorts"]')).toHaveCSS('background-color', 'rgb(34, 34, 34)');
+    await expect(gkKitField.locator('div[title="Socks"]')).toHaveCSS('background-color', 'rgb(255, 221, 0)');
+    expect(pageErrors).toEqual([]);
   });
 
   test('can edit match events when lineup is empty', async ({ page }) => {

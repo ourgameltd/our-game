@@ -242,11 +242,20 @@ try
         await context.SaveChangesAsync();
     }
     
-    if (!await context.Kits.AnyAsync())
+    var seededKits = OurGame.Persistence.Data.SeedData.KitSeedData.GetKits();
+    var seededKitIds = seededKits.Select(kit => kit.Id).ToList();
+    var existingKitIds = await context.Kits
+        .Where(kit => seededKitIds.Contains(kit.Id))
+        .Select(kit => kit.Id)
+        .ToListAsync();
+    var missingKits = seededKits
+        .Where(kit => !existingKitIds.Contains(kit.Id))
+        .ToList();
+
+    if (missingKits.Count > 0)
     {
         Console.WriteLine("  👕 Seeding kits...");
-        var kits = OurGame.Persistence.Data.SeedData.KitSeedData.GetKits();
-        await context.Kits.AddRangeAsync(kits);
+        await context.Kits.AddRangeAsync(missingKits);
         await context.SaveChangesAsync();
     }
     
