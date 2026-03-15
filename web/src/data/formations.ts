@@ -910,6 +910,54 @@ export const getFormationById = (id: string): Formation | undefined => {
   return sampleFormations.find(formation => formation.id === id);
 };
 
+/**
+ * Sorts formations alphabetically by name with stable secondary sort by system.
+ * Uses locale-aware comparison for proper alphabetical ordering.
+ */
+const sortFormationsAlphabetically = (formations: Formation[]): Formation[] => {
+  return [...formations].sort((a, b) => {
+    const nameComparison = a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+    if (nameComparison !== 0) {
+      return nameComparison;
+    }
+    // Secondary sort by system for stable ordering when names match
+    // Use empty string fallback for formations without a system
+    const systemA = a.system ?? '';
+    const systemB = b.system ?? '';
+    return systemA.localeCompare(systemB, undefined, { sensitivity: 'base' });
+  });
+};
+
+/**
+ * Gets formations filtered by squad size, sorted alphabetically by name.
+ * @param squadSize - The number of players (e.g., 4, 5, 7, 9, 11)
+ * @returns Array of formations sorted alphabetically by name
+ */
 export const getFormationsBySquadSize = (squadSize: number): Formation[] => {
-  return sampleFormations.filter(formation => formation.squadSize === squadSize);
+  const filtered = sampleFormations.filter(formation => formation.squadSize === squadSize);
+  return sortFormationsAlphabetically(filtered);
+};
+
+/**
+ * Gets all formations grouped by squad size with alphabetical sorting within each group.
+ * Useful for displaying all formations organized by squad size (e.g., in tactic editor).
+ * @returns Record mapping squad size to sorted array of formations
+ */
+export const getFormationsGroupedBySquadSize = (): Record<number, Formation[]> => {
+  const grouped: Record<number, Formation[]> = {};
+  
+  for (const formation of sampleFormations) {
+    const { squadSize } = formation;
+    if (!grouped[squadSize]) {
+      grouped[squadSize] = [];
+    }
+    grouped[squadSize].push(formation);
+  }
+  
+  // Sort formations within each group alphabetically
+  for (const squadSize in grouped) {
+    grouped[squadSize] = sortFormationsAlphabetically(grouped[squadSize]);
+  }
+  
+  return grouped;
 };

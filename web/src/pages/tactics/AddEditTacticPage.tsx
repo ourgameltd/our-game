@@ -7,7 +7,7 @@ import FormActions from '@/components/common/FormActions';
 import TacticPitchEditor from '@/components/tactics/TacticPitchEditor';
 import PrinciplePanel from '@/components/tactics/PrinciplePanel';
 import { getResolvedPositions } from '@/data/tactics';
-import { getFormationById, sampleFormations } from '@/data/formations';
+import { getFormationById, getFormationsGroupedBySquadSize, sampleFormations } from '@/data/formations';
 import { Tactic, TacticalPositionOverride, TacticPrinciple, FormationScope, PlayerDirection, SquadSize } from '@/types';
 import {
   useTactic,
@@ -233,6 +233,11 @@ export default function AddEditTacticPage() {
     [tactic],
   );
 
+  // Group formations by squad size with alphabetical sorting
+  const formationsBySquadSize = useMemo(() => getFormationsGroupedBySquadSize(), []);
+
+  const squadSizeOrder: SquadSize[] = [11, 9, 7, 5, 4];
+
   // ---- Helpers -------------------------------------------------------------
   const getBackUrl = () => {
     if (!clubId) return '/dashboard';
@@ -398,7 +403,7 @@ export default function AddEditTacticPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
           <PageTitle
             title={isEditing ? 'Edit Tactic' : 'New Tactic'}
-            subtitle={`${formation?.name || 'Unknown Formation'} • ${tactic.squadSize}-a-side`}
+            subtitle={`${formation?.name || 'Unknown Formation'}`}
             badge={getScopeLabel()}
             backLink={getBackUrl()}
           />
@@ -469,7 +474,7 @@ export default function AddEditTacticPage() {
                   </label>
                   {isEditing ? (
                     <div className="px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300">
-                      {formation?.name || 'Unknown'} ({tactic.squadSize}-a-side)
+                      {formation?.name || 'Unknown'}
                     </div>
                   ) : (
                     <select
@@ -477,11 +482,20 @@ export default function AddEditTacticPage() {
                       onChange={(e) => handleFormationChange(e.target.value)}
                       className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
                     >
-                      {sampleFormations.map(f => (
-                        <option key={f.id} value={f.id}>
-                          {f.name} ({f.squadSize}-a-side)
-                        </option>
-                      ))}
+                      {squadSizeOrder.map(squadSize => {
+                        const formations = formationsBySquadSize[squadSize];
+                        if (!formations || formations.length === 0) return null;
+                        
+                        return (
+                          <optgroup key={squadSize} label={`${squadSize}v${squadSize}`}>
+                            {formations.map(f => (
+                              <option key={f.id} value={f.id}>
+                                {f.name}
+                              </option>
+                            ))}
+                          </optgroup>
+                        );
+                      })}
                     </select>
                   )}
                 </div>

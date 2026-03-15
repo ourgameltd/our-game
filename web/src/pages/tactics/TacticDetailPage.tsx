@@ -222,7 +222,7 @@ export default function TacticDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
           <PageTitle
             title={tactic.name}
-            subtitle={`${tacticDto?.parentFormationName || 'Unknown Formation'} • ${tactic.squadSize}-a-side${tactic.style ? ` • ${tactic.style}` : ''}`}
+            subtitle={`${tacticDto?.parentFormationName || 'Unknown Formation'}${tactic.style ? ` • ${tactic.style}` : ''}`}
             badge={getScopeLabel()}
             backLink={getBackUrl()}
             action={{

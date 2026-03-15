@@ -1,7 +1,7 @@
 ---
 name: Orchestrator
 description: Sonnet, Codex, Gemini
-model: Claude Sonnet 4.5
+model: GPT-5.4 (copilot)
 tools: ['read/readFile', 'agent/runSubagent']
 ---
 
