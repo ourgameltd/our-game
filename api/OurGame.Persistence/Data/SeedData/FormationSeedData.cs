@@ -14,6 +14,7 @@ public static class FormationSeedData
     // 9-a-side Formation IDs
     public static readonly Guid Formation_332_Id = Guid.Parse("f5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0");
     public static readonly Guid Formation_233_Id = Guid.Parse("f6f7a8b9-c0d1-e2f3-a4b5-c6d7e8f9a0b1");
+    public static readonly Guid Formation_431_Id = Guid.Parse("f7f7a8b9-c0d1-e2f3-a4b5-c6d7e8f9a0b1");
     
     // 7-a-side Formation IDs
     public static readonly Guid Formation_231_Id = Guid.Parse("f8b9c0d1-e2f3-a4b5-c6d7-e8f9a0b1c2d3");
@@ -91,6 +92,18 @@ public static class FormationSeedData
                 Tags = "[\"Strong defensive shape\",\"Midfield control in center\",\"Two strikers partnership\"]",
                 IsSystemFormation = true,
                                 CreatedAt = now,
+                UpdatedAt = now
+            },
+            new Formation
+            {
+                Id = Formation_431_Id,
+                Name = "4-3-1",
+                System = "4-3-1",
+                SquadSize = SquadSize.NineASide,
+                Summary = "Solid 9-a-side formation with four defenders and one striker",
+                Tags = "[\"Strong defensive shape\",\"Midfield control in center\",\"Lone striker up front\"]",
+                IsSystemFormation = true,
+                CreatedAt = now,
                 UpdatedAt = now
             },
             new Formation
