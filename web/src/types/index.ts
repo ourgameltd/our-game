@@ -195,7 +195,7 @@ export interface Player {
   firstName: string;
   lastName: string;
   nickname?: string;
-  dateOfBirth: Date;
+  dateOfBirth?: Date;
   photo?: string;
   associationId?: string; // FA, UEFA, or other football association registration ID
   preferredPositions: PlayerPosition[];

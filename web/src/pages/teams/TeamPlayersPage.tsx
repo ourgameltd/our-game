@@ -56,7 +56,7 @@ export default function TeamPlayersPage() {
       firstName: player.firstName,
       lastName: player.lastName,
       nickname: player.nickname,
-      dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth) : new Date(),
+      dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth) : undefined,
       photo: player.photo,
       associationId: player.associationId,
       preferredPositions: player.preferredPositions as any[],

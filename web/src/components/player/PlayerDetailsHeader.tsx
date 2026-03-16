@@ -22,7 +22,7 @@ export default function PlayerDetailsHeader({
     return age;
   };
 
-  const age = calculateAge(player.dateOfBirth);
+  const age = player.dateOfBirth ? calculateAge(player.dateOfBirth) : null;
 
   return (
     <div className="flex items-start gap-4">
@@ -45,8 +45,7 @@ export default function PlayerDetailsHeader({
           )}
         </h1>
         <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-          <span>Age: {age} years old</span>
-          <span>•</span>
+          {age !== null && <><span>Age: {age} years old</span><span>•</span></>}
           <span>Positions: {player.preferredPositions.join(', ')}</span>
         </div>
       </div>

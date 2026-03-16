@@ -60,7 +60,7 @@ function mapApiPlayerToPlayer(apiPlayer: ClubPlayerDto): Player {
     firstName: apiPlayer.firstName,
     lastName: apiPlayer.lastName,
     nickname: apiPlayer.nickname,
-    dateOfBirth: apiPlayer.dateOfBirth ? new Date(apiPlayer.dateOfBirth) : new Date(),
+    dateOfBirth: apiPlayer.dateOfBirth ? new Date(apiPlayer.dateOfBirth) : undefined,
     photo: apiPlayer.photo,
     associationId: apiPlayer.associationId,
     preferredPositions: apiPlayer.preferredPositions as PlayerPosition[],

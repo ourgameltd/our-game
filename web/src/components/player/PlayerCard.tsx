@@ -13,7 +13,7 @@ interface PlayerCardProps {
 }
 
 export default function PlayerCard({ player, squadNumber, isCaptain = false, onClick, isSelected = false, badges, actions }: PlayerCardProps) {
-  const age = new Date().getFullYear() - player.dateOfBirth.getFullYear();
+  const age = player.dateOfBirth ? new Date().getFullYear() - player.dateOfBirth.getFullYear() : null;
   
   // Convert player attributes to grouped format and get top 4 attributes
   const groupedAttributes = groupAttributes(player.attributes);
@@ -66,7 +66,7 @@ export default function PlayerCard({ player, squadNumber, isCaptain = false, onC
               <span className="text-sm font-normal text-primary-600 dark:text-primary-400 ml-2">"{player.nickname}"</span>
             )}
           </h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">Age {age}</p>
+          {age !== null && <p className="text-sm text-gray-600 dark:text-gray-400">Age {age}</p>}
         </div>
         
         {/* Mobile badges */}
@@ -92,7 +92,7 @@ export default function PlayerCard({ player, squadNumber, isCaptain = false, onC
 
       {/* Age - desktop only */}
       <p className="hidden md:block text-sm text-gray-600 dark:text-gray-400 md:w-16 md:flex-shrink-0 md:order-3">
-        Age {age}
+        {age !== null ? `Age ${age}` : ''}
       </p>
 
       {/* Positions */}
