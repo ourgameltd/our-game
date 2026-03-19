@@ -25,7 +25,7 @@ public class ArchiveAgeGroupHandler : IRequestHandler<ArchiveAgeGroupCommand>
         // Check if age group exists
         var exists = await _db.Database
             .SqlQueryRaw<int>(
-                "SELECT COUNT(1) FROM AgeGroups WHERE Id = {0}", ageGroupId)
+                "SELECT COUNT(1) AS Value FROM AgeGroups WHERE Id = {0}", ageGroupId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (exists == 0)

@@ -32,7 +32,7 @@ public class UpdateTeamPlayerSquadNumberHandler : IRequestHandler<UpdateTeamPlay
         // 1. Check if the PlayerTeam assignment exists
         var assignmentExists = await _db.Database
             .SqlQueryRaw<int>(
-                "SELECT COUNT(1) FROM PlayerTeams WHERE TeamId = {0} AND PlayerId = {1}",
+                "SELECT COUNT(1) AS Value FROM PlayerTeams WHERE TeamId = {0} AND PlayerId = {1}",
                 teamId, playerId)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -44,7 +44,7 @@ public class UpdateTeamPlayerSquadNumberHandler : IRequestHandler<UpdateTeamPlay
         // 2. Check if the squad number is already used by another player on the same team
         var squadNumberInUse = await _db.Database
             .SqlQueryRaw<int>(
-                "SELECT COUNT(1) FROM PlayerTeams WHERE TeamId = {0} AND SquadNumber = {1} AND PlayerId != {2}",
+                "SELECT COUNT(1) AS Value FROM PlayerTeams WHERE TeamId = {0} AND SquadNumber = {1} AND PlayerId != {2}",
                 teamId, squadNumber, playerId)
             .FirstOrDefaultAsync(cancellationToken);
 

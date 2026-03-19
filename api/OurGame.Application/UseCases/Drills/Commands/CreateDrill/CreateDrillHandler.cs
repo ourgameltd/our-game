@@ -51,14 +51,14 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
         Guid? coachId = null;
         if (!string.IsNullOrEmpty(command.UserId))
         {
-            var userIdSql = "SELECT Id FROM Users WHERE AuthId = {0}";
+            var userIdSql = "SELECT Id AS Value FROM Users WHERE AuthId = {0}";
             var userId = await _db.Database
                 .SqlQueryRaw<Guid>(userIdSql, command.UserId)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (userId != Guid.Empty)
             {
-                var coachIdSql = "SELECT Id FROM Coaches WHERE UserId = {0}";
+                var coachIdSql = "SELECT Id AS Value FROM Coaches WHERE UserId = {0}";
                 var resolvedCoachId = await _db.Database
                     .SqlQueryRaw<Guid>(coachIdSql, userId)
                     .FirstOrDefaultAsync(cancellationToken);
@@ -73,7 +73,7 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
         // Use first available coach if user is not a coach
         if (coachId == null)
         {
-            var firstCoachSql = "SELECT TOP 1 Id FROM Coaches WHERE IsArchived = 0 ORDER BY Id";
+            var firstCoachSql = "SELECT TOP 1 Id AS Value FROM Coaches WHERE IsArchived = 0 ORDER BY Id";
             var firstCoachId = await _db.Database
                 .SqlQueryRaw<Guid>(firstCoachSql)
                 .FirstOrDefaultAsync(cancellationToken);

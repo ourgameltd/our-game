@@ -25,7 +25,7 @@ public class ArchiveTeamHandler : IRequestHandler<ArchiveTeamCommand>
         // Check if team exists
         var exists = await _db.Database
             .SqlQueryRaw<int>(
-                "SELECT COUNT(1) FROM Teams WHERE Id = {0}", teamId)
+                "SELECT COUNT(1) AS Value FROM Teams WHERE Id = {0}", teamId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (exists == 0)

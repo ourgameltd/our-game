@@ -67,7 +67,7 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
 
         // Resolve current coach ID from AuthId (UserId from command)
         var currentCoachSql = @"
-            SELECT c.Id 
+            SELECT c.Id AS Value
             FROM Coaches c
             INNER JOIN Users u ON c.UserId = u.Id
             WHERE u.AuthId = {0}";

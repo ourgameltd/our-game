@@ -54,14 +54,14 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
         Guid? coachId = null;
         if (!string.IsNullOrEmpty(command.UserId))
         {
-            var userIdSql = "SELECT Id FROM Users WHERE AuthId = {0}";
+            var userIdSql = "SELECT Id AS Value FROM Users WHERE AuthId = {0}";
             var userId = await _db.Database
                 .SqlQueryRaw<Guid>(userIdSql, command.UserId)
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (userId != Guid.Empty)
             {
-                var coachIdSql = "SELECT Id FROM Coaches WHERE UserId = {0}";
+                var coachIdSql = "SELECT Id AS Value FROM Coaches WHERE UserId = {0}";
                 var resolvedCoachId = await _db.Database
                     .SqlQueryRaw<Guid>(coachIdSql, userId)
                     .FirstOrDefaultAsync(cancellationToken);
