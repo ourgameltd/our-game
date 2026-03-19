@@ -30,15 +30,33 @@ public class CreateTacticHandler : IRequestHandler<CreateTacticCommand, TacticDe
             throw new ValidationException("Name", "Name is required.");
         }
 
-        // Validate parent formation exists and get its squad size
+        if (dto.ParentFormationId == Guid.Empty)
+        {
+            throw new ValidationException("ParentFormationId", "ParentFormationId is required.");
+        }
+
+        // Validate parent formation exists as a system formation and get its squad size
         var parentFormation = await _db.Database
             .SqlQueryRaw<ParentFormationRow>(
-                "SELECT Id, SquadSize FROM Formations WHERE Id = {0}",
+                "SELECT Id, SquadSize FROM Formations WHERE Id = {0} AND IsSystemFormation = 1",
                 dto.ParentFormationId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (parentFormation == null)
         {
+            var formationExists = await _db.Database
+                .SqlQueryRaw<int>(
+                    "SELECT COUNT(1) AS Value FROM Formations WHERE Id = {0}",
+                    dto.ParentFormationId)
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (formationExists > 0)
+            {
+                throw new ValidationException(
+                    "ParentFormationId",
+                    "ParentFormationId must reference an existing system formation.");
+            }
+
             throw new NotFoundException("Formation", dto.ParentFormationId.ToString());
         }
 

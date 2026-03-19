@@ -468,6 +468,24 @@ export interface TeamTrainingSessionDto {
   focusAreas: string[];
 }
 
+export interface SystemFormationPositionDto {
+  positionIndex: number;
+  position: string;
+  x: number;
+  y: number;
+  direction?: string;
+}
+
+export interface SystemFormationDto {
+  id: string;
+  name: string;
+  system?: string;
+  squadSize: number;
+  summary?: string;
+  tags: string[];
+  positions: SystemFormationPositionDto[];
+}
+
 // Team Kit DTOs
 export interface TeamKitDto {
   id: string;
@@ -2952,6 +2970,20 @@ export const apiClient = {
           `/v1/age-groups/${ageGroupId}/archive`,
           request
         );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  },
+
+  formations: {
+    /**
+     * Get all system formations for tactic creation/editing.
+     */
+    getSystem: async (): Promise<ApiResponse<SystemFormationDto[]>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<SystemFormationDto[]>>('/v1/formations/system');
         return response.data;
       } catch (error) {
         return handleApiError(error);

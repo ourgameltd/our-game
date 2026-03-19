@@ -7,15 +7,16 @@ import FormActions from '@/components/common/FormActions';
 import TacticPitchEditor from '@/components/tactics/TacticPitchEditor';
 import PrinciplePanel from '@/components/tactics/PrinciplePanel';
 import { getResolvedPositions } from '@/data/tactics';
-import { getFormationById, getFormationsGroupedBySquadSize, sampleFormations } from '@/data/formations';
-import { Tactic, TacticalPositionOverride, TacticPrinciple, FormationScope, PlayerDirection, SquadSize } from '@/types';
+import { Tactic, TacticalPositionOverride, TacticPrinciple, Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize } from '@/types';
 import {
   useTactic,
+  useSystemFormations,
   useCreateTactic,
   useUpdateTactic,
 } from '@/api';
 import type {
   TacticDetailDto,
+  SystemFormationDto,
   CreateTacticRequest,
   UpdateTacticRequest,
 } from '@/api';
@@ -153,6 +154,87 @@ function FormActionsSkeleton() {
   );
 }
 
+interface BlockingStateProps {
+  title: string;
+  subtitle: string;
+  message: string;
+  badge: string;
+  backLink: string;
+}
+
+function BlockingState({ title, subtitle, message, badge, backLink }: BlockingStateProps) {
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <main className="mx-auto px-4 py-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+          <PageTitle
+            title={title}
+            subtitle={subtitle}
+            badge={badge}
+            backLink={backLink}
+          />
+        </div>
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+          <p className="text-red-700 dark:text-red-300">{message}</p>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+const squadSizeOrder: SquadSize[] = [11, 9, 7, 5, 4];
+const tacticIdRegex = /^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i;
+
+function isValidTacticId(value: string | undefined): value is string {
+  return !!value && tacticIdRegex.test(value);
+}
+
+function isSupportedSquadSize(value: number): value is SquadSize {
+  return squadSizeOrder.includes(value as SquadSize);
+}
+
+function mapSystemFormationToFormation(dto: SystemFormationDto): Formation | null {
+  if (!dto.id || !dto.name || !isSupportedSquadSize(dto.squadSize) || dto.positions.length === 0) {
+    return null;
+  }
+
+  return {
+    id: dto.id,
+    name: dto.name,
+    system: dto.system,
+    squadSize: dto.squadSize,
+    summary: dto.summary,
+    tags: dto.tags,
+    positions: dto.positions.map(position => ({
+      position: position.position as PlayerPosition,
+      x: position.x,
+      y: position.y,
+      direction: position.direction as PlayerDirection | undefined,
+    })),
+    isSystemFormation: true,
+    scope: { type: 'system' },
+  };
+}
+
+function groupFormationsBySquadSize(formations: Formation[]) {
+  const grouped: Partial<Record<SquadSize, Formation[]>> = {};
+
+  for (const formation of formations) {
+    if (!grouped[formation.squadSize]) {
+      grouped[formation.squadSize] = [];
+    }
+
+    grouped[formation.squadSize]!.push(formation);
+  }
+
+  for (const squadSize of squadSizeOrder) {
+    grouped[squadSize]?.sort((left, right) => left.name.localeCompare(right.name));
+  }
+
+  return grouped;
+}
+
 // ---------------------------------------------------------------------------
 // Default empty tactic for "new" mode
 // ---------------------------------------------------------------------------
@@ -168,7 +250,7 @@ function createDefaultTactic(clubId?: string, ageGroupId?: string, teamId?: stri
   return {
     id: '',
     name: 'New Tactic',
-    parentFormationId: sampleFormations[0]?.id || '',
+    parentFormationId: '',
     squadSize: 11,
     positionOverrides: {},
     principles: [],
@@ -185,8 +267,14 @@ export default function AddEditTacticPage() {
   const { clubId, ageGroupId, teamId, tacticId } = useParams();
   const navigate = useNavigate();
   const isEditing = !!tacticId;
+  const hasValidEditTacticId = !isEditing || isValidTacticId(tacticId);
 
   // ---- API hooks -----------------------------------------------------------
+  const {
+    data: systemFormationDtos,
+    isLoading: isLoadingSystemFormations,
+    error: systemFormationsError,
+  } = useSystemFormations();
   const { data: tacticDetail, isLoading, error: fetchError } = useTactic(tacticId);
   const { createTactic, isSubmitting: isCreating, data: createData, error: createError } = useCreateTactic();
   const { updateTactic, isSubmitting: isUpdating, data: updateData, error: updateError } = useUpdateTactic(tacticId || '');
@@ -198,6 +286,24 @@ export default function AddEditTacticPage() {
   const [tactic, setTactic] = useState<Tactic>(() => createDefaultTactic(clubId, ageGroupId, teamId));
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
   const formInitialized = useRef(false);
+  const submitInFlightRef = useRef(false);
+
+  const systemFormations = useMemo(
+    () => (systemFormationDtos ?? [])
+      .map(mapSystemFormationToFormation)
+      .filter((formation): formation is Formation => formation !== null),
+    [systemFormationDtos],
+  );
+
+  const firstAvailableFormation = useMemo(
+    () => systemFormations[0] ?? null,
+    [systemFormations],
+  );
+
+  const formationsBySquadSize = useMemo(
+    () => groupFormationsBySquadSize(systemFormations),
+    [systemFormations],
+  );
 
   // Initialize form state from API data (edit mode)
   useEffect(() => {
@@ -206,6 +312,26 @@ export default function AddEditTacticPage() {
       formInitialized.current = true;
     }
   }, [isEditing, tacticDetail]);
+
+  // Initialize create-mode formation from backend system formations.
+  useEffect(() => {
+    if (isEditing || !firstAvailableFormation) {
+      return;
+    }
+
+    setTactic(prev => {
+      if (prev.parentFormationId) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        parentFormationId: firstAvailableFormation.id,
+        squadSize: firstAvailableFormation.squadSize,
+        updatedAt: new Date().toISOString(),
+      };
+    });
+  }, [isEditing, firstAvailableFormation]);
 
   // Navigate to detail page on successful save
   useEffect(() => {
@@ -224,8 +350,8 @@ export default function AddEditTacticPage() {
 
   // ---- Derived data (client-side) ------------------------------------------
   const formation = useMemo(
-    () => getFormationById(tactic.parentFormationId || ''),
-    [tactic.parentFormationId],
+    () => systemFormations.find(item => item.id === tactic.parentFormationId) ?? null,
+    [systemFormations, tactic.parentFormationId],
   );
 
   const resolvedPositions = useMemo(
@@ -233,10 +359,10 @@ export default function AddEditTacticPage() {
     [tactic],
   );
 
-  // Group formations by squad size with alphabetical sorting
-  const formationsBySquadSize = useMemo(() => getFormationsGroupedBySquadSize(), []);
-
-  const squadSizeOrder: SquadSize[] = [11, 9, 7, 5, 4];
+  const hasSystemFormationCatalog = systemFormations.length > 0;
+  const isBlockingSystemFormationState = !isLoadingSystemFormations && (!!systemFormationsError || !hasSystemFormationCatalog);
+  const isBlockingEditState = isEditing && !isLoading && (!hasValidEditTacticId || !!fetchError || !tacticDetail);
+  const isBlockingMissingParentFormation = !isLoadingSystemFormations && hasSystemFormationCatalog && !formation;
 
   // ---- Helpers -------------------------------------------------------------
   const getBackUrl = () => {
@@ -295,7 +421,7 @@ export default function AddEditTacticPage() {
   };
 
   const handleFormationChange = (formationId: string) => {
-    const newFormation = getFormationById(formationId);
+    const newFormation = systemFormations.find(item => item.id === formationId);
     if (newFormation) {
       setTactic(prev => ({
         ...prev,
@@ -309,39 +435,49 @@ export default function AddEditTacticPage() {
   };
 
   const handleSave = async () => {
-    if (isEditing && tacticId) {
-      const request: UpdateTacticRequest = {
-        name: tactic.name,
-        summary: tactic.summary || undefined,
-        style: tactic.style || undefined,
-        tags: tactic.tags || [],
-        positionOverrides: buildOverridesPayload(tactic.positionOverrides),
-        principles: buildPrinciplesPayload(tactic.principles),
-      };
-      await updateTactic(request);
-    } else {
-      const request: CreateTacticRequest = {
-        name: tactic.name,
-        parentFormationId: tactic.parentFormationId || '',
-        parentTacticId: tactic.parentTacticId,
-        summary: tactic.summary || undefined,
-        style: tactic.style || undefined,
-        tags: tactic.tags || [],
-        scope: {
-          type: teamId && ageGroupId ? 'team' : ageGroupId ? 'ageGroup' : 'club',
-          clubId: clubId || '',
-          ageGroupId: ageGroupId,
-          teamId: teamId,
-        },
-        positionOverrides: buildOverridesPayload(tactic.positionOverrides),
-        principles: buildPrinciplesPayload(tactic.principles),
-      };
-      await createTactic(request);
+    if (submitInFlightRef.current || isSubmitting || isBlockingSystemFormationState || isBlockingEditState || isBlockingMissingParentFormation) {
+      return;
+    }
+
+    submitInFlightRef.current = true;
+
+    try {
+      if (isEditing && tacticId) {
+        const request: UpdateTacticRequest = {
+          name: tactic.name,
+          summary: tactic.summary || undefined,
+          style: tactic.style || undefined,
+          tags: tactic.tags || [],
+          positionOverrides: buildOverridesPayload(tactic.positionOverrides),
+          principles: buildPrinciplesPayload(tactic.principles),
+        };
+        await updateTactic(request);
+      } else {
+        const request: CreateTacticRequest = {
+          name: tactic.name,
+          parentFormationId: tactic.parentFormationId || '',
+          parentTacticId: tactic.parentTacticId,
+          summary: tactic.summary || undefined,
+          style: tactic.style || undefined,
+          tags: tactic.tags || [],
+          scope: {
+            type: teamId && ageGroupId ? 'team' : ageGroupId ? 'ageGroup' : 'club',
+            clubId: clubId || '',
+            ageGroupId: ageGroupId,
+            teamId: teamId,
+          },
+          positionOverrides: buildOverridesPayload(tactic.positionOverrides),
+          principles: buildPrinciplesPayload(tactic.principles),
+        };
+        await createTactic(request);
+      }
+    } finally {
+      submitInFlightRef.current = false;
     }
   };
 
   // ---- Loading state (edit mode only) --------------------------------------
-  const showSkeletons = isEditing && isLoading;
+  const showSkeletons = isLoadingSystemFormations || (isEditing && hasValidEditTacticId && isLoading);
 
   if (showSkeletons) {
     return (
@@ -372,29 +508,47 @@ export default function AddEditTacticPage() {
     );
   }
 
-  // ---- Error state (edit mode fetch failed) --------------------------------
-  if (isEditing && fetchError) {
+  if (isBlockingSystemFormationState) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        <main className="mx-auto px-4 py-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-            <PageTitle
-              title="Edit Tactic"
-              subtitle="Error loading tactic"
-              badge={getScopeLabel()}
-              backLink={getBackUrl()}
-            />
-          </div>
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
-            <p className="text-red-700 dark:text-red-300">
-              Failed to load tactic: {fetchError.message}
-            </p>
-          </div>
-        </main>
-      </div>
+      <BlockingState
+        title={isEditing ? 'Edit Tactic' : 'New Tactic'}
+        subtitle="System formations unavailable"
+        badge={getScopeLabel()}
+        backLink={getBackUrl()}
+        message={systemFormationsError?.message || 'No system formations are available for tactics right now.'}
+      />
     );
   }
+
+  if (isBlockingEditState) {
+    const blockingMessage = !hasValidEditTacticId
+      ? 'The tactic ID in the URL is invalid, so this tactic cannot be loaded for editing.'
+      : fetchError?.message || 'This tactic could not be loaded.';
+
+    return (
+      <BlockingState
+        title="Edit Tactic"
+        subtitle="Error loading tactic"
+        badge={getScopeLabel()}
+        backLink={getBackUrl()}
+        message={blockingMessage}
+      />
+    );
+  }
+
+  if (isBlockingMissingParentFormation) {
+    return (
+      <BlockingState
+        title={isEditing ? 'Edit Tactic' : 'New Tactic'}
+        subtitle="Base formation unavailable"
+        badge={getScopeLabel()}
+        backLink={getBackUrl()}
+        message="The selected base formation is not available from the system formation catalog, so this tactic cannot be edited or saved."
+      />
+    );
+  }
+
+  const saveDisabled = isSubmitting || submitInFlightRef.current || !formation;
 
   // ---- Render form ---------------------------------------------------------
   return (
@@ -485,7 +639,7 @@ export default function AddEditTacticPage() {
                       {squadSizeOrder.map(squadSize => {
                         const formations = formationsBySquadSize[squadSize];
                         if (!formations || formations.length === 0) return null;
-                        
+
                         return (
                           <optgroup key={squadSize} label={`${squadSize}v${squadSize}`}>
                             {formations.map(f => (
@@ -551,7 +705,7 @@ export default function AddEditTacticPage() {
             onArchive={isEditing ? () => console.log('Archive tactic') : undefined}
             onCancel={() => navigate(getBackUrl())}
             saveLabel={isSubmitting ? 'Saving…' : isEditing ? 'Save Changes' : 'Create Tactic'}
-            saveDisabled={isSubmitting}
+            saveDisabled={saveDisabled}
             showArchive={isEditing}
           />
         </div>

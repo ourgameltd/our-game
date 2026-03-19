@@ -33,6 +33,7 @@ import {
   ClubDevelopmentPlanDto,
   AgeGroupDevelopmentPlanSummaryDto,
   TeamDevelopmentPlanDto,
+  SystemFormationDto,
   TacticsByScopeResponseDto,
   DrillsByScopeResponseDto,
   DrillTemplatesByScopeResponseDto,
@@ -592,6 +593,16 @@ export function useClubDevelopmentPlans(clubId: string | undefined): UseApiState
 // ============================================================
 // Tactics Hooks
 // ============================================================
+
+/**
+ * Hook to fetch DB-backed system formations for tactic add/edit flows.
+ */
+export function useSystemFormations(): UseApiState<SystemFormationDto[]> {
+  return useApiCall<SystemFormationDto[]>(
+    () => apiClient.formations.getSystem(),
+    []
+  );
+}
 
 /**
  * Hook to fetch tactics by scope (club, age group, or team level)

@@ -92,7 +92,7 @@ export default function TacticsListPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         <PageTitle
-          title="Formations"
+          title="Tactics"
           subtitle={`Manage tactical setups for your ${getScopeLabel().toLowerCase()}`}
           action={{
             label: 'New Tactic',
