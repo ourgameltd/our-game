@@ -352,7 +352,6 @@ const AgeGroupOverviewPage: React.FC = () => {
               type="upcoming"
               matches={upcomingMatches}
               limit={3}
-              viewAllLink={clubId && ageGroupId ? Routes.ageGroupMatches(clubId, ageGroupId) : '#'}
               showTeamInfo={true}
               getTeamInfo={(match) => ({
                 teamName: stats?.upcomingMatches.find(m => m.id === match.id)?.teamName || 'Unknown',
@@ -367,7 +366,6 @@ const AgeGroupOverviewPage: React.FC = () => {
               type="results"
               matches={previousResults}
               limit={3}
-              viewAllLink={clubId && ageGroupId ? Routes.ageGroupMatches(clubId, ageGroupId) : '#'}
               showTeamInfo={true}
               getTeamInfo={(match) => ({
                 teamName: stats?.previousResults.find(m => m.id === match.id)?.teamName || 'Unknown',

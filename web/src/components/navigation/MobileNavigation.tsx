@@ -52,11 +52,9 @@ export default function MobileNavigation() {
   const teamCoachMatch = matchPath('/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches/:coachId/*', location.pathname);
   const teamMatchesMatch = matchPath('/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/matches/*', location.pathname);
   const teamTrainingMatch = matchPath('/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training/*', location.pathname);
-  const ageGroupMatchesMatch = matchPath('/dashboard/:clubId/age-groups/:ageGroupId/matches/*', location.pathname);
-  const ageGroupTrainingMatch = matchPath('/dashboard/:clubId/age-groups/:ageGroupId/training/*', location.pathname);
 
   const clubId = clubMatch?.params.clubId;
-  const ageGroupId = ageGroupMatch?.params.ageGroupId || teamMatch?.params.ageGroupId || playerMatch?.params.ageGroupId || teamPlayerMatch?.params.ageGroupId || ageGroupCoachMatch?.params.ageGroupId || teamCoachMatch?.params.ageGroupId || teamMatchesMatch?.params.ageGroupId || teamTrainingMatch?.params.ageGroupId || ageGroupMatchesMatch?.params.ageGroupId || ageGroupTrainingMatch?.params.ageGroupId;
+    const ageGroupId = ageGroupMatch?.params.ageGroupId || teamMatch?.params.ageGroupId || playerMatch?.params.ageGroupId || teamPlayerMatch?.params.ageGroupId || ageGroupCoachMatch?.params.ageGroupId || teamCoachMatch?.params.ageGroupId || teamMatchesMatch?.params.ageGroupId || teamTrainingMatch?.params.ageGroupId;
   const teamId = teamMatch?.params.teamId || teamPlayerMatch?.params.teamId || teamCoachMatch?.params.teamId || teamMatchesMatch?.params.teamId || teamTrainingMatch?.params.teamId;
   const playerId = playerMatch?.params.playerId || teamPlayerMatch?.params.playerId;
   const coachId = ageGroupCoachMatch?.params.coachId || teamCoachMatch?.params.coachId;
@@ -385,41 +383,6 @@ export default function MobileNavigation() {
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Coaches</span>
-                              </Link>
-                            </li>
-                          </ul>
-                        )}
-                      </li>
-                      {/* Scheduling Section */}
-                      <li className="mobile-nav-item">
-                        <button
-                          onClick={() => setIsSchedulingExpanded(!isSchedulingExpanded)}
-                          className={`mobile-nav-link pl-8 w-full justify-between ${isSchedulingPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
-                        >
-                          <span className="flex items-center gap-4">
-                            <Calendar className="mobile-nav-icon" />
-                            <span className="mobile-nav-text">Scheduling</span>
-                          </span>
-                          {isSchedulingExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                        </button>
-                        {isSchedulingExpanded && (
-                          <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                            <li className="mobile-nav-item">
-                              <Link 
-                                to={Routes.ageGroupMatches(clubId as string, ageGroupId as string)}
-                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupMatches(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
-                              >
-                                <Shield className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Matches</span>
-                              </Link>
-                            </li>
-                            <li className="mobile-nav-item">
-                              <Link 
-                                to={Routes.ageGroupTrainingSessions(clubId as string, ageGroupId as string)}
-                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupTrainingSessions(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
-                              >
-                                <Dumbbell className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Training</span>
                               </Link>
                             </li>
                           </ul>

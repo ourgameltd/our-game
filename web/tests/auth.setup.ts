@@ -26,9 +26,9 @@ setup('authenticate', async ({ page }) => {
   await page.locator('input[name="userId"]').fill('00000001000000000000000000000101');
   await page.locator('input[name="userId"]').dispatchEvent('keyup');
   
-  // User details - display name for the seeded user
+  // User details should remain email-like to match the real-world auth payload shape
   await page.locator('input[name="userDetails"]').clear();
-  await page.locator('input[name="userDetails"]').fill('Michael Law');
+  await page.locator('input[name="userDetails"]').fill('michael@michaellaw.me');
   await page.locator('input[name="userDetails"]').dispatchEvent('keyup');
   
   // User roles - one per line. The 'authenticated' role is required by staticwebapp.config.json
@@ -79,6 +79,16 @@ setup('authenticate', async ({ page }) => {
   
   // Check userId exists
   expect(authInfo.clientPrincipal.userId).toBeTruthy();
+
+  // Keep the real-world payload shape: email-like userDetails, name claims unchanged
+  expect(authInfo.clientPrincipal.userDetails).toBe('michael@michaellaw.me');
+  expect(authInfo.clientPrincipal.claims).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({ typ: 'name', val: 'Michael Law' }),
+      expect.objectContaining({ typ: 'given_name', val: 'Michael' }),
+      expect.objectContaining({ typ: 'family_name', val: 'Law' })
+    ])
+  );
   
   // Check roles exist and include authenticated
   expect(authInfo.clientPrincipal.userRoles).toBeDefined();

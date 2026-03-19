@@ -1,6 +1,18 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Profile Page', () => {
+  test('should show the signed-in user name in the navigation profile label', async ({ page }) => {
+    await page.goto('/profile', { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+    await expect(page.getByRole('heading', { name: 'My Profile' })).toBeVisible({ timeout: 15000 });
+
+    const navigationProfileLabel = page.locator('a[href="/profile"] .mobile-nav-user-name').first();
+
+    await expect(navigationProfileLabel).toBeVisible();
+    await expect(navigationProfileLabel).toHaveText('Michael Law');
+    await expect(navigationProfileLabel).not.toHaveText('michael@michaellaw.me');
+  });
+
   test('should load and update profile successfully', async ({ page }) => {
     // Navigate to profile page
     await page.goto('/profile', { waitUntil: 'domcontentloaded', timeout: 30000 });

@@ -86,15 +86,36 @@ export function getUserEmail(principal: ClientPrincipal | null): string | undefi
  */
 export function getUserDisplayName(principal: ClientPrincipal | null): string | undefined {
   if (!principal) return undefined;
-  
-  // Try userDetails first (often contains the display name)
-  if (principal.userDetails) return principal.userDetails;
-  
-  // Fall back to claims
-  if (principal.claims) {
-    return getClaimValue(principal.claims, 'name') || 
-           getClaimValue(principal.claims, 'given_name');
+
+  const claims = principal.claims;
+
+  const fullName = claims
+    ? getClaimValue(claims, 'name') ||
+      getClaimValue(claims, 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name')
+    : undefined;
+
+  if (fullName?.trim()) {
+    return fullName.trim();
   }
-  
-  return undefined;
+
+  const givenName = claims
+    ? getClaimValue(claims, 'given_name') ||
+      getClaimValue(claims, 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname')
+    : undefined;
+
+  const familyName = claims
+    ? getClaimValue(claims, 'family_name') ||
+      getClaimValue(claims, 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname')
+    : undefined;
+
+  const splitName = [givenName, familyName]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .map(value => value.trim())
+    .join(' ');
+
+  if (splitName) {
+    return splitName;
+  }
+
+  return principal.userDetails || getUserEmail(principal) || principal.userId;
 }
