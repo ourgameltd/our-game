@@ -44,6 +44,7 @@ public class GetSystemFormationsHandler : IRequestHandler<GetSystemFormationsQue
 
         var positionsSql = @"
             SELECT
+                fp.Id,
                 fp.FormationId,
                 fp.PositionIndex,
                 fp.Position,
@@ -53,7 +54,7 @@ public class GetSystemFormationsHandler : IRequestHandler<GetSystemFormationsQue
             FROM FormationPositions fp
             INNER JOIN Formations f ON f.Id = fp.FormationId
             WHERE f.IsSystemFormation = 1
-            ORDER BY fp.FormationId, fp.PositionIndex";
+            ORDER BY fp.FormationId, fp.PositionIndex, fp.YCoord, fp.XCoord, fp.Position, fp.Id";
 
         var positions = await _db.Database
             .SqlQueryRaw<SystemFormationPositionRaw>(positionsSql)
@@ -65,6 +66,10 @@ public class GetSystemFormationsHandler : IRequestHandler<GetSystemFormationsQue
                 group => group.Key,
                 group => group
                     .OrderBy(position => position.PositionIndex)
+                    .ThenBy(position => position.YCoord)
+                    .ThenBy(position => position.XCoord)
+                    .ThenBy(position => position.Position)
+                    .ThenBy(position => position.Id)
                     .Select(position => new SystemFormationPositionDto
                     {
                         PositionIndex = position.PositionIndex,
@@ -123,6 +128,7 @@ public class SystemFormationRaw
 
 public class SystemFormationPositionRaw
 {
+    public Guid Id { get; set; }
     public Guid FormationId { get; set; }
     public int PositionIndex { get; set; }
     public int Position { get; set; }

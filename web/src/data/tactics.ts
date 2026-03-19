@@ -214,6 +214,8 @@ export const getTacticById = (id: string): Tactic | undefined => {
  * Resolved position after applying all inheritance
  */
 export interface ResolvedPosition {
+  positionId?: string;
+  positionIndex?: number;
   position: string;
   x: number;
   y: number;
@@ -230,7 +232,9 @@ export const getResolvedPositions = (tactic: Tactic): ResolvedPosition[] => {
   // Start with base formation
   if (!tactic.parentFormationId) {
     // This is a system formation, return its positions directly
-    return (tactic.positions || []).map((pos) => ({
+    return (tactic.positions || []).map((pos, index) => ({
+      positionId: `${tactic.id}:${index}`,
+      positionIndex: index,
       position: pos.position,
       x: pos.x,
       y: pos.y,
@@ -248,7 +252,9 @@ export const getResolvedPositions = (tactic: Tactic): ResolvedPosition[] => {
   }
 
   // Initialize resolved positions from base formation
-  const resolvedPositions: ResolvedPosition[] = baseFormation.positions.map((pos) => ({
+  const resolvedPositions: ResolvedPosition[] = baseFormation.positions.map((pos, index) => ({
+    positionId: `${baseFormation.id}:${index}`,
+    positionIndex: index,
     position: pos.position,
     x: pos.x,
     y: pos.y,

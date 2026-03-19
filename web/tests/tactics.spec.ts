@@ -5,6 +5,7 @@ const createdTacticId = '11111111-2222-3333-4444-555555555555';
 
 const tacticsListUrl = `/dashboard/${clubId}/tactics`;
 const newTacticUrl = `/dashboard/${clubId}/tactics/new`;
+const tacticDetailUrl = `/dashboard/${clubId}/tactics/${createdTacticId}`;
 const invalidEditUrl = `/dashboard/${clubId}/tactics/not-a-valid-id/edit`;
 
 const systemFormations = [
@@ -104,6 +105,8 @@ const createdTacticDetail = {
   positionOverrides: [],
   principles: [],
   resolvedPositions: systemFormations[0].positions.map((position) => ({
+    positionId: `resolved-position-${position.positionIndex}`,
+    positionIndex: position.positionIndex,
     position: position.position,
     x: position.x,
     y: position.y,
@@ -199,6 +202,28 @@ test.describe('Tactics', () => {
     await expect(formationSelect.locator('option', { hasText: '2-3-1 Build Out' })).toHaveCount(1);
 
     expect(formationRequests.count).toBeGreaterThan(0);
+  });
+
+  test('detail page renders the full resolved lineup from the API', async ({ page }) => {
+    await mockClubShell(page);
+    await mockCreatedTacticDetail(page);
+
+    await page.goto(tacticDetailUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+    await expect(page.getByRole('heading', { name: 'High Press 4-3-3' })).toBeVisible({ timeout: 15000 });
+    await expect(page.getByText('4-3-3 Press • pressing')).toBeVisible();
+
+    const renderedPositionMarkers = page
+      .locator('span')
+      .filter({ hasText: /^(GK|RB|CB|LB|CM|RW|ST|LW)$/ });
+
+    await expect(renderedPositionMarkers).toHaveCount(11);
+    await expect(renderedPositionMarkers.filter({ hasText: /^GK$/ })).toHaveCount(1);
+    await expect(renderedPositionMarkers.filter({ hasText: /^RB$/ })).toHaveCount(1);
+    await expect(renderedPositionMarkers.filter({ hasText: /^LB$/ })).toHaveCount(1);
+    await expect(renderedPositionMarkers.filter({ hasText: /^ST$/ })).toHaveCount(1);
+    await expect(renderedPositionMarkers.filter({ hasText: /^CB$/ })).toHaveCount(2);
+    await expect(renderedPositionMarkers.filter({ hasText: /^CM$/ })).toHaveCount(3);
   });
 
   test('double submit on create still issues only one POST', async ({ page }) => {

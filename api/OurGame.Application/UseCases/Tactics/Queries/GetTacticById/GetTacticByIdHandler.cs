@@ -102,6 +102,7 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
         // 5. Fetch base formation positions from parent formation
         var basePositionsSql = @"
             SELECT 
+                fp.Id,
                 fp.PositionIndex,
                 fp.Position,
                 fp.XCoord,
@@ -109,7 +110,7 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
                 fp.Direction
             FROM FormationPositions fp
             WHERE fp.FormationId = {0}
-            ORDER BY fp.PositionIndex";
+            ORDER BY fp.PositionIndex, fp.YCoord, fp.XCoord, fp.Position, fp.Id";
 
         var basePositions = tactic.ParentFormationId.HasValue
             ? await _db.Database
@@ -220,14 +221,10 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
         List<PositionOverrideWithTacticRaw> allOverrides,
         Guid? sourceFormationId)
     {
-        // Start with a dictionary indexed by PositionIndex for efficient lookups
-        var positionMap = new Dictionary<int, ResolvedPosition>();
-
-        // Initialize with base formation positions
-        foreach (var basePos in basePositions)
-        {
-            positionMap[basePos.PositionIndex] = new ResolvedPosition
+        var resolvedPositions = basePositions
+            .Select(basePos => new ResolvedPosition
             {
+                PositionId = basePos.Id,
                 PositionIndex = basePos.PositionIndex,
                 Position = ((PlayerPosition)basePos.Position).ToString(),
                 X = (double)(basePos.XCoord ?? 0),
@@ -237,8 +234,12 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
                     : null,
                 SourceFormationId = sourceFormationId,
                 OverriddenBy = new List<Guid>()
-            };
-        }
+            })
+            .ToList();
+
+        var positionsByIndex = resolvedPositions
+            .GroupBy(position => position.PositionIndex)
+            .ToDictionary(group => group.Key, group => group.ToList());
 
         // Apply overrides in order from root (highest depth) to current tactic (lowest depth)
         // Hierarchy is already ordered by Depth DESC (root first)
@@ -248,10 +249,13 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
             
             foreach (var ovr in overridesForThisTactic)
             {
-                // Only apply override if the position index exists in the base formation
-                if (positionMap.TryGetValue(ovr.PositionIndex, out var position))
+                if (!positionsByIndex.TryGetValue(ovr.PositionIndex, out var matchingPositions))
                 {
-                    // Apply coordinate overrides
+                    continue;
+                }
+
+                foreach (var position in matchingPositions)
+                {
                     if (ovr.XCoord.HasValue)
                     {
                         position.X = (double)ovr.XCoord.Value;
@@ -268,16 +272,20 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
                         position.Direction = ovr.Direction;
                     }
                     
-                    // Track that this tactic overrode this position
                     position.OverriddenBy.Add(node.Id);
                 }
             }
         }
 
-        // Convert to DTO list, ordered by PositionIndex
-        return positionMap.Values
+        return resolvedPositions
             .OrderBy(p => p.PositionIndex)
+            .ThenBy(p => p.Y)
+            .ThenBy(p => p.X)
+            .ThenBy(p => p.Position)
+            .ThenBy(p => p.PositionId)
             .Select(p => new ResolvedPositionDto(
+                PositionId: p.PositionId.ToString(),
+                PositionIndex: p.PositionIndex,
                 Position: p.Position,
                 X: p.X,
                 Y: p.Y,
@@ -367,6 +375,7 @@ public class TacticPrincipleRaw
 
 public class FormationPositionRaw
 {
+    public Guid Id { get; set; }
     public int PositionIndex { get; set; }
     public int Position { get; set; }  // PlayerPosition enum stored as int in SQL
     public decimal? XCoord { get; set; }
@@ -398,6 +407,7 @@ public class PositionOverrideWithTacticRaw
 /// </summary>
 internal class ResolvedPosition
 {
+    public Guid PositionId { get; set; }
     public int PositionIndex { get; set; }
     public string Position { get; set; } = string.Empty;
     public double X { get; set; }

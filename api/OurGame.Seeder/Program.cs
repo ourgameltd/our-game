@@ -274,6 +274,12 @@ try
         await context.FormationPositions.AddRangeAsync(positions);
         await context.SaveChangesAsync();
     }
+
+    var formationPositionRepair = await RepairSystemFormationPositionsAsync(context);
+    if (formationPositionRepair.UpdatedCount > 0 || formationPositionRepair.InsertedCount > 0)
+    {
+        Console.WriteLine($"  🔧 Repaired system formation positions ({formationPositionRepair.UpdatedCount} updated, {formationPositionRepair.InsertedCount} inserted)...");
+    }
     
     if (!await context.TacticPrinciples.AnyAsync())
     {
@@ -626,4 +632,60 @@ static string? FindApiDirectory(string startDirectory)
     }
 
     return null;
+}
+
+static async Task<(int UpdatedCount, int InsertedCount)> RepairSystemFormationPositionsAsync(OurGameContext context)
+{
+    var seededPositions = OurGame.Persistence.Data.SeedData.FormationPositionSeedData.GetFormationPositions();
+    var systemFormationIds = OurGame.Persistence.Data.SeedData.FormationSeedData.SystemFormationIds;
+    Func<FormationPosition, (Guid FormationId, int Position, decimal? XCoord, decimal? YCoord)> createFormationPositionKey =
+        position => (position.FormationId, (int)position.Position, position.XCoord, position.YCoord);
+
+    var existingPositions = await context.FormationPositions
+        .Where(position => systemFormationIds.Contains(position.FormationId))
+        .ToListAsync();
+
+    var existingPositionsByKey = existingPositions
+        .GroupBy(createFormationPositionKey)
+        .ToDictionary(group => group.Key, group => group.OrderBy(position => position.Id).ToList());
+
+    var updatedCount = 0;
+    var insertedCount = 0;
+
+    foreach (var seededPosition in seededPositions)
+    {
+        var key = createFormationPositionKey(seededPosition);
+
+        if (existingPositionsByKey.TryGetValue(key, out var matches) && matches.Any())
+        {
+            var existingPosition = matches[0];
+            if (existingPosition.PositionIndex != seededPosition.PositionIndex)
+            {
+                existingPosition.PositionIndex = seededPosition.PositionIndex;
+                updatedCount++;
+            }
+
+            continue;
+        }
+
+        await context.FormationPositions.AddAsync(new OurGame.Persistence.Models.FormationPosition
+        {
+            Id = Guid.NewGuid(),
+            FormationId = seededPosition.FormationId,
+            Position = seededPosition.Position,
+            XCoord = seededPosition.XCoord,
+            YCoord = seededPosition.YCoord,
+            Direction = seededPosition.Direction,
+            PositionIndex = seededPosition.PositionIndex
+        });
+
+        insertedCount++;
+    }
+
+    if (updatedCount > 0 || insertedCount > 0)
+    {
+        await context.SaveChangesAsync();
+    }
+
+    return (updatedCount, insertedCount);
 }

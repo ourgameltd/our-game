@@ -26,6 +26,21 @@ public static class FormationSeedData
     // 4-a-side Formation IDs
     public static readonly Guid Formation_4aside_121_Id = Guid.Parse("f4a1b2c3-d4e5-f6a7-b8c9-d0e1f2a3b4c5");
 
+    public static readonly Guid[] SystemFormationIds =
+    [
+        Formation_442_Classic_Id,
+        Formation_433_Attack_Id,
+        Formation_352_Id,
+        Formation_4231_Id,
+        Formation_332_Id,
+        Formation_233_Id,
+        Formation_431_Id,
+        Formation_231_Id,
+        Formation_222_Id,
+        Formation_5aside_121_Id,
+        Formation_4aside_121_Id
+    ];
+
     public static List<Formation> GetFormations()
     {
         var now = DateTime.UtcNow;

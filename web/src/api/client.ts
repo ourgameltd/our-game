@@ -1181,6 +1181,8 @@ export interface PositionOverrideDto {
 }
 
 export interface ResolvedPositionDto {
+  positionId: string;
+  positionIndex: number;
   position: string;
   x: number;
   y: number;

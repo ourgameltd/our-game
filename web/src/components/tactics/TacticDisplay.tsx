@@ -13,6 +13,8 @@ interface TacticDisplayProps {
   showDirections?: boolean;
   showInheritance?: boolean;
   onPositionClick?: (index: number) => void;
+  onResolvedPositionClick?: (positionId: string | null) => void;
+  selectedPositionId?: string | null;
   selectedPositionIndex?: number | null;
   highlightedPositionIndices?: number[]; // For principle highlighting
   className?: string;
@@ -64,6 +66,8 @@ export default function TacticDisplay({
   showDirections = true,
   showInheritance = false,
   onPositionClick,
+  onResolvedPositionClick,
+  selectedPositionId,
   selectedPositionIndex,
   highlightedPositionIndices = [],
   className = '',
@@ -141,10 +145,14 @@ export default function TacticDisplay({
 
         {/* Player positions */}
         {resolvedPositions.map((pos, index) => {
-          const isSelected = index === selectedPositionIndex;
-          const isPrincipleHighlighted = highlightedPositionIndices.includes(index);
+          const positionIndex = pos.positionIndex ?? index;
+          const positionId = pos.positionId;
+          const isSelected = selectedPositionId
+            ? positionId === selectedPositionId
+            : index === selectedPositionIndex;
+          const isPrincipleHighlighted = highlightedPositionIndices.includes(positionIndex);
           const hasOverrides = showInheritance && pos.overriddenBy && pos.overriddenBy.length > 0;
-          const hasPrinciples = hasSpecificPrinciples(tactic.principles || [], index);
+          const hasPrinciples = hasSpecificPrinciples(tactic.principles || [], positionIndex);
           
           // Player assignment support
           const player = selectedPlayers[index];
@@ -158,20 +166,25 @@ export default function TacticDisplay({
             selectedPositionIndex !== undefined && 
             !isSelected &&
             selectedPrinciples.length > 0 &&
-            !selectedPrinciples.some(p => p.positionIndices.includes(index))) ||
+            !selectedPrinciples.some(p => p.positionIndices.includes(positionIndex))) ||
             (highlightedPositionIndices.length > 0 && !isPrincipleHighlighted);
 
           const handleClick = () => {
+            if (onResolvedPositionClick) {
+              onResolvedPositionClick(positionId || null);
+              return;
+            }
+
             if (onPositionClick) {
-              onPositionClick(index);
+              onPositionClick(positionIndex);
             }
           };
 
           return (
             <div
-              key={index}
+              key={positionId || `${pos.sourceFormationId}:${positionIndex}:${index}`}
               className={`absolute transform -translate-x-1/2 -translate-y-1/2 ${
-                onPositionClick || interactive ? 'cursor-pointer hover:scale-110' : ''
+                onPositionClick || onResolvedPositionClick || interactive ? 'cursor-pointer hover:scale-110' : ''
               } transition-all duration-200 group hover:z-50 ${isDimmed ? 'opacity-40' : ''}`}
               style={{
                 left: `${pos.x}%`,

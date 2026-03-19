@@ -4,6 +4,8 @@ import { TacticPrinciple } from '@/types';
 
 /** Minimal position shape needed by PrinciplePanel — decoupled from data layer */
 interface ResolvedPositionItem {
+  positionId?: string;
+  positionIndex?: number;
   position: string;
 }
 
@@ -11,8 +13,10 @@ interface PrinciplePanelProps {
   principles: TacticPrinciple[];
   resolvedPositions: ResolvedPositionItem[];
   onPrinciplesChange?: (principles: TacticPrinciple[]) => void;
+  selectedPositionId?: string | null;
   selectedPositionIndex?: number | null;
   onPositionClick?: (index: number | null) => void;
+  onResolvedPositionClick?: (positionId: string | null) => void;
   selectedPrincipleId?: string | null;
   onPrincipleClick?: (principleId: string | null) => void;
   readOnly?: boolean;
@@ -27,21 +31,27 @@ export default function PrinciplePanel({
   principles,
   resolvedPositions,
   onPrinciplesChange,
+  selectedPositionId,
   selectedPositionIndex,
   onPositionClick,
+  onResolvedPositionClick,
   selectedPrincipleId,
   onPrincipleClick,
   readOnly = false,
 }: PrinciplePanelProps) {
   const [expandedPrinciple, setExpandedPrinciple] = useState<string | null>(null);
   const [editingPrinciple, setEditingPrinciple] = useState<string | null>(null);
+  const selectedResolvedPosition = selectedPositionId
+    ? resolvedPositions.find(position => position.positionId === selectedPositionId) || null
+    : null;
+  const selectedResolvedPositionIndex = selectedResolvedPosition?.positionIndex ?? selectedPositionIndex;
 
   // Filter principles based on mode
   // In read-only mode with a selected position, show only relevant principles
-  const displayPrinciples = readOnly && selectedPositionIndex !== null && selectedPositionIndex !== undefined
+  const displayPrinciples = readOnly && selectedResolvedPositionIndex !== null && selectedResolvedPositionIndex !== undefined
     ? principles.filter(p => 
         p.positionIndices.length === 0 || // Global principles
-        p.positionIndices.includes(selectedPositionIndex)
+        p.positionIndices.includes(selectedResolvedPositionIndex)
       )
     : principles;
 
@@ -258,29 +268,38 @@ export default function PrinciplePanel({
               
               <div className="flex flex-wrap gap-2">
                 {resolvedPositions.map((pos, index) => {
-                  const isAssigned = principle.positionIndices.includes(index);
+                  const positionIndex = pos.positionIndex ?? index;
+                  const isAssigned = principle.positionIndices.includes(positionIndex);
+                  const isSelected = selectedPositionId
+                    ? pos.positionId === selectedPositionId
+                    : positionIndex === selectedPositionIndex;
+
                   return (
                     <button
                       type="button"
-                      key={index}
+                      key={pos.positionId || `${pos.position}-${positionIndex}-${index}`}
                       onClick={() => {
                         if (!readOnly) {
                           // If team-wide is active and user clicks a position, 
                           // switch to position-specific mode with just that position
                           if (isGlobal) {
-                            handleUpdatePrinciple(principle.id, { positionIndices: [index] });
+                            handleUpdatePrinciple(principle.id, { positionIndices: [positionIndex] });
                           } else {
-                            handleTogglePosition(principle.id, index);
+                            handleTogglePosition(principle.id, positionIndex);
                           }
                         } else {
-                          onPositionClick?.(index);
+                          if (onResolvedPositionClick) {
+                            onResolvedPositionClick(pos.positionId || null);
+                          } else {
+                            onPositionClick?.(index);
+                          }
                         }
                       }}
                       className={`px-2 py-1 text-xs font-medium rounded transition-colors ${
                         isGlobal
                           ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-purple-900/30 dark:hover:text-purple-400'
                           : isAssigned
-                          ? index === selectedPositionIndex
+                          ? isSelected
                             ? 'bg-yellow-400 text-yellow-900 dark:bg-yellow-500 dark:text-yellow-950'
                             : 'bg-purple-500 text-white hover:bg-purple-600'
                           : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-purple-100 hover:text-purple-700 dark:hover:bg-purple-900/30 dark:hover:text-purple-400'
@@ -341,14 +360,20 @@ export default function PrinciplePanel({
       {readOnly && (
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-500 dark:text-gray-400 italic">
-            {selectedPositionIndex !== null && selectedPositionIndex !== undefined
-              ? `Showing principles for ${resolvedPositions[selectedPositionIndex]?.position || 'selected position'}`
+            {selectedResolvedPositionIndex !== null && selectedResolvedPositionIndex !== undefined
+              ? `Showing principles for ${selectedResolvedPosition?.position || resolvedPositions.find(position => position.positionIndex === selectedResolvedPositionIndex)?.position || 'selected position'}`
               : 'Select a position on the pitch to filter principles'
             }
           </p>
-          {selectedPositionIndex !== null && selectedPositionIndex !== undefined && onPositionClick && (
+          {selectedResolvedPositionIndex !== null && selectedResolvedPositionIndex !== undefined && (onResolvedPositionClick || onPositionClick) && (
             <button
-              onClick={() => onPositionClick(null)}
+              onClick={() => {
+                if (onResolvedPositionClick) {
+                  onResolvedPositionClick(null);
+                } else {
+                  onPositionClick?.(null);
+                }
+              }}
               className="flex items-center gap-1 px-2 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 rounded transition-colors"
             >
               <X className="w-3 h-3" />

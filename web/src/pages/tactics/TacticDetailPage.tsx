@@ -56,7 +56,9 @@ function mapDtoToTactic(dto: TacticDetailDto): Tactic {
  * Map ResolvedPositionDto to ResolvedPosition expected by components
  */
 function mapResolvedPositions(dtos: ResolvedPositionDto[]): ResolvedPosition[] {
-  return dtos.map(dto => ({
+  return dtos.map((dto, index) => ({
+    positionId: dto.positionId || `resolved-position-${dto.positionIndex ?? index}`,
+    positionIndex: dto.positionIndex ?? index,
     position: dto.position,
     x: dto.x,
     y: dto.y,
@@ -69,13 +71,17 @@ function mapResolvedPositions(dtos: ResolvedPositionDto[]): ResolvedPosition[] {
 export default function TacticDetailPage() {
   const { clubId, ageGroupId, teamId, tacticId } = useParams();
   const navigate = useNavigate();
-  const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
+  const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);
   const [selectedPrincipleId, setSelectedPrincipleId] = useState<string | null>(null);
 
   const { data: tacticDto, isLoading, error } = useTactic(tacticId);
 
   const tactic = tacticDto ? mapDtoToTactic(tacticDto) : undefined;
   const resolvedPositions = tacticDto ? mapResolvedPositions(tacticDto.resolvedPositions) : [];
+  const selectedPosition = selectedPositionId
+    ? resolvedPositions.find(position => position.positionId === selectedPositionId) || null
+    : null;
+  const selectedPositionIndex = selectedPosition?.positionIndex ?? null;
 
   // Get highlighted position indices from selected principle
   const highlightedPositionIndices = selectedPrincipleId
@@ -83,15 +89,15 @@ export default function TacticDetailPage() {
     : [];
 
   // Handle position click - clear principle selection when position is clicked
-  const handlePositionClick = (index: number | null) => {
-    setSelectedPosition(index === selectedPosition ? null : index);
+  const handlePositionClick = (positionId: string | null) => {
+    setSelectedPositionId(positionId === selectedPositionId ? null : positionId);
     setSelectedPrincipleId(null); // Clear principle selection when clicking a position
   };
 
   // Handle principle click - clear position selection when principle is clicked
   const handlePrincipleClick = (principleId: string | null) => {
     setSelectedPrincipleId(principleId);
-    setSelectedPosition(null); // Clear position selection when clicking a principle
+    setSelectedPositionId(null); // Clear position selection when clicking a principle
   };
 
   const getBackUrl = () => {
@@ -243,8 +249,9 @@ export default function TacticDetailPage() {
             resolvedPositions={resolvedPositions}
             showDirections={true}
             showInheritance={true}
-            onPositionClick={handlePositionClick}
-            selectedPositionIndex={selectedPosition}
+            onResolvedPositionClick={handlePositionClick}
+            selectedPositionId={selectedPositionId}
+            selectedPositionIndex={selectedPositionIndex}
             highlightedPositionIndices={highlightedPositionIndices}
           />
         </div>
@@ -277,8 +284,9 @@ export default function TacticDetailPage() {
           <PrinciplePanel
             principles={tactic.principles || []}
             resolvedPositions={resolvedPositions}
-            selectedPositionIndex={selectedPosition}
-            onPositionClick={handlePositionClick}
+            selectedPositionId={selectedPositionId}
+            selectedPositionIndex={selectedPositionIndex}
+            onResolvedPositionClick={handlePositionClick}
             selectedPrincipleId={selectedPrincipleId}
             onPrincipleClick={handlePrincipleClick}
             readOnly
