@@ -104,6 +104,7 @@ public class AssignCoachToTeamHandler : IRequestHandler<AssignCoachToTeamCommand
             .SqlQueryRaw<TeamCoachQueryResult>(@"
                 SELECT
                     c.Id,
+                    c.AssociationId,
                     c.FirstName,
                     c.LastName,
                     c.Photo,
@@ -125,6 +126,7 @@ public class AssignCoachToTeamHandler : IRequestHandler<AssignCoachToTeamCommand
         return new TeamCoachDto
         {
             Id = result.Id,
+            AssociationId = result.AssociationId,
             FirstName = result.FirstName ?? string.Empty,
             LastName = result.LastName ?? string.Empty,
             PhotoUrl = result.Photo,
@@ -168,6 +170,7 @@ internal class TeamCoachExistsResult
 internal class TeamCoachQueryResult
 {
     public Guid Id { get; set; }
+    public string? AssociationId { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Photo { get; set; }

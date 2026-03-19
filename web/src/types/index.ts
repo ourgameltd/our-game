@@ -247,7 +247,7 @@ export interface Coach {
   clubId: string; // Coaches belong to a club
   firstName: string;
   lastName: string;
-  dateOfBirth: Date;
+  dateOfBirth?: Date;
   photo?: string;
   email: string;
   phone: string;

@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.UseCases.Reports.Commands.CreateReport.DTOs;
 using OurGame.Application.UseCases.Reports.Queries.GetReportById;
 using OurGame.Application.UseCases.Reports.Queries.GetReportById.DTOs;
@@ -29,7 +30,7 @@ public class CreateReportHandler : IRequestHandler<CreateReportCommand, ReportDt
         var reportId = Guid.NewGuid();
         var now = DateTime.UtcNow;
 
-        // 1. Get the coach ID from Azure User ID
+        // 1. Get the coach ID from authenticated user
         var coachId = await GetCoachIdFromAzureUserId(command.AzureUserId, cancellationToken);
 
         // 2. Serialize arrays to JSON
@@ -95,14 +96,25 @@ public class CreateReportHandler : IRequestHandler<CreateReportCommand, ReportDt
         return createdReport;
     }
 
-    private async Task<Guid?> GetCoachIdFromAzureUserId(string azureUserId, CancellationToken cancellationToken)
+    private async Task<Guid> GetCoachIdFromAzureUserId(string azureUserId, CancellationToken cancellationToken)
     {
-        var sql = "SELECT Id FROM Coaches WHERE AzureUserId = {0}";
         var coach = await _db.Database
-            .SqlQueryRaw<CoachIdResult>(sql, azureUserId)
+            .SqlQueryRaw<CoachIdResult>(@"
+                SELECT c.Id
+                FROM Users u
+                INNER JOIN Coaches c ON c.UserId = u.Id
+                WHERE u.AuthId = {0} AND c.IsArchived = 0
+            ", azureUserId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        return coach?.Id;
+        if (coach != null)
+        {
+            return coach.Id;
+        }
+
+        throw new ValidationException(
+            nameof(azureUserId),
+            "Authenticated user is not linked to an active coach account.");
     }
 }
 

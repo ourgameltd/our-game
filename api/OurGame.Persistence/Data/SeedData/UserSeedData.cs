@@ -54,6 +54,17 @@ public static class UserSeedData
         return (value ?? string.Empty).Trim().ToLowerInvariant();
     }
 
+    public static string GetSafeCoachAssociationId(string name, string? associationId = null)
+    {
+        var normalizedAssociationId = (associationId ?? string.Empty).Trim();
+        if (!string.IsNullOrWhiteSpace(normalizedAssociationId))
+        {
+            return normalizedAssociationId;
+        }
+
+        return $"seed-assoc-{SlugifyName(name)}";
+    }
+
     public static Guid GetUserIdByName(string name)
     {
         // Map "Michael Law" from JSON data to the hardcoded test user
@@ -276,7 +287,8 @@ public static class UserSeedData
                 Team: NormalizeRawValue(admin.Team),
                 Name: NormalizeRawValue(admin.Name),
                 Email: NormalizeOptionalRawValue(admin.Email),
-                Phone: NormalizeOptionalRawValue(admin.Phone)))
+                Phone: NormalizeOptionalRawValue(admin.Phone),
+                AssociationId: NormalizeOptionalRawValue(admin.AssociationId)))
             .ToList();
 
         return new VolDataset(players, guardians, admins);
@@ -346,6 +358,8 @@ public static class UserSeedData
         public string? Email { get; set; }
 
         public string? Phone { get; set; }
+
+        public string? AssociationId { get; set; }
     }
 
     public sealed record VolDataset(IReadOnlyList<PlayerSource> Players, IReadOnlyList<GuardianSource> Guardians, IReadOnlyList<AdminSource> Admins);
@@ -354,5 +368,5 @@ public static class UserSeedData
 
     public sealed record GuardianSource(string Player, string Name, string? Email, string? Phone);
 
-    public sealed record AdminSource(string Team, string Name, string? Email, string? Phone);
+    public sealed record AdminSource(string Team, string Name, string? Email, string? Phone, string? AssociationId);
 }

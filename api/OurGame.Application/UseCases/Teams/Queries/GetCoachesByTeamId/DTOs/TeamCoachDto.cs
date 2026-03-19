@@ -11,6 +11,11 @@ public class TeamCoachDto
     public Guid Id { get; set; }
 
     /// <summary>
+    /// The coach's football association ID
+    /// </summary>
+    public string? AssociationId { get; set; }
+
+    /// <summary>
     /// The coach's first name
     /// </summary>
     public string FirstName { get; set; } = string.Empty;

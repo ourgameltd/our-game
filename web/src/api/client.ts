@@ -80,6 +80,7 @@ export interface TeamCoachDto {
   firstName?: string;
   lastName?: string;
   photoUrl?: string;
+  associationId?: string;
   role?: string;
   isArchived?: boolean;
 }

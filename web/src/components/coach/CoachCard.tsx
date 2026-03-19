@@ -10,7 +10,10 @@ interface CoachCardProps {
 }
 
 export default function CoachCard({ coach, onClick, badges, actions }: CoachCardProps) {
-  const age = new Date().getFullYear() - coach.dateOfBirth.getFullYear();
+  const birthDate = coach.dateOfBirth ? new Date(coach.dateOfBirth) : null;
+  const age = birthDate && !Number.isNaN(birthDate.getTime())
+    ? new Date().getFullYear() - birthDate.getFullYear()
+    : null;
 
   const handleSendInvite = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent card click when clicking invite button
@@ -67,9 +70,13 @@ export default function CoachCard({ coach, onClick, badges, actions }: CoachCard
       </p>
 
       {/* Age */}
-      <p className="hidden md:block text-sm text-gray-600 dark:text-gray-400 md:w-16 md:flex-shrink-0 md:order-4">
-        Age {age}
-      </p>
+      {age !== null ? (
+        <p className="hidden md:block text-sm text-gray-600 dark:text-gray-400 md:w-16 md:flex-shrink-0 md:order-4">
+          Age {age}
+        </p>
+      ) : (
+        <div className="hidden md:block md:w-16 md:flex-shrink-0 md:order-4" />
+      )}
 
       {/* Specializations */}
       {coach.specializations && coach.specializations.length > 0 && (

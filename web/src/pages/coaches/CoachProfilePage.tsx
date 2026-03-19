@@ -249,7 +249,7 @@ export default function CoachProfilePage() {
                 </div>
                 {coach.associationId && (
                   <div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">FA Registration ID</p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">Association ID</p>
                     <p className="font-medium text-gray-900 dark:text-white">{coach.associationId}</p>
                   </div>
                 )}

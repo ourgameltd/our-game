@@ -1082,127 +1082,148 @@
       "team": "Black",
       "name": "Andy Campbell",
       "email": "andycampbell10@hotmail.co.uk",
-      "phone": "+44 7923 302174"
+      "phone": "+44 7923 302174",
+      "associationId": "seed-assoc-andy-campbell"
     },
     {
       "team": "Black",
       "name": "Chris Boult",
       "email": "chrisjohnboult@gmail.com",
-      "phone": "+44 7476 106803"
+      "phone": "+44 7476 106803",
+      "associationId": "seed-assoc-chris-boult"
     },
     {
       "team": "Black",
       "name": "Graeme Monteith",
       "email": "graememonteith@icloud.com",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-graeme-monteith"
     },
     {
       "team": "Black",
       "name": "Kevin Gallacher",
       "email": "kgallacher18@gmail.com",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-kevin-gallacher"
     },
     {
       "team": "Black",
       "name": "Ryan Neill",
       "email": "ryan.neill1590@gmail.com",
-      "phone": "+44 7515 709492"
+      "phone": "+44 7515 709492",
+      "associationId": "seed-assoc-ryan-neill"
     },
     {
       "team": "Blue",
       "name": "Aidan Mcnaught",
       "email": "aidanmcnaught0104@gmail.com",
-      "phone": "+44 7488 499946"
+      "phone": "+44 7488 499946",
+      "associationId": "seed-assoc-aidan-mcnaught"
     },
     {
       "team": "Blue",
       "name": "Graham Westwater",
       "email": "gmwest46@gmail.com",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-graham-westwater"
     },
     {
       "team": "Blue",
       "name": "Grant Richmond",
       "email": "",
-      "phone": "+44 7990 538227"
+      "phone": "+44 7990 538227",
+      "associationId": "seed-assoc-grant-richmond"
     },
     {
       "team": "Blue",
       "name": "Kenny Beaton",
       "email": "kennybeaton81@gmail.com",
-      "phone": "+44 7505 407101"
+      "phone": "+44 7505 407101",
+      "associationId": "seed-assoc-kenny-beaton"
     },
     {
       "team": "Blue",
       "name": "Michael Law",
       "email": "michael.law@sky.com",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-michael-law"
     },
     {
       "team": "Blue",
       "name": "Sean Cargill",
       "email": "seancargill@hotmail.co.uk",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-sean-cargill"
     },
     {
       "team": "Blue",
       "name": "Thomas O'Donnell",
       "email": "thomasodonnell567@gmail.com",
-      "phone": "+44 7808 791424"
+      "phone": "+44 7808 791424",
+      "associationId": "seed-assoc-thomas-o-donnell"
     },
     {
       "team": "Girls",
       "name": "Colin Imogens Dad",
       "email": "colinleitch888@hotmail.com",
-      "phone": "+44 7854 486651"
+      "phone": "+44 7854 486651",
+      "associationId": "seed-assoc-colin-imogens-dad"
     },
     {
       "team": "Girls",
       "name": "Kathryn Pender",
       "email": "kathrynpender7@hotmail.co.uk",
-      "phone": "+44 7376 357478"
+      "phone": "+44 7376 357478",
+      "associationId": "seed-assoc-kathryn-pender"
     },
     {
       "team": "Girls",
       "name": "Sean Cargill",
       "email": "seancargill@hotmail.co.uk",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-sean-cargill"
     },
     {
       "team": "Girls",
       "name": "Thomas O'Donnell",
       "email": "thomasodonnell567@gmail.com",
-      "phone": "+44 7808 791424"
+      "phone": "+44 7808 791424",
+      "associationId": "seed-assoc-thomas-o-donnell"
     },
     {
       "team": "Girls",
       "name": "David Gordon",
       "email": "davidgordon0212@gmail.com",
-      "phone": "+44 7518 745902"
+      "phone": "+44 7518 745902",
+      "associationId": "seed-assoc-david-gordon"
     },
     {
       "team": "White",
       "name": "Ali O'Keeffe",
       "email": "aliokeeffe@gmail.com",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-ali-o-keeffe"
     },
     {
       "team": "White",
       "name": "John O'Dell",
       "email": "john_diesel1@yahoo.co.uk",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-john-o-dell"
     },
     {
       "team": "White",
       "name": "Neil Kangley",
       "email": "neilkangley@msn.com",
-      "phone": ""
+      "phone": "",
+      "associationId": "seed-assoc-neil-kangley"
     },
     {
       "team": "White",
       "name": "Stef Mccoll",
       "email": "s.mcoll13@gmail.com",
-      "phone": "+44 7400 435435"
+      "phone": "+44 7400 435435",
+      "associationId": "seed-assoc-stef-mccoll"
     }
   ]
 }

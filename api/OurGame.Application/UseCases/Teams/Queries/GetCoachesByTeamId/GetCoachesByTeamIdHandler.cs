@@ -29,6 +29,7 @@ public class GetCoachesByTeamIdHandler : IRequestHandler<GetCoachesByTeamIdQuery
         var sql = @"
             SELECT
                 c.Id,
+                c.AssociationId,
                 c.FirstName,
                 c.LastName,
                 c.Photo,
@@ -46,6 +47,7 @@ public class GetCoachesByTeamIdHandler : IRequestHandler<GetCoachesByTeamIdQuery
         return rows.Select(r => new TeamCoachDto
         {
             Id = r.Id,
+            AssociationId = r.AssociationId,
             FirstName = r.FirstName ?? string.Empty,
             LastName = r.LastName ?? string.Empty,
             PhotoUrl = r.Photo,
@@ -61,6 +63,7 @@ public class GetCoachesByTeamIdHandler : IRequestHandler<GetCoachesByTeamIdQuery
 public class TeamCoachRawDto
 {
     public Guid Id { get; set; }
+    public string? AssociationId { get; set; }
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Photo { get; set; }

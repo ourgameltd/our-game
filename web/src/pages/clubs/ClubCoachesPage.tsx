@@ -49,7 +49,7 @@ function mapApiCoachToCoach(apiCoach: ClubCoachDto): Coach {
     clubId: apiCoach.clubId,
     firstName: apiCoach.firstName,
     lastName: apiCoach.lastName,
-    dateOfBirth: apiCoach.dateOfBirth ? new Date(apiCoach.dateOfBirth) : new Date(),
+    dateOfBirth: apiCoach.dateOfBirth ? new Date(apiCoach.dateOfBirth) : undefined,
     photo: apiCoach.photo,
     email: apiCoach.email || '',
     phone: apiCoach.phone || '',

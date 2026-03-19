@@ -62,10 +62,10 @@ export default function AgeGroupCoachesPage() {
   }, [clubId, ageGroupId]);
 
   const mapCoachDtoToCoach = (dto: AgeGroupCoachDto): Coach => {
-    // Convert DateOnly string to Date, use fallback if null
-    const dateOfBirth = dto.dateOfBirth 
-      ? new Date(dto.dateOfBirth) 
-      : new Date('2000-01-01');
+    // Convert DateOnly string to Date when the API provides one
+    const dateOfBirth = dto.dateOfBirth
+      ? new Date(dto.dateOfBirth)
+      : undefined;
 
     // Extract team IDs from teams array
     const teamIds = dto.teams.map(team => team.id);
