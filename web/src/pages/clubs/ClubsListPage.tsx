@@ -72,11 +72,6 @@ export default function ClubsListPage() {
                   {hasMyChildren && (
                     <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                       {myChildrenList.map((player) => {
-                        // Parse preferred positions (stored as comma-separated string)
-                        const preferredPositions = player.preferredPositions 
-                          ? player.preferredPositions.split(',').map(p => p.trim())
-                          : [];
-                        
                         // Get the first age group for the route
                         const firstAgeGroupId = player.ageGroups.length > 0 ? player.ageGroups[0].id : '';
                         
@@ -102,9 +97,6 @@ export default function ClubsListPage() {
                               <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">
                                   {player.firstName} {player.lastName}
-                                </p>
-                                <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                  {player.club?.shortName} • {preferredPositions.join(', ')}
                                 </p>
                               </div>
                             </div>
@@ -133,7 +125,7 @@ export default function ClubsListPage() {
                                 {player.firstName} {player.lastName}
                               </p>
                               <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                {player.club?.shortName} • {preferredPositions.join(', ')}
+                                {player.club?.shortName}
                               </p>
                             </div>
                           </Link>
