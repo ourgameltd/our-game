@@ -250,7 +250,7 @@ export default function TeamCoachesPage() {
                       clubId: team.clubId,
                       firstName: coach.firstName || '',
                       lastName: coach.lastName || '',
-                      dateOfBirth: coach.dateOfBirth ? new Date(coach.dateOfBirth) : undefined,
+                      dateOfBirth: undefined,
                       photo: coach.photoUrl,
                       email: '',
                       phone: '',

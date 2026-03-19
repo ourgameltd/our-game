@@ -23,7 +23,7 @@ export default function CoachDetailsHeader({
     return age;
   };
 
-  const age = calculateAge(coach.dateOfBirth);
+  const age = coach.dateOfBirth ? calculateAge(coach.dateOfBirth) : undefined;
 
   return (
     <div className="flex items-start gap-4">
@@ -44,8 +44,12 @@ export default function CoachDetailsHeader({
         </h1>
         <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
           <span className="font-medium text-secondary-600 dark:text-secondary-400">{coachRoleDisplay[coach.role]}</span>
-          <span>•</span>
-          <span>Age: {age} years old</span>
+          {age !== undefined && (
+            <>
+              <span>•</span>
+              <span>Age: {age} years old</span>
+            </>
+          )}
           {coach.associationId && (
             <>
               <span>•</span>
