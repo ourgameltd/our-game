@@ -875,9 +875,9 @@ export default function AddEditMatchPage() {
         summary: summary || undefined,
         captainId: captainId || undefined,
         playerOfMatchId: playerOfTheMatch || undefined,
-        goals: goals,
-        cards,
-        injuries,
+        goals: goals.filter(g => g.playerId),
+        cards: cards.filter(c => c.playerId),
+        injuries: injuries.filter(i => i.playerId),
         performanceRatings: ratings
       },
       coachIds: assignedCoachIds,
