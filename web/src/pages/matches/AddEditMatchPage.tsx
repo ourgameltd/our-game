@@ -16,6 +16,14 @@ function isSupportedSquadSize(value: number): value is SquadSize {
   return supportedSquadSizes.includes(value as SquadSize);
 }
 
+// Match edit displays defenders at the top and attackers at the bottom,
+// so mirror horizontal coordinates to keep left/right position labels intuitive.
+function mirrorPitchXForMatchEdit(x: number): number {
+  const safeX = Number.isFinite(x) ? x : 50;
+  const clampedX = Math.max(0, Math.min(100, safeX));
+  return 100 - clampedX;
+}
+
 function mapSystemFormationToFormation(dto: SystemFormationDto): Formation | null {
   if (!dto.id || !dto.name || !isSupportedSquadSize(dto.squadSize) || dto.positions.length === 0) {
     return null;
@@ -30,7 +38,7 @@ function mapSystemFormationToFormation(dto: SystemFormationDto): Formation | nul
     tags: dto.tags,
     positions: dto.positions.map(position => ({
       position: position.position as PlayerPosition,
-      x: position.x,
+      x: mirrorPitchXForMatchEdit(position.x),
       y: position.y,
       direction: position.direction as PlayerDirection | undefined,
     })),
@@ -44,7 +52,7 @@ function mapResolvedPositionDtos(dtos: ResolvedPositionDto[]): ResolvedPosition[
     positionId: dto.positionId || `resolved-position-${dto.positionIndex ?? index}`,
     positionIndex: dto.positionIndex ?? index,
     position: dto.position as PlayerPosition,
-    x: dto.x,
+    x: mirrorPitchXForMatchEdit(dto.x),
     y: dto.y,
     direction: dto.direction as PlayerDirection | undefined,
     sourceFormationId: dto.sourceFormationId || '',
@@ -70,7 +78,7 @@ function mapTacticListDtoToTactic(dto: TacticListDto): Tactic {
   for (const override of dto.positionOverrides || []) {
     const mappedOverride: TacticalPositionOverride = {};
 
-    if (override.xCoord !== undefined) mappedOverride.x = override.xCoord;
+    if (override.xCoord !== undefined) mappedOverride.x = mirrorPitchXForMatchEdit(override.xCoord);
     if (override.yCoord !== undefined) mappedOverride.y = override.yCoord;
     if (override.direction) mappedOverride.direction = override.direction as PlayerDirection;
 
