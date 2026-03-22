@@ -1319,13 +1319,13 @@ export function useUpdateClub(clubId: string): UseMutationState<ClubDetailDto> &
  * with validation details preserved for field-level error mapping.
  */
 export function useCreateMatch(): UseMutationState<MatchDetailDto> & {
-  createMatch: (request: CreateMatchRequest) => Promise<void>;
+  createMatch: (request: CreateMatchRequest) => Promise<ApiResponse<MatchDetailDto>>;
 } {
   const [data, setData] = useState<MatchDetailDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const createMatch = useCallback(async (request: CreateMatchRequest): Promise<void> => {
+  const createMatch = useCallback(async (request: CreateMatchRequest): Promise<ApiResponse<MatchDetailDto>> => {
     setIsSubmitting(true);
     setError(null);
     setData(null);
@@ -1340,10 +1340,16 @@ export function useCreateMatch(): UseMutationState<MatchDetailDto> & {
           validationErrors: response.error?.validationErrors,
         });
       }
+      return response;
     } catch (err) {
-      setError({
+      const apiError = {
         message: err instanceof Error ? err.message : 'An unexpected error occurred',
-      });
+      };
+      setError(apiError);
+      return {
+        success: false,
+        error: apiError,
+      };
     } finally {
       setIsSubmitting(false);
     }
@@ -1358,13 +1364,13 @@ export function useCreateMatch(): UseMutationState<MatchDetailDto> & {
  * with validation details preserved for field-level error mapping.
  */
 export function useUpdateMatch(matchId: string): UseMutationState<MatchDetailDto> & {
-  updateMatch: (request: UpdateMatchRequest) => Promise<void>;
+  updateMatch: (request: UpdateMatchRequest) => Promise<ApiResponse<MatchDetailDto>>;
 } {
   const [data, setData] = useState<MatchDetailDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const updateMatch = useCallback(async (request: UpdateMatchRequest): Promise<void> => {
+  const updateMatch = useCallback(async (request: UpdateMatchRequest): Promise<ApiResponse<MatchDetailDto>> => {
     setIsSubmitting(true);
     setError(null);
     setData(null);
@@ -1379,10 +1385,16 @@ export function useUpdateMatch(matchId: string): UseMutationState<MatchDetailDto
           validationErrors: response.error?.validationErrors,
         });
       }
+      return response;
     } catch (err) {
-      setError({
+      const apiError = {
         message: err instanceof Error ? err.message : 'An unexpected error occurred',
-      });
+      };
+      setError(apiError);
+      return {
+        success: false,
+        error: apiError,
+      };
     } finally {
       setIsSubmitting(false);
     }

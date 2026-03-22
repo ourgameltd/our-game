@@ -46,7 +46,7 @@ OurGame is a comprehensive, responsive, mobile-first web portal for football clu
 - **EF Core CLI**: Database migrations and scaffolding
 - **Docker**: Local SQL Server container
 - **Storybook**: Component development
-- **Playwright**: E2E testing for critical user journeys (run with `npm run test:e2e:with-setup`)
+- **.NET Test Projects**: Unit test coverage for backend and API endpoint behavior
 
 ## Application Structure
 
@@ -195,57 +195,17 @@ Dashboard
 5. **Vite**: Run with `npm run dev` in `/web`
 6. **SWA CLI**: Use `swa start` to link frontend and backend locally
 
-### End-to-End Testing with Playwright
+### API Endpoint Test Expectations
 
-#### Running E2E Tests
-The E2E test suite uses Playwright to test critical user journeys in a browser environment:
+Playwright and other browser-driven end-to-end test guidance is intentionally out of scope for this repository's contributor instructions. Do not add new Playwright tests, Playwright workflows, or Playwright-specific references to these instructions when making changes.
 
-- **Full test suite with DB setup**: `npm run test:e2e:with-setup` (recommended)
-  - Automatically runs the seeder to ensure database has current test data
-  - Runs all Playwright tests headless
-- **Tests only** (no DB setup): `npm run test:e2e`
-- **Interactive UI mode**: `npm run test:e2e:ui`
-- **Debug mode**: `npm run test:e2e:debug`
+When work changes backend behavior, API contracts, validation, authorization, serialization, or endpoint responses, contributors should add or extend a .NET unit test project that exercises the affected API endpoints. Treat API endpoint unit coverage as the default testing expectation for backend work.
 
-#### Prerequisites for E2E Testing
-Before running E2E tests, ensure the following services are running:
-
-1. **Docker SQL Server**: Must be running on localhost:1433
-   ```bash
-   docker ps  # Verify SQL Server container is running
-   ```
-2. **Azure Functions**: Backend API must be running locally
-   ```bash
-   cd api/OurGame.Api
-   func start
-   ```
-3. **SWA CLI**: Frontend and backend proxy must be running
-   ```bash
-   cd web
-   swa start  # Starts on http://localhost:4280
-   ```
-
-#### Test Data
-E2E tests use real seeded data from the database:
-
-- **Test User**: Michael Law (AuthId: `00000001000000000000000000000101`)
-- **Email**: michael@michaellaw.me
-- **Roles**: Authenticated, Coach, Player
-- **Data Source**: Seeded via `OurGame.Seeder` from `OurGame.Persistence.Data.SeedData`
-
-The authentication setup ([web/tests/auth.setup.ts](../web/tests/auth.setup.ts)) configures the SWA CLI emulator to authenticate as this user for all tests.
-
-#### For AI Coding Agents
-When making changes to authentication, user profile, or other critical flows:
-
-1. Run `npm run test:e2e:with-setup` to verify your changes haven't broken existing functionality
-2. Tests are defined in `/web/tests/*.spec.ts`
-3. Shared authentication setup is in `/web/tests/auth.setup.ts`
-4. If tests fail, check:
-   - Database is seeded with current data
-   - Azure Functions backend is running
-   - SWA CLI is running on port 4280
-   - No breaking API changes without corresponding test updates
+#### Backend Test Guidance
+1. Add focused tests around the affected Azure Functions endpoints and their observable HTTP behavior.
+2. Cover success paths, validation failures, and relevant edge cases introduced by the change.
+3. Keep tests close to the API surface so contract regressions are caught without relying on browser automation.
+4. Update existing backend test projects where possible instead of introducing Playwright or other E2E test references.
 
 ### Bicep Infrastructure
 - **File**: `/infrastructure/main.bicep`
@@ -293,8 +253,8 @@ When making changes to authentication, user profile, or other critical flows:
 
 ### Testing
 - **Unit Tests**: Required for business logic
-- **Integration Tests**: Test Azure Functions endpoints
-- **E2E Tests**: Playwright tests for critical user journeys (see "End-to-End Testing with Playwright" section)
+- **API Endpoint Unit Tests**: Expected for Azure Functions endpoint behavior and contract changes
+- **No Playwright Coverage**: Do not add Playwright tests or Playwright-specific guidance to this workspace instruction set
 
 ---
 

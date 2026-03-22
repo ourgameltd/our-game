@@ -1,10 +1,10 @@
 import { Plus } from 'lucide-react';
-import { Tactic, PlayerDirection, TacticPrinciple, PlayerPosition } from '@/types';
+import { Tactic, PlayerDirection, TacticPrinciple } from '@/types';
 import { ResolvedPosition } from '@/data/tactics';
 
 interface SelectedPlayer {
   playerId: string;
-  position: PlayerPosition;
+  positionIndex: number;
 }
 
 interface TacticDisplayProps {
@@ -149,17 +149,17 @@ export default function TacticDisplay({
           const positionId = pos.positionId;
           const isSelected = selectedPositionId
             ? positionId === selectedPositionId
-            : index === selectedPositionIndex;
+            : positionIndex === selectedPositionIndex;
           const isPrincipleHighlighted = highlightedPositionIndices.includes(positionIndex);
           const hasOverrides = showInheritance && pos.overriddenBy && pos.overriddenBy.length > 0;
           const hasPrinciples = hasSpecificPrinciples(tactic.principles || [], positionIndex);
           
           // Player assignment support
-          const player = selectedPlayers[index];
+          const player = selectedPlayers.find(selectedPlayer => selectedPlayer.positionIndex === positionIndex);
           const hasPlayer = !!player;
           const playerName = hasPlayer && getPlayerName ? getPlayerName(player.playerId) : '';
           const initials = playerName ? playerName.split(' ').map(n => n[0]).join('') : '';
-          const isHighlighted = hasPlayer && index === highlightedPlayerIndex;
+          const isHighlighted = hasPlayer && positionIndex === highlightedPlayerIndex;
           
           // Dim positions not related to selected position's principles OR selected principle's positions
           const isDimmed = (selectedPositionIndex !== null && 

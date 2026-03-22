@@ -1502,6 +1502,7 @@ namespace OurGame.Persistence.Migrations
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     LineupId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PlayerId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PositionIndex = table.Column<int>(type: "int", nullable: true),
                     Position = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     SquadNumber = table.Column<int>(type: "int", nullable: true),
                     IsStarting = table.Column<bool>(type: "bit", nullable: false),

@@ -64,6 +64,7 @@ public record LineupPlayerDto
     public string FirstName { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
     public string? Photo { get; init; }
+    public int? PositionIndex { get; init; }
     public string? Position { get; init; }
     public int? SquadNumber { get; init; }
     public bool IsStarting { get; init; }

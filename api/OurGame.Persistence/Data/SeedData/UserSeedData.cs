@@ -7,7 +7,7 @@ namespace OurGame.Persistence.Data.SeedData;
 
 public static class UserSeedData
 {
-    // Test user for E2E tests - DO NOT REMOVE
+    // Stable seeded user - DO NOT REMOVE
     public static readonly Guid MichaelLaw_Id = Guid.Parse("00000001-0000-0000-0000-000000000102");
     private const string TestUserNormalizedName = "michael law";
 
@@ -109,7 +109,7 @@ public static class UserSeedData
         var now = DateTime.UtcNow;
         var users = new List<User>
         {
-            // Test user - referenced in web/tests/auth.setup.ts
+            // Stable seeded user with a fixed auth identity for local development flows
             new User
             {
                 Id = MichaelLaw_Id,

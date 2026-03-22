@@ -87,9 +87,10 @@
     },
     {
       "label": "Dev: Start Backend Containers + SWA",
-      "dependsOrder": "parallel",
+      "dependsOrder": "sequence",
       "dependsOn": [
         "Infra: Start Local Stack",
+        "DB: Seed",
         "Web: SWA CLI"
       ],
       "problemMatcher": []

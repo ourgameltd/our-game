@@ -229,6 +229,17 @@ export interface ResolvedPosition {
  * Recursively merges parent formation + parent tactic + current overrides
  */
 export const getResolvedPositions = (tactic: Tactic): ResolvedPosition[] => {
+  const providedResolvedPositions = (tactic as Tactic & { resolvedPositions?: ResolvedPosition[] }).resolvedPositions;
+
+  if (providedResolvedPositions && providedResolvedPositions.length > 0) {
+    return providedResolvedPositions.map((position, index) => ({
+      ...position,
+      positionId: position.positionId || `${position.sourceFormationId}:${position.positionIndex ?? index}`,
+      positionIndex: position.positionIndex ?? index,
+      overriddenBy: position.overriddenBy || [],
+    }));
+  }
+
   // Start with base formation
   if (!tactic.parentFormationId) {
     // This is a system formation, return its positions directly

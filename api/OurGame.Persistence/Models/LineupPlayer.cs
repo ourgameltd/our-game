@@ -13,6 +13,8 @@ public partial class LineupPlayer
 
     public Guid PlayerId { get; set; }
 
+    public int? PositionIndex { get; set; }
+
     public string Position { get; set; }
 
     public int? SquadNumber { get; set; }

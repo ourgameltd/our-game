@@ -1155,9 +1155,14 @@ export interface TacticListDto {
   summary?: string;
   style?: string;
   squadSize: number;
+  system?: string;
   parentFormationId?: string;
   parentFormationName?: string;
+  parentTacticId?: string;
   scope: TacticScopeDto;
+  positionOverrides?: PositionOverrideDto[];
+  principles?: TacticPrincipleDto[];
+  resolvedPositions?: ResolvedPositionDto[];
   tags: string[];
   createdAt: string;
   updatedAt: string;
@@ -1963,6 +1968,7 @@ export interface LineupPlayerDto {
   lastName: string;
   photo?: string;
   position?: string;
+  positionIndex?: number | null;
   squadNumber?: number;
   isStarting: boolean;
 }
@@ -2080,6 +2086,7 @@ export interface CreateMatchLineupRequest {
 export interface CreateLineupPlayerRequest {
   playerId: string;
   position?: string;
+  positionIndex?: number;
   squadNumber?: number;
   isStarting: boolean;
 }
@@ -2169,6 +2176,7 @@ export interface UpdateMatchLineupRequest {
 export interface UpdateLineupPlayerRequest {
   playerId: string;
   position?: string;
+  positionIndex?: number;
   squadNumber?: number;
   isStarting: boolean;
 }

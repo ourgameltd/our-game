@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OurGame.Persistence;
 using OurGame.Persistence.Models;
+using System.Data;
 
 var cleanMode = args.Contains("--clean", StringComparer.OrdinalIgnoreCase);
 
@@ -101,6 +102,8 @@ try
             Console.WriteLine("✅ Database is up to date");
         }
     }
+
+    await EnsureLineupPlayersPositionIndexAsync(context);
     
     // Clean existing data if --clean flag is specified
     if (cleanMode)
@@ -688,4 +691,54 @@ static async Task<(int UpdatedCount, int InsertedCount)> RepairSystemFormationPo
     }
 
     return (updatedCount, insertedCount);
+}
+
+static async Task EnsureLineupPlayersPositionIndexAsync(OurGameContext context)
+{
+    var connection = context.Database.GetDbConnection();
+    var shouldCloseConnection = connection.State != ConnectionState.Open;
+
+    if (shouldCloseConnection)
+    {
+        await connection.OpenAsync();
+    }
+
+    try
+    {
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            SELECT
+                CASE WHEN OBJECT_ID(N'[dbo].[LineupPlayers]', N'U') IS NOT NULL THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END,
+                CASE WHEN COL_LENGTH(N'dbo.LineupPlayers', 'PositionIndex') IS NOT NULL THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END;
+            """;
+
+        await using var reader = await command.ExecuteReaderAsync();
+
+        if (!await reader.ReadAsync())
+        {
+            return;
+        }
+
+        var tableExists = reader.GetBoolean(0);
+        var columnExists = reader.GetBoolean(1);
+
+        await reader.CloseAsync();
+
+        if (!tableExists || columnExists)
+        {
+            return;
+        }
+
+        Console.WriteLine("🔧 Repairing stale schema: adding LineupPlayers.PositionIndex...");
+        await context.Database.ExecuteSqlRawAsync(
+            "ALTER TABLE [dbo].[LineupPlayers] ADD [PositionIndex] int NULL");
+        Console.WriteLine("✅ Added missing LineupPlayers.PositionIndex column");
+    }
+    finally
+    {
+        if (shouldCloseConnection)
+        {
+            await connection.CloseAsync();
+        }
+    }
 }

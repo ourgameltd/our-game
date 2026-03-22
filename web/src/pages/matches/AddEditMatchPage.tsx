@@ -1,15 +1,141 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
-import { getResolvedPositions } from '@/data/tactics';
+import { AlertCircle, ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
+import { getResolvedPositions, ResolvedPosition } from '@/data/tactics';
 import { weatherConditions, squadSizes, cardTypes, injurySeverities } from '@/constants/referenceData';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
-import { PlayerPosition, SquadSize, Tactic } from '@/types';
+import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, Tactic, TacticalPositionOverride, TacticPrinciple } from '@/types';
 import { Routes } from '@utils/routes';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits } from '@/api/hooks';
-import { apiClient, CreateMatchRequest, UpdateMatchRequest } from '@/api/client';
-import { sampleFormations, getFormationsBySquadSize } from '@/data/formations';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch } from '@/api/hooks';
+import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
+
+const supportedSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
+
+function isSupportedSquadSize(value: number): value is SquadSize {
+  return supportedSquadSizes.includes(value as SquadSize);
+}
+
+function mapSystemFormationToFormation(dto: SystemFormationDto): Formation | null {
+  if (!dto.id || !dto.name || !isSupportedSquadSize(dto.squadSize) || dto.positions.length === 0) {
+    return null;
+  }
+
+  return {
+    id: dto.id,
+    name: dto.name,
+    system: dto.system,
+    squadSize: dto.squadSize,
+    summary: dto.summary,
+    tags: dto.tags,
+    positions: dto.positions.map(position => ({
+      position: position.position as PlayerPosition,
+      x: position.x,
+      y: position.y,
+      direction: position.direction as PlayerDirection | undefined,
+    })),
+    isSystemFormation: true,
+    scope: { type: 'system' },
+  };
+}
+
+function mapResolvedPositionDtos(dtos: ResolvedPositionDto[]): ResolvedPosition[] {
+  return dtos.map((dto, index) => ({
+    positionId: dto.positionId || `resolved-position-${dto.positionIndex ?? index}`,
+    positionIndex: dto.positionIndex ?? index,
+    position: dto.position as PlayerPosition,
+    x: dto.x,
+    y: dto.y,
+    direction: dto.direction as PlayerDirection | undefined,
+    sourceFormationId: dto.sourceFormationId || '',
+    overriddenBy: dto.overriddenBy || [],
+  }));
+}
+
+function mapTacticScope(scope: TacticListDto['scope']): FormationScope {
+  if (scope.type === 'team' && scope.teamId && scope.ageGroupId && scope.clubId) {
+    return { type: 'team', clubId: scope.clubId, ageGroupId: scope.ageGroupId, teamId: scope.teamId };
+  }
+
+  if (scope.type === 'ageGroup' && scope.ageGroupId && scope.clubId) {
+    return { type: 'ageGroup', clubId: scope.clubId, ageGroupId: scope.ageGroupId };
+  }
+
+  return { type: 'club', clubId: scope.clubId || '' };
+}
+
+function mapTacticListDtoToTactic(dto: TacticListDto): Tactic {
+  const positionOverrides: Record<number, TacticalPositionOverride> = {};
+
+  for (const override of dto.positionOverrides || []) {
+    const mappedOverride: TacticalPositionOverride = {};
+
+    if (override.xCoord !== undefined) mappedOverride.x = override.xCoord;
+    if (override.yCoord !== undefined) mappedOverride.y = override.yCoord;
+    if (override.direction) mappedOverride.direction = override.direction as PlayerDirection;
+
+    positionOverrides[override.positionIndex] = mappedOverride;
+  }
+
+  const principles: TacticPrinciple[] = (dto.principles || []).map(principle => ({
+    id: principle.id,
+    title: principle.title,
+    description: principle.description || '',
+    positionIndices: principle.positionIndices,
+  }));
+
+  return {
+    id: dto.id,
+    name: dto.name,
+    system: dto.system,
+    squadSize: dto.squadSize as SquadSize,
+    parentFormationId: dto.parentFormationId,
+    parentTacticId: dto.parentTacticId,
+    positionOverrides,
+    principles,
+    summary: dto.summary,
+    style: dto.style,
+    tags: dto.tags,
+    scope: mapTacticScope(dto.scope),
+    createdAt: dto.createdAt,
+    updatedAt: dto.updatedAt,
+    resolvedPositions: dto.resolvedPositions ? mapResolvedPositionDtos(dto.resolvedPositions) : undefined,
+  } as Tactic;
+}
+
+type StartingLineupPlayer = {
+  playerId: string;
+  positionIndex: number;
+  squadNumber?: number;
+  positionLabel?: PlayerPosition;
+};
+
+type LineupSlot = {
+  positionIndex: number;
+  positionLabel?: PlayerPosition;
+};
+
+function buildLineupSlots(resolvedPositions: ResolvedPosition[], squadSize: SquadSize): LineupSlot[] {
+  const lineupSlots = Array.from({ length: squadSize }, (_, index) => ({
+    positionIndex: index,
+    positionLabel: undefined as PlayerPosition | undefined,
+  }));
+
+  for (const resolvedPosition of resolvedPositions) {
+    const positionIndex = resolvedPosition.positionIndex;
+
+    if (positionIndex === undefined || positionIndex < 0 || positionIndex >= squadSize) {
+      continue;
+    }
+
+    lineupSlots[positionIndex] = {
+      positionIndex,
+      positionLabel: resolvedPosition.position as PlayerPosition | undefined,
+    };
+  }
+
+  return lineupSlots;
+}
 
 export default function AddEditMatchPage() {
   const { clubId, ageGroupId, teamId, matchId } = useParams();
@@ -22,9 +148,12 @@ export default function AddEditMatchPage() {
   const { data: existingMatch, isLoading: matchLoading } = useMatch(isEditing ? matchId : undefined);
   const { data: teamPlayers = [], isLoading: playersLoading } = useTeamPlayers(teamId);
   const { data: teamCoaches = [], isLoading: coachesLoading } = useTeamCoaches(teamId);
+  const { data: systemFormationDtos, isLoading: formationsLoading, error: formationsError } = useSystemFormations();
   const { data: tacticsData, isLoading: tacticsLoading } = useTacticsByScope(clubId, ageGroupId, teamId);
   const { data: teamKitsData, isLoading: kitsLoading } = useTeamKits(teamId);
   const { data: clubKits = [], isLoading: clubKitsLoading } = useClubKits(clubId);
+  const { createMatch, isSubmitting: isCreating, error: createError } = useCreateMatch();
+  const { updateMatch, isSubmitting: isUpdating, error: updateError } = useUpdateMatch(matchId || '');
   
   // Get available seasons from age group
   const availableSeasons = ageGroup?.seasons || [];
@@ -53,8 +182,40 @@ export default function AddEditMatchPage() {
   const allClubPlayers = teamPlayers || [];
 
   // Loading and error states
-  const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || tacticsLoading || kitsLoading || clubKitsLoading;
-  const hasError = teamError;
+  const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || formationsLoading || tacticsLoading || kitsLoading || clubKitsLoading;
+  const hasError = teamError || formationsError;
+  const mutationError = createError || updateError;
+  const isSaving = isCreating || isUpdating;
+
+  const systemFormations = useMemo(
+    () => (systemFormationDtos ?? [])
+      .map(mapSystemFormationToFormation)
+      .filter((formation): formation is Formation => formation !== null),
+    [systemFormationDtos],
+  );
+
+  const formationsById = useMemo(
+    () => new Map(systemFormations.map(formation => [formation.id, formation])),
+    [systemFormations],
+  );
+
+  const allTactics = useMemo((): Tactic[] => {
+    if (!tacticsData) {
+      return [];
+    }
+
+    return [...(tacticsData.scopeTactics || []), ...(tacticsData.inheritedTactics || [])]
+      .filter(tactic => {
+        const validSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
+        return validSquadSizes.includes(tactic.squadSize as SquadSize);
+      })
+      .map(mapTacticListDtoToTactic);
+  }, [tacticsData]);
+
+  const tacticsById = useMemo(
+    () => new Map(allTactics.map(tactic => [tactic.id, tactic])),
+    [allTactics],
+  );
 
   // Form initialization state - CRITICAL: Must be called before any conditional returns
   const [isFormInitialized, setIsFormInitialized] = useState(false);
@@ -85,7 +246,7 @@ export default function AddEditMatchPage() {
   const [summary, setSummary] = useState('');
   
   // Lineup state - derive from MatchDetailDto.lineup.players (LineupPlayerDto[])
-  const [startingPlayers, setStartingPlayers] = useState<{ playerId: string; position: PlayerPosition; squadNumber?: number }[]>([]);
+  const [startingPlayers, setStartingPlayers] = useState<StartingLineupPlayer[]>([]);
   const [substitutes, setSubstitutes] = useState<{ playerId: string; squadNumber?: number }[]>([]);
   const [substitutions, setSubstitutions] = useState<{ minute: number; playerOut: string; playerIn: string }[]>([]);
   
@@ -102,14 +263,12 @@ export default function AddEditMatchPage() {
   // Coach assignment state - filter out undefined IDs from TeamCoachDto
   const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>([]);
   const [showCoachModal, setShowCoachModal] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  
   // Attendance state - derive from team players, not from DTO (attendance not in MatchDetailDto)
   const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>([]);
 
   const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report' | 'attendance'>('details');
   
-  // Position swap state - tracks the array index in startingPlayers for precise swapping
+  // Position swap state - tracks the lineup slot index for precise swapping
   const [selectedPlayerIndexForSwap, setSelectedPlayerIndexForSwap] = useState<number | null>(null);
   
   // Cross-team player selection modal
@@ -120,6 +279,43 @@ export default function AddEditMatchPage() {
   const [modalSearchTerm, setModalSearchTerm] = useState('');
   const [modalAgeGroupFilter, setModalAgeGroupFilter] = useState<string>('all');
   const [modalTeamFilter, setModalTeamFilter] = useState<string>('all');
+
+  const availableFormations = useMemo(
+    () => systemFormations
+      .filter(formation => formation.squadSize === squadSize)
+      .sort((left, right) => left.name.localeCompare(right.name)),
+    [squadSize, systemFormations],
+  );
+
+  const availableTactics = useMemo(
+    () => allTactics.filter(tactic => tactic.squadSize === squadSize),
+    [allTactics, squadSize],
+  );
+
+  const selectedTactic = tacticId ? tacticsById.get(tacticId) ?? null : null;
+  const selectedFormation = formationId ? formationsById.get(formationId) ?? null : null;
+
+  const selectedResolvedPositions = useMemo(() => {
+    if (selectedTactic) {
+      return getResolvedPositions(selectedTactic);
+    }
+
+    if (selectedFormation) {
+      return getResolvedPositions(selectedFormation);
+    }
+
+    return [] as ResolvedPosition[];
+  }, [selectedFormation, selectedTactic]);
+
+  const lineupSlots = useMemo(
+    () => buildLineupSlots(selectedResolvedPositions, squadSize),
+    [selectedResolvedPositions, squadSize],
+  );
+
+  const lineupSlotsByPositionIndex = useMemo(
+    () => new Map(lineupSlots.map(slot => [slot.positionIndex, slot])),
+    [lineupSlots],
+  );
 
   // Initialize form when data loads or when navigating to a different match
   useEffect(() => {
@@ -143,8 +339,18 @@ export default function AddEditMatchPage() {
 
     // Initialize form fields from existingMatch (when editing) or defaults (when adding)
     if (isEditing && existingMatch) {
+      const initialSquadSize = (existingMatch.squadSize || ageGroup?.defaultSquadSize || 11) as SquadSize;
+      const initialTactic = existingMatch.lineup?.tacticId ? tacticsById.get(existingMatch.lineup.tacticId) ?? null : null;
+      const initialFormation = existingMatch.lineup?.formationId ? formationsById.get(existingMatch.lineup.formationId) ?? null : null;
+      const initialResolvedPositions = initialTactic
+        ? getResolvedPositions(initialTactic)
+        : initialFormation
+          ? getResolvedPositions(initialFormation)
+          : [];
+      const initialLineupSlots = buildLineupSlots(initialResolvedPositions, initialSquadSize);
+
       setSeasonId(existingMatch.seasonId || defaultSeason);
-      setSquadSize((existingMatch.squadSize || ageGroup?.defaultSquadSize || 11) as SquadSize);
+      setSquadSize(initialSquadSize);
       setOpposition(existingMatch.opposition || '');
       setKickOffTime(
         existingMatch.kickOffTime ? existingMatch.kickOffTime.slice(0, 16) : 
@@ -163,12 +369,28 @@ export default function AddEditMatchPage() {
       setHomeScore(existingMatch.homeScore?.toString() || '');
       setAwayScore(existingMatch.awayScore?.toString() || '');
       setSummary(existingMatch.report?.summary || '');
+      const usedPositionIndices = new Set<number>();
       setStartingPlayers(
-        existingMatch.lineup?.players?.filter(p => p.isStarting).map(p => ({
-          playerId: p.playerId,
-          position: p.position as PlayerPosition,
-          squadNumber: p.squadNumber
-        })) || []
+        existingMatch.lineup?.players?.filter(p => p.isStarting).map((p, index) => {
+          let resolvedPositionIndex = p.positionIndex ?? initialLineupSlots[index]?.positionIndex ?? index;
+
+          while (usedPositionIndices.has(resolvedPositionIndex)) {
+            resolvedPositionIndex = initialLineupSlots.find(
+              slot => !usedPositionIndices.has(slot.positionIndex),
+            )?.positionIndex ?? (resolvedPositionIndex + 1);
+          }
+
+          usedPositionIndices.add(resolvedPositionIndex);
+
+          return {
+            playerId: p.playerId,
+            positionIndex: resolvedPositionIndex,
+            positionLabel: lineupSlotsByPositionIndex.get(resolvedPositionIndex)?.positionLabel
+              || initialLineupSlots.find(slot => slot.positionIndex === resolvedPositionIndex)?.positionLabel
+              || p.position as PlayerPosition | undefined,
+            squadNumber: p.squadNumber,
+          };
+        }) || []
       );
       setSubstitutes(
         existingMatch.lineup?.players?.filter(p => !p.isStarting).map(p => ({
@@ -261,7 +483,7 @@ export default function AddEditMatchPage() {
     }
 
     setIsFormInitialized(true);
-  }, [isLoading, isFormInitialized, isEditing, existingMatch, ageGroup, defaultSeason, teamPlayers, matchId, teamId]);
+  }, [isLoading, isFormInitialized, isEditing, existingMatch, ageGroup, defaultSeason, teamPlayers, matchId, teamId, tacticsById, formationsById, lineupSlotsByPositionIndex]);
 
   // Auto-assign team coaches for new matches
   useEffect(() => {
@@ -320,29 +542,6 @@ export default function AddEditMatchPage() {
       </div>
     );
   }
-  
-  // Get formations filtered by squad size
-  const availableFormations = getFormationsBySquadSize(squadSize);
-  
-  // Get tactics available for this team (including inherited from club and age group)
-  const getAvailableTactics = (): Tactic[] => {
-    if (!tacticsData) return [];
-    
-    const allTactics = [...(tacticsData.scopeTactics || []), ...(tacticsData.inheritedTactics || [])];
-    const filtered = allTactics.filter(tactic => {
-      // Must match squad size - validate TacticListDto.squadSize (number) as SquadSize
-      const validSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
-      const isValidSquadSize = validSquadSizes.includes(tactic.squadSize as SquadSize);
-      if (!isValidSquadSize || tactic.squadSize !== squadSize) return false;
-      return true;
-    });
-    // Cast TacticListDto[] to Tactic[] - they're compatible except for squadSize type
-    return filtered as any as Tactic[];
-  };
-  
-  const availableTactics = getAvailableTactics();
-  const selectedTactic = tacticId ? availableTactics.find(t => t.id === tacticId) : null;
-  const selectedFormation = formationId ? sampleFormations.find(f => f.id === formationId) : null;
   
   // Get the URL for viewing the selected tactic's detail page
   const getTacticDetailUrl = (tactic: Tactic | null): string | null => {
@@ -405,18 +604,37 @@ export default function AddEditMatchPage() {
     return player?.squadNumber;
   };
 
+  const getPositionLabelForSlot = (positionIndex: number, fallback?: PlayerPosition): string => {
+    return lineupSlotsByPositionIndex.get(positionIndex)?.positionLabel || fallback || `Slot ${positionIndex + 1}`;
+  };
+
+  const getNextAvailablePositionIndex = (): number | undefined => {
+    return lineupSlots.find(slot => !startingPlayers.some(player => player.positionIndex === slot.positionIndex))?.positionIndex;
+  };
+
   const handleAddStartingPlayer = (playerId: string, position: PlayerPosition) => {
     if (!startingPlayers.find(p => p.playerId === playerId)) {
+      const positionIndex = getNextAvailablePositionIndex();
+      if (positionIndex === undefined) {
+        return;
+      }
+
       // Get squad number from player data
       const squadNumber = getPlayerSquadNumber(playerId);
-      setStartingPlayers([...startingPlayers, { playerId, position, squadNumber }]);
+      setStartingPlayers([...startingPlayers, { playerId, positionIndex, squadNumber, positionLabel: position }]);
       // Remove from substitutes if present
       setSubstitutes(substitutes.filter(s => s.playerId !== playerId));
     }
   };
 
   const handleRemoveStartingPlayer = (playerId: string) => {
+    const removedPlayer = startingPlayers.find(player => player.playerId === playerId);
     setStartingPlayers(startingPlayers.filter(p => p.playerId !== playerId));
+
+    if (removedPlayer && selectedPlayerIndexForSwap === removedPlayer.positionIndex) {
+      setSelectedPlayerIndexForSwap(null);
+    }
+
     // Clear captain if removed player was captain
     if (captainId === playerId) {
       setCaptainId('');
@@ -493,21 +711,34 @@ export default function AddEditMatchPage() {
   const handlePlayerClickForSwap = (playerIndex: number) => {
     if (isLocked) return;
     
+    const clickedPlayer = startingPlayers.find(player => player.positionIndex === playerIndex);
+    
     if (selectedPlayerIndexForSwap === null) {
-      // First click - select this player by index
-      setSelectedPlayerIndexForSwap(playerIndex);
+      if (clickedPlayer) {
+        setSelectedPlayerIndexForSwap(playerIndex);
+      }
     } else {
-      // Second click - swap positions
       if (selectedPlayerIndexForSwap === playerIndex) {
-        // Clicked same player - deselect
         setSelectedPlayerIndexForSwap(null);
       } else {
-        // Swap the two players at these indices
-        const newStartingPlayers = [...startingPlayers];
-        const temp = newStartingPlayers[selectedPlayerIndexForSwap];
-        newStartingPlayers[selectedPlayerIndexForSwap] = newStartingPlayers[playerIndex];
-        newStartingPlayers[playerIndex] = temp;
-        setStartingPlayers(newStartingPlayers);
+        setStartingPlayers(prev => {
+          const selectedPlayer = prev.find(player => player.positionIndex === selectedPlayerIndexForSwap);
+          if (!selectedPlayer) {
+            return prev;
+          }
+
+          return prev.map(player => {
+            if (player.playerId === selectedPlayer.playerId) {
+              return { ...player, positionIndex: playerIndex };
+            }
+
+            if (clickedPlayer && player.playerId === clickedPlayer.playerId) {
+              return { ...player, positionIndex: selectedPlayerIndexForSwap };
+            }
+
+            return player;
+          });
+        });
         setSelectedPlayerIndexForSwap(null);
       }
     }
@@ -532,9 +763,11 @@ export default function AddEditMatchPage() {
   const handleSquadSizeChange = (newSquadSize: SquadSize) => {
     setSquadSize(newSquadSize);
     // Reset formation if current one doesn't match new squad size
-    const currentFormation = sampleFormations.find(f => f.id === formationId);
-    if (currentFormation && currentFormation.squadSize !== newSquadSize) {
+    const currentFormation = formationId ? formationsById.get(formationId) : null;
+    const currentTactic = tacticId ? tacticsById.get(tacticId) ?? null : null;
+    if ((currentFormation && currentFormation.squadSize !== newSquadSize) || (currentTactic && currentTactic.squadSize !== newSquadSize)) {
       setFormationId('');
+      setTacticId('');
       // Also warn if there are starting players selected
       if (startingPlayers.length > 0) {
         const confirmReset = window.confirm(
@@ -600,84 +833,76 @@ export default function AddEditMatchPage() {
       return;
     }
 
-    try {
-      setIsSaving(true);
-      
-      const matchData: CreateMatchRequest | UpdateMatchRequest = {
-        teamId: teamId!,
-        seasonId: seasonId || defaultSeason,
-        squadSize,
-        opposition,
-        matchDate: new Date(kickOffTime).toISOString(),
-        kickOffTime: new Date(kickOffTime).toISOString(),
-        meetTime: meetTime ? new Date(meetTime).toISOString() : undefined,
-        location,
-        isHome,
-        competition,
-        primaryKitId: kit || undefined,
-        goalkeeperKitId: goalkeeperKit || undefined,
-        homeScore: homeScore ? parseInt(homeScore) : undefined,
-        awayScore: awayScore ? parseInt(awayScore) : undefined,
-        status: existingMatch?.status || 'scheduled',
-        weatherCondition: weather || undefined,
-        weatherTemperature: temperature ? parseFloat(temperature) : undefined,
-        lineup: {
-          formationId: formationId || undefined,
-          tacticId: tacticId || undefined,
-          players: [
-            ...startingPlayers.map(p => ({ 
-              playerId: p.playerId, 
-              position: p.position, 
-              squadNumber: p.squadNumber, 
-              isStarting: true 
-            })), 
-            ...substitutes.map(s => ({ 
-              playerId: s.playerId, 
-              position: undefined, 
-              squadNumber: s.squadNumber, 
-              isStarting: false 
-            }))
-          ]
-        },
-        report: {
-          summary: summary || undefined,
-          captainId: captainId || undefined,
-          playerOfMatchId: playerOfTheMatch || undefined,
-          goals: goals,
-          cards,
-          injuries,
-          performanceRatings: ratings
-        },
-        coachIds: assignedCoachIds,
-        substitutions: substitutions.map(s => ({
-          minute: s.minute,
-          playerOutId: s.playerOut,
-          playerInId: s.playerIn
-        })),
-        attendance: attendance.map(a => ({
-          playerId: a.playerId,
-          status: a.status,
-          notes: a.notes || undefined
-        })),
-        notes: notes || undefined
-      };
+    const matchData: CreateMatchRequest | UpdateMatchRequest = {
+      teamId: teamId!,
+      seasonId: seasonId || defaultSeason,
+      squadSize,
+      opposition,
+      matchDate: new Date(kickOffTime).toISOString(),
+      kickOffTime: new Date(kickOffTime).toISOString(),
+      meetTime: meetTime ? new Date(meetTime).toISOString() : undefined,
+      location,
+      isHome,
+      competition,
+      primaryKitId: kit || undefined,
+      goalkeeperKitId: goalkeeperKit || undefined,
+      homeScore: homeScore ? parseInt(homeScore) : undefined,
+      awayScore: awayScore ? parseInt(awayScore) : undefined,
+      status: existingMatch?.status || 'scheduled',
+      weatherCondition: weather || undefined,
+      weatherTemperature: temperature ? parseFloat(temperature) : undefined,
+      lineup: {
+        formationId: formationId || undefined,
+        tacticId: tacticId || undefined,
+        players: [
+          ...[...startingPlayers].sort((left, right) => left.positionIndex - right.positionIndex).map(p => ({ 
+            playerId: p.playerId, 
+            position: lineupSlotsByPositionIndex.get(p.positionIndex)?.positionLabel || p.positionLabel,
+            positionIndex: p.positionIndex,
+            squadNumber: p.squadNumber, 
+            isStarting: true 
+          })), 
+          ...substitutes.map(s => ({ 
+            playerId: s.playerId, 
+            position: undefined, 
+            positionIndex: undefined,
+            squadNumber: s.squadNumber, 
+            isStarting: false 
+          }))
+        ]
+      },
+      report: {
+        summary: summary || undefined,
+        captainId: captainId || undefined,
+        playerOfMatchId: playerOfTheMatch || undefined,
+        goals: goals,
+        cards,
+        injuries,
+        performanceRatings: ratings
+      },
+      coachIds: assignedCoachIds,
+      substitutions: substitutions.map(s => ({
+        minute: s.minute,
+        playerOutId: s.playerOut,
+        playerInId: s.playerIn
+      })),
+      attendance: attendance.map(a => ({
+        playerId: a.playerId,
+        status: a.status,
+        notes: a.notes || undefined
+      })),
+      notes: notes || undefined
+    };
 
-      if (isEditing) {
-        const updateData: UpdateMatchRequest = {
-          ...matchData as any,
-          isLocked: isLocked
-        };
-        await apiClient.matches.update(matchId!, updateData);
-      } else {
-        await apiClient.matches.create(matchData as any as CreateMatchRequest);
-      }
-      
+    const response = isEditing
+      ? await updateMatch({
+          ...(matchData as Omit<UpdateMatchRequest, 'isLocked'>),
+          isLocked,
+        })
+      : await createMatch(matchData as CreateMatchRequest);
+
+    if (response.success && response.data) {
       navigate(Routes.matches(clubId!, ageGroupId!, teamId!));
-    } catch (error) {
-      console.error('Error saving match:', error);
-      alert('Failed to save match. Please try again.');
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -716,6 +941,24 @@ export default function AddEditMatchPage() {
             )}
           </div>
         </div>
+
+        {mutationError && (
+          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-red-700 dark:text-red-300">{mutationError.message}</p>
+              {mutationError.validationErrors && (
+                <ul className="mt-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside">
+                  {Object.entries(mutationError.validationErrors).map(([field, messages]) =>
+                    messages.map((message, index) => (
+                      <li key={`${field}-${index}`}>{field}: {message}</li>
+                    ))
+                  )}
+                </ul>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="card mb-4">
@@ -1249,10 +1492,11 @@ export default function AddEditMatchPage() {
                         {availableTactics
                           .filter(t => t.scope.type === 'team')
                           .map(t => {
-                            const parentFormation = sampleFormations.find(f => f.id === t.parentFormationId);
+                            const parentFormation = t.parentFormationId ? formationsById.get(t.parentFormationId) : null;
+                            const formationLabel = parentFormation?.system || t.system || 'Unknown Formation';
                             return (
                               <option key={`tactic:${t.id}`} value={`tactic:${t.id}`}>
-                                {t.name} {parentFormation ? `(${parentFormation.system})` : ''}
+                                {t.name} ({formationLabel})
                               </option>
                             );
                           })}
@@ -1264,10 +1508,11 @@ export default function AddEditMatchPage() {
                         {availableTactics
                           .filter(t => t.scope.type === 'ageGroup')
                           .map(t => {
-                            const parentFormation = sampleFormations.find(f => f.id === t.parentFormationId);
+                            const parentFormation = t.parentFormationId ? formationsById.get(t.parentFormationId) : null;
+                            const formationLabel = parentFormation?.system || t.system || 'Unknown Formation';
                             return (
                               <option key={`tactic:${t.id}`} value={`tactic:${t.id}`}>
-                                {t.name} {parentFormation ? `(${parentFormation.system})` : ''}
+                                {t.name} ({formationLabel})
                               </option>
                             );
                           })}
@@ -1279,10 +1524,11 @@ export default function AddEditMatchPage() {
                         {availableTactics
                           .filter(t => t.scope.type === 'club')
                           .map(t => {
-                            const parentFormation = sampleFormations.find(f => f.id === t.parentFormationId);
+                            const parentFormation = t.parentFormationId ? formationsById.get(t.parentFormationId) : null;
+                            const formationLabel = parentFormation?.system || t.system || 'Unknown Formation';
                             return (
                               <option key={`tactic:${t.id}`} value={`tactic:${t.id}`}>
-                                {t.name} {parentFormation ? `(${parentFormation.system})` : ''}
+                                {t.name} ({formationLabel})
                               </option>
                             );
                           })}
@@ -1321,23 +1567,7 @@ export default function AddEditMatchPage() {
                     </h3>
                 <div className="space-y-2 mb-4">
                   {(() => {
-                    // Get the selected formation to access position order
-                    const selectedFormation = sampleFormations.find(f => f.id === formationId);
-                    
-                    // Create a map of position orders from the formation
-                    const positionOrder: Record<string, number> = {};
-                    if (selectedFormation?.positions) {
-                      selectedFormation.positions.forEach((pos, index) => {
-                        positionOrder[pos.position] = index;
-                      });
-                    }
-                    
-                    // Sort starting lineup by formation position order (GK -> Defenders -> Midfielders -> Forwards)
-                    const sortedPlayers = [...startingPlayers].sort((a, b) => {
-                      const orderA = positionOrder[a.position] ?? 999;
-                      const orderB = positionOrder[b.position] ?? 999;
-                      return orderA - orderB;
-                    });
+                    const sortedPlayers = [...startingPlayers].sort((a, b) => a.positionIndex - b.positionIndex);
                     
                     return sortedPlayers.map((player) => {
                       const playerData = allClubPlayers.find(p => p.id === player.playerId);
@@ -1364,7 +1594,7 @@ export default function AddEditMatchPage() {
                               />
                             )}
                             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
-                              {player.position}
+                              {getPositionLabelForSlot(player.positionIndex, player.positionLabel)}
                             </span>
                             {playerData?.photoUrl && (
                               <img 
@@ -1597,7 +1827,7 @@ export default function AddEditMatchPage() {
                       </div>
                       <TacticDisplay
                         tactic={selectedTactic}
-                        resolvedPositions={getResolvedPositions(selectedTactic)}
+                        resolvedPositions={selectedResolvedPositions}
                         showDirections={true}
                         showInheritance={false}
                         selectedPlayers={startingPlayers}
@@ -1624,7 +1854,7 @@ export default function AddEditMatchPage() {
                       </div>
                       <TacticDisplay
                         tactic={selectedFormation}
-                        resolvedPositions={getResolvedPositions(selectedFormation)}
+                        resolvedPositions={selectedResolvedPositions}
                         showDirections={false}
                         showInheritance={false}
                         selectedPlayers={startingPlayers}

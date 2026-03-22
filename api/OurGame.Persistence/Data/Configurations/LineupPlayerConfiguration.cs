@@ -13,6 +13,8 @@ public class LineupPlayerConfiguration : IEntityTypeConfiguration<LineupPlayer>
 
         builder.HasKey(e => e.Id);
 
+        builder.Property(e => e.PositionIndex);
+
         builder.HasOne(e => e.Lineup)
             .WithMany(l => l.LineupPlayers)
             .HasForeignKey(e => e.LineupId)

@@ -302,7 +302,7 @@ export interface Match {
 export interface MatchLineup {
   formationId: string;
   tacticId?: string; // Optional tactic to apply on top of formation
-  starting: { playerId: string; position: PlayerPosition; squadNumber?: number }[]; // squadNumber can override team default
+  starting: { playerId: string; positionIndex?: number; position?: PlayerPosition; squadNumber?: number }[]; // position is display-only, positionIndex should be used as the lineup slot when available
   substitutes: { playerId: string; squadNumber?: number }[]; // squadNumber can override team default
   substitutions?: {
     minute: number;

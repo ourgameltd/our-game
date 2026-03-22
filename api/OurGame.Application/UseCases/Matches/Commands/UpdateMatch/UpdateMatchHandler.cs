@@ -44,6 +44,8 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
             throw new NotFoundException("Match", matchId.ToString());
         }
 
+        await ValidateLineupReferencesAsync(dto.Lineup, cancellationToken);
+
         // Parse match status
         var statusInt = ParseStatus(dto.Status);
 
@@ -53,8 +55,13 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
         var notes = dto.Notes ?? string.Empty;
         var weatherCondition = dto.WeatherCondition;
 
-        // Update the match record
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+        await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+
+        try
+        {
+
+            // Update the match record
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             UPDATE Matches
             SET SeasonId = {dto.SeasonId},
                 SquadSize = {dto.SquadSize},
@@ -79,161 +86,169 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
             WHERE Id = {matchId}
         ", cancellationToken);
 
-        // Replace lineup (delete existing + insert new)
-        // First delete lineup players, then the lineup itself
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            // Replace lineup (delete existing + insert new)
+            // First delete lineup players, then the lineup itself
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE lp FROM LineupPlayers lp
             INNER JOIN MatchLineups ml ON lp.LineupId = ml.Id
             WHERE ml.MatchId = {matchId}
         ", cancellationToken);
 
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE FROM MatchLineups WHERE MatchId = {matchId}
         ", cancellationToken);
 
-        if (dto.Lineup != null)
-        {
-            var lineupId = Guid.NewGuid();
-            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            if (dto.Lineup != null)
+            {
+                var lineupId = Guid.NewGuid();
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
                 INSERT INTO MatchLineups (Id, MatchId, FormationId, TacticId)
                 VALUES ({lineupId}, {matchId}, {dto.Lineup.FormationId}, {dto.Lineup.TacticId})
             ", cancellationToken);
 
-            foreach (var player in dto.Lineup.Players)
-            {
-                var lpId = Guid.NewGuid();
-                var position = player.Position ?? string.Empty;
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO LineupPlayers (Id, LineupId, PlayerId, Position, SquadNumber, IsStarting)
-                    VALUES ({lpId}, {lineupId}, {player.PlayerId}, {position}, {player.SquadNumber}, {player.IsStarting})
+                foreach (var player in dto.Lineup.Players)
+                {
+                    var lpId = Guid.NewGuid();
+                    var position = player.Position ?? string.Empty;
+                    await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO LineupPlayers (Id, LineupId, PlayerId, PositionIndex, Position, SquadNumber, IsStarting)
+                    VALUES ({lpId}, {lineupId}, {player.PlayerId}, {player.PositionIndex}, {position}, {player.SquadNumber}, {player.IsStarting})
                 ", cancellationToken);
+                }
             }
-        }
 
-        // Replace coaches
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            // Replace coaches
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE FROM MatchCoaches WHERE MatchId = {matchId}
         ", cancellationToken);
 
-        foreach (var coachId in dto.CoachIds)
-        {
-            var mcId = Guid.NewGuid();
-            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            foreach (var coachId in dto.CoachIds)
+            {
+                var mcId = Guid.NewGuid();
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
                 INSERT INTO MatchCoaches (Id, MatchId, CoachId)
                 VALUES ({mcId}, {matchId}, {coachId})
             ", cancellationToken);
-        }
+            }
 
-        // Replace substitutions
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            // Replace substitutions
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE FROM MatchSubstitutions WHERE MatchId = {matchId}
         ", cancellationToken);
 
-        foreach (var sub in dto.Substitutions)
-        {
-            var subId = Guid.NewGuid();
-            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            foreach (var sub in dto.Substitutions)
+            {
+                var subId = Guid.NewGuid();
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
                 INSERT INTO MatchSubstitutions (Id, MatchId, Minute, PlayerOutId, PlayerInId)
                 VALUES ({subId}, {matchId}, {sub.Minute}, {sub.PlayerOutId}, {sub.PlayerInId})
             ", cancellationToken);
-        }
+            }
 
-        // Replace attendance
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            // Replace attendance
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE FROM MatchAttendances WHERE MatchId = {matchId}
         ", cancellationToken);
 
-        if (dto.Attendance != null && dto.Attendance.Any())
-        {
-            foreach (var attendance in dto.Attendance)
+            if (dto.Attendance != null && dto.Attendance.Any())
             {
-                var attendanceId = Guid.NewGuid();
-                var attendanceNotes = attendance.Notes ?? string.Empty;
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                foreach (var attendance in dto.Attendance)
+                {
+                    var attendanceId = Guid.NewGuid();
+                    var attendanceNotes = attendance.Notes ?? string.Empty;
+                    await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO MatchAttendances (Id, MatchId, PlayerId, Status, Notes, CreatedAt, UpdatedAt)
                     VALUES ({attendanceId}, {matchId}, {attendance.PlayerId}, {attendance.Status}, {attendanceNotes}, {now}, {now})
                 ", cancellationToken);
+                }
             }
-        }
 
-        // Replace match report and its children
-        // Delete children first (goals, cards, injuries, ratings), then the report
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            // Replace match report and its children
+            // Delete children first (goals, cards, injuries, ratings), then the report
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE g FROM Goals g
             INNER JOIN MatchReports mr ON g.MatchReportId = mr.Id
             WHERE mr.MatchId = {matchId}
         ", cancellationToken);
 
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE c FROM Cards c
             INNER JOIN MatchReports mr ON c.MatchReportId = mr.Id
             WHERE mr.MatchId = {matchId}
         ", cancellationToken);
 
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE i FROM Injuries i
             INNER JOIN MatchReports mr ON i.MatchReportId = mr.Id
             WHERE mr.MatchId = {matchId}
         ", cancellationToken);
 
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE pr FROM PerformanceRatings pr
             INNER JOIN MatchReports mr ON pr.MatchReportId = mr.Id
             WHERE mr.MatchId = {matchId}
         ", cancellationToken);
 
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE FROM MatchReports WHERE MatchId = {matchId}
         ", cancellationToken);
 
-        if (dto.Report != null)
-        {
-            var reportId = Guid.NewGuid();
-            var summary = dto.Report.Summary ?? string.Empty;
-            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            if (dto.Report != null)
+            {
+                var reportId = Guid.NewGuid();
+                var summary = dto.Report.Summary ?? string.Empty;
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
                 INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, CreatedAt)
                 VALUES ({reportId}, {matchId}, {summary}, {dto.Report.CaptainId}, {dto.Report.PlayerOfMatchId}, {now})
             ", cancellationToken);
 
-            foreach (var goal in dto.Report.Goals)
-            {
-                var goalId = Guid.NewGuid();
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                foreach (var goal in dto.Report.Goals)
+                {
+                    var goalId = Guid.NewGuid();
+                    await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO Goals (Id, MatchReportId, PlayerId, Minute, AssistPlayerId)
                     VALUES ({goalId}, {reportId}, {goal.PlayerId}, {goal.Minute}, {goal.AssistPlayerId})
                 ", cancellationToken);
-            }
+                }
 
-            foreach (var card in dto.Report.Cards)
-            {
-                var cardId = Guid.NewGuid();
-                var cardTypeInt = ParseCardType(card.Type);
-                var reason = card.Reason ?? string.Empty;
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                foreach (var card in dto.Report.Cards)
+                {
+                    var cardId = Guid.NewGuid();
+                    var cardTypeInt = ParseCardType(card.Type);
+                    var reason = card.Reason ?? string.Empty;
+                    await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO Cards (Id, MatchReportId, PlayerId, Type, Minute, Reason)
                     VALUES ({cardId}, {reportId}, {card.PlayerId}, {cardTypeInt}, {card.Minute}, {reason})
                 ", cancellationToken);
-            }
+                }
 
-            foreach (var injury in dto.Report.Injuries)
-            {
-                var injuryId = Guid.NewGuid();
-                var severityInt = ParseSeverity(injury.Severity);
-                var description = injury.Description ?? string.Empty;
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                foreach (var injury in dto.Report.Injuries)
+                {
+                    var injuryId = Guid.NewGuid();
+                    var severityInt = ParseSeverity(injury.Severity);
+                    var description = injury.Description ?? string.Empty;
+                    await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO Injuries (Id, MatchReportId, PlayerId, Minute, Description, Severity)
                     VALUES ({injuryId}, {reportId}, {injury.PlayerId}, {injury.Minute}, {description}, {severityInt})
                 ", cancellationToken);
-            }
+                }
 
-            foreach (var rating in dto.Report.PerformanceRatings)
-            {
-                var ratingId = Guid.NewGuid();
-                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                foreach (var rating in dto.Report.PerformanceRatings)
+                {
+                    var ratingId = Guid.NewGuid();
+                    await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO PerformanceRatings (Id, MatchReportId, PlayerId, Rating)
                     VALUES ({ratingId}, {reportId}, {rating.PlayerId}, {rating.Rating})
                 ", cancellationToken);
+                }
             }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
         }
 
         // Query back the updated match
@@ -246,6 +261,82 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
         }
 
         return result;
+    }
+
+    private async Task ValidateLineupReferencesAsync(UpdateMatchLineupRequest? lineup, CancellationToken cancellationToken)
+    {
+        if (lineup == null)
+        {
+            return;
+        }
+
+        var errors = new Dictionary<string, string[]>();
+
+        if (lineup.FormationId == Guid.Empty)
+        {
+            errors["Lineup.FormationId"] = ["FormationId must be a valid non-empty GUID."];
+        }
+
+        if (lineup.TacticId == Guid.Empty)
+        {
+            errors["Lineup.TacticId"] = ["TacticId must be a valid non-empty GUID."];
+        }
+
+        FormationReference? formation = null;
+        if (lineup.FormationId.HasValue && lineup.FormationId.Value != Guid.Empty)
+        {
+            formation = await _db.Formations
+                .Where(f => f.Id == lineup.FormationId.Value)
+                .Select(f => new FormationReference
+                {
+                    Id = f.Id,
+                    IsSystemFormation = f.IsSystemFormation,
+                    ParentFormationId = f.ParentFormationId
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (formation == null)
+            {
+                errors["Lineup.FormationId"] = ["FormationId must reference an existing formation."];
+            }
+            else if (!formation.IsSystemFormation)
+            {
+                errors["Lineup.FormationId"] = ["FormationId must reference an existing system formation."];
+            }
+        }
+
+        FormationReference? tactic = null;
+        if (lineup.TacticId.HasValue && lineup.TacticId.Value != Guid.Empty)
+        {
+            tactic = await _db.Formations
+                .Where(f => f.Id == lineup.TacticId.Value)
+                .Select(f => new FormationReference
+                {
+                    Id = f.Id,
+                    IsSystemFormation = f.IsSystemFormation,
+                    ParentFormationId = f.ParentFormationId
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (tactic == null)
+            {
+                errors["Lineup.TacticId"] = ["TacticId must reference an existing tactic."];
+            }
+            else if (tactic.IsSystemFormation || !tactic.ParentFormationId.HasValue)
+            {
+                errors["Lineup.TacticId"] = ["TacticId must reference an existing tactic."];
+            }
+        }
+
+        if (formation?.Id != null && tactic?.ParentFormationId != null && tactic.ParentFormationId != formation.Id)
+        {
+            errors["Lineup.TacticId"] = ["TacticId must belong to the selected FormationId."];
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new ValidationException(errors);
+        }
     }
 
     private static int ParseStatus(string? status)
@@ -278,5 +369,14 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
             "serious" => (int)Severity.Serious,
             _ => (int)Severity.Minor
         };
+    }
+
+    private sealed class FormationReference
+    {
+        public Guid Id { get; init; }
+
+        public bool IsSystemFormation { get; init; }
+
+        public Guid? ParentFormationId { get; init; }
     }
 }

@@ -1173,6 +1173,9 @@ namespace OurGame.Persistence.Migrations
                     b.Property<Guid?>("PlayerId1")
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<int?>("PositionIndex")
+                        .HasColumnType("int");
+
                     b.Property<string>("Position")
                         .HasColumnType("nvarchar(max)");
 

@@ -43,6 +43,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
             throw new NotFoundException("Team", dto.TeamId.ToString());
         }
 
+        await ValidateLineupReferencesAsync(dto.Lineup, cancellationToken);
+
         // Parse match status
         var statusInt = ParseStatus(dto.Status);
 
@@ -81,8 +83,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
                 var lpId = Guid.NewGuid();
                 var position = player.Position ?? string.Empty;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO LineupPlayers (Id, LineupId, PlayerId, Position, SquadNumber, IsStarting)
-                    VALUES ({lpId}, {lineupId}, {player.PlayerId}, {position}, {player.SquadNumber}, {player.IsStarting})
+                    INSERT INTO LineupPlayers (Id, LineupId, PlayerId, PositionIndex, Position, SquadNumber, IsStarting)
+                    VALUES ({lpId}, {lineupId}, {player.PlayerId}, {player.PositionIndex}, {position}, {player.SquadNumber}, {player.IsStarting})
                 ", cancellationToken);
             }
         }
@@ -188,6 +190,82 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
         return result;
     }
 
+    private async Task ValidateLineupReferencesAsync(CreateMatchLineupRequest? lineup, CancellationToken cancellationToken)
+    {
+        if (lineup == null)
+        {
+            return;
+        }
+
+        var errors = new Dictionary<string, string[]>();
+
+        if (lineup.FormationId == Guid.Empty)
+        {
+            errors["Lineup.FormationId"] = ["FormationId must be a valid non-empty GUID."];
+        }
+
+        if (lineup.TacticId == Guid.Empty)
+        {
+            errors["Lineup.TacticId"] = ["TacticId must be a valid non-empty GUID."];
+        }
+
+        FormationReference? formation = null;
+        if (lineup.FormationId.HasValue && lineup.FormationId.Value != Guid.Empty)
+        {
+            formation = await _db.Formations
+                .Where(f => f.Id == lineup.FormationId.Value)
+                .Select(f => new FormationReference
+                {
+                    Id = f.Id,
+                    IsSystemFormation = f.IsSystemFormation,
+                    ParentFormationId = f.ParentFormationId
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (formation == null)
+            {
+                errors["Lineup.FormationId"] = ["FormationId must reference an existing formation."];
+            }
+            else if (!formation.IsSystemFormation)
+            {
+                errors["Lineup.FormationId"] = ["FormationId must reference an existing system formation."];
+            }
+        }
+
+        FormationReference? tactic = null;
+        if (lineup.TacticId.HasValue && lineup.TacticId.Value != Guid.Empty)
+        {
+            tactic = await _db.Formations
+                .Where(f => f.Id == lineup.TacticId.Value)
+                .Select(f => new FormationReference
+                {
+                    Id = f.Id,
+                    IsSystemFormation = f.IsSystemFormation,
+                    ParentFormationId = f.ParentFormationId
+                })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (tactic == null)
+            {
+                errors["Lineup.TacticId"] = ["TacticId must reference an existing tactic."];
+            }
+            else if (tactic.IsSystemFormation || !tactic.ParentFormationId.HasValue)
+            {
+                errors["Lineup.TacticId"] = ["TacticId must reference an existing tactic."];
+            }
+        }
+
+        if (formation?.Id != null && tactic?.ParentFormationId != null && tactic.ParentFormationId != formation.Id)
+        {
+            errors["Lineup.TacticId"] = ["TacticId must belong to the selected FormationId."];
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new ValidationException(errors);
+        }
+    }
+
     private static int ParseStatus(string? status)
     {
         return (status?.ToLower()) switch
@@ -218,5 +296,14 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
             "serious" => (int)Severity.Serious,
             _ => (int)Severity.Minor
         };
+    }
+
+    private sealed class FormationReference
+    {
+        public Guid Id { get; init; }
+
+        public bool IsSystemFormation { get; init; }
+
+        public Guid? ParentFormationId { get; init; }
     }
 }

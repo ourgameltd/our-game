@@ -100,13 +100,25 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     p.FirstName,
                     p.LastName,
                     p.Photo,
+                    lp.PositionIndex,
                     lp.Position,
                     lp.SquadNumber,
                     lp.IsStarting
                 FROM LineupPlayers lp
                 INNER JOIN Players p ON lp.PlayerId = p.Id
                 WHERE lp.LineupId = {0}
-                ORDER BY lp.IsStarting DESC, lp.SquadNumber";
+                ORDER BY
+                    lp.IsStarting DESC,
+                    CASE
+                        WHEN lp.IsStarting = 1 AND lp.PositionIndex IS NOT NULL THEN 0
+                        WHEN lp.IsStarting = 1 THEN 1
+                        ELSE 2
+                    END,
+                    CASE WHEN lp.IsStarting = 1 THEN lp.PositionIndex END,
+                    lp.SquadNumber,
+                    p.LastName,
+                    p.FirstName,
+                    lp.Id";
 
             lineupPlayers = await _db.Database
                 .SqlQueryRaw<LineupPlayerRaw>(lineupPlayersSql, lineup.Id)
@@ -307,6 +319,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     FirstName = lp.FirstName ?? string.Empty,
                     LastName = lp.LastName ?? string.Empty,
                     Photo = lp.Photo,
+                    PositionIndex = lp.PositionIndex,
                     Position = lp.Position,
                     SquadNumber = lp.SquadNumber,
                     IsStarting = lp.IsStarting
@@ -484,6 +497,7 @@ public class LineupPlayerRaw
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Photo { get; set; }
+    public int? PositionIndex { get; set; }
     public string? Position { get; set; }
     public int? SquadNumber { get; set; }
     public bool IsStarting { get; set; }

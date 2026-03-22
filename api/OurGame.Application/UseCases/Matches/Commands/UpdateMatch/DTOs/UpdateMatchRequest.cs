@@ -105,6 +105,8 @@ public record UpdateLineupPlayerRequest
     [Required]
     public Guid PlayerId { get; init; }
 
+    public int? PositionIndex { get; init; }
+
     [StringLength(50)]
     public string? Position { get; init; }
 
