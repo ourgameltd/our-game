@@ -295,6 +295,24 @@ export default function AddEditMatchPage() {
   const selectedTactic = tacticId ? tacticsById.get(tacticId) ?? null : null;
   const selectedFormation = formationId ? formationsById.get(formationId) ?? null : null;
 
+  const invitedPlayerIds = useMemo(
+    () => Array.from(new Set([
+      ...startingPlayers.map(player => player.playerId),
+      ...substitutes.map(substitute => substitute.playerId),
+    ])),
+    [startingPlayers, substitutes],
+  );
+
+  const invitedPlayerIdSet = useMemo(
+    () => new Set(invitedPlayerIds),
+    [invitedPlayerIds],
+  );
+
+  const invitedPlayers = useMemo(
+    () => (teamPlayers || []).filter(player => invitedPlayerIdSet.has(player.id)),
+    [teamPlayers, invitedPlayerIdSet],
+  );
+
   const selectedResolvedPositions = useMemo(() => {
     if (selectedTactic) {
       return getResolvedPositions(selectedTactic);
@@ -469,17 +487,15 @@ export default function AddEditMatchPage() {
       setAssignedCoachIds([]);
     }
 
-    // Initialize attendance
+    // Initialize attendance from persisted values for edit mode; sync with invited lineup below.
     if (isEditing && existingMatch && existingMatch.attendance && existingMatch.attendance.length > 0) {
-      // Load attendance from existing match
       setAttendance(existingMatch.attendance.map(a => ({
         playerId: a.playerId,
         status: a.status as 'confirmed' | 'declined' | 'maybe' | 'pending',
         notes: a.notes
       })));
-    } else if (teamPlayers && teamPlayers.length > 0) {
-      // Initialize from team players with default "pending" status
-      setAttendance(teamPlayers.map(p => ({ playerId: p.id, status: 'pending' as const })));
+    } else {
+      setAttendance([]);
     }
 
     setIsFormInitialized(true);
@@ -493,6 +509,28 @@ export default function AddEditMatchPage() {
       setAssignedCoachIds(teamCoaches.map(c => c.id).filter((id): id is string => id !== undefined));
     }
   }, [isFormInitialized, isEditing, teamCoaches, assignedCoachIds.length]);
+
+  // Keep attendance aligned with invited lineup players only.
+  useEffect(() => {
+    if (!isFormInitialized) return;
+
+    setAttendance(prevAttendance => {
+      const filteredAttendance = prevAttendance.filter(item => invitedPlayerIdSet.has(item.playerId));
+      const existingAttendancePlayerIds = new Set(filteredAttendance.map(item => item.playerId));
+
+      let didChange = filteredAttendance.length !== prevAttendance.length;
+      const nextAttendance = [...filteredAttendance];
+
+      invitedPlayerIds.forEach(playerId => {
+        if (!existingAttendancePlayerIds.has(playerId)) {
+          nextAttendance.push({ playerId, status: 'pending' });
+          didChange = true;
+        }
+      });
+
+      return didChange ? nextAttendance : prevAttendance;
+    });
+  }, [isFormInitialized, invitedPlayerIds, invitedPlayerIdSet]);
 
   // NOW we can safely do conditional returns - all hooks have been called
   if (hasError) {
@@ -749,15 +787,37 @@ export default function AddEditMatchPage() {
   };
 
   const handleSetAttendanceStatus = (playerId: string, status: 'confirmed' | 'declined' | 'maybe' | 'pending') => {
-    setAttendance(attendance.map(a => 
-      a.playerId === playerId ? { ...a, status } : a
-    ));
+    if (!invitedPlayerIdSet.has(playerId)) {
+      return;
+    }
+
+    setAttendance(prevAttendance => {
+      const index = prevAttendance.findIndex(item => item.playerId === playerId);
+      if (index === -1) {
+        return [...prevAttendance, { playerId, status }];
+      }
+
+      return prevAttendance.map(item =>
+        item.playerId === playerId ? { ...item, status } : item,
+      );
+    });
   };
 
   const handleSetAttendanceNote = (playerId: string, note: string) => {
-    setAttendance(attendance.map(a => 
-      a.playerId === playerId ? { ...a, notes: note || undefined } : a
-    ));
+    if (!invitedPlayerIdSet.has(playerId)) {
+      return;
+    }
+
+    setAttendance(prevAttendance => {
+      const index = prevAttendance.findIndex(item => item.playerId === playerId);
+      if (index === -1) {
+        return [...prevAttendance, { playerId, status: 'pending', notes: note || undefined }];
+      }
+
+      return prevAttendance.map(item =>
+        item.playerId === playerId ? { ...item, notes: note || undefined } : item,
+      );
+    });
   };
 
   const handleSquadSizeChange = (newSquadSize: SquadSize) => {
@@ -886,7 +946,9 @@ export default function AddEditMatchPage() {
         playerOutId: s.playerOut,
         playerInId: s.playerIn
       })),
-      attendance: attendance.map(a => ({
+      attendance: attendance
+        .filter(a => invitedPlayerIdSet.has(a.playerId))
+        .map(a => ({
         playerId: a.playerId,
         status: a.status,
         notes: a.notes || undefined
@@ -906,7 +968,7 @@ export default function AddEditMatchPage() {
     }
   };
 
-  const allPlayersInMatch = [...startingPlayers.map(p => p.playerId), ...substitutes.map(s => s.playerId)];
+  const allPlayersInMatch = invitedPlayerIds;
   const availablePlayers = (teamPlayers ?? []).filter(p => !allPlayersInMatch.includes(p.id));
   
   // Players available for events (goals/cards/injuries) - fallback to all team players when lineup is empty
@@ -2367,7 +2429,7 @@ export default function AddEditMatchPage() {
               </div>
 
               <div className="space-y-2">
-                {(teamPlayers || []).map((player) => {
+                {invitedPlayers.map((player) => {
                   const playerAttendance = attendance.find(a => a.playerId === player.id);
                   const status = playerAttendance?.status || 'pending';
                   

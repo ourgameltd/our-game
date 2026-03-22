@@ -45,6 +45,7 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
         }
 
         await ValidateLineupReferencesAsync(dto.Lineup, cancellationToken);
+        ValidateAttendancePlayers(dto.Lineup, dto.Attendance);
 
         // Parse match status
         var statusInt = ParseStatus(dto.Status);
@@ -337,6 +338,41 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
         {
             throw new ValidationException(errors);
         }
+    }
+
+    private static void ValidateAttendancePlayers(
+        UpdateMatchLineupRequest? lineup,
+        List<UpdateMatchAttendanceRequest>? attendance)
+    {
+        if (attendance == null || attendance.Count == 0)
+        {
+            return;
+        }
+
+        var invitedPlayerIds = lineup?.Players
+            .Select(player => player.PlayerId)
+            .Where(playerId => playerId != Guid.Empty)
+            .ToHashSet() ?? [];
+
+        var invalidAttendancePlayerIds = attendance
+            .Select(record => record.PlayerId)
+            .Where(playerId => playerId != Guid.Empty && !invitedPlayerIds.Contains(playerId))
+            .Distinct()
+            .ToList();
+
+        if (invalidAttendancePlayerIds.Count == 0)
+        {
+            return;
+        }
+
+        var joinedPlayerIds = string.Join(", ", invalidAttendancePlayerIds.Select(playerId => playerId.ToString()));
+        throw new ValidationException(new Dictionary<string, string[]>
+        {
+            ["Attendance"] =
+            [
+                $"Attendance can only be recorded for invited lineup players. Invalid player IDs: {joinedPlayerIds}."
+            ]
+        });
     }
 
     private static int ParseStatus(string? status)
