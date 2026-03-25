@@ -16,6 +16,11 @@
     "generate:api": "echo 'NSwag client generation - requires openapi.json from running API. Start API with func start, then run: npx @hey-api/openapi-ts -i http://localhost:7071/api/openapi/v3.json -o src/api/generated -c axios'"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@material-tailwind/react": "^2.1.10",
+    "@mui/icons-material": "^7.3.9",
+    "@mui/material": "^7.3.9",
     "@tailwindcss/typography": "^0.5.19",
     "axios": "^1.13.2",
     "clsx": "^2.1.1",

@@ -61,12 +61,72 @@ public class MatchSaveAttendanceValidationTests
         Assert.True(exception.Errors.ContainsKey("Attendance"));
     }
 
+    [Fact]
+    public async Task CreateMatch_WhenGoalPeriodMissing_ThrowsValidationException()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var data = await database.SeedBaseDataAsync();
+
+        var handler = new CreateMatchHandler(database.Context);
+        var request = BuildCreateRequest(
+            data.TeamId,
+            data.FormationId,
+            data.TacticId,
+            invitedPlayerIds: [data.PlayerOneId],
+            attendancePlayerIds: [data.PlayerOneId],
+            goals: [new CreateGoalRequest
+            {
+                PlayerId = data.PlayerOneId,
+                Minute = 12,
+                Period = string.Empty,
+                IsExtraTime = false,
+                IsPenalty = false,
+            }]);
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(async () =>
+            await handler.Handle(new CreateMatchCommand(request), CancellationToken.None));
+
+        Assert.True(exception.Errors.ContainsKey("Report.Goals"));
+    }
+
+    [Fact]
+    public async Task CreateMatch_WhenCardMinuteIsMissing_AllowsSave()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var data = await database.SeedBaseDataAsync();
+
+        var handler = new CreateMatchHandler(database.Context);
+        var request = BuildCreateRequest(
+            data.TeamId,
+            data.FormationId,
+            data.TacticId,
+            invitedPlayerIds: [data.PlayerOneId],
+            attendancePlayerIds: [data.PlayerOneId],
+            cards: [new CreateCardRequest
+            {
+                PlayerId = data.PlayerOneId,
+                Type = "yellow",
+                Minute = null,
+                Period = "second",
+                AddedTimeMinutes = null,
+                Reason = "Persistent fouling",
+            }]);
+
+        var createdMatch = await handler.Handle(new CreateMatchCommand(request), CancellationToken.None);
+
+        Assert.NotNull(createdMatch.Report);
+        Assert.Single(createdMatch.Report!.Cards);
+        Assert.Null(createdMatch.Report.Cards[0].Minute);
+    }
+
     private static CreateMatchRequest BuildCreateRequest(
         Guid teamId,
         Guid formationId,
         Guid tacticId,
         IReadOnlyCollection<Guid> invitedPlayerIds,
-        IReadOnlyCollection<Guid> attendancePlayerIds)
+        IReadOnlyCollection<Guid> attendancePlayerIds,
+        IReadOnlyCollection<CreateGoalRequest>? goals = null,
+        IReadOnlyCollection<CreateCardRequest>? cards = null)
     {
         return new CreateMatchRequest
         {
@@ -97,7 +157,14 @@ public class MatchSaveAttendanceValidationTests
             {
                 PlayerId = playerId,
                 Status = "confirmed"
-            }).ToList()
+            }).ToList(),
+            Report = new CreateMatchReportRequest
+            {
+                Goals = goals?.ToList() ?? [],
+                Cards = cards?.ToList() ?? [],
+                Injuries = [],
+                PerformanceRatings = [],
+            }
         };
     }
 

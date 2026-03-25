@@ -1,6 +1,12 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AlertCircle, ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
+import { Timeline, TimelineItem, TimelineHeader, TimelineIcon, TimelineBody } from '@material-tailwind/react';
+import { SpeedDial, SpeedDialAction, SpeedDialIcon } from '@mui/material';
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
+import StyleIcon from '@mui/icons-material/Style';
+import HealingIcon from '@mui/icons-material/Healing';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { getResolvedPositions, ResolvedPosition } from '@/data/tactics';
 import { weatherConditions, squadSizes, cardTypes, injurySeverities } from '@/constants/referenceData';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
@@ -122,6 +128,79 @@ type LineupSlot = {
   positionIndex: number;
   positionLabel?: PlayerPosition;
 };
+
+type TimelinePeriod = 'first' | 'second' | 'third' | 'etFirst' | 'etSecond' | 'penalties';
+
+type GoalEvent = {
+  playerId: string;
+  minute?: number;
+  period: TimelinePeriod;
+  addedTimeMinutes?: number;
+  isExtraTime: boolean;
+  isPenalty: boolean;
+  assistPlayerId?: string;
+};
+
+type CardEvent = {
+  playerId: string;
+  type: 'yellow' | 'red';
+  minute?: number;
+  period?: TimelinePeriod;
+  addedTimeMinutes?: number;
+  reason?: string;
+};
+
+type InjuryEvent = {
+  playerId: string;
+  minute?: number;
+  period?: TimelinePeriod;
+  addedTimeMinutes?: number;
+  description: string;
+  severity: 'minor' | 'moderate' | 'serious';
+};
+
+type SubstitutionEvent = {
+  minute?: number;
+  period?: TimelinePeriod;
+  addedTimeMinutes?: number;
+  playerOut: string;
+  playerIn: string;
+};
+
+type TimelineEventType = 'goal' | 'card' | 'injury' | 'substitution';
+
+type TimelineModalEventDraft =
+  | ({ eventType: 'goal' } & GoalEvent)
+  | ({ eventType: 'card' } & CardEvent)
+  | ({ eventType: 'injury' } & InjuryEvent)
+  | ({ eventType: 'substitution' } & SubstitutionEvent);
+
+type TimelineModalState = {
+  mode: 'create' | 'edit';
+  eventType: TimelineEventType;
+  index?: number;
+};
+
+const timelineSections: { period: TimelinePeriod; label: string }[] = [
+  { period: 'first', label: 'First Half' },
+  { period: 'second', label: 'Second Half' },
+  { period: 'third', label: 'Third Period' },
+  { period: 'etFirst', label: 'Extra Time First' },
+  { period: 'etSecond', label: 'Extra Time Second' },
+  { period: 'penalties', label: 'Penalties' },
+];
+
+function parseTimelinePeriod(value?: string): TimelinePeriod | undefined {
+  if (!value) {
+    return undefined;
+  }
+
+  if (timelineSections.some(section => section.period === value)) {
+    return value as TimelinePeriod;
+  }
+
+  return undefined;
+}
 
 function buildLineupSlots(resolvedPositions: ResolvedPosition[], squadSize: SquadSize): LineupSlot[] {
   const lineupSlots = Array.from({ length: squadSize }, (_, index) => ({
@@ -256,12 +335,15 @@ export default function AddEditMatchPage() {
   // Lineup state - derive from MatchDetailDto.lineup.players (LineupPlayerDto[])
   const [startingPlayers, setStartingPlayers] = useState<StartingLineupPlayer[]>([]);
   const [substitutes, setSubstitutes] = useState<{ playerId: string; squadNumber?: number }[]>([]);
-  const [substitutions, setSubstitutions] = useState<{ minute: number; playerOut: string; playerIn: string }[]>([]);
+  const [substitutions, setSubstitutions] = useState<SubstitutionEvent[]>([]);
   
   // Match events state
-  const [goals, setGoals] = useState<{ playerId: string; minute: number; assistPlayerId?: string }[]>([]);
-  const [cards, setCards] = useState<{ playerId: string; type: 'yellow' | 'red'; minute: number; reason?: string }[]>([]);
-  const [injuries, setInjuries] = useState<{ playerId: string; minute: number; description: string; severity: 'minor' | 'moderate' | 'serious' }[]>([]);
+  const [goals, setGoals] = useState<GoalEvent[]>([]);
+  const [cards, setCards] = useState<CardEvent[]>([]);
+  const [injuries, setInjuries] = useState<InjuryEvent[]>([]);
+  const [isEventSpeedDialOpen, setIsEventSpeedDialOpen] = useState(false);
+  const [eventModal, setEventModal] = useState<TimelineModalState | null>(null);
+  const [eventDraft, setEventDraft] = useState<TimelineModalEventDraft | null>(null);
   const [ratings, setRatings] = useState<{ playerId: string; rating: number }[]>([]);
   const [playerOfTheMatch, setPlayerOfTheMatch] = useState('');
   const [captainId, setCaptainId] = useState('');
@@ -427,6 +509,8 @@ export default function AddEditMatchPage() {
       setSubstitutions(
         (existingMatch.substitutions || []).map(s => ({
           minute: s.minute,
+          period: parseTimelinePeriod(s.period),
+          addedTimeMinutes: s.addedTimeMinutes,
           playerOut: s.playerOutId,
           playerIn: s.playerInId
         }))
@@ -435,23 +519,35 @@ export default function AddEditMatchPage() {
         (existingMatch.report?.goals || []).map(g => ({
           playerId: g.playerId,
           minute: g.minute,
+          period: parseTimelinePeriod(g.period) || 'first',
+          addedTimeMinutes: g.addedTimeMinutes,
+          isExtraTime: g.isExtraTime,
+          isPenalty: g.isPenalty,
           assistPlayerId: g.assistPlayerId
         }))
       );
       setCards(
-        (existingMatch.report?.cards || []).map(c => ({ 
-          ...c, 
-          type: (c.type === 'yellow' || c.type === 'red' ? c.type : 'yellow') as 'yellow' | 'red' 
+        (existingMatch.report?.cards || []).map(c => ({
+          playerId: c.playerId,
+          type: (c.type === 'yellow' || c.type === 'red' ? c.type : 'yellow') as 'yellow' | 'red',
+          minute: c.minute,
+          period: parseTimelinePeriod(c.period),
+          addedTimeMinutes: c.addedTimeMinutes,
+          reason: c.reason,
         }))
       );
       setInjuries(
         (existingMatch.report?.injuries || []).map(i => ({
           playerId: i.playerId,
           minute: i.minute,
+          period: parseTimelinePeriod(i.period),
+          addedTimeMinutes: i.addedTimeMinutes,
           description: i.description || '',
           severity: (['minor', 'moderate', 'serious'].includes(i.severity) ? i.severity : 'minor') as 'minor' | 'moderate' | 'serious'
         }))
       );
+      setEventModal(null);
+      setEventDraft(null);
       setRatings(
         (existingMatch.report?.performanceRatings || []).map(r => ({ ...r, rating: r.rating || 0 }))
       );
@@ -487,6 +583,9 @@ export default function AddEditMatchPage() {
       setGoals([]);
       setCards([]);
       setInjuries([]);
+      setIsEventSpeedDialOpen(false);
+      setEventModal(null);
+      setEventDraft(null);
       setRatings([]);
       setPlayerOfTheMatch('');
       setCaptainId('');
@@ -713,37 +812,399 @@ export default function AddEditMatchPage() {
     );
   };
 
-  const handleAddGoal = () => {
-    setGoals([...goals, { playerId: '', minute: 0, assistPlayerId: undefined }]);
+  const allTimelinePeriods = timelineSections.map(section => section.period);
+
+  const defaultTimelinePeriod = 'second' as TimelinePeriod;
+
+  const handleOpenCreateEventModal = (eventType: TimelineEventType) => {
+    let draft: TimelineModalEventDraft;
+
+    if (eventType === 'goal') {
+      draft = {
+        eventType: 'goal',
+        playerId: '',
+        minute: undefined,
+        period: defaultTimelinePeriod,
+        addedTimeMinutes: undefined,
+        isExtraTime: false,
+        isPenalty: defaultTimelinePeriod === 'penalties',
+        assistPlayerId: undefined,
+      };
+    } else if (eventType === 'card') {
+      draft = {
+        eventType: 'card',
+        playerId: '',
+        type: 'yellow',
+        minute: undefined,
+        period: defaultTimelinePeriod,
+        addedTimeMinutes: undefined,
+        reason: undefined,
+      };
+    } else if (eventType === 'injury') {
+      draft = {
+        eventType: 'injury',
+        playerId: '',
+        minute: undefined,
+        period: defaultTimelinePeriod,
+        addedTimeMinutes: undefined,
+        description: '',
+        severity: 'minor',
+      };
+    } else if (eventType === 'substitution') {
+      draft = {
+        eventType: 'substitution',
+        minute: undefined,
+        period: defaultTimelinePeriod,
+        addedTimeMinutes: undefined,
+        playerOut: '',
+        playerIn: '',
+      };
+    } else {
+      return;
+    }
+
+    setEventModal({ mode: 'create', eventType });
+    setEventDraft(draft);
+    setIsEventSpeedDialOpen(false);
   };
 
-  const handleRemoveGoal = (index: number) => {
-    setGoals(goals.filter((_, i) => i !== index));
+  const handleOpenEditEventModal = (eventType: TimelineEventType, index: number) => {
+    if (eventType === 'goal' && goals[index]) {
+      setEventDraft({ eventType: 'goal', ...goals[index] });
+    }
+
+    if (eventType === 'card' && cards[index]) {
+      setEventDraft({ eventType: 'card', ...cards[index] });
+    }
+
+    if (eventType === 'injury' && injuries[index]) {
+      setEventDraft({ eventType: 'injury', ...injuries[index] });
+    }
+
+    if (eventType === 'substitution' && substitutions[index]) {
+      setEventDraft({ eventType: 'substitution', ...substitutions[index] });
+    }
+
+    setEventModal({ mode: 'edit', eventType, index });
+    setIsEventSpeedDialOpen(false);
   };
 
-  const handleAddCard = () => {
-    setCards([...cards, { playerId: '', type: 'yellow', minute: 0 }]);
+  const eventSpeedDialActions: { eventType: TimelineEventType; label: string; icon: JSX.Element }[] = [
+    { eventType: 'goal', label: 'Goal', icon: <SportsSoccerIcon fontSize="small" className="text-green-600" /> },
+    { eventType: 'card', label: 'Card', icon: <StyleIcon fontSize="small" className="text-yellow-600" /> },
+    { eventType: 'injury', label: 'Injury', icon: <HealingIcon fontSize="small" className="text-red-600" /> },
+    { eventType: 'substitution', label: 'Substitution', icon: <SwapHorizIcon fontSize="small" className="text-blue-600" /> },
+  ];
+
+  const handleCloseEventModal = () => {
+    setEventModal(null);
+    setEventDraft(null);
   };
 
-  const handleRemoveCard = (index: number) => {
-    setCards(cards.filter((_, i) => i !== index));
+  const handleSaveEventModal = () => {
+    if (!eventModal || !eventDraft) {
+      return;
+    }
+
+    const hasInvalidAddedTime = (addedTimeMinutes?: number) => addedTimeMinutes !== undefined && addedTimeMinutes < 0;
+    const hasMinute = (minute?: number) => minute !== undefined && !Number.isNaN(minute) && minute > 0;
+    const hasInvalidMinute = (minute?: number) => minute !== undefined && (Number.isNaN(minute) || minute < 1);
+
+    if (eventDraft.eventType === 'goal') {
+      if (!eventDraft.playerId) {
+        alert('Please select a goal scorer.');
+        return;
+      }
+
+      if (!eventDraft.period) {
+        alert('Please select a period for the goal.');
+        return;
+      }
+
+      if (hasInvalidMinute(eventDraft.minute)) {
+        alert('Goal minute must be 1 or greater when provided.');
+        return;
+      }
+
+      if (hasInvalidAddedTime(eventDraft.addedTimeMinutes)) {
+        alert('Injury time must be at least 1 minute.');
+        return;
+      }
+
+      if ((eventDraft.addedTimeMinutes ?? 0) > 0 && !hasMinute(eventDraft.minute)) {
+        alert('Set a minute before adding injury time.');
+        return;
+      }
+
+      if (eventDraft.assistPlayerId && eventDraft.assistPlayerId === eventDraft.playerId) {
+        alert('Assist player cannot be the same as the goal scorer.');
+        return;
+      }
+    }
+
+    if (eventDraft.eventType === 'card') {
+      if (!eventDraft.playerId) {
+        alert('Please select a player for the card event.');
+        return;
+      }
+
+      if (!eventDraft.period) {
+        alert('Please select a period for the card event.');
+        return;
+      }
+
+      if (hasInvalidMinute(eventDraft.minute)) {
+        alert('Card minute must be 1 or greater when provided.');
+        return;
+      }
+
+      if (hasInvalidAddedTime(eventDraft.addedTimeMinutes)) {
+        alert('Injury time must be at least 1 minute.');
+        return;
+      }
+
+      if ((eventDraft.addedTimeMinutes ?? 0) > 0 && !hasMinute(eventDraft.minute)) {
+        alert('Set a minute before adding injury time.');
+        return;
+      }
+
+    }
+
+
+    if (eventDraft.eventType === 'injury') {
+      if (!eventDraft.playerId) {
+        alert('Please select a player for the injury event.');
+        return;
+      }
+
+      if (!eventDraft.period) {
+        alert('Please select a period for the injury event.');
+        return;
+      }
+
+      if (hasInvalidMinute(eventDraft.minute)) {
+        alert('Injury minute must be 1 or greater when provided.');
+        return;
+      }
+
+      if (hasInvalidAddedTime(eventDraft.addedTimeMinutes)) {
+        alert('Injury time must be at least 1 minute.');
+        return;
+      }
+
+      if ((eventDraft.addedTimeMinutes ?? 0) > 0 && !hasMinute(eventDraft.minute)) {
+        alert('Set a minute before adding injury time.');
+        return;
+      }
+
+      if (!eventDraft.description.trim()) {
+        alert('Please add a brief injury description.');
+        return;
+      }
+    }
+
+    if (eventDraft.eventType === 'substitution') {
+      if (!eventDraft.playerOut || !eventDraft.playerIn) {
+        alert('Please select both players for the substitution.');
+        return;
+      }
+
+      if (!eventDraft.period) {
+        alert('Please select a period for the substitution.');
+        return;
+      }
+
+      if (eventDraft.playerOut === eventDraft.playerIn) {
+        alert('Player off and player on must be different players.');
+        return;
+      }
+
+      if (hasInvalidMinute(eventDraft.minute)) {
+        alert('Substitution minute must be 1 or greater when provided.');
+        return;
+      }
+
+      if (hasInvalidAddedTime(eventDraft.addedTimeMinutes)) {
+        alert('Injury time must be at least 1 minute.');
+        return;
+      }
+
+      if ((eventDraft.addedTimeMinutes ?? 0) > 0 && !hasMinute(eventDraft.minute)) {
+        alert('Set a minute before adding injury time.');
+        return;
+      }
+
+    }
+
+    const isCreate = eventModal.mode === 'create';
+
+    if (eventDraft.eventType === 'goal') {
+      setGoals(previous => isCreate
+        ? [...previous, {
+          playerId: eventDraft.playerId,
+          minute: eventDraft.minute,
+          period: eventDraft.period,
+          addedTimeMinutes: eventDraft.addedTimeMinutes,
+          isExtraTime: eventDraft.isExtraTime,
+          isPenalty: eventDraft.isPenalty,
+          assistPlayerId: eventDraft.assistPlayerId,
+        }]
+        : previous.map((event, index) => index === eventModal.index ? {
+          playerId: eventDraft.playerId,
+          minute: eventDraft.minute,
+          period: eventDraft.period,
+          addedTimeMinutes: eventDraft.addedTimeMinutes,
+          isExtraTime: eventDraft.isExtraTime,
+          isPenalty: eventDraft.isPenalty,
+          assistPlayerId: eventDraft.assistPlayerId,
+        } : event),
+      );
+    }
+
+    if (eventDraft.eventType === 'card') {
+      setCards(previous => isCreate
+        ? [...previous, {
+          playerId: eventDraft.playerId,
+          type: eventDraft.type,
+          minute: eventDraft.minute,
+          period: eventDraft.period,
+          addedTimeMinutes: eventDraft.addedTimeMinutes,
+          reason: eventDraft.reason,
+        }]
+        : previous.map((event, index) => index === eventModal.index ? {
+          playerId: eventDraft.playerId,
+          type: eventDraft.type,
+          minute: eventDraft.minute,
+          period: eventDraft.period,
+          addedTimeMinutes: eventDraft.addedTimeMinutes,
+          reason: eventDraft.reason,
+        } : event),
+      );
+    }
+
+    if (eventDraft.eventType === 'injury') {
+      setInjuries(previous => isCreate
+        ? [...previous, {
+          playerId: eventDraft.playerId,
+          minute: eventDraft.minute,
+          period: eventDraft.period,
+          addedTimeMinutes: eventDraft.addedTimeMinutes,
+          description: eventDraft.description,
+          severity: eventDraft.severity,
+        }]
+        : previous.map((event, index) => index === eventModal.index ? {
+          playerId: eventDraft.playerId,
+          minute: eventDraft.minute,
+          period: eventDraft.period,
+          addedTimeMinutes: eventDraft.addedTimeMinutes,
+          description: eventDraft.description,
+          severity: eventDraft.severity,
+        } : event),
+      );
+    }
+
+    if (eventDraft.eventType === 'substitution') {
+      setSubstitutions(previous => isCreate
+        ? [...previous, {
+          minute: eventDraft.minute,
+          period: eventDraft.period,
+          addedTimeMinutes: eventDraft.addedTimeMinutes,
+          playerOut: eventDraft.playerOut,
+          playerIn: eventDraft.playerIn,
+        }]
+        : previous.map((event, index) => index === eventModal.index ? {
+          minute: eventDraft.minute,
+          period: eventDraft.period,
+          addedTimeMinutes: eventDraft.addedTimeMinutes,
+          playerOut: eventDraft.playerOut,
+          playerIn: eventDraft.playerIn,
+        } : event),
+      );
+    }
+
+    handleCloseEventModal();
   };
 
-  const handleAddInjury = () => {
-    setInjuries([...injuries, { playerId: '', minute: 0, description: '', severity: 'minor' }]);
+  const handleDeleteTimelineEvent = (eventType: TimelineEventType, index: number) => {
+    if (eventType === 'goal') {
+      setGoals(prev => prev.filter((_, currentIndex) => currentIndex !== index));
+    }
+
+    if (eventType === 'card') {
+      setCards(prev => prev.filter((_, currentIndex) => currentIndex !== index));
+    }
+
+    if (eventType === 'injury') {
+      setInjuries(prev => prev.filter((_, currentIndex) => currentIndex !== index));
+    }
+
+    if (eventType === 'substitution') {
+      setSubstitutions(prev => prev.filter((_, currentIndex) => currentIndex !== index));
+    }
+
   };
 
-  const handleRemoveInjury = (index: number) => {
-    setInjuries(injuries.filter((_, i) => i !== index));
-  };
+  const timelineEvents = (() => {
+    const goalsTimeline = goals.map((event, index) => ({
+      id: `goal-${index}`,
+      eventType: 'goal' as const,
+      index,
+      period: event.period,
+      minute: event.minute,
+      addedTimeMinutes: event.addedTimeMinutes,
+    }));
 
-  const handleAddSubstitution = () => {
-    setSubstitutions([...substitutions, { minute: 0, playerOut: '', playerIn: '' }]);
-  };
+    const cardsTimeline = cards.map((event, index) => ({
+      id: `card-${index}`,
+      eventType: 'card' as const,
+      index,
+      period: event.period,
+      minute: event.minute,
+      addedTimeMinutes: event.addedTimeMinutes,
+    }));
 
-  const handleRemoveSubstitution = (index: number) => {
-    setSubstitutions(substitutions.filter((_, i) => i !== index));
-  };
+    const injuriesTimeline = injuries.map((event, index) => ({
+      id: `injury-${index}`,
+      eventType: 'injury' as const,
+      index,
+      period: event.period,
+      minute: event.minute,
+      addedTimeMinutes: event.addedTimeMinutes,
+    }));
+
+    const substitutionsTimeline = substitutions.map((event, index) => ({
+      id: `substitution-${index}`,
+      eventType: 'substitution' as const,
+      index,
+      period: event.period,
+      minute: event.minute,
+      addedTimeMinutes: event.addedTimeMinutes,
+    }));
+
+    return [...goalsTimeline, ...cardsTimeline, ...injuriesTimeline, ...substitutionsTimeline]
+      .filter(event => event.period && allTimelinePeriods.includes(event.period))
+      .sort((left, right) => {
+        const sectionOrder = allTimelinePeriods.indexOf(left.period as TimelinePeriod) - allTimelinePeriods.indexOf(right.period as TimelinePeriod);
+        if (sectionOrder !== 0) {
+          return sectionOrder;
+        }
+
+        const leftMinute = left.minute ?? 999;
+        const rightMinute = right.minute ?? 999;
+        if (leftMinute !== rightMinute) {
+          return leftMinute - rightMinute;
+        }
+
+        return (left.addedTimeMinutes ?? 0) - (right.addedTimeMinutes ?? 0);
+      });
+  })();
+
+  const timelineSectionsWithEvents = timelineSections
+    .map(section => ({
+      section,
+      events: timelineEvents.filter(event => event.period === section.period),
+    }))
+    .filter(group => group.events.length > 0);
 
   const handleSetRating = (playerId: string, rating: number) => {
     const existing = ratings.find(r => r.playerId === playerId);
@@ -752,6 +1213,14 @@ export default function AddEditMatchPage() {
     } else {
       setRatings([...ratings, { playerId, rating }]);
     }
+  };
+
+  const handleTogglePlayerOfTheMatch = (playerId: string) => {
+    if (isLocked) {
+      return;
+    }
+
+    setPlayerOfTheMatch(current => current === playerId ? '' : playerId);
   };
 
   const handlePlayerClickForSwap = (playerIndex: number) => {
@@ -901,6 +1370,28 @@ export default function AddEditMatchPage() {
       return;
     }
 
+    const invalidGoalIndex = goals.findIndex(goal => !goal.playerId || !goal.period || (goal.minute !== undefined && goal.minute < 1));
+    if (invalidGoalIndex >= 0) {
+      alert(`Goal ${invalidGoalIndex + 1} requires scorer and period. If minute is entered it must be 1 or greater.`);
+      return;
+    }
+
+    const invalidSubstitutionIndex = substitutions.findIndex(substitution => !substitution.playerOut || !substitution.playerIn);
+    if (invalidSubstitutionIndex >= 0) {
+      alert(`Substitution ${invalidSubstitutionIndex + 1} requires both player off and player on.`);
+      return;
+    }
+
+    const hasInvalidGoalInjuryTime = goals.some(goal => goal.addedTimeMinutes !== undefined && goal.addedTimeMinutes < 0);
+    const hasInvalidCardInjuryTime = cards.some(card => card.addedTimeMinutes !== undefined && card.addedTimeMinutes < 0);
+    const hasInvalidInjuryEventInjuryTime = injuries.some(injury => injury.addedTimeMinutes !== undefined && injury.addedTimeMinutes < 0);
+    const hasInvalidSubstitutionInjuryTime = substitutions.some(substitution => substitution.addedTimeMinutes !== undefined && substitution.addedTimeMinutes < 0);
+
+    if (hasInvalidGoalInjuryTime || hasInvalidCardInjuryTime || hasInvalidInjuryEventInjuryTime || hasInvalidSubstitutionInjuryTime) {
+      alert('Injury time must be at least 1 minute.');
+      return;
+    }
+
     const matchData: CreateMatchRequest | UpdateMatchRequest = {
       teamId: teamId!,
       seasonId: seasonId || defaultSeason,
@@ -943,14 +1434,44 @@ export default function AddEditMatchPage() {
         summary: summary || undefined,
         captainId: captainId || undefined,
         playerOfMatchId: playerOfTheMatch || undefined,
-        goals: goals.filter(g => g.playerId),
-        cards: cards.filter(c => c.playerId),
-        injuries: injuries.filter(i => i.playerId),
+        goals: goals
+          .filter(goal => goal.playerId)
+          .map(goal => ({
+            playerId: goal.playerId,
+            minute: goal.minute ?? 0,
+            period: goal.period,
+            addedTimeMinutes: goal.addedTimeMinutes && goal.addedTimeMinutes > 0 ? goal.addedTimeMinutes : undefined,
+            isExtraTime: goal.isExtraTime,
+            isPenalty: goal.isPenalty,
+            assistPlayerId: goal.assistPlayerId,
+          })),
+        cards: cards
+          .filter(card => card.playerId)
+          .map(card => ({
+            playerId: card.playerId,
+            type: card.type,
+            minute: card.minute,
+            period: card.period,
+            addedTimeMinutes: card.addedTimeMinutes && card.addedTimeMinutes > 0 ? card.addedTimeMinutes : undefined,
+            reason: card.reason,
+          })),
+        injuries: injuries
+          .filter(injury => injury.playerId)
+          .map(injury => ({
+            playerId: injury.playerId,
+            minute: injury.minute,
+            period: injury.period,
+            addedTimeMinutes: injury.addedTimeMinutes && injury.addedTimeMinutes > 0 ? injury.addedTimeMinutes : undefined,
+            description: injury.description,
+            severity: injury.severity,
+          })),
         performanceRatings: ratings
       },
       coachIds: assignedCoachIds,
       substitutions: substitutions.map(s => ({
         minute: s.minute,
+        period: s.period,
+        addedTimeMinutes: s.addedTimeMinutes && s.addedTimeMinutes > 0 ? s.addedTimeMinutes : undefined,
         playerOutId: s.playerOut,
         playerInId: s.playerIn
       })),
@@ -1959,378 +2480,300 @@ export default function AddEditMatchPage() {
 
           {/* Match Events Tab */}
           {activeTab === 'events' && (
-            <div className="mt-4 space-y-2">
-              {/* Goals */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Goals ⚽
-                </h3>
-                <div className="space-y-2 mb-4">
-                  {goals.map((goal, index) => (
-                    <div key={index} className="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg border border-green-200 dark:border-green-800">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Minute</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="120"
-                            value={goal.minute}
-                            onChange={(e) => {
-                              const newGoals = [...goals];
-                              newGoals[index].minute = parseInt(e.target.value) || 0;
-                              setGoals(newGoals);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Goal Scorer</label>
-                          <select
-                            value={goal.playerId}
-                            onChange={(e) => {
-                              const newGoals = [...goals];
-                              newGoals[index].playerId = e.target.value;
-                              setGoals(newGoals);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            <option value="">Select player</option>
-                            {playersForEvents.map(pId => (
-                              <option key={pId} value={pId}>
-                                {getPlayerName(pId)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Assist (Optional)</label>
-                          <select
-                            value={goal.assistPlayerId || ''}
-                            onChange={(e) => {
-                              const newGoals = [...goals];
-                              newGoals[index].assistPlayerId = e.target.value || undefined;
-                              setGoals(newGoals);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            <option value="">None</option>
-                            {playersForEvents.map(pId => (
-                              <option key={pId} value={pId}>
-                                {getPlayerName(pId)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveGoal(index)}
-                            disabled={isLocked}
-                            className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddGoal}
-                  disabled={isLocked}
-                  className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  title="Add Goal"
+            <div className="mt-4 space-y-4">
+              <div className="relative h-14">
+                <SpeedDial
+                  ariaLabel="Add match event"
+                  icon={<SpeedDialIcon />}
+                  direction="right"
+                  FabProps={{
+                    size: 'small',
+                    color: 'success',
+                    disabled: isLocked,
+                  }}
+                  sx={{
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    '& .MuiSpeedDial-actions': {
+                      gap: 1,
+                    },
+                    '& .MuiSpeedDial-fab': {
+                      boxShadow: 'none',
+                    },
+                  }}
+                  open={isEventSpeedDialOpen}
+                  onOpen={() => {
+                    if (!isLocked) {
+                      setIsEventSpeedDialOpen(true);
+                    }
+                  }}
+                  onClose={() => setIsEventSpeedDialOpen(false)}
                 >
-                  <Plus className="w-4 h-4" />
-                </button>
+                  {eventSpeedDialActions.map((action) => (
+                    <SpeedDialAction
+                      key={action.eventType}
+                      icon={action.icon}
+                      slotProps={{
+                        tooltip: {
+                          title: `Add ${action.label}`,
+                          placement: 'bottom',
+                        },
+                      }}
+                      onClick={() => handleOpenCreateEventModal(action.eventType)}
+                      
+                    />
+                  ))}
+                </SpeedDial>
               </div>
 
-              {/* Cards */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Cards 🟨 🟥
-                </h3>
-                <div className="space-y-2 mb-4">
-                  {cards.map((card, index) => (
-                    <div key={index} className="bg-yellow-50 dark:bg-yellow-900/20 p-4 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Minute</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="120"
-                            value={card.minute}
-                            onChange={(e) => {
-                              const newCards = [...cards];
-                              newCards[index].minute = parseInt(e.target.value) || 0;
-                              setCards(newCards);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Player</label>
-                          <select
-                            value={card.playerId}
-                            onChange={(e) => {
-                              const newCards = [...cards];
-                              newCards[index].playerId = e.target.value;
-                              setCards(newCards);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            <option value="">Select player</option>
-                            {playersForEvents.map(pId => (
-                              <option key={pId} value={pId}>
-                                {getPlayerName(pId)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Card Type</label>
-                          <select
-                            value={card.type}
-                            onChange={(e) => {
-                              const newCards = [...cards];
-                              newCards[index].type = e.target.value as 'yellow' | 'red';
-                              setCards(newCards);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            {cardTypes.map(ct => (
-                              <option key={ct.value} value={ct.value}>{ct.label}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Reason (Optional)</label>
-                          <input
-                            type="text"
-                            value={card.reason || ''}
-                            onChange={(e) => {
-                              const newCards = [...cards];
-                              newCards[index].reason = e.target.value;
-                              setCards(newCards);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                            placeholder="e.g., Foul"
-                          />
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveCard(index)}
-                            disabled={isLocked}
-                            className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              {timelineSectionsWithEvents.length === 0 && (
+                <div className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No events yet. Add one to get started.</p>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddCard}
-                  disabled={isLocked}
-                  className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  title="Add Card"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              )}
 
-              {/* Injuries */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Injuries 🏥
-                </h3>
-                <div className="space-y-2 mb-4">
-                  {injuries.map((injury, index) => (
-                    <div key={index} className="bg-red-50 dark:bg-red-900/20 p-4 rounded-lg border border-red-200 dark:border-red-800">
-                      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Minute</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="120"
-                            value={injury.minute}
-                            onChange={(e) => {
-                              const newInjuries = [...injuries];
-                              newInjuries[index].minute = parseInt(e.target.value) || 0;
-                              setInjuries(newInjuries);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Player</label>
-                          <select
-                            value={injury.playerId}
-                            onChange={(e) => {
-                              const newInjuries = [...injuries];
-                              newInjuries[index].playerId = e.target.value;
-                              setInjuries(newInjuries);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            <option value="">Select player</option>
-                            {playersForEvents.map(pId => (
-                              <option key={pId} value={pId}>
-                                {getPlayerName(pId)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Severity</label>
-                          <select
-                            value={injury.severity}
-                            onChange={(e) => {
-                              const newInjuries = [...injuries];
-                              newInjuries[index].severity = e.target.value as 'minor' | 'moderate' | 'serious';
-                              setInjuries(newInjuries);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                          >
-                            {injurySeverities.map(sev => (
-                              <option key={sev.value} value={sev.value}>{sev.label}</option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Description</label>
-                          <input
-                            type="text"
-                            value={injury.description}
-                            onChange={(e) => {
-                              const newInjuries = [...injuries];
-                              newInjuries[index].description = e.target.value;
-                              setInjuries(newInjuries);
-                            }}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                            placeholder="e.g., Ankle sprain"
-                          />
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveInjury(index)}
-                            disabled={isLocked}
-                            className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddInjury}
-                  disabled={isLocked}
-                  className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  title="Add Injury"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
-              </div>
+              {timelineSectionsWithEvents.map(({ section, events: sectionEvents }) => {
 
-              {/* Substitutions */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                  Substitutions 🔄
-                </h3>
-                <div className="space-y-2 mb-4">
-                  {substitutions.map((sub, index) => (
-                    <div key={index} className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Minute</label>
-                          <input
-                            type="number"
-                            min="0"
-                            max="120"
-                            value={sub.minute}
-                            onChange={(e) => {
-                              const newSubs = [...substitutions];
-                              newSubs[index].minute = parseInt(e.target.value) || 0;
-                              setSubstitutions(newSubs);
-                            }}
-                            disabled={isLocked}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Player Off</label>
-                          <select
-                            value={sub.playerOut}
-                            onChange={(e) => {
-                              const newSubs = [...substitutions];
-                              newSubs[index].playerOut = e.target.value;
-                              setSubstitutions(newSubs);
-                            }}
-                            disabled={isLocked}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <option value="">Select player</option>
-                            {startingPlayers.map(p => (
-                              <option key={p.playerId} value={p.playerId}>
-                                {getPlayerName(p.playerId)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-xs text-gray-600 dark:text-gray-400 mb-1">Player On</label>
-                          <select
-                            value={sub.playerIn}
-                            onChange={(e) => {
-                              const newSubs = [...substitutions];
-                              newSubs[index].playerIn = e.target.value;
-                              setSubstitutions(newSubs);
-                            }}
-                            disabled={isLocked}
-                            className="w-full px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            <option value="">Select player</option>
-                            {substitutes.map(sub => (
-                              <option key={sub.playerId} value={sub.playerId}>
-                                {getPlayerName(sub.playerId)}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-                        <div className="flex items-end">
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSubstitution(index)}
-                            disabled={isLocked}
-                            className="w-full px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            Remove
-                          </button>
-                        </div>
-                      </div>
+                return (
+                  <section key={section.period} className="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                    <h3 className="text-md font-semibold text-gray-900 dark:text-white mb-2">{section.label}</h3>
+
+                    <div className="relative">
+                      <Timeline className="w-full min-w-0">
+                      {sectionEvents.map((event, index) => {
+                        const timelineMinute = event.minute !== undefined && event.minute !== null && event.minute > 0
+                          ? `${event.minute}${event.addedTimeMinutes ? `+${event.addedTimeMinutes}` : ''}`
+                          : '';
+
+                        const hasConnector = index < sectionEvents.length - 1;
+
+                        if (event.eventType === 'goal') {
+                          const goal = goals[event.index];
+                          return (
+                            <TimelineItem key={event.id} className="relative pb-2">
+                              {hasConnector && (
+                                <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
+                              )}
+                              <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2.5 pl-3 pr-3 shadow-sm">
+                                <TimelineIcon className="p-0 bg-gray-100 dark:bg-gray-700">
+                                  <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
+                                </TimelineIcon>
+                                <div className="ml-3 flex w-full items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">⚽ Goal • {getPlayerName(goal.playerId)}</p>
+                                    {goal.assistPlayerId && (
+                                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Assist: {getPlayerName(goal.assistPlayerId)}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-3 shrink-0">
+                                    <button type="button" onClick={() => handleOpenEditEventModal('goal', event.index)} disabled={isLocked} className="text-blue-600 disabled:opacity-50">Edit</button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('goal', event.index)} disabled={isLocked} className="text-red-600 disabled:opacity-50">Delete</button>
+                                  </div>
+                                </div>
+                              </TimelineHeader>
+                              <TimelineBody className="pb-1" />
+                            </TimelineItem>
+                          );
+                        }
+
+                        if (event.eventType === 'card') {
+                          const card = cards[event.index];
+                          return (
+                            <TimelineItem key={event.id} className="relative pb-2">
+                              {hasConnector && (
+                                <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
+                              )}
+                              <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2.5 pl-3 pr-3 shadow-sm">
+                                <TimelineIcon className="p-0 bg-gray-100 dark:bg-gray-700">
+                                  <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
+                                </TimelineIcon>
+                                <div className="ml-3 flex w-full items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{card.type === 'red' ? '🟥' : '🟨'} Card • {getPlayerName(card.playerId)}</p>
+                                    {card.reason?.trim() && (
+                                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{card.reason}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-3 shrink-0">
+                                    <button type="button" onClick={() => handleOpenEditEventModal('card', event.index)} disabled={isLocked} className="text-blue-600 disabled:opacity-50">Edit</button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('card', event.index)} disabled={isLocked} className="text-red-600 disabled:opacity-50">Delete</button>
+                                  </div>
+                                </div>
+                              </TimelineHeader>
+                              <TimelineBody className="pb-1" />
+                            </TimelineItem>
+                          );
+                        }
+
+                        if (event.eventType === 'injury') {
+                          const injury = injuries[event.index];
+                          return (
+                            <TimelineItem key={event.id} className="relative pb-2">
+                              {hasConnector && (
+                                <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
+                              )}
+                              <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2.5 pl-3 pr-3 shadow-sm">
+                                <TimelineIcon className="p-0 bg-gray-100 dark:bg-gray-700">
+                                  <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
+                                </TimelineIcon>
+                                <div className="ml-3 flex w-full items-start justify-between gap-3">
+                                  <div className="min-w-0">
+                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">🏥 Injury • {getPlayerName(injury.playerId)}</p>
+                                    {injury.description.trim() && (
+                                      <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{injury.description}</p>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center gap-3 shrink-0">
+                                    <button type="button" onClick={() => handleOpenEditEventModal('injury', event.index)} disabled={isLocked} className="text-blue-600 disabled:opacity-50">Edit</button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('injury', event.index)} disabled={isLocked} className="text-red-600 disabled:opacity-50">Delete</button>
+                                  </div>
+                                </div>
+                              </TimelineHeader>
+                              <TimelineBody className="pb-1" />
+                            </TimelineItem>
+                          );
+                        }
+
+                        const substitution = substitutions[event.index];
+                        return (
+                          <TimelineItem key={event.id} className="relative pb-2">
+                            {hasConnector && (
+                              <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
+                            )}
+                            <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2.5 pl-3 pr-3 shadow-sm">
+                              <TimelineIcon className="p-0 bg-gray-100 dark:bg-gray-700">
+                                <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
+                              </TimelineIcon>
+                              <div className="ml-3 flex w-full items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-lg font-semibold text-gray-900 dark:text-white">🔄 Substitution • {getPlayerName(substitution.playerOut)}</p>
+                                  <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{getPlayerName(substitution.playerOut)} → {getPlayerName(substitution.playerIn)}</p>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                  <button type="button" onClick={() => handleOpenEditEventModal('substitution', event.index)} disabled={isLocked} className="text-blue-600 disabled:opacity-50">Edit</button>
+                                  <button type="button" onClick={() => handleDeleteTimelineEvent('substitution', event.index)} disabled={isLocked} className="text-red-600 disabled:opacity-50">Delete</button>
+                                </div>
+                              </div>
+                            </TimelineHeader>
+                            <TimelineBody className="pb-1" />
+                          </TimelineItem>
+                        );
+                      })}
+                      </Timeline>
                     </div>
-                  ))}
+                  </section>
+                );
+              })}
+            </div>
+          )}
+
+          {activeTab === 'events' && eventModal && eventDraft && (
+            <div className="fixed inset-0 z-[1100] bg-black/50 flex items-center justify-center p-4">
+              <div className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                    {eventModal.mode === 'create' ? 'Add' : 'Edit'} {eventModal.eventType.charAt(0).toUpperCase() + eventModal.eventType.slice(1)}
+                  </h3>
+                  <button type="button" onClick={handleCloseEventModal} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <X className="w-5 h-5" />
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleAddSubstitution}
-                  disabled={isLocked}
-                  className="btn-secondary btn-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                  title="Add Substitution"
-                >
-                  <Plus className="w-4 h-4" />
-                </button>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  {eventDraft.eventType === 'goal' && (
+                    <>
+                      <select value={eventDraft.playerId} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="">Goal scorer</option>
+                        {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
+                      </select>
+                      <select
+                        value={eventDraft.period}
+                        onChange={(e) => {
+                          const period = e.target.value as TimelinePeriod;
+                          setEventDraft({
+                            ...eventDraft,
+                            period,
+                            isExtraTime: period === 'etFirst' || period === 'etSecond',
+                            isPenalty: period === 'penalties',
+                          });
+                        }}
+                        className="px-2 py-2 border rounded bg-white dark:bg-gray-700"
+                      >
+                        {timelineSections.map(periodOption => <option key={periodOption.period} value={periodOption.period}>{periodOption.label}</option>)}
+                      </select>
+                      <input type="number" min="1" value={eventDraft.minute ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, minute: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Minute" />
+                      <input type="number" min="1" value={eventDraft.addedTimeMinutes ?? ''} onChange={(e) => { const value = e.target.value ? parseInt(e.target.value, 10) : undefined; setEventDraft({ ...eventDraft, addedTimeMinutes: value && value > 0 ? value : undefined }); }} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Injury time (+)" />
+                      <select value={eventDraft.assistPlayerId || ''} onChange={(e) => setEventDraft({ ...eventDraft, assistPlayerId: e.target.value || undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700 md:col-span-2">
+                        <option value="">Assist (optional)</option>
+                        {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
+                      </select>
+                    </>
+                  )}
+
+                  {eventDraft.eventType === 'card' && (
+                    <>
+                      <select value={eventDraft.playerId} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="">Player</option>
+                        {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
+                      </select>
+                      <select value={eventDraft.period || ''} onChange={(e) => setEventDraft({ ...eventDraft, period: e.target.value ? e.target.value as TimelinePeriod : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="">Period (optional)</option>
+                        {timelineSections.map(periodOption => <option key={periodOption.period} value={periodOption.period}>{periodOption.label}</option>)}
+                      </select>
+                      <input type="number" min="0" value={eventDraft.minute ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, minute: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Minute (optional)" />
+                      <input type="number" min="1" value={eventDraft.addedTimeMinutes ?? ''} onChange={(e) => { const value = e.target.value ? parseInt(e.target.value, 10) : undefined; setEventDraft({ ...eventDraft, addedTimeMinutes: value && value > 0 ? value : undefined }); }} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Injury time (+)" />
+                      <select value={eventDraft.type} onChange={(e) => setEventDraft({ ...eventDraft, type: e.target.value as 'yellow' | 'red' })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        {cardTypes.map(cardType => <option key={cardType.value} value={cardType.value}>{cardType.label}</option>)}
+                      </select>
+                      <input type="text" value={eventDraft.reason || ''} onChange={(e) => setEventDraft({ ...eventDraft, reason: e.target.value || undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Reason" />
+                    </>
+                  )}
+
+                  {eventDraft.eventType === 'injury' && (
+                    <>
+                      <select value={eventDraft.playerId} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="">Player</option>
+                        {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
+                      </select>
+                      <select value={eventDraft.period || ''} onChange={(e) => setEventDraft({ ...eventDraft, period: e.target.value ? e.target.value as TimelinePeriod : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="">Period (optional)</option>
+                        {timelineSections.map(periodOption => <option key={periodOption.period} value={periodOption.period}>{periodOption.label}</option>)}
+                      </select>
+                      <input type="number" min="0" value={eventDraft.minute ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, minute: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Minute (optional)" />
+                      <input type="number" min="1" value={eventDraft.addedTimeMinutes ?? ''} onChange={(e) => { const value = e.target.value ? parseInt(e.target.value, 10) : undefined; setEventDraft({ ...eventDraft, addedTimeMinutes: value && value > 0 ? value : undefined }); }} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Injury time (+)" />
+                      <select value={eventDraft.severity} onChange={(e) => setEventDraft({ ...eventDraft, severity: e.target.value as 'minor' | 'moderate' | 'serious' })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        {injurySeverities.map(severity => <option key={severity.value} value={severity.value}>{severity.label}</option>)}
+                      </select>
+                      <input type="text" value={eventDraft.description} onChange={(e) => setEventDraft({ ...eventDraft, description: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Description" />
+                    </>
+                  )}
+
+                  {eventDraft.eventType === 'substitution' && (
+                    <>
+                      <select value={eventDraft.playerOut} onChange={(e) => setEventDraft({ ...eventDraft, playerOut: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="">Player off</option>
+                        {startingPlayers.map(player => <option key={player.playerId} value={player.playerId}>{getPlayerName(player.playerId)}</option>)}
+                      </select>
+                      <select value={eventDraft.period || ''} onChange={(e) => setEventDraft({ ...eventDraft, period: e.target.value ? e.target.value as TimelinePeriod : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="">Period (optional)</option>
+                        {timelineSections.map(periodOption => <option key={periodOption.period} value={periodOption.period}>{periodOption.label}</option>)}
+                      </select>
+                      <input type="number" min="0" value={eventDraft.minute ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, minute: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Minute (optional)" />
+                      <input type="number" min="1" value={eventDraft.addedTimeMinutes ?? ''} onChange={(e) => { const value = e.target.value ? parseInt(e.target.value, 10) : undefined; setEventDraft({ ...eventDraft, addedTimeMinutes: value && value > 0 ? value : undefined }); }} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Injury time (+)" />
+                      <select value={eventDraft.playerIn} onChange={(e) => setEventDraft({ ...eventDraft, playerIn: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                        <option value="">Player on</option>
+                        {substitutes.map(player => <option key={player.playerId} value={player.playerId}>{getPlayerName(player.playerId)}</option>)}
+                      </select>
+                    </>
+                  )}
+
+                </div>
+
+                <div className="mt-5 flex items-center justify-end gap-2">
+                  <button type="button" onClick={handleCloseEventModal} className="btn-secondary btn-sm">Cancel</button>
+                  <button type="button" onClick={handleSaveEventModal} className="btn-success btn-sm">Save Event</button>
+                </div>
               </div>
             </div>
           )}
@@ -2361,6 +2804,7 @@ export default function AddEditMatchPage() {
                 <div className="space-y-2">
                   {allPlayersInMatch.map(playerId => {
                     const rating = getRating(playerId);
+                    const isPlayerOfTheMatch = playerOfTheMatch === playerId;
                     return (
                       <div key={playerId} className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
                         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -2373,6 +2817,19 @@ export default function AddEditMatchPage() {
                                 Starting XI
                               </span>
                             )}
+                            <button
+                              type="button"
+                              onClick={() => handleTogglePlayerOfTheMatch(playerId)}
+                              disabled={isLocked}
+                              className={`px-2 py-0.5 rounded text-xs border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                isPlayerOfTheMatch
+                                  ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-400 dark:border-amber-500 text-amber-900 dark:text-amber-100'
+                                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
+                              }`}
+                              aria-pressed={isPlayerOfTheMatch}
+                            >
+                              {isPlayerOfTheMatch ? '⭐' : '☆'}
+                            </button>
                           </div>
                           <div className="flex items-center gap-3">
                             <input
@@ -2400,26 +2857,6 @@ export default function AddEditMatchPage() {
                     );
                   })}
                 </div>
-              </div>
-
-              {/* Player of the Match */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Player of the Match ⭐
-                </label>
-                <select
-                  value={playerOfTheMatch}
-                  onChange={(e) => setPlayerOfTheMatch(e.target.value)}
-                  disabled={isLocked}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <option value="">Select player of the match</option>
-                  {allPlayersInMatch.map(pId => (
-                    <option key={pId} value={pId}>
-                      {getPlayerName(pId)} {getRating(pId) ? `(${getRating(pId).toFixed(1)})` : ''}
-                    </option>
-                  ))}
-                </select>
               </div>
             </div>
           )}

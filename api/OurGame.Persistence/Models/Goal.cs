@@ -15,6 +15,14 @@ public partial class Goal
 
     public int Minute { get; set; }
 
+    public string Period { get; set; }
+
+    public int? AddedTimeMinutes { get; set; }
+
+    public bool IsExtraTime { get; set; }
+
+    public bool IsPenalty { get; set; }
+
     public Guid? AssistPlayerId { get; set; }
 
     public virtual Player AssistPlayer { get; set; }

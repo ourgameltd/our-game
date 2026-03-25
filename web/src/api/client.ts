@@ -1993,6 +1993,10 @@ export interface GoalDetailDto {
   playerId: string;
   scorerName: string;
   minute: number;
+  period: string;
+  addedTimeMinutes?: number;
+  isExtraTime: boolean;
+  isPenalty: boolean;
   assistPlayerId?: string;
   assistPlayerName?: string;
 }
@@ -2002,7 +2006,9 @@ export interface CardDetailDto {
   playerId: string;
   playerName: string;
   type: string;
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   reason?: string;
 }
 
@@ -2010,7 +2016,9 @@ export interface InjuryDetailDto {
   id: string;
   playerId: string;
   playerName: string;
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   description?: string;
   severity: string;
 }
@@ -2033,7 +2041,9 @@ export interface MatchCoachDetailDto {
 
 export interface MatchSubstitutionDetailDto {
   id: string;
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   playerOutId: string;
   playerOutName: string;
   playerInId: string;
@@ -2104,19 +2114,27 @@ export interface CreateMatchReportRequest {
 export interface CreateGoalRequest {
   playerId: string;
   minute: number;
+  period: string;
+  addedTimeMinutes?: number;
+  isExtraTime: boolean;
+  isPenalty: boolean;
   assistPlayerId?: string;
 }
 
 export interface CreateCardRequest {
   playerId: string;
   type: string;
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   reason?: string;
 }
 
 export interface CreateInjuryRequest {
   playerId: string;
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   description?: string;
   severity: string;
 }
@@ -2127,7 +2145,9 @@ export interface CreatePerformanceRatingRequest {
 }
 
 export interface CreateMatchSubstitutionRequest {
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   playerOutId: string;
   playerInId: string;
 }
@@ -2194,19 +2214,27 @@ export interface UpdateMatchReportRequest {
 export interface UpdateGoalRequest {
   playerId: string;
   minute: number;
+  period: string;
+  addedTimeMinutes?: number;
+  isExtraTime: boolean;
+  isPenalty: boolean;
   assistPlayerId?: string;
 }
 
 export interface UpdateCardRequest {
   playerId: string;
   type: string;
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   reason?: string;
 }
 
 export interface UpdateInjuryRequest {
   playerId: string;
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   description?: string;
   severity: string;
 }
@@ -2217,7 +2245,9 @@ export interface UpdatePerformanceRatingRequest {
 }
 
 export interface UpdateMatchSubstitutionRequest {
-  minute: number;
+  minute?: number;
+  period?: string;
+  addedTimeMinutes?: number;
   playerOutId: string;
   playerInId: string;
 }

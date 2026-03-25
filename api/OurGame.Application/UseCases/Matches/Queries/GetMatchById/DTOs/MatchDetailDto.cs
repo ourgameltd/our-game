@@ -98,6 +98,10 @@ public record GoalDetailDto
     public Guid PlayerId { get; init; }
     public string ScorerName { get; init; } = string.Empty;
     public int Minute { get; init; }
+    public string Period { get; init; } = string.Empty;
+    public int? AddedTimeMinutes { get; init; }
+    public bool IsExtraTime { get; init; }
+    public bool IsPenalty { get; init; }
     public Guid? AssistPlayerId { get; init; }
     public string? AssistPlayerName { get; init; }
 }
@@ -111,7 +115,9 @@ public record CardDetailDto
     public Guid PlayerId { get; init; }
     public string PlayerName { get; init; } = string.Empty;
     public string Type { get; init; } = string.Empty;
-    public int Minute { get; init; }
+    public int? Minute { get; init; }
+    public string? Period { get; init; }
+    public int? AddedTimeMinutes { get; init; }
     public string? Reason { get; init; }
 }
 
@@ -123,7 +129,9 @@ public record InjuryDetailDto
     public Guid Id { get; init; }
     public Guid PlayerId { get; init; }
     public string PlayerName { get; init; } = string.Empty;
-    public int Minute { get; init; }
+    public int? Minute { get; init; }
+    public string? Period { get; init; }
+    public int? AddedTimeMinutes { get; init; }
     public string? Description { get; init; }
     public string Severity { get; init; } = string.Empty;
 }
@@ -158,7 +166,9 @@ public record MatchCoachDetailDto
 public record MatchSubstitutionDetailDto
 {
     public Guid Id { get; init; }
-    public int Minute { get; init; }
+    public int? Minute { get; init; }
+    public string? Period { get; init; }
+    public int? AddedTimeMinutes { get; init; }
     public Guid PlayerOutId { get; init; }
     public string PlayerOutName { get; init; } = string.Empty;
     public Guid PlayerInId { get; init; }

@@ -226,7 +226,7 @@ export default function PlayerProfilePage() {
                 date: new Date(match.matchDate),
                 kickOffTime: match.kickoffTime ? new Date(match.kickoffTime) : new Date(match.matchDate),
                 location: match.venue || '',
-                isHome: match.homeAway.toLowerCase() === 'home',
+                isHome: (match.homeAway ?? '').toLowerCase() === 'home',
                 competition: match.competition || '',
                 status: 'scheduled' as const
               }))}

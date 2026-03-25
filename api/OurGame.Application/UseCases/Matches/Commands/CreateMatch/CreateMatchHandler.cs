@@ -45,6 +45,7 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
 
         await ValidateLineupReferencesAsync(dto.Lineup, cancellationToken);
         ValidateAttendancePlayers(dto.Lineup, dto.Attendance);
+        ValidateGoalTimeline(dto.Report?.Goals);
 
         // Parse match status
         var statusInt = ParseStatus(dto.Status);
@@ -105,8 +106,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
         {
             var subId = Guid.NewGuid();
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO MatchSubstitutions (Id, MatchId, Minute, PlayerOutId, PlayerInId)
-                VALUES ({subId}, {matchId}, {sub.Minute}, {sub.PlayerOutId}, {sub.PlayerInId})
+                INSERT INTO MatchSubstitutions (Id, MatchId, Minute, Period, AddedTimeMinutes, PlayerOutId, PlayerInId)
+                VALUES ({subId}, {matchId}, {sub.Minute}, {sub.Period}, {sub.AddedTimeMinutes}, {sub.PlayerOutId}, {sub.PlayerInId})
             ", cancellationToken);
         }
 
@@ -139,8 +140,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
             {
                 var goalId = Guid.NewGuid();
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO Goals (Id, MatchReportId, PlayerId, Minute, AssistPlayerId)
-                    VALUES ({goalId}, {reportId}, {goal.PlayerId}, {goal.Minute}, {goal.AssistPlayerId})
+                    INSERT INTO Goals (Id, MatchReportId, PlayerId, Minute, Period, AddedTimeMinutes, IsExtraTime, IsPenalty, AssistPlayerId)
+                    VALUES ({goalId}, {reportId}, {goal.PlayerId}, {goal.Minute}, {goal.Period}, {goal.AddedTimeMinutes}, {goal.IsExtraTime}, {goal.IsPenalty}, {goal.AssistPlayerId})
                 ", cancellationToken);
             }
 
@@ -151,8 +152,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
                 var cardTypeInt = ParseCardType(card.Type);
                 var reason = card.Reason ?? string.Empty;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO Cards (Id, MatchReportId, PlayerId, Type, Minute, Reason)
-                    VALUES ({cardId}, {reportId}, {card.PlayerId}, {cardTypeInt}, {card.Minute}, {reason})
+                    INSERT INTO Cards (Id, MatchReportId, PlayerId, Type, Minute, Period, AddedTimeMinutes, Reason)
+                    VALUES ({cardId}, {reportId}, {card.PlayerId}, {cardTypeInt}, {card.Minute}, {card.Period}, {card.AddedTimeMinutes}, {reason})
                 ", cancellationToken);
             }
 
@@ -163,8 +164,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
                 var severityInt = ParseSeverity(injury.Severity);
                 var description = injury.Description ?? string.Empty;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO Injuries (Id, MatchReportId, PlayerId, Minute, Description, Severity)
-                    VALUES ({injuryId}, {reportId}, {injury.PlayerId}, {injury.Minute}, {description}, {severityInt})
+                    INSERT INTO Injuries (Id, MatchReportId, PlayerId, Minute, Period, AddedTimeMinutes, Description, Severity)
+                    VALUES ({injuryId}, {reportId}, {injury.PlayerId}, {injury.Minute}, {injury.Period}, {injury.AddedTimeMinutes}, {description}, {severityInt})
                 ", cancellationToken);
             }
 
@@ -298,6 +299,33 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
             ["Attendance"] =
             [
                 $"Attendance can only be recorded for invited lineup players. Invalid player IDs: {joinedPlayerIds}."
+            ]
+        });
+    }
+
+    private static void ValidateGoalTimeline(List<CreateGoalRequest>? goals)
+    {
+        if (goals == null || goals.Count == 0)
+        {
+            return;
+        }
+
+        var invalidGoalIndexes = goals
+            .Select((goal, index) => new { goal, index })
+            .Where(item => item.goal.Minute < 0 || string.IsNullOrWhiteSpace(item.goal.Period))
+            .Select(item => item.index + 1)
+            .ToList();
+
+        if (invalidGoalIndexes.Count == 0)
+        {
+            return;
+        }
+
+        throw new ValidationException(new Dictionary<string, string[]>
+        {
+            ["Report.Goals"] =
+            [
+                $"Goal events require a valid minute and period. Invalid goal entries: {string.Join(", ", invalidGoalIndexes)}."
             ]
         });
     }

@@ -1,4 +1,5 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { Settings } from 'lucide-react';
 import { Match } from '@/types';
 import { Routes } from '@utils/routes';
 
@@ -19,6 +20,7 @@ export default function MatchesListContent({
   getAgeGroupId,
   showTeamInfo = false
 }: MatchesListContentProps) {
+  const navigate = useNavigate();
   
   const sortedMatches = [...matches].sort((a, b) => b.date.getTime() - a.date.getTime());
   const upcomingMatches = sortedMatches.filter(m => m.date > new Date());
@@ -50,6 +52,11 @@ export default function MatchesListContent({
     return Routes.matchReport(clubId, matchAgeGroupId, match.teamId, match.id);
   };
 
+  const getMatchEditLink = (match: Match) => {
+    const matchAgeGroupId = getAgeGroupId ? getAgeGroupId(match.teamId) : (ageGroupId || '');
+    return Routes.matchEdit(clubId, matchAgeGroupId, match.teamId, match.id);
+  };
+
   const MatchRow = ({ match }: { match: Match }) => {
     const result = getMatchResult(match);
     const ourScore = match.isHome ? match.score?.home : match.score?.away;
@@ -58,9 +65,17 @@ export default function MatchesListContent({
     const teamName = showTeamInfo && getTeamName ? getTeamName(match.teamId) : '';
 
     return (
-      <Link
-        to={getMatchLink(match)}
-        className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b"
+      <div
+        role="link"
+        tabIndex={0}
+        onClick={() => navigate(getMatchLink(match))}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigate(getMatchLink(match));
+          }
+        }}
+        className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b cursor-pointer"
       >
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-4">
           {/* Date & Competition - stacked on mobile, inline on desktop */}
@@ -108,12 +123,12 @@ export default function MatchesListContent({
             {/* Score / VS */}
             <div className="flex-shrink-0 flex items-center justify-center w-[70px] md:w-[80px]">
               {isPast && match.score ? (
-                <div className="text-center">
+                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                   <div className="text-xl md:text-lg font-bold text-gray-900 dark:text-white leading-none">
                     {ourScore} - {theirScore}
                   </div>
                   {result && (
-                    <div className={`inline-block px-2 py-0.5 rounded text-xs font-semibold mt-1 ${getResultColor(result)}`}>
+                    <div className={`inline-block px-1.5 py-0.5 rounded text-[10px] md:text-xs font-semibold ${getResultColor(result)}`}>
                       {result}
                     </div>
                   )}
@@ -143,8 +158,21 @@ export default function MatchesListContent({
           </div>
 
           {/* Location - mobile only as card footer */}
-          <div className="text-xs text-gray-600 dark:text-gray-400 text-center md:hidden border-t border-gray-100 dark:border-gray-700 pt-2 -mx-4 px-4 -mb-1">
+          <div className="text-xs text-gray-600 dark:text-gray-400 text-center md:hidden border-t border-gray-100 dark:border-gray-700 pt-2 -mx-4 px-4">
             📍 {match.location}
+          </div>
+
+          {/* Mobile actions */}
+          <div className="md:hidden -mx-4 px-4 -mb-1 border-t border-gray-100 dark:border-gray-700 pt-2 flex justify-end">
+            <Link
+              to={getMatchEditLink(match)}
+              onClick={(e) => e.stopPropagation()}
+              className="p-2 bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 rounded-lg transition-colors"
+              title="Settings"
+              aria-label="Edit match settings"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
           </div>
 
           {/* Desktop-only: Team name */}
@@ -171,7 +199,16 @@ export default function MatchesListContent({
           </div>
 
           {/* Status/Actions */}
-          <div className="hidden md:flex md:order-6 md:flex-shrink-0 items-center gap-2 md:w-[100px] justify-end">
+          <div className="hidden md:flex md:order-6 md:flex-shrink-0 items-center gap-2 md:w-[140px] justify-end">
+            <Link
+              to={getMatchEditLink(match)}
+              onClick={(e) => e.stopPropagation()}
+              className="p-1.5 bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 rounded-lg transition-colors"
+              title="Settings"
+              aria-label="Edit match settings"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
             {match.report?.playerOfTheMatch && (
               <div className="text-xs text-yellow-600 dark:text-yellow-400" title="Has Player of the Match">
                 ⭐
@@ -184,7 +221,7 @@ export default function MatchesListContent({
             )}
           </div>
         </div>
-      </Link>
+      </div>
     );
   };
 

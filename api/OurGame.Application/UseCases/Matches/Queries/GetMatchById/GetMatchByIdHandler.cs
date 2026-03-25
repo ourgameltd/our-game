@@ -147,6 +147,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             SELECT 
                 ms.Id,
                 ms.Minute,
+                ms.Period,
+                ms.AddedTimeMinutes,
                 ms.PlayerOutId,
                 pOut.FirstName + ' ' + pOut.LastName AS PlayerOutName,
                 ms.PlayerInId,
@@ -155,7 +157,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             INNER JOIN Players pOut ON ms.PlayerOutId = pOut.Id
             INNER JOIN Players pIn ON ms.PlayerInId = pIn.Id
             WHERE ms.MatchId = {0}
-            ORDER BY ms.Minute";
+            ORDER BY COALESCE(ms.Minute, 999), COALESCE(ms.AddedTimeMinutes, 0)";
 
         var substitutions = await _db.Database
             .SqlQueryRaw<SubstitutionRaw>(subsSql, query.MatchId)
@@ -212,13 +214,17 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     g.PlayerId,
                     p.FirstName + ' ' + p.LastName AS ScorerName,
                     g.Minute,
+                    g.Period,
+                    g.AddedTimeMinutes,
+                    g.IsExtraTime,
+                    g.IsPenalty,
                     g.AssistPlayerId,
                     ap.FirstName + ' ' + ap.LastName AS AssistPlayerName
                 FROM Goals g
                 INNER JOIN Players p ON g.PlayerId = p.Id
                 LEFT JOIN Players ap ON g.AssistPlayerId = ap.Id
                 WHERE g.MatchReportId = {0}
-                ORDER BY g.Minute";
+                ORDER BY g.Minute, COALESCE(g.AddedTimeMinutes, 0)";
 
             goals = await _db.Database
                 .SqlQueryRaw<GoalRaw>(goalsSql, report.Id)
@@ -231,11 +237,13 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     p.FirstName + ' ' + p.LastName AS PlayerName,
                     c.Type,
                     c.Minute,
+                    c.Period,
+                    c.AddedTimeMinutes,
                     c.Reason
                 FROM Cards c
                 INNER JOIN Players p ON c.PlayerId = p.Id
                 WHERE c.MatchReportId = {0}
-                ORDER BY c.Minute";
+                ORDER BY COALESCE(c.Minute, 999), COALESCE(c.AddedTimeMinutes, 0)";
 
             cards = await _db.Database
                 .SqlQueryRaw<CardRaw>(cardsSql, report.Id)
@@ -247,12 +255,14 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     i.PlayerId,
                     p.FirstName + ' ' + p.LastName AS PlayerName,
                     i.Minute,
+                    i.Period,
+                    i.AddedTimeMinutes,
                     i.Description,
                     i.Severity
                 FROM Injuries i
                 INNER JOIN Players p ON i.PlayerId = p.Id
                 WHERE i.MatchReportId = {0}
-                ORDER BY i.Minute";
+                ORDER BY COALESCE(i.Minute, 999), COALESCE(i.AddedTimeMinutes, 0)";
 
             injuries = await _db.Database
                 .SqlQueryRaw<InjuryRaw>(injuriesSql, report.Id)
@@ -341,6 +351,10 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     PlayerId = g.PlayerId,
                     ScorerName = g.ScorerName ?? string.Empty,
                     Minute = g.Minute,
+                    Period = g.Period ?? string.Empty,
+                    AddedTimeMinutes = g.AddedTimeMinutes,
+                    IsExtraTime = g.IsExtraTime,
+                    IsPenalty = g.IsPenalty,
                     AssistPlayerId = g.AssistPlayerId,
                     AssistPlayerName = g.AssistPlayerName
                 }).ToList(),
@@ -351,6 +365,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     PlayerName = c.PlayerName ?? string.Empty,
                     Type = MapCardTypeToString(c.Type),
                     Minute = c.Minute,
+                    Period = c.Period,
+                    AddedTimeMinutes = c.AddedTimeMinutes,
                     Reason = c.Reason
                 }).ToList(),
                 Injuries = injuries.Select(i => new InjuryDetailDto
@@ -359,6 +375,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     PlayerId = i.PlayerId,
                     PlayerName = i.PlayerName ?? string.Empty,
                     Minute = i.Minute,
+                    Period = i.Period,
+                    AddedTimeMinutes = i.AddedTimeMinutes,
                     Description = i.Description,
                     Severity = MapSeverityToString(i.Severity)
                 }).ToList(),
@@ -383,6 +401,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             {
                 Id = s.Id,
                 Minute = s.Minute,
+                Period = s.Period,
+                AddedTimeMinutes = s.AddedTimeMinutes,
                 PlayerOutId = s.PlayerOutId,
                 PlayerOutName = s.PlayerOutName ?? string.Empty,
                 PlayerInId = s.PlayerInId,
@@ -516,7 +536,9 @@ public class MatchCoachRaw
 public class SubstitutionRaw
 {
     public Guid Id { get; set; }
-    public int Minute { get; set; }
+    public int? Minute { get; set; }
+    public string? Period { get; set; }
+    public int? AddedTimeMinutes { get; set; }
     public Guid PlayerOutId { get; set; }
     public string? PlayerOutName { get; set; }
     public Guid PlayerInId { get; set; }
@@ -541,6 +563,10 @@ public class GoalRaw
     public Guid PlayerId { get; set; }
     public string? ScorerName { get; set; }
     public int Minute { get; set; }
+    public string? Period { get; set; }
+    public int? AddedTimeMinutes { get; set; }
+    public bool IsExtraTime { get; set; }
+    public bool IsPenalty { get; set; }
     public Guid? AssistPlayerId { get; set; }
     public string? AssistPlayerName { get; set; }
 }
@@ -551,7 +577,9 @@ public class CardRaw
     public Guid PlayerId { get; set; }
     public string? PlayerName { get; set; }
     public int Type { get; set; }
-    public int Minute { get; set; }
+    public int? Minute { get; set; }
+    public string? Period { get; set; }
+    public int? AddedTimeMinutes { get; set; }
     public string? Reason { get; set; }
 }
 
@@ -560,7 +588,9 @@ public class InjuryRaw
     public Guid Id { get; set; }
     public Guid PlayerId { get; set; }
     public string? PlayerName { get; set; }
-    public int Minute { get; set; }
+    public int? Minute { get; set; }
+    public string? Period { get; set; }
+    public int? AddedTimeMinutes { get; set; }
     public string? Description { get; set; }
     public int Severity { get; set; }
 }

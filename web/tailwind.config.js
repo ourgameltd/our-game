@@ -1,5 +1,7 @@
+import withMT from '@material-tailwind/react/utils/withMT.js';
+
 /** @type {import('tailwindcss').Config} */
-export default {
+export default withMT({
   darkMode: 'class',
   content: [
     "./index.html",
@@ -44,6 +46,7 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        mono: ['ui-monospace', 'SFMono-Regular', 'Menlo', 'Monaco', 'Consolas', 'Liberation Mono', 'Courier New', 'monospace'],
       },
       boxShadow: {
         'card': '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
@@ -54,4 +57,4 @@ export default {
   plugins: [
     require('@tailwindcss/typography'),
   ],
-}
+})

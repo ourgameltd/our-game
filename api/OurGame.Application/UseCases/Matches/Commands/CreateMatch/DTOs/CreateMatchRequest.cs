@@ -148,6 +148,16 @@ public record CreateGoalRequest
     [Required]
     public int Minute { get; init; }
 
+    [Required]
+    [StringLength(20)]
+    public string Period { get; init; } = string.Empty;
+
+    public int? AddedTimeMinutes { get; init; }
+
+    public bool IsExtraTime { get; init; }
+
+    public bool IsPenalty { get; init; }
+
     public Guid? AssistPlayerId { get; init; }
 }
 
@@ -166,8 +176,12 @@ public record CreateCardRequest
     [StringLength(20)]
     public string Type { get; init; } = "yellow";
 
-    [Required]
-    public int Minute { get; init; }
+    public int? Minute { get; init; }
+
+    [StringLength(20)]
+    public string? Period { get; init; }
+
+    public int? AddedTimeMinutes { get; init; }
 
     [StringLength(500)]
     public string? Reason { get; init; }
@@ -181,8 +195,12 @@ public record CreateInjuryRequest
     [Required]
     public Guid PlayerId { get; init; }
 
-    [Required]
-    public int Minute { get; init; }
+    public int? Minute { get; init; }
+
+    [StringLength(20)]
+    public string? Period { get; init; }
+
+    public int? AddedTimeMinutes { get; init; }
 
     [StringLength(1000)]
     public string? Description { get; init; }
@@ -211,8 +229,12 @@ public record CreatePerformanceRatingRequest
 /// </summary>
 public record CreateMatchSubstitutionRequest
 {
-    [Required]
-    public int Minute { get; init; }
+    public int? Minute { get; init; }
+
+    [StringLength(20)]
+    public string? Period { get; init; }
+
+    public int? AddedTimeMinutes { get; init; }
 
     [Required]
     public Guid PlayerOutId { get; init; }

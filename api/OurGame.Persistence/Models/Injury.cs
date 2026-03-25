@@ -14,7 +14,11 @@ public partial class Injury
 
     public Guid PlayerId { get; set; }
 
-    public int Minute { get; set; }
+    public int? Minute { get; set; }
+
+    public string Period { get; set; }
+
+    public int? AddedTimeMinutes { get; set; }
 
     public string Description { get; set; }
 

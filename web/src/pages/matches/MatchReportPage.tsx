@@ -188,94 +188,15 @@ export default function MatchReportPage() {
           )}
         </div>
 
-        {/* Coaching Staff */}
-        {match.coaches.length > 0 && (
-          <div className="card mt-4">
-            <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white flex items-center gap-2">
-              <span>👨‍🏫</span> Coaching Staff
-            </h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {match.coaches.map((coach) => (
-                <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  {coach.photo ? (
-                    <img 
-                      src={coach.photo} 
-                      alt={`${coach.firstName} ${coach.lastName}`}
-                      className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                      {coach.firstName[0]}{coach.lastName[0]}
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
-                      {coach.firstName} {coach.lastName}
-                    </p>
-                    <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                      {coachRoleDisplay[coach.role] || coach.role}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        
         {/* Match Report Content (only for past matches) */}
         {!isUpcoming && match.report && (
           <>
-            {/* Player of the Match */}
-            {match.report.playerOfMatchId && match.report.playerOfMatchName && (
-              <div className="card mt-4 mb-4 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-2xl">⭐</span>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Player of the Match</h2>
-                </div>
-                <div className="flex items-center gap-4 mt-4">
-                  {match.report.playerOfMatchPhoto ? (
-                    <img 
-                      src={match.report.playerOfMatchPhoto} 
-                      alt={match.report.playerOfMatchName}
-                      className="w-16 h-16 rounded-full object-cover border-2 border-amber-400"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-full flex items-center justify-center text-white text-xl font-bold border-2 border-amber-400">
-                      {match.report.playerOfMatchName.split(' ').map(n => n[0]).join('')}
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-lg font-medium text-gray-900 dark:text-white">
-                      {match.report.playerOfMatchName}
-                    </p>
-                    {match.report.performanceRatings?.find(r => r.playerId === match.report!.playerOfMatchId) && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Rating: {match.report.performanceRatings.find(r => r.playerId === match.report!.playerOfMatchId)?.rating?.toFixed(1)}/10
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Lineup with Ratings */}
             {match.lineup && (
               <div className="grid md:grid-cols-2 gap-4">
                 <div className="card mb-4">
-                  <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Team Sheet & Player Ratings</h2>
-                  
-                  {/* Captain Display */}
-                  {match.report.captainId && match.report.captainName && (
-                    <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg">
-                      <div className="flex items-center gap-2">
-                        <span className="text-amber-500 text-lg">©</span>
-                        <span className="text-sm font-medium text-amber-800 dark:text-amber-300">
-                          Captain: {match.report.captainName}
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                  
+                  <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Team Sheet</h2>
+  
                   {/* Starting XI */}
                   <div className="mb-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Starting XI</h3>
@@ -291,13 +212,8 @@ export default function MatchReportPage() {
                         return (
                           <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${isCaptain ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700' : 'bg-green-50 dark:bg-green-900/20'}`}>
                             <div className="flex items-center gap-3 flex-1">
-                              {player.squadNumber !== undefined && (
-                                <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
-                                  {player.squadNumber}
-                                </span>
-                              )}
                               {player.position && (
-                                <span className="px-2 py-1 bg-green-600 text-white rounded text-xs font-semibold min-w-[3rem] text-center">
+                                <span className="px-1.5 py-0.5 bg-green-600 text-white rounded text-[11px] font-semibold min-w-[2.25rem] text-center leading-none">
                                   {player.position}
                                 </span>
                               )}
@@ -360,17 +276,7 @@ export default function MatchReportPage() {
                               </div>
                             </div>
                             {rating && rating.rating !== null && rating.rating !== undefined && (
-                              <div className="flex items-center gap-2 ml-2">
-                                <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                  <div 
-                                    className={`h-full ${
-                                      rating.rating >= 8 ? 'bg-green-500' : 
-                                      rating.rating >= 6 ? 'bg-blue-500' : 
-                                      'bg-amber-500'
-                                    }`}
-                                    style={{ width: `${Number(rating.rating) * 10}%` }}
-                                  />
-                                </div>
+                              <div className="ml-2">
                                 <span className="font-bold text-gray-900 dark:text-white min-w-[2.5rem] text-right text-sm">
                                   {Number(rating.rating).toFixed(1)}
                                 </span>
@@ -397,11 +303,6 @@ export default function MatchReportPage() {
                           return (
                             <div key={index} className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                               <div className="flex items-center gap-3 flex-1">
-                                {player.squadNumber !== undefined && (
-                                  <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
-                                    {player.squadNumber}
-                                  </span>
-                                )}
                                 {player.photo ? (
                                   <img 
                                     src={player.photo} 
@@ -458,17 +359,7 @@ export default function MatchReportPage() {
                                 </div>
                               </div>
                               {rating && rating.rating !== null && rating.rating !== undefined && (
-                                <div className="flex items-center gap-2 ml-2">
-                                  <div className="w-16 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                    <div 
-                                      className={`h-full ${
-                                        rating.rating >= 8 ? 'bg-green-500' : 
-                                        rating.rating >= 6 ? 'bg-blue-500' : 
-                                        'bg-amber-500'
-                                      }`}
-                                      style={{ width: `${Number(rating.rating) * 10}%` }}
-                                    />
-                                  </div>
+                                <div className="ml-2">
                                   <span className="font-bold text-gray-900 dark:text-white min-w-[2.5rem] text-right text-sm">
                                     {Number(rating.rating).toFixed(1)}
                                   </span>
@@ -477,6 +368,39 @@ export default function MatchReportPage() {
                             </div>
                           );
                         })}
+                      </div>
+                    </div>
+                  )}
+
+                  {match.coaches.length > 0 && (
+                    <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+                      <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                        <span>👨‍🏫</span> Coaching Staff
+                      </h3>
+                      <div className="grid md:grid-cols-2 gap-3">
+                        {match.coaches.map((coach) => (
+                          <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                            {coach.photo ? (
+                              <img
+                                src={coach.photo}
+                                alt={`${coach.firstName} ${coach.lastName}`}
+                                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                                {coach.firstName[0]}{coach.lastName[0]}
+                              </div>
+                            )}
+                            <div className="min-w-0 flex-1">
+                              <p className="font-medium text-gray-900 dark:text-white truncate">
+                                {coach.firstName} {coach.lastName}
+                              </p>
+                              <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                                {coachRoleDisplay[coach.role] || coach.role}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
