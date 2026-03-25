@@ -6,8 +6,11 @@ import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { useTeamOverview, useTeamPlayers, useUpdateTeam, useUpdateTeamSquadNumbers, useArchiveTeam, useAgeGroupById } from '@/api/hooks';
 import type { SquadNumberAssignment } from '@/api/client';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function TeamSettingsPage() {
+  usePageTitle(['Team Settings']);
+
   const { clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
   

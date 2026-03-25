@@ -4,6 +4,7 @@ import { useClubById, useUpdateClub, UpdateClubRequest } from '@/api';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Skeleton for the page title area
@@ -62,6 +63,8 @@ function HistoryCardSkeleton() {
 }
 
 export default function ClubSettingsPage() {
+  usePageTitle(['Club Settings']);
+
   const { clubId } = useParams();
   const navigate = useNavigate();
 

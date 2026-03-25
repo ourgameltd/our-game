@@ -9,6 +9,7 @@ import { useRequiredParams } from '@utils/routeParams';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
 import type { Coach } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton component for coach card loading state
 function CoachCardSkeleton() {
@@ -64,6 +65,8 @@ function mapApiCoachToCoach(apiCoach: ClubCoachDto): Coach {
 }
 
 export default function ClubCoachesPage() {
+  usePageTitle(['Club Coaches']);
+
   // Validate route parameters
   const params = useRequiredParams(['clubId'], { returnNullOnError: true });
   const clubId = params.clubId;

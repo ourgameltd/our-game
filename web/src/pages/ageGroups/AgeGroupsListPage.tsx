@@ -5,6 +5,7 @@ import PageTitle from '../../components/common/PageTitle';
 import AgeGroupListCard from '../../components/ageGroup/AgeGroupListCard';
 import { Routes } from '@utils/routes';
 import { Club, AgeGroup } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Maps AgeGroupListDto from API to AgeGroup type used by components
@@ -89,6 +90,9 @@ function PageTitleSkeleton() {
 
 const AgeGroupsListPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
+  
+  usePageTitle(['Club', 'Age Groups']);
+  
   const [showArchived, setShowArchived] = useState(false);
   
   // Fetch club from API

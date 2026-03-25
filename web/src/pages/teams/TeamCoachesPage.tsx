@@ -7,8 +7,11 @@ import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { mapUiRoleToApi } from '@/api/mappers';
 import { useRequiredParams } from '@utils/routeParams';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function TeamCoachesPage() {
+  usePageTitle(['Team Coaches']);
+
   // Extract and validate route parameters
   let clubId: string | undefined = undefined;
   let ageGroupId: string | undefined = undefined;

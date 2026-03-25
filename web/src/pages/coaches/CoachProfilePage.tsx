@@ -3,6 +3,7 @@ import { useCoach } from '@/api/hooks';
 import { Routes } from '@utils/routes';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import PageTitle from '@components/common/PageTitle';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -99,6 +100,16 @@ export default function CoachProfilePage() {
   const contextTeamName = teamId && coach
     ? coach.teams?.find(t => t.teamId === teamId)?.teamName ?? 'Team'
     : null;
+
+  usePageTitle(
+    [
+      'Club',
+      ageGroupId ? (contextAgeGroupName ?? 'Age Group') : undefined,
+      teamId ? (contextTeamName ?? 'Team') : undefined,
+      coach ? `${coach.firstName} ${coach.lastName}` : 'Coach Profile',
+    ],
+    !!coach,
+  );
 
   // Determine back link based on context (team, age group, or club)
   let backLink: string;

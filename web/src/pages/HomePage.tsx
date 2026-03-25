@@ -2,8 +2,11 @@ import { Link } from 'react-router-dom';
 import Logo from '../components/common/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useCurrentUser } from '@/api/hooks';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function HomePage() {
+  usePageTitle(['Home']);
+
   // Get auth state
   const { isAuthenticated, isLoading: isAuthLoading } = useAuth();
   

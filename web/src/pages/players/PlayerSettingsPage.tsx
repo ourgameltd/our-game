@@ -6,6 +6,7 @@ import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
 import { Plus } from 'lucide-react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -84,6 +85,8 @@ function EmergencyContactsSkeleton() {
 
 
 export default function PlayerSettingsPage() {
+  usePageTitle(['Player Settings']);
+
   const { clubId, ageGroupId, playerId } = useParams();
   const navigate = useNavigate();
   const isNewPlayer = playerId === 'new';

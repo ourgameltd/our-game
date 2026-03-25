@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Plus, AlertCircle } from 'lucide-react';
 import { useState, useMemo } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { 
   useTeamOverview, 
   useAgeGroupPlayers, 
@@ -17,6 +18,8 @@ import { Player, PlayerAttributes } from '@/types';
 import { useRequiredParams } from '@utils/routeParams';
 
 export default function TeamPlayersPage() {
+  usePageTitle(['Team Players']);
+
   const [showArchived, setShowArchived] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
 

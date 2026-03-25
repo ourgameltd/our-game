@@ -5,6 +5,7 @@ import TrainingSessionsListContent from '@/components/training/TrainingSessionsL
 import { useTeamTrainingSessions } from '@/api/hooks';
 import { TeamTrainingSessionDto } from '@/api/client';
 import { TrainingSession } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Helper function to map API DTO to UI model
 const mapApiSessionToUiSession = (dto: TeamTrainingSessionDto): TrainingSession => ({
@@ -26,6 +27,8 @@ const mapApiSessionToUiSession = (dto: TeamTrainingSessionDto): TrainingSession 
 });
 
 export default function TrainingSessionsListPage() {
+  usePageTitle(['Training Sessions List']);
+
   const { clubId, ageGroupId, teamId } = useParams();
   
   const { data, isLoading, error } = useTeamTrainingSessions(teamId);

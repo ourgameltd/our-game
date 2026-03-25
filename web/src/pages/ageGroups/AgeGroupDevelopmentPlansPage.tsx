@@ -8,6 +8,7 @@ import DevelopmentPlanTableRow from '@components/player/DevelopmentPlanTableRow'
 import { Routes } from '@utils/routes';
 import { Filter, Target, AlertCircle } from 'lucide-react';
 import type { DevelopmentPlan, Player, PlayerPosition } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // --- Skeleton components ---
 
@@ -131,6 +132,8 @@ function mapApiPlayerToPlayer(dto: AgeGroupDevelopmentPlanPlayerDto): Player {
 // --- Page component ---
 
 export default function AgeGroupDevelopmentPlansPage() {
+  usePageTitle(['Age Group Development Plans']);
+
   const { clubId, ageGroupId } = useParams<{ clubId: string; ageGroupId: string }>();
   const [sortBy, setSortBy] = useState<'date' | 'progress'>('date');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed' | 'archived'>('all');

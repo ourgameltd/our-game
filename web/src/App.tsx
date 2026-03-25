@@ -4,6 +4,8 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import { UserPreferencesProvider } from '@/contexts/UserPreferencesContext';
 import { NavigationProvider, useNavigation } from '@/contexts/NavigationContext';
 import { AuthProvider } from '@/contexts/AuthContext';
+import { PageTitleProvider, usePageTitleFallback } from '@/contexts/PageTitleContext';
+import { getRouteFallbackTitle } from '@/utils/pageTitles';
 import HomePage from '@pages/HomePage';
 import LoginPage from '@pages/auth/LoginPage';
 import RegisterPage from '@pages/auth/RegisterPage';
@@ -73,6 +75,8 @@ function AppContent() {
   const location = useLocation();
   const { isDesktopOpen } = useNavigation();
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
+
+  usePageTitleFallback(getRouteFallbackTitle(location.pathname));
   
   useEffect(() => {
     const handleResize = () => {
@@ -273,12 +277,14 @@ function App() {
       <UserPreferencesProvider>
         <NavigationProvider>
           <AuthProvider>
-            <Router
-              basename={import.meta.env.BASE_URL}
-              future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
-            >
-              <AppContent />
-            </Router>
+            <PageTitleProvider>
+              <Router
+                basename={import.meta.env.BASE_URL}
+                future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
+              >
+                <AppContent />
+              </Router>
+            </PageTitleProvider>
           </AuthProvider>
         </NavigationProvider>
       </UserPreferencesProvider>

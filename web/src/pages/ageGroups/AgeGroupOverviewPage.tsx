@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { apiClient } from '@/api';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import type {
   AgeGroupDetailDto,
   AgeGroupStatisticsDto,
@@ -39,6 +40,8 @@ const AgeGroupOverviewPage: React.FC = () => {
   const [stats, setStats] = useState<AgeGroupStatisticsDto | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
   const [statsError, setStatsError] = useState<string | null>(null);
+
+  usePageTitle(['Club', ageGroup?.name ?? 'Age Group', 'Overview']);
 
   useEffect(() => {
     if (!clubId || !ageGroupId) return;

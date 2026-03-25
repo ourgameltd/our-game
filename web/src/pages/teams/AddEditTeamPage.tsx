@@ -6,11 +6,14 @@ import { CreateTeamRequest, UpdateTeamRequest } from '@/api/client';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@utils/routes';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const AddEditTeamPage: React.FC = () => {
   const { clubId, ageGroupId, teamId } = useParams<{ clubId: string; ageGroupId: string; teamId?: string }>();
   const navigate = useNavigate();
   const isEditing = !!teamId;
+
+  usePageTitle(['Club', 'Age Group', isEditing ? 'Edit Team' : 'Add Edit Team']);
 
   // API data hooks
   const { data: club, isLoading: clubLoading, error: clubError } = useClubById(clubId);

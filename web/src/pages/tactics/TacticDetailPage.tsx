@@ -9,6 +9,7 @@ import PrinciplePanel from '@/components/tactics/PrinciplePanel';
 import PageTitle from '@/components/common/PageTitle';
 import { Tactic, TacticPrinciple, TacticalPositionOverride, PlayerDirection, FormationScope, SquadSize } from '@/types';
 import type { ResolvedPosition } from '@/data/tactics';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Map TacticDetailDto from API to Tactic shape expected by UI components
@@ -69,6 +70,8 @@ function mapResolvedPositions(dtos: ResolvedPositionDto[]): ResolvedPosition[] {
 }
 
 export default function TacticDetailPage() {
+  usePageTitle(['Tactic Detail']);
+
   const { clubId, ageGroupId, teamId, tacticId } = useParams();
   const navigate = useNavigate();
   const [selectedPositionId, setSelectedPositionId] = useState<string | null>(null);

@@ -6,6 +6,7 @@ import { teamLevels, squadSizes, type AgeGroupLevel } from '@/data/referenceData
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@utils/routes';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const AddEditAgeGroupPage: React.FC = () => {
   const { clubId, ageGroupId } = useParams<{ clubId: string; ageGroupId?: string }>();
@@ -26,6 +27,8 @@ const AddEditAgeGroupPage: React.FC = () => {
 
   // Editing mode detection
   const isEditing = Boolean(ageGroupId);
+
+  usePageTitle(['Club', isEditing ? 'Edit Age Group' : 'Add Edit Age Group']);
 
   const [formData, setFormData] = useState({
     name: '',

@@ -9,8 +9,11 @@ import { drillCategories, getDrillCategoryColors } from '@/constants/referenceDa
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { Drill, SessionDrill } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function AddEditTrainingSessionPage() {
+  usePageTitle(['Add Edit Training Session']);
+
   const { clubId, ageGroupId, teamId, sessionId } = useParams();
   const navigate = useNavigate();
   const isEditing = sessionId && sessionId !== 'new';

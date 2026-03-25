@@ -6,8 +6,11 @@ import PageTitle from '@components/common/PageTitle';
 import ReportCardListCard from '@components/player/ReportCardListCard';
 import ReportCardTableRow from '@components/player/ReportCardTableRow';
 import { Filter, FileText, Loader2 } from 'lucide-react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function PlayerReportCardsPage() {
+  usePageTitle(['Player Report Cards']);
+
   const { clubId, playerId, ageGroupId, teamId } = useParams();
   const [sortBy, setSortBy] = useState<'date'>('date');
   

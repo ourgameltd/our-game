@@ -7,6 +7,7 @@ import type { ClubPlayerDto, ClubTeamDto, ClubDetailDto } from '@/api';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import type { Player, PlayerPosition, PlayerAttributes } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton component for player card loading state
 function PlayerCardSkeleton() {
@@ -77,6 +78,8 @@ function mapApiPlayerToPlayer(apiPlayer: ClubPlayerDto): Player {
 import PlayerCard from '@components/player/PlayerCard';
 
 export default function ClubPlayersPage() {
+  usePageTitle(['Club Players']);
+
   // Validate route parameters
   const params = useRequiredParams(['clubId'], { returnNullOnError: true });
   const clubId = params.clubId;

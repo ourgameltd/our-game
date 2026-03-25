@@ -8,6 +8,7 @@ import NeedsSupportCard from '@components/players/NeedsSupportCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { Match } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function TeamOverviewPage() {
   const { clubId, ageGroupId, teamId } = useParams();
@@ -17,6 +18,8 @@ export default function TeamOverviewPage() {
   const team = overview?.team ?? null;
   const stats = overview?.statistics ?? null;
   const upcomingTrainingSessions = overview?.upcomingTrainingSessions ?? [];
+
+  usePageTitle(['Club', 'Age Group', team?.name ?? 'Team', 'Overview'], !!team);
 
   const mapMatchSummary = (matches: TeamMatchSummaryDto[], status: Match['status']): Match[] => {
     return matches.map(match => ({

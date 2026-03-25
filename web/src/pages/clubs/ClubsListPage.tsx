@@ -3,8 +3,11 @@ import PageTitle from '@components/common/PageTitle';
 import { Routes, areAllParamsValid } from '@utils/routes';
 import { useMyTeams, useMyChildren, useCurrentUser, useMyClubs, usePlayer } from '@/api/hooks';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function ClubsListPage() {
+  usePageTitle(['Clubs List']);
+
   // Get authenticated user information
   const { isLoading: authLoading } = useAuth();
 

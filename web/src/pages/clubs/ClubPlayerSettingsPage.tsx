@@ -5,8 +5,11 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function ClubPlayerSettingsPage() {
+  usePageTitle(['Club Player Settings']);
+
   const { clubId, playerId } = useParams();
   const navigate = useNavigate();
   const isNewPlayer = playerId === 'new';

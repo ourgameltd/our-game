@@ -4,8 +4,11 @@ import PageTitle from '@components/common/PageTitle';
 import ImageAlbum from '@components/player/ImageAlbum';
 import { PlayerImage } from '@/types';
 import { useState, useEffect } from 'react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function PlayerAlbumPage() {
+  usePageTitle(['Player Album']);
+
   const { playerId } = useParams();
   const { data: album, isLoading, error } = usePlayerAlbum(playerId);
   const [albumImages, setAlbumImages] = useState<PlayerImage[]>([]);

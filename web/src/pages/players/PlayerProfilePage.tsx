@@ -6,6 +6,7 @@ import { useNavigation } from '@/contexts/NavigationContext';
 import PageTitle from '@components/common/PageTitle';
 import RecentPerformanceCard from '@components/player/RecentPerformanceCard';
 import MatchesCard from '@components/matches/MatchesCard';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function PlayerProfilePage() {
   const { clubId, playerId, ageGroupId, teamId } = useParams();
@@ -14,6 +15,16 @@ export default function PlayerProfilePage() {
   const { data: player, isLoading: playerLoading, error: playerError } = usePlayer(playerId);
   const { data: recentPerformances, isLoading: performancesLoading } = usePlayerRecentPerformances(playerId, 5);
   const { data: upcomingMatches, isLoading: matchesLoading } = usePlayerUpcomingMatches(playerId, 3);
+
+  usePageTitle(
+    [
+      player?.clubName ?? 'Club',
+      ageGroupId ? (player?.ageGroupName ?? 'Age Group') : undefined,
+      teamId ? (player?.teamName ?? 'Team') : undefined,
+      player ? `${player.firstName} ${player.lastName}` : 'Player Profile',
+    ],
+    !!player,
+  );
 
   // Update navigation context with entity names
   useEffect(() => {

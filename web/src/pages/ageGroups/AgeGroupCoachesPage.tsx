@@ -7,8 +7,11 @@ import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { useRequiredParams } from '@utils/routeParams';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function AgeGroupCoachesPage() {
+  usePageTitle(['Age Group Coaches']);
+
   const params = useRequiredParams(['clubId', 'ageGroupId'], { returnNullOnError: true });
   const clubId = params.clubId;
   const ageGroupId = params.ageGroupId;

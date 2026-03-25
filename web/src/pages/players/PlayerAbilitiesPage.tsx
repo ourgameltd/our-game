@@ -7,12 +7,15 @@ import { groupAttributes, getQualityColor } from '@utils/attributeHelpers';
 import { PlayerAttributes } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PolarAngleAxis, PolarGrid, PolarRadiusAxis, RadarChart, Radar, Legend
 } from 'recharts';
 
 export default function PlayerAbilitiesPage() {
+  usePageTitle(['Player Abilities']);
+
   const { playerId } = useParams();
   const { data: abilities, isLoading: loading, error, refetch } = usePlayerAbilities(playerId);
   const { mutate: createEvaluation, isSubmitting } = useCreatePlayerAbilityEvaluation(playerId!);

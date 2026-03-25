@@ -4,6 +4,7 @@ import { useClubById, useAgeGroupById, useClubMatches, ClubMatchDto } from '@/ap
 import type { Match } from '@/types';
 import PageTitle from '@components/common/PageTitle';
 import MatchesListContent from '@/components/matches/MatchesListContent';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Maps a ClubMatchDto from the API to the Match type used by MatchesListContent
@@ -71,6 +72,8 @@ function MatchesListSkeleton() {
 }
 
 export default function AgeGroupMatchesPage() {
+  usePageTitle(['Age Group Matches']);
+
   const { clubId, ageGroupId } = useParams();
   
   // Fetch club details from API

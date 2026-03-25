@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../../components/common/Logo';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function RegisterPage() {
+  usePageTitle(['Register']);
+
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: '',

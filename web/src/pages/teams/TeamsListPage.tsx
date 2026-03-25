@@ -4,8 +4,11 @@ import TeamListCard from '@components/team/TeamListCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { Team, Club, AgeGroup, SquadSize } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function TeamsListPage() {
+  usePageTitle(['Teams List']);
+
   const { clubId, ageGroupId } = useParams();
   const navigate = useNavigate();
   

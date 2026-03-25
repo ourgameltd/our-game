@@ -5,8 +5,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentUser, UserProfile } from '@/api/users';
 import { useUpdateCurrentUser, UpdateCurrentUserRequest } from '@/api';
 import PageTitle from '@components/common/PageTitle';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function ProfilePage() {
+  usePageTitle(['Profile']);
+
   const { theme, setTheme } = useTheme();
   const { isAuthenticated, isLoading } = useAuth();
   

@@ -5,8 +5,11 @@ import { useAgeGroup } from '@/api/hooks';
 import { mapClubTrainingSessions } from '@/api/mappers';
 import PageTitle from '@components/common/PageTitle';
 import TrainingSessionsListContent from '@/components/training/TrainingSessionsListContent';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function AgeGroupTrainingSessionsPage() {
+  usePageTitle(['Age Group Training Sessions']);
+
   const { clubId, ageGroupId } = useParams();
   
   const { data: club, isLoading: clubLoading, error: clubError } = useClub(clubId);

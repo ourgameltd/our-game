@@ -8,6 +8,7 @@ import DevelopmentPlanTableRow from '@components/player/DevelopmentPlanTableRow'
 import { Routes } from '@utils/routes';
 import { Filter, Target, AlertCircle } from 'lucide-react';
 import type { DevelopmentPlan, Player, PlayerPosition } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Skeleton component for development plan card loading state (mobile)
@@ -142,6 +143,8 @@ function mapApiPlayerToPlayer(dto: ClubDevelopmentPlanPlayerDto): Player {
 }
 
 export default function ClubDevelopmentPlansPage() {
+  usePageTitle(['Club Development Plans']);
+
   const { clubId } = useParams<{ clubId: string }>();
   const [sortBy, setSortBy] = useState<'date' | 'progress'>('date');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed' | 'archived'>('all');

@@ -4,8 +4,11 @@ import { apiClient } from '@api/client';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function AddEditReportCardPage() {
+  usePageTitle(['Add Edit Report Card']);
+
   const { clubId, playerId, ageGroupId, teamId, reportId } = useParams();
   const navigate = useNavigate();
   

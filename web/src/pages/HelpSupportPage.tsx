@@ -13,6 +13,7 @@ import {
   Send
 } from 'lucide-react';
 import PageTitle from '@components/common/PageTitle';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 interface FAQItem {
   id: string;
@@ -87,6 +88,8 @@ const faqs: FAQItem[] = [
 const categories = ['All', 'Players', 'Matches', 'Training', 'Kits', 'Tactics', 'Account', 'General'];
 
 export default function HelpSupportPage() {
+  usePageTitle(['Help and Support']);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);

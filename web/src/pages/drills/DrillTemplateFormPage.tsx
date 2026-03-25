@@ -1,6 +1,7 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, AlertCircle } from 'lucide-react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { 
   useDrillTemplateById, 
   useDrillsByScope, 
@@ -53,6 +54,8 @@ function DrillsSkeleton() {
 }
 
 export default function DrillTemplateFormPage() {
+  usePageTitle(['Drill Template Form']);
+
   const { clubId, ageGroupId, teamId, templateId } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!templateId;

@@ -15,6 +15,7 @@ import MatchesCard from '@components/matches/MatchesCard';
 import AgeGroupListCard from '@components/ageGroup/AgeGroupListCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function ClubOverviewPage() {
   // Validate route parameters
@@ -35,6 +36,8 @@ export default function ClubOverviewPage() {
   const [ageGroupsError, setAgeGroupsError] = useState<string | null>(null);
 
   const [ageGroupStats, setAgeGroupStats] = useState<Map<string, AgeGroupStatisticsDto>>(new Map());
+
+  usePageTitle([club?.name ?? 'Club', 'Overview'], !!club);
 
   useEffect(() => {
     if (!clubId) return;

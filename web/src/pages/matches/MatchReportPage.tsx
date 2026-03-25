@@ -5,12 +5,23 @@ import { useMatchReport } from '@/api/hooks';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@/utils/routes';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function MatchReportPage() {
   const { matchId, clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
   const { data: match, isLoading, error } = useMatchReport(matchId);
   const { setEntityName } = useNavigation();
+
+  usePageTitle(
+    [
+      match?.clubName ?? 'Club',
+      ageGroupId ? (match?.ageGroupName ?? 'Age Group') : undefined,
+      match?.teamName ?? 'Team',
+      'Match Report',
+    ],
+    !!match,
+  );
 
   // Populate navigation context once data loads
   useEffect(() => {

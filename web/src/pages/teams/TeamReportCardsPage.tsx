@@ -8,6 +8,7 @@ import ReportCardTableRow from '@components/player/ReportCardTableRow';
 import { Routes } from '@utils/routes';
 import { Filter, FileText, AlertCircle } from 'lucide-react';
 import type { PlayerReport, Player, PlayerPosition } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Skeleton component for report card list item loading state
@@ -131,6 +132,8 @@ function mapApiPlayerToPlayer(apiReport: ClubReportCardDto): Player {
 }
 
 export default function TeamReportCardsPage() {
+  usePageTitle(['Team Report Cards']);
+
   const { clubId, ageGroupId, teamId } = useParams<{ clubId: string; ageGroupId: string; teamId: string }>();
   const [sortBy, setSortBy] = useState<'date' | 'rating'>('date');
   const [filterRating, setFilterRating] = useState<'all' | 'high' | 'medium' | 'low'>('all');

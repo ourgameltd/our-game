@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../../components/common/Logo';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function PasswordResetPage() {
+  usePageTitle(['Password Reset']);
+
   const [email, setEmail] = useState('');
   const [submitted, setSubmitted] = useState(false);
 

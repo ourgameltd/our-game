@@ -8,6 +8,7 @@ import TacticPitchEditor from '@/components/tactics/TacticPitchEditor';
 import PrinciplePanel from '@/components/tactics/PrinciplePanel';
 import { getResolvedPositions } from '@/data/tactics';
 import { Tactic, TacticalPositionOverride, TacticPrinciple, Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   useTactic,
   useSystemFormations,
@@ -264,6 +265,8 @@ function createDefaultTactic(clubId?: string, ageGroupId?: string, teamId?: stri
 // ---------------------------------------------------------------------------
 
 export default function AddEditTacticPage() {
+  usePageTitle(['Add Edit Tactic']);
+
   const { clubId, ageGroupId, teamId, tacticId } = useParams();
   const navigate = useNavigate();
   const isEditing = !!tacticId;

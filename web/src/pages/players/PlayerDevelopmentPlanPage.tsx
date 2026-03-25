@@ -4,8 +4,11 @@ import { useDevelopmentPlan } from '@/api/hooks';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { Routes } from '@/utils/routes';
 import PageTitle from '@/components/common/PageTitle';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function PlayerDevelopmentPlanPage() {
+  usePageTitle(['Player Development Plan']);
+
   const { planId, playerId, clubId, ageGroupId, teamId } = useParams();
   const { data: plan, isLoading, error } = useDevelopmentPlan(planId);
   const { setEntityName } = useNavigation();

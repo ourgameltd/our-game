@@ -6,6 +6,7 @@ import { ClubTrainingSessionDto } from '@/api/client';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { Link } from 'react-router-dom';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton components for loading states
 function SessionRowSkeleton() {
@@ -66,6 +67,8 @@ function FiltersSkeleton() {
 }
 
 export default function ClubTrainingSessionsPage() {
+  usePageTitle(['Club Training Sessions']);
+
   const { clubId } = useParams();
   
   const [filterAgeGroup, setFilterAgeGroup] = useState('');

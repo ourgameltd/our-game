@@ -5,6 +5,7 @@ import { getAttributeCategory, playerAttributes, linkTypes } from '@/constants/r
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   useDrill,
   useCreateDrill,
@@ -90,6 +91,8 @@ function FormActionsSkeleton() {
 }
 
 export default function DrillFormPage() {
+  usePageTitle(['Drill Form']);
+
   const { clubId, ageGroupId, teamId, drillId } = useParams();
   const navigate = useNavigate();
   const isEditMode = !!drillId;

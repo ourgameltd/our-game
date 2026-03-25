@@ -15,6 +15,7 @@ import { Routes } from '@utils/routes';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
 import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch } from '@/api/hooks';
 import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const supportedSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
 
@@ -225,6 +226,8 @@ function buildLineupSlots(resolvedPositions: ResolvedPosition[], squadSize: Squa
 }
 
 export default function AddEditMatchPage() {
+  usePageTitle(['Add Edit Match']);
+
   const { clubId, ageGroupId, teamId, matchId } = useParams();
   const navigate = useNavigate();
   const isEditing = matchId && matchId !== 'new';
@@ -2503,12 +2506,16 @@ export default function AddEditMatchPage() {
                     },
                   }}
                   open={isEventSpeedDialOpen}
-                  onOpen={() => {
-                    if (!isLocked) {
+                  onOpen={(_, reason) => {
+                    if (!isLocked && reason === 'toggle') {
                       setIsEventSpeedDialOpen(true);
                     }
                   }}
-                  onClose={() => setIsEventSpeedDialOpen(false)}
+                  onClose={(_, reason) => {
+                    if (reason === 'toggle') {
+                      setIsEventSpeedDialOpen(false);
+                    }
+                  }}
                 >
                   {eventSpeedDialActions.map((action) => (
                     <SpeedDialAction

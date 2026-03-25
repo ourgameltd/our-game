@@ -6,8 +6,11 @@ import ReportCardTableRow from '@components/player/ReportCardTableRow';
 import { Routes } from '@utils/routes';
 import { Filter, FileText } from 'lucide-react';
 import { useAgeGroupReportCards, useAgeGroup } from '@/api/hooks';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function AgeGroupReportCardsPage() {
+  usePageTitle(['Age Group Report Cards']);
+
   const { clubId, ageGroupId } = useParams<{ clubId: string; ageGroupId: string }>();
   const [sortBy, setSortBy] = useState<'date' | 'rating'>('date');
   const [filterRating, setFilterRating] = useState<'all' | 'high' | 'medium' | 'low'>('all');

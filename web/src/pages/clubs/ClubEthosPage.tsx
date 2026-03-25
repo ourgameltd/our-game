@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useClubById } from '@/api';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Skeleton loading component for a card section
@@ -72,6 +73,8 @@ function CommunityStatementSkeleton() {
 }
 
 export default function ClubEthosPage() {
+  usePageTitle(['Club Ethos']);
+
   const { clubId } = useParams();
   
   // Fetch club from API

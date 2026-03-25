@@ -6,6 +6,7 @@ import { developmentPlanStatuses, type DevelopmentPlanStatus } from '@data/refer
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 interface Goal {
   id?: string;
@@ -35,6 +36,8 @@ function parseApiDate(dateStr: string | undefined): string {
 }
 
 export default function AddEditDevelopmentPlanPage() {
+  usePageTitle(['Add Edit Development Plan']);
+
   const { clubId, playerId, ageGroupId, teamId, planId } = useParams();
   const navigate = useNavigate();
 

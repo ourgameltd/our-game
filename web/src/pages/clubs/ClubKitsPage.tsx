@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Kit } from '@/types';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   ClubKitDto,
   useClubById,
@@ -61,6 +62,8 @@ function mapApiKitToKit(apiKit: ClubKitDto): Kit {
 }
 
 export default function ClubKitsPage() {
+  usePageTitle(['Club Kits']);
+
   const { clubId } = useParams();
 
   const {

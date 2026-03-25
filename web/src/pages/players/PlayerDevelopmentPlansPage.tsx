@@ -9,8 +9,11 @@ import PageTitle from '@components/common/PageTitle';
 import DevelopmentPlanListCard from '@components/player/DevelopmentPlanListCard';
 import DevelopmentPlanTableRow from '@components/player/DevelopmentPlanTableRow';
 import { Filter, Target } from 'lucide-react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function PlayerDevelopmentPlansPage() {
+  usePageTitle(['Player Development Plans']);
+
   const { clubId, playerId, ageGroupId, teamId } = useParams();
   const [sortBy, setSortBy] = useState<'date' | 'progress'>('date');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'completed' | 'archived'>('all');

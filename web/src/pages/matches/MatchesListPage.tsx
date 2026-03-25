@@ -5,6 +5,7 @@ import type { Match } from '@/types';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import MatchesListContent from '@/components/matches/MatchesListContent';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Maps a TeamMatchDto from the API to the Match type used by MatchesListContent
@@ -85,6 +86,16 @@ export default function MatchesListPage() {
       matches: mappedMatches,
     };
   }, [matchesData, teamId]);
+
+  usePageTitle(
+    [
+      club?.name ?? 'Club',
+      ageGroupId ? 'Age Group' : undefined,
+      team?.name ?? 'Team',
+      'Matches',
+    ],
+    !!team,
+  );
 
   // Show not found if team doesn't exist after loading
   if (!isLoading && !team && error) {

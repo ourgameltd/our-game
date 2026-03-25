@@ -7,6 +7,7 @@ import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -75,6 +76,8 @@ function groupTeamsByAgeGroup(teams: ClubTeamDto[]): { ageGroupName: string; tea
 }
 
 export default function CoachSettingsPage() {
+  usePageTitle(['Coach Settings']);
+
   const { clubId, coachId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
   const isNewCoach = coachId === 'new';

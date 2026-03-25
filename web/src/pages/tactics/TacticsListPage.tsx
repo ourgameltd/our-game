@@ -4,6 +4,7 @@ import { useTacticsByScope } from '@/api/hooks';
 import type { TacticListDto } from '@/api';
 import { Routes } from '@/utils/routes';
 import PageTitle from '@/components/common/PageTitle';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton component for tactic row loading state
 function TacticRowSkeleton() {
@@ -52,6 +53,8 @@ function TacticsListSkeleton({ count = 3 }: { count?: number }) {
 }
 
 export default function TacticsListPage() {
+  usePageTitle(['Tactics List']);
+
   const { clubId, ageGroupId, teamId } = useParams();
 
   // Fetch tactics from API

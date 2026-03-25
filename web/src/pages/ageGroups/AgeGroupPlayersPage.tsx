@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo, useEffect } from 'react';
 import { useAgeGroupPlayers } from '@/api/hooks';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import { 
   apiClient, 
   type ApiResponse, 
@@ -16,6 +17,8 @@ import { useRequiredParams } from '@utils/routeParams';
 import { Player, PlayerAttributes } from '@/types';
 
 export default function AgeGroupPlayersPage() {
+  usePageTitle(['Age Group Players']);
+
   // Validate route parameters
   const params = useRequiredParams(['clubId', 'ageGroupId'], { returnNullOnError: true });
   const clubId = params.clubId;

@@ -3,6 +3,7 @@ import { usePlayer, useReportCard } from '@/api';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import { AlertCircle } from 'lucide-react';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 /**
  * Skeleton component for page title loading state
@@ -52,6 +53,8 @@ function ReportSectionSkeleton() {
 }
 
 export default function PlayerReportCardPage() {
+  usePageTitle(['Player Report Card']);
+
   const { playerId, clubId, ageGroupId, teamId, reportId } = useParams();
   
   // Fetch player and report card from API

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Kit } from '@/types';
 import { CreateTeamKitRequest, UpdateTeamKitRequest } from '@/api/client';
+import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   useTeamKits,
   useTeamOverview,
@@ -47,6 +48,8 @@ function KitCardSkeleton() {
 }
 
 export default function TeamKitsPage() {
+  usePageTitle(['Team Kits']);
+
   const { teamId } = useParams();
   
   // API hooks

@@ -6,6 +6,7 @@ import { DrillListDto } from '@/api/client';
 import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton component for drills list loading state
 function DrillsListSkeleton() {
@@ -53,6 +54,8 @@ function FilterAttributesSkeleton() {
 }
 
 export default function DrillsListPage() {
+  usePageTitle(['Drills List']);
+
   const { clubId, ageGroupId, teamId } = useParams();
   
   const [searchTerm, setSearchTerm] = useState('');

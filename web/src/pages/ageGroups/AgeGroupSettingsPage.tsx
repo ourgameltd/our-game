@@ -8,8 +8,11 @@ import { teamLevels, squadSizes, type AgeGroupLevel } from '@/constants/referenc
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function AgeGroupSettingsPage() {
+  usePageTitle(['Age Group Settings']);
+
   const { clubId, ageGroupId } = useParams();
   const navigate = useNavigate();
 

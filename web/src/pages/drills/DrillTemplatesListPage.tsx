@@ -6,6 +6,7 @@ import type { DrillTemplateListDto } from '@/api';
 import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton component for template row loading state
 function TemplateRowSkeleton() {
@@ -59,6 +60,8 @@ function AttributeFiltersSkeleton() {
 }
 
 export default function DrillTemplatesListPage() {
+  usePageTitle(['Drill Templates List']);
+
   const { clubId, ageGroupId, teamId } = useParams();
   
   const [searchTerm, setSearchTerm] = useState('');

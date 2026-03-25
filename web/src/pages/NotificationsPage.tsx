@@ -2,6 +2,7 @@ import { useState } from 'react';
 import PageTitle from '@/components/common/PageTitle';
 import { Bell, Check, CheckCheck, Trash2, Filter, Trophy, Users, Calendar, Megaphone, MessageSquare } from 'lucide-react';
 import { getNotificationTypeColors } from '@/data/referenceData';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 interface Notification {
   id: string;
@@ -62,6 +63,8 @@ const initialNotifications: Notification[] = [
 ];
 
 export default function NotificationsPage() {
+  usePageTitle(['Notifications']);
+
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
 
