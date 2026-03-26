@@ -89,7 +89,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   }
   properties: {
     serverFarmId: appServicePlan.id
-    httpsOnly: false
+    httpsOnly: true
     reserved: false
     siteConfig: {     
       appSettings: [
@@ -138,13 +138,12 @@ resource staticWebAppBackend 'Microsoft.Web/staticSites/linkedBackends@2023-12-0
   }
 }
 
-// Outputs
+// Outputs — only non-sensitive resource names and URLs are exposed.
+// Secrets (connection strings, keys, tokens) must be retrieved at deploy-time
+// via CLI commands (e.g. az staticwebapp secrets list) to avoid leaking them
+// into ARM deployment history and CI logs.
 output storageAccountName string = storageAccount.name
-output storageAccountConnectionString string = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
 output staticWebAppName string = staticWebApp.name
 output staticWebAppUrl string = 'https://${staticWebApp.properties.defaultHostname}'
-output staticWebAppDeploymentToken string = staticWebApp.listSecrets().properties.apiKey
 output functionAppName string = functionApp.name
 output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
-output appInsightsConnectionString string = appInsights.properties.ConnectionString
-output appInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey
