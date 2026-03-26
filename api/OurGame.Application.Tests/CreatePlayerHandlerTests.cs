@@ -1,5 +1,4 @@
 using MediatR;
-using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.UseCases.Players.Commands.CreatePlayer;
@@ -182,29 +181,42 @@ public class CreatePlayerHandlerTests
 
     private sealed class TestDatabase : IAsyncDisposable
     {
-        private readonly SqliteConnection _connection;
+        private const string MasterConnection =
+            "Server=localhost,14330;Database=master;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True";
+
+        private readonly string _databaseName;
 
         public OurGameContext Context { get; }
 
-        private TestDatabase(SqliteConnection connection, OurGameContext context)
+        private TestDatabase(string databaseName, OurGameContext context)
         {
-            _connection = connection;
+            _databaseName = databaseName;
             Context = context;
         }
 
         public static async Task<TestDatabase> CreateAsync()
         {
-            var connection = new SqliteConnection("Data Source=:memory:");
-            await connection.OpenAsync();
+            var databaseName = $"OurGameTest_{Guid.NewGuid():N}";
+            var connectionString =
+                $"Server=localhost,14330;Database={databaseName};User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True";
+
+            var masterOptions = new DbContextOptionsBuilder<OurGameContext>()
+                .UseSqlServer(MasterConnection)
+                .Options;
+            await using (var masterContext = new OurGameContext(masterOptions))
+            {
+                await masterContext.Database.ExecuteSqlRawAsync(
+                    $"CREATE DATABASE [{databaseName}]");
+            }
 
             var options = new DbContextOptionsBuilder<OurGameContext>()
-                .UseSqlite(connection)
+                .UseSqlServer(connectionString)
                 .Options;
 
             var context = new OurGameContext(options);
             await context.Database.EnsureCreatedAsync();
 
-            return new TestDatabase(connection, context);
+            return new TestDatabase(databaseName, context);
         }
 
         public async Task<SeedSingleClubData> SeedSingleClubWithTeamAsync()
@@ -328,7 +340,13 @@ public class CreatePlayerHandlerTests
         public async ValueTask DisposeAsync()
         {
             await Context.DisposeAsync();
-            await _connection.DisposeAsync();
+
+            var masterOptions = new DbContextOptionsBuilder<OurGameContext>()
+                .UseSqlServer(MasterConnection)
+                .Options;
+            await using var masterContext = new OurGameContext(masterOptions);
+            await masterContext.Database.ExecuteSqlRawAsync(
+                $"ALTER DATABASE [{_databaseName}] SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE [{_databaseName}]");
         }
     }
 

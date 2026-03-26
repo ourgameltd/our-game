@@ -57,7 +57,7 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
                     p.OverallRating,
                     p.IsArchived
                 FROM Players p
-                WHERE p.ClubId = {0}
+                WHERE p.ClubId = {0} AND p.IsArchived = 0
                 ORDER BY p.FirstName, p.LastName";
 
         var playerData = await _db.Database

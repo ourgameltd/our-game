@@ -5,6 +5,7 @@ using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.UseCases.DrillTemplates.Commands.UpdateDrillTemplate.DTOs;
 using OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplateById;
 using OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplateById.DTOs;
+using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.DrillTemplates.Commands.UpdateDrillTemplate;
@@ -128,7 +129,7 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
             }
 
             // Count categories
-            var category = drill.Category?.ToLowerInvariant() ?? "mixed";
+            var category = Enum.GetName(typeof(DrillCategory), drill.Category)?.ToLowerInvariant() ?? "mixed";
             categoryCount[category] = categoryCount.GetValueOrDefault(category, 0) + 1;
         }
 
@@ -237,6 +238,6 @@ public class DrillDataRaw
 {
     public Guid Id { get; set; }
     public int? DurationMinutes { get; set; }
-    public string? Category { get; set; }
+    public int Category { get; set; }
     public string? Attributes { get; set; }
 }

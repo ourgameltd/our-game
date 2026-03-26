@@ -88,8 +88,8 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
             var tcId = Guid.NewGuid();
             var assignedAt = now;
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO TeamCoaches (Id, CoachId, TeamId, AssignedAt)
-                VALUES ({tcId}, {coachId}, {teamId}, {assignedAt})
+                INSERT INTO TeamCoaches (Id, CoachId, TeamId, Role, AssignedAt)
+                VALUES ({tcId}, {coachId}, {teamId}, {roleInt}, {assignedAt})
             ", cancellationToken);
         }
 

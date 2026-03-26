@@ -97,7 +97,7 @@ public class UpdateTeamHandler : IRequestHandler<UpdateTeamCommand, TeamOverview
                     t.AgeGroupId,
                     t.Name,
                     t.ShortName,
-                    t.Level,
+                    CAST(t.Level AS INT) AS Level,
                     t.Season,
                     t.PrimaryColor,
                     t.SecondaryColor,
