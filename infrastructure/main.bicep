@@ -10,6 +10,10 @@ param baseName string = 'ourgame'
 @description('Storage account SKU')
 param storageAccountSku string = 'Standard_LRS'
 
+@description('Default network access rule for the storage account network ACLs (Deny or Allow). Default is Deny for security.')
+@allowed(['Allow', 'Deny'])
+param storageDefaultAction string = 'Deny'
+
 @description('Object ID of the Azure AD principal to set as SQL Server administrator')
 param sqlAdminObjectId string
 
@@ -19,7 +23,12 @@ param sqlAdminLoginName string
 @description('Azure AD tenant ID for SQL administrator')
 param sqlAdminTenantId string
 
-var storageAccountName = '${baseName}storage${environmentName}'
+// Storage account names must be 3-24 chars, lowercase letters and numbers only.
+// Normalize by lowercasing and removing hyphens, then truncate to 24 characters.
+var storageAccountNameRaw = replace(toLower('${baseName}storage${environmentName}'), '-', '')
+var storageAccountName = substring(storageAccountNameRaw, 0, min(length(storageAccountNameRaw), 24))
+// Shared managed identity connection string for Azure Functions and table storage
+var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};Authentication=ManagedIdentity;RunAs=App'
 var staticWebAppName = '${baseName}-swa-${environmentName}'
 var functionAppName = '${baseName}-func-${environmentName}'
 var appServicePlanName = '${baseName}-asp-${environmentName}'
@@ -41,7 +50,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
     minimumTlsVersion: 'TLS1_2'
     allowBlobPublicAccess: false
     networkAcls: {
-      defaultAction: 'Allow'
+      defaultAction: storageDefaultAction
     }
   }
 }
@@ -106,11 +115,11 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
       appSettings: [
         {
           name: 'AzureWebJobsStorage'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+          value: storageConnectionString
         }
         {
           name: 'TableStorageConnectionString'
-          value: 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};AccountKey=${storageAccount.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}'
+          value: storageConnectionString
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
