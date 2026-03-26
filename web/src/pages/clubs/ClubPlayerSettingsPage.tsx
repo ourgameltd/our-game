@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { usePlayer, useClubById, useClubTeams, useUpdatePlayer, UpdatePlayerRequest } from '@/api';
+import {
+  usePlayer,
+  useClubById,
+  useClubTeams,
+  useUpdatePlayer,
+  useCreateClubPlayer,
+  UpdatePlayerRequest,
+  CreatePlayerRequest
+} from '@/api';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
@@ -19,6 +27,11 @@ export default function ClubPlayerSettingsPage() {
   const { data: club, isLoading: clubLoading } = useClubById(clubId);
   const { data: allTeams, isLoading: teamsLoading } = useClubTeams(clubId);
   const { updatePlayer, isSubmitting, error: submitError } = useUpdatePlayer(playerId || '');
+  const {
+    createPlayer,
+    isSubmitting: isCreating,
+    error: createError,
+  } = useCreateClubPlayer(clubId || '');
 
   const [formInitialized, setFormInitialized] = useState(false);
   const [formData, setFormData] = useState({
@@ -55,6 +68,8 @@ export default function ClubPlayerSettingsPage() {
 
   const isLoading = playerLoading || clubLoading || teamsLoading;
   const isFormDisabled = !isNewPlayer && player?.isArchived;
+  const isSubmittingForm = isSubmitting || isCreating;
+  const formError = submitError || createError;
   const teams = allTeams || [];
 
   // Loading state
@@ -185,8 +200,28 @@ export default function ClubPlayerSettingsPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (formData.preferredPositions.length === 0) {
+      alert('Please select at least one preferred position');
+      return;
+    }
+
     if (isNewPlayer) {
-      // Create flow not yet implemented
+      const createRequest: CreatePlayerRequest = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        nickname: formData.nickname || undefined,
+        associationId: formData.associationId || undefined,
+        dateOfBirth: formData.dateOfBirth,
+        photo: formData.photo || undefined,
+        preferredPositions: formData.preferredPositions,
+        teamIds: selectedTeams.length > 0 ? selectedTeams : undefined,
+      };
+
+      const created = await createPlayer(createRequest);
+
+      if (created) {
+        navigate(Routes.clubPlayers(clubId!));
+      }
       return;
     }
 
@@ -243,14 +278,14 @@ export default function ClubPlayerSettingsPage() {
         )}
 
         {/* API error banner */}
-        {submitError && (
+        {formError && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-sm font-medium text-red-800 dark:text-red-300">
-              {submitError.message}
+              {formError.message}
             </p>
-            {submitError.validationErrors && (
+            {formError.validationErrors && (
               <ul className="mt-2 list-disc list-inside text-sm text-red-700 dark:text-red-400">
-                {Object.entries(submitError.validationErrors).map(([field, errors]) =>
+                {Object.entries(formError.validationErrors).map(([field, errors]) =>
                   errors.map((msg, i) => (
                     <li key={`${field}-${i}`}>{field}: {msg}</li>
                   ))
@@ -473,8 +508,8 @@ export default function ClubPlayerSettingsPage() {
             isArchived={!isNewPlayer && player?.isArchived}
             onArchive={!isNewPlayer ? () => setShowArchiveConfirm(true) : undefined}
             onCancel={handleCancel}
-            saveLabel={isSubmitting ? 'Saving...' : (isNewPlayer ? 'Create Player' : 'Save Changes')}
-            saveDisabled={!!isFormDisabled || isSubmitting}
+            saveLabel={isSubmittingForm ? 'Saving...' : (isNewPlayer ? 'Create Player' : 'Save Changes')}
+            saveDisabled={!!isFormDisabled || isSubmittingForm}
             showArchive={!isNewPlayer}
           />
         </form>

@@ -53,6 +53,7 @@ import {
   TeamTrainingSessionsDto,
   UpdateAgeGroupRequest,
   UpdatePlayerRequest,
+  CreatePlayerRequest,
   UpdateClubRequest,
   CreateMatchRequest,
   UpdateMatchRequest,
@@ -1233,6 +1234,48 @@ export function useUpdatePlayer(playerId: string): UseMutationState<PlayerDto> &
   }, [playerId]);
 
   return { updatePlayer, isSubmitting, data, error };
+}
+
+/**
+ * Hook to create a club player.
+ * Returns a mutation function, submitting state, response data, and error
+ * with validation details preserved for field-level error mapping.
+ */
+export function useCreateClubPlayer(clubId: string): UseMutationState<PlayerDto> & {
+  createPlayer: (request: CreatePlayerRequest) => Promise<boolean>;
+} {
+  const [data, setData] = useState<PlayerDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const createPlayer = useCallback(async (request: CreatePlayerRequest): Promise<boolean> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<PlayerDto> = await apiClient.clubs.createPlayer(clubId, request);
+      if (response.success && response.data) {
+        setData(response.data);
+        return true;
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create player',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+        return false;
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId]);
+
+  return { createPlayer, isSubmitting, data, error };
 }
 
 /**

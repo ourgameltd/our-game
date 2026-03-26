@@ -1838,6 +1838,25 @@ export interface UpdatePlayerRequest {
   isArchived: boolean;
 }
 
+export interface CreatePlayerRequest {
+  firstName: string;
+  lastName: string;
+  nickname?: string;
+  associationId?: string;
+  dateOfBirth: string; // ISO date string (YYYY-MM-DD)
+  emergencyContacts?: {
+    name: string;
+    phone: string;
+    relationship: string;
+    isPrimary: boolean;
+  }[];
+  photo?: string;
+  allergies?: string;
+  medicalConditions?: string;
+  preferredPositions: string[];
+  teamIds?: string[];
+}
+
 export interface UpdateClubRequest {
   name: string;
   shortName: string;
@@ -2779,6 +2798,21 @@ export const apiClient = {
       const params = includeArchived ? '?includeArchived=true' : '';
       const response = await axiosInstance.get<ApiResponse<ClubPlayerDto[]>>(`/v1/clubs/${clubId}/players${params}`);
       return response.data;
+    },
+
+    /**
+     * Create a new player for a club
+     */
+    createPlayer: async (clubId: string, request: CreatePlayerRequest): Promise<ApiResponse<PlayerDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<PlayerDto>>(
+          `/v1/clubs/${clubId}/players`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
 
     /**
