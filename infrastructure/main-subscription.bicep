@@ -38,12 +38,11 @@ module infrastructure 'main.bicep' = {
   }
 }
 
-// Outputs from the infrastructure module
+// Outputs from the infrastructure module — non-sensitive values only.
+// Secrets are retrieved at deploy-time via CLI commands.
 output resourceGroupName string = resourceGroup.name
 output storageAccountName string = infrastructure.outputs.storageAccountName
-output storageAccountConnectionString string = infrastructure.outputs.storageAccountConnectionString
 output staticWebAppName string = infrastructure.outputs.staticWebAppName
 output staticWebAppUrl string = infrastructure.outputs.staticWebAppUrl
-output staticWebAppDeploymentToken string = infrastructure.outputs.staticWebAppDeploymentToken
 output functionAppName string = infrastructure.outputs.functionAppName
 output functionAppUrl string = infrastructure.outputs.functionAppUrl

@@ -21,22 +21,6 @@
       "allowedRoles": ["anonymous"]
     },
     {
-      "route": "/@vite/*",
-      "allowedRoles": ["anonymous"]
-    },
-    {
-      "route": "/@react-refresh",
-      "allowedRoles": ["anonymous"]
-    },
-    {
-      "route": "/src/*",
-      "allowedRoles": ["anonymous"]
-    },
-    {
-      "route": "/node_modules/*",
-      "allowedRoles": ["anonymous"]
-    },
-    {
       "route": "/*",
       "allowedRoles": ["authenticated"]
     },
@@ -46,10 +30,12 @@
     }
   ],
   "globalHeaders": {
-    "_comment": "IMPORTANT: CORS configured with wildcard (*) as per project requirements for development convenience. Azure Static Web Apps handles CORS internally in production. If stricter security is needed, configure specific allowed origins in Azure portal.",
-    "Access-Control-Allow-Origin": "*",
-    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization"
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "strict-origin-when-cross-origin",
+    "X-XSS-Protection": "1; mode=block",
+    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+    "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://dc.services.visualstudio.com; frame-ancestors 'none'"
   },
   "responseOverrides": {
     "401": {
