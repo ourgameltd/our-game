@@ -26,6 +26,8 @@ public class GetTeamOverviewHandler : IRequestHandler<GetTeamOverviewQuery, Team
 
     public async Task<TeamOverviewDto?> Handle(GetTeamOverviewQuery query, CancellationToken cancellationToken)
     {
+        const string completedMatchPredicate = "(m.Status = 2 OR (m.MatchDate < GETUTCDATE() AND m.HomeScore IS NOT NULL AND m.AwayScore IS NOT NULL))";
+
         var teamSql = @"
             SELECT
                 t.Id,
@@ -62,14 +64,16 @@ public class GetTeamOverviewHandler : IRequestHandler<GetTeamOverviewQuery, Team
 
         var matchStatsSql = @"
             SELECT
-                COUNT(CASE WHEN m.Status = 2 THEN 1 END) AS MatchesPlayed,
-                COUNT(CASE WHEN m.Status = 2 AND m.IsHome = 1 AND m.HomeScore > m.AwayScore THEN 1
-                           WHEN m.Status = 2 AND m.IsHome = 0 AND m.AwayScore > m.HomeScore THEN 1 END) AS Wins,
-                COUNT(CASE WHEN m.Status = 2 AND m.HomeScore = m.AwayScore THEN 1 END) AS Draws,
-                COUNT(CASE WHEN m.Status = 2 AND m.IsHome = 1 AND m.HomeScore < m.AwayScore THEN 1
-                           WHEN m.Status = 2 AND m.IsHome = 0 AND m.AwayScore < m.HomeScore THEN 1 END) AS Losses,
-                COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.HomeScore ELSE m.AwayScore END), 0) AS GoalsFor,
-                COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.AwayScore ELSE m.HomeScore END), 0) AS GoalsAgainst
+                COUNT(CASE WHEN " + completedMatchPredicate + @" THEN 1 END) AS MatchesPlayed,
+                COUNT(CASE WHEN " + completedMatchPredicate + @" AND m.IsHome = 1 AND m.HomeScore > m.AwayScore THEN 1
+                           WHEN " + completedMatchPredicate + @" AND m.IsHome = 0 AND m.AwayScore > m.HomeScore THEN 1 END) AS Wins,
+                COUNT(CASE WHEN " + completedMatchPredicate + @" AND m.HomeScore = m.AwayScore THEN 1 END) AS Draws,
+                COUNT(CASE WHEN " + completedMatchPredicate + @" AND m.IsHome = 1 AND m.HomeScore < m.AwayScore THEN 1
+                           WHEN " + completedMatchPredicate + @" AND m.IsHome = 0 AND m.AwayScore < m.HomeScore THEN 1 END) AS Losses,
+                COALESCE(SUM(CASE WHEN " + completedMatchPredicate + @" AND m.IsHome = 1 THEN m.HomeScore
+                                  WHEN " + completedMatchPredicate + @" AND m.IsHome = 0 THEN m.AwayScore END), 0) AS GoalsFor,
+                COALESCE(SUM(CASE WHEN " + completedMatchPredicate + @" AND m.IsHome = 1 THEN m.AwayScore
+                                  WHEN " + completedMatchPredicate + @" AND m.IsHome = 0 THEN m.HomeScore END), 0) AS GoalsAgainst
             FROM Matches m
             WHERE m.TeamId = {0}";
 
@@ -119,7 +123,7 @@ public class GetTeamOverviewHandler : IRequestHandler<GetTeamOverviewQuery, Team
             FROM Matches m
             INNER JOIN Teams t ON m.TeamId = t.Id
             WHERE m.TeamId = {0}
-                AND m.Status = 2
+                AND " + completedMatchPredicate + @"
             ORDER BY m.MatchDate DESC";
 
         var recentResults = await _db.Database
@@ -138,7 +142,7 @@ public class GetTeamOverviewHandler : IRequestHandler<GetTeamOverviewQuery, Team
             INNER JOIN Matches m ON mr.MatchId = m.Id
             INNER JOIN Players p ON pr.PlayerId = p.Id
             WHERE m.TeamId = {0}
-                AND m.Status = 2
+                AND " + completedMatchPredicate + @"
                 AND pr.Rating IS NOT NULL
                 AND p.IsArchived = 0
             GROUP BY pr.PlayerId, p.FirstName, p.LastName
@@ -161,7 +165,7 @@ public class GetTeamOverviewHandler : IRequestHandler<GetTeamOverviewQuery, Team
             INNER JOIN Matches m ON mr.MatchId = m.Id
             INNER JOIN Players p ON pr.PlayerId = p.Id
             WHERE m.TeamId = {0}
-                AND m.Status = 2
+                AND " + completedMatchPredicate + @"
                 AND pr.Rating IS NOT NULL
                 AND p.IsArchived = 0
             GROUP BY pr.PlayerId, p.FirstName, p.LastName

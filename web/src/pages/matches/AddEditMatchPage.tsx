@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { AlertCircle, ClipboardList, Users, Activity, FileText, Lock, Unlock, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
+import { AlertCircle, ClipboardList, Users, Activity, FileText, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
 import { Timeline, TimelineItem, TimelineHeader, TimelineIcon, TimelineBody } from '@material-tailwind/react';
 import { SpeedDial, SpeedDialAction, SpeedDialIcon } from '@mui/material';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
@@ -1324,46 +1324,10 @@ export default function AddEditMatchPage() {
     }
   };
 
-  const handleCompleteMatch = () => {
-    // Validate that essential match data is filled
-    if (!homeScore || !awayScore) {
-      return;
-    }
-    if (startingPlayers.length === 0) {
-      return;
-    }
-    
-    const confirmComplete = window.confirm(
-      'Are you sure you want to mark this match as completed? The match will be locked automatically.'
-    );
-    
-    if (confirmComplete) {
-      setIsLocked(true);
-    }
-  };
-
-  const handleToggleLock = () => {
-    if (isLocked) {
-      const confirmUnlock = window.confirm(
-        'Are you sure you want to unlock this match? This will allow editing of all match details.'
-      );
-      if (confirmUnlock) {
-        setIsLocked(false);
-      }
-    } else {
-      const confirmLock = window.confirm(
-        'Are you sure you want to lock this match? This will prevent any further edits until unlocked.'
-      );
-      if (confirmLock) {
-        setIsLocked(true);
-      }
-    }
-  };
-
   const handleSave = async () => {
     // Check if match is locked
     if (isLocked) {
-      alert('This match is locked and cannot be edited. Please unlock it first.');
+      alert('This match is locked and cannot be edited.');
       return;
     }
 
@@ -3023,54 +2987,14 @@ export default function AddEditMatchPage() {
         {isLocked && (
             <div className="mt-4 pt-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
               <p className="text-amber-800 dark:text-amber-300 font-medium">
-                🔒 This match is locked. Unlock it to make changes.
+                🔒 This match is locked and cannot be edited.
               </p>
             </div>
           )}
 
           {/* Action Buttons */}
           <div className="mt-4">
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-              {/* Left side - Match-specific controls */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                {isEditing && (
-                  <>
-                    {!isLocked && existingMatch?.status !== 'completed' && (
-                      <button
-                        type="button"
-                        onClick={handleCompleteMatch}
-                        disabled={!homeScore || !awayScore || startingPlayers.length === 0}
-                        className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={!homeScore || !awayScore ? 'Enter match score to complete' : startingPlayers.length === 0 ? 'Add starting players to complete' : 'Mark match as completed'}
-                      >
-                        ✓ Complete Match
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={handleToggleLock}
-                      className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium ${
-                        isLocked
-                          ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                          : 'bg-gray-600 hover:bg-gray-700 text-white'
-                      }`}
-                    >
-                      {isLocked ? (
-                        <>
-                          <Unlock className="w-4 h-4" />
-                          Unlock
-                        </>
-                      ) : (
-                        <>
-                          <Lock className="w-4 h-4" />
-                          Lock
-                        </>
-                      )}
-                    </button>
-                  </>
-                )}
-              </div>
-              
+            <div className="flex justify-end">
               {/* Right side - Standard form actions */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                 <button
