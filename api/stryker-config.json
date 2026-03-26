@@ -1,0 +1,23 @@
+{
+  "stryker-config": {
+    "thresholds": {
+      "high": 80,
+      "low": 60,
+      "break": 0
+    },
+    "reporters": [
+      "html",
+      "markdown",
+      "progress",
+      "cleartext"
+    ],
+    "mutation-level": "Standard",
+    "mutate": [
+      "!**/Migrations/**",
+      "!**/Models/**",
+      "!**/Data/SeedData/**",
+      "!**/obj/**",
+      "!**/bin/**"
+    ]
+  }
+}

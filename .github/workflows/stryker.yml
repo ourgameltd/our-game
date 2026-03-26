@@ -1,0 +1,99 @@
+name: Stryker Mutation Testing
+
+on:
+  workflow_dispatch:
+
+jobs:
+  mutate-application:
+    name: Mutate OurGame.Application
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+      
+    - name: Install Stryker.NET
+      run: dotnet tool install --global dotnet-stryker
+      
+    - name: Restore dependencies
+      working-directory: ./api
+      run: dotnet restore
+      
+    - name: Run Stryker on Application layer
+      working-directory: ./api/OurGame.Application.Tests
+      run: |
+        dotnet stryker \
+          --config-file ../stryker-config.json \
+          --project OurGame.Application.csproj \
+          --output ../StrykerOutput/Application
+      
+    - name: Add mutation summary to build
+      if: always()
+      run: |
+        echo "## Stryker Mutation Testing — OurGame.Application" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f ./api/StrykerOutput/Application/reports/mutation-report.md ]; then
+          cat ./api/StrykerOutput/Application/reports/mutation-report.md >> $GITHUB_STEP_SUMMARY
+        else
+          echo "Mutation report not generated. Check logs for details." >> $GITHUB_STEP_SUMMARY
+        fi
+      
+    - name: Upload Application mutation report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: stryker-report-application
+        path: ./api/StrykerOutput/Application
+        retention-days: 14
+
+  mutate-api:
+    name: Mutate OurGame.Api
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+      
+    - name: Install Stryker.NET
+      run: dotnet tool install --global dotnet-stryker
+      
+    - name: Restore dependencies
+      working-directory: ./api
+      run: dotnet restore
+      
+    - name: Run Stryker on Api layer
+      working-directory: ./api/OurGame.Api.Tests
+      run: |
+        dotnet stryker \
+          --config-file ../stryker-config.json \
+          --project OurGame.Api.csproj \
+          --output ../StrykerOutput/Api
+      
+    - name: Add mutation summary to build
+      if: always()
+      run: |
+        echo "## Stryker Mutation Testing — OurGame.Api" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        if [ -f ./api/StrykerOutput/Api/reports/mutation-report.md ]; then
+          cat ./api/StrykerOutput/Api/reports/mutation-report.md >> $GITHUB_STEP_SUMMARY
+        else
+          echo "Mutation report not generated. Check logs for details." >> $GITHUB_STEP_SUMMARY
+        fi
+      
+    - name: Upload Api mutation report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: stryker-report-api
+        path: ./api/StrykerOutput/Api
+        retention-days: 14

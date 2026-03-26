@@ -1,6 +1,7 @@
 name: PR Build
 
 on:
+  workflow_dispatch:
   pull_request:
     branches:
       - main
@@ -33,10 +34,33 @@ jobs:
       working-directory: ./api
       run: dotnet build --configuration Release --no-restore
       
-    - name: Run tests
+    - name: Run tests with coverage
       working-directory: ./api
-      run: dotnet test --configuration Release --no-build --verbosity normal
-      continue-on-error: true
+      run: |
+        dotnet test --configuration Release --no-build --verbosity normal \
+          --collect:"XPlat Code Coverage" \
+          --results-directory ./TestResults
+      
+    - name: Generate coverage report
+      uses: danielpalme/ReportGenerator-GitHub-Action@5
+      with:
+        reports: './api/TestResults/**/coverage.cobertura.xml'
+        targetdir: './coverage-report'
+        reporttypes: 'HtmlInline_AzurePipelines;MarkdownSummaryGithub;Cobertura'
+      
+    - name: Add coverage summary to build
+      run: |
+        echo "## Unit Test Coverage Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        cat ./coverage-report/SummaryGithub.md >> $GITHUB_STEP_SUMMARY
+      
+    - name: Upload coverage report
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: coverage-report
+        path: ./coverage-report
+        retention-days: 14
       
     - name: Publish API
       working-directory: ./api
