@@ -12,6 +12,16 @@ internal sealed class TestMediator : IMediator
         _handlers[typeof(TRequest)] = async (request, ct) => await handler((TRequest)request, ct);
     }
 
+    public void Register<TRequest>(Func<TRequest, CancellationToken, Task> handler)
+        where TRequest : IRequest
+    {
+        _handlers[typeof(TRequest)] = async (request, ct) =>
+        {
+            await handler((TRequest)request, ct);
+            return null;
+        };
+    }
+
     public Task Publish(object notification, CancellationToken cancellationToken = default)
     {
         return Task.CompletedTask;
