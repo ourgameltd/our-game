@@ -10,12 +10,23 @@ param baseName string = 'ourgame'
 @description('Storage account SKU')
 param storageAccountSku string = 'Standard_LRS'
 
+@description('Object ID of the Azure AD principal to set as SQL Server administrator')
+param sqlAdminObjectId string
+
+@description('Login name (display name) of the Azure AD SQL administrator')
+param sqlAdminLoginName string
+
+@description('Azure AD tenant ID for SQL administrator')
+param sqlAdminTenantId string
+
 var storageAccountName = '${baseName}storage${environmentName}'
 var staticWebAppName = '${baseName}-swa-${environmentName}'
 var functionAppName = '${baseName}-func-${environmentName}'
 var appServicePlanName = '${baseName}-asp-${environmentName}'
 var logAnalyticsName = '${baseName}-log-${environmentName}'
 var appInsightsName = '${baseName}-ai-${environmentName}'
+var sqlServerName = '${baseName}-sql-${environmentName}'
+var sqlDatabaseName = 'OurGame'
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -106,11 +117,70 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           value: 'dotnet-isolated'
         }
         {
+          name: 'FUNCTIONS_EXTENSION_VERSION'
+          value: '~4'
+        }
+        {
+          name: 'WEBSITE_RUN_FROM_PACKAGE'
+          value: '1'
+        }
+        {
           name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
           value: appInsights.properties.ConnectionString
         }
+        {
+          name: 'ConnectionStrings__DefaultConnection'
+          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDatabaseName};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;'
+        }
       ]
     }
+  }
+}
+
+// SQL Server - Azure AD only authentication (no SQL auth)
+resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
+  name: sqlServerName
+  location: location
+  properties: {
+    minimalTlsVersion: '1.2'
+    administrators: {
+      administratorType: 'ActiveDirectory'
+      login: sqlAdminLoginName
+      sid: sqlAdminObjectId
+      tenantId: sqlAdminTenantId
+      principalType: 'Application'
+      azureADOnlyAuthentication: true
+    }
+  }
+}
+
+// SQL Database - General Purpose Serverless (cheapest tier)
+resource sqlDatabase 'Microsoft.Sql/servers/databases@2023-08-01-preview' = {
+  parent: sqlServer
+  name: sqlDatabaseName
+  location: location
+  sku: {
+    name: 'GP_S_Gen5'
+    tier: 'GeneralPurpose'
+    family: 'Gen5'
+    capacity: 1
+  }
+  properties: {
+    collation: 'SQL_Latin1_General_CP1_CI_AS'
+    maxSizeBytes: 34359738368
+    autoPauseDelay: 60
+    minCapacity: json('0.5')
+    requestedBackupStorageRedundancy: 'Local'
+  }
+}
+
+// Allow Azure services to access SQL Server
+resource sqlFirewallAllowAzure 'Microsoft.Sql/servers/firewallRules@2023-08-01-preview' = {
+  parent: sqlServer
+  name: 'AllowAllWindowsAzureIps'
+  properties: {
+    startIpAddress: '0.0.0.0'
+    endIpAddress: '0.0.0.0'
   }
 }
 
@@ -147,3 +217,5 @@ output staticWebAppName string = staticWebApp.name
 output staticWebAppUrl string = 'https://${staticWebApp.properties.defaultHostname}'
 output functionAppName string = functionApp.name
 output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
+output sqlServerName string = sqlServer.name
+output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName

@@ -16,12 +16,6 @@
     },
     "storageAccountSku": {
       "value": "Standard_LRS"
-    },
-    "functionAppSku": {
-      "value": "Y1"
-    },
-    "functionAppSkuFamily": {
-      "value": "Y"
     }
   }
 }

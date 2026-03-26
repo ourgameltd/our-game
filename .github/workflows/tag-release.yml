@@ -80,6 +80,8 @@ jobs:
       staticWebAppName: ${{ steps.deploy.outputs.staticWebAppName }}
       staticWebAppUrl: ${{ steps.deploy.outputs.staticWebAppUrl }}
       storageAccountName: ${{ steps.deploy.outputs.storageAccountName }}
+      sqlServerName: ${{ steps.deploy.outputs.sqlServerName }}
+      sqlServerFqdn: ${{ steps.deploy.outputs.sqlServerFqdn }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -88,6 +90,17 @@ jobs:
       uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Resolve service principal details for SQL admin
+      id: sp
+      run: |
+        CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r '.clientId')
+        TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r '.tenantId')
+        SP_OBJECT_ID=$(az ad sp show --id "$CLIENT_ID" --query id -o tsv)
+        SP_DISPLAY_NAME=$(az ad sp show --id "$CLIENT_ID" --query displayName -o tsv)
+        echo "objectId=$SP_OBJECT_ID" >> $GITHUB_OUTPUT
+        echo "displayName=$SP_DISPLAY_NAME" >> $GITHUB_OUTPUT
+        echo "tenantId=$TENANT_ID" >> $GITHUB_OUTPUT
         
     - name: Deploy Bicep template at subscription level
       id: deploy
@@ -103,6 +116,9 @@ jobs:
           --parameters environmentName=prod \
           --parameters baseName=ourgame \
           --parameters storageAccountSku=Standard_LRS \
+          --parameters sqlAdminObjectId="${{ steps.sp.outputs.objectId }}" \
+          --parameters sqlAdminLoginName="${{ steps.sp.outputs.displayName }}" \
+          --parameters sqlAdminTenantId="${{ steps.sp.outputs.tenantId }}" \
           --query 'properties.outputs' \
           --output json)
         
@@ -111,10 +127,77 @@ jobs:
         echo "staticWebAppUrl=$(echo $DEPLOYMENT_OUTPUT | jq -r '.staticWebAppUrl.value')" >> $GITHUB_OUTPUT
         echo "functionAppName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.functionAppName.value')" >> $GITHUB_OUTPUT
         echo "storageAccountName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.storageAccountName.value')" >> $GITHUB_OUTPUT
+        echo "sqlServerName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerName.value')" >> $GITHUB_OUTPUT
+        echo "sqlServerFqdn=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerFqdn.value')" >> $GITHUB_OUTPUT
+
+  provision-database:
+    runs-on: ubuntu-latest
+    needs: [deploy-infrastructure]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Azure Login
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Add runner IP to SQL Server firewall
+      id: firewall
+      run: |
+        RUNNER_IP=$(curl -s https://api.ipify.org)
+        echo "runnerIp=$RUNNER_IP" >> $GITHUB_OUTPUT
+        az sql server firewall-rule create \
+          --resource-group ${{ needs.deploy-infrastructure.outputs.resourceGroupName }} \
+          --server ${{ needs.deploy-infrastructure.outputs.sqlServerName }} \
+          --name GitHubActionsRunner \
+          --start-ip-address "$RUNNER_IP" \
+          --end-ip-address "$RUNNER_IP"
+
+    - name: Create SQL contained user for Function App managed identity
+      run: |
+        FUNC_APP_NAME="${{ needs.deploy-infrastructure.outputs.functionAppName }}"
+        SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
+        
+        # Get an access token for SQL using the logged-in service principal
+        TOKEN=$(az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
+        
+        # Create the contained user and grant roles using sqlcmd
+        sqlcmd -S "tcp:${SQL_SERVER},1433" -d OurGame --authentication-method=ActiveDirectoryAccessToken --access-token "$TOKEN" -Q "
+          IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = '${FUNC_APP_NAME}')
+          BEGIN
+            CREATE USER [${FUNC_APP_NAME}] FROM EXTERNAL PROVIDER;
+            ALTER ROLE db_datareader ADD MEMBER [${FUNC_APP_NAME}];
+            ALTER ROLE db_datawriter ADD MEMBER [${FUNC_APP_NAME}];
+            ALTER ROLE db_ddladmin ADD MEMBER [${FUNC_APP_NAME}];
+          END
+        "
+        echo "✅ SQL user [${FUNC_APP_NAME}] provisioned with datareader, datawriter, and ddladmin roles"
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Run database seeder (migrations + seed data)
+      run: |
+        SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
+        export ConnectionStrings__DefaultConnection="Server=tcp:${SQL_SERVER},1433;Database=OurGame;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;"
+        dotnet run --project api/OurGame.Seeder
+
+    - name: Remove runner IP from SQL Server firewall
+      if: always()
+      run: |
+        az sql server firewall-rule delete \
+          --resource-group ${{ needs.deploy-infrastructure.outputs.resourceGroupName }} \
+          --server ${{ needs.deploy-infrastructure.outputs.sqlServerName }} \
+          --name GitHubActionsRunner \
+          --yes 2>/dev/null || true
 
   deploy-function-app:
     runs-on: ubuntu-latest
-    needs: [build-backend, deploy-infrastructure]
+    needs: [build-backend, deploy-infrastructure, provision-database]
     
     steps:
     - name: Checkout code
