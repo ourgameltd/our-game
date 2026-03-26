@@ -157,7 +157,7 @@ jobs:
 
     - name: Install sqlcmd (go-sqlcmd)
       run: |
-        curl -sSL https://github.com/microsoft/go-sqlcmd/releases/latest/download/sqlcmd-linux-amd64.tar.gz | tar xz -C /tmp
+        curl -sSL https://github.com/microsoft/go-sqlcmd/releases/latest/download/sqlcmd-linux-amd64.tar.bz2 | tar xj -C /tmp
         sudo install -m 755 /tmp/sqlcmd /usr/local/bin/sqlcmd
         sqlcmd --version
 
