@@ -1,5 +1,8 @@
 name: Stryker Mutation Testing
 
+permissions:
+  contents: read
+
 on:
   workflow_dispatch:
 
