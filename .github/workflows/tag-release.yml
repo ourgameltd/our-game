@@ -155,6 +155,12 @@ jobs:
           --start-ip-address "$RUNNER_IP" \
           --end-ip-address "$RUNNER_IP"
 
+    - name: Install sqlcmd (go-sqlcmd)
+      run: |
+        curl -sSL https://github.com/microsoft/go-sqlcmd/releases/latest/download/sqlcmd-linux-amd64.tar.gz | tar xz -C /tmp
+        sudo install -m 755 /tmp/sqlcmd /usr/local/bin/sqlcmd
+        sqlcmd --version
+
     - name: Create SQL contained user for Function App managed identity
       run: |
         FUNC_APP_NAME="${{ needs.deploy-infrastructure.outputs.functionAppName }}"
