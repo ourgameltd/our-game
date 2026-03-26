@@ -62,6 +62,7 @@ jobs:
         reports: './api/TestResults/**/coverage.cobertura.xml'
         targetdir: './coverage-report'
         reporttypes: 'HtmlInline_AzurePipelines;MarkdownSummaryGithub;Cobertura'
+        assemblyfilters: '-OurGame.Persistence'
       
     - name: Add coverage summary to build
       run: |
