@@ -157,7 +157,7 @@ jobs:
 
     - name: Install sqlcmd (go-sqlcmd)
       run: |
-        curl -sSL https://github.com/microsoft/go-sqlcmd/releases/latest/download/sqlcmd-linux-amd64.tar.gz | tar xz -C /tmp
+        curl -sSL https://github.com/microsoft/go-sqlcmd/releases/latest/download/sqlcmd-linux-amd64.tar.bz2 | tar xj -C /tmp
         sudo install -m 755 /tmp/sqlcmd /usr/local/bin/sqlcmd
         sqlcmd --version
 
@@ -166,11 +166,8 @@ jobs:
         FUNC_APP_NAME="${{ needs.deploy-infrastructure.outputs.functionAppName }}"
         SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
         
-        # Get an access token for SQL using the logged-in service principal
-        TOKEN=$(az account get-access-token --resource https://database.windows.net/ --query accessToken -o tsv)
-        
-        # Create the contained user and grant roles using sqlcmd
-        sqlcmd -S "tcp:${SQL_SERVER},1433" -d OurGame --authentication-method=ActiveDirectoryAccessToken --access-token "$TOKEN" -Q "
+        # Use ActiveDirectoryAzCli to authenticate via the az login session established earlier
+        sqlcmd -S "tcp:${SQL_SERVER},1433" -d OurGame --authentication-method=ActiveDirectoryAzCli -Q "
           IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = '${FUNC_APP_NAME}')
           BEGIN
             CREATE USER [${FUNC_APP_NAME}] FROM EXTERNAL PROVIDER;
