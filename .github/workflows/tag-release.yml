@@ -279,7 +279,7 @@ jobs:
             B2C_CLIENT_ID="$B2C_CLIENT_ID" \
             B2C_CLIENT_SECRET="$B2C_CLIENT_SECRET"
       env:
-        B2C_CLIENT_ID: ${{ secrets.B2C_CLIENT_ID }}
+        B2C_CLIENT_ID: ${{ vars.B2C_CLIENT_ID }}
         B2C_CLIENT_SECRET: ${{ secrets.B2C_CLIENT_SECRET }}
           
     - name: Deployment Summary
