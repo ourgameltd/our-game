@@ -152,6 +152,7 @@ jobs:
   provision-database:
     runs-on: ubuntu-latest
     needs: [deploy-infrastructure]
+    environment: live
     
     steps:
     - name: Checkout code
