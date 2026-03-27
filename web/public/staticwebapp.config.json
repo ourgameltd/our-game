@@ -1,27 +1,144 @@
 {
   "navigationFallback": {
-    "rewrite": "/index.html",
-    "exclude": ["/api/*", "/assets/*", "/*.{css,scss,js,png,gif,ico,jpg,svg,woff,woff2,ttf,eot}"]
+    "rewrite": "/redirect",
+    "exclude": [
+      "/images/*.{png,jpg,gif}",
+      "/css/*"
+    ]
+  },
+  "mimeTypes": {
+    ".json": "text/json"
   },
   "routes": [
+
+    {
+      "route": "/.auth/login/twitter",
+      "statusCode": 401
+    },
+    {
+      "route": "/.auth/login/facebook",
+      "statusCode": 401
+    },
+    {
+      "route": "/.auth/login/google",
+      "statusCode": 401
+    },
+    {
+      "route": "/.auth/login/github",
+      "statusCode": 401
+    },
+    {
+      "route": "/.auth/login/apple",
+      "statusCode": 401
+    },
+    {
+      "route": "/.auth/login/aad",
+      "statusCode": 401
+    },
+    {
+      "route": "/api/GetRoles",
+      "methods": [
+        "POST"
+      ],
+      "allowedRoles": [
+        "anonymous",
+        "authenticated"
+      ]
+    },
+    {
+      "route": "/api/claim*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/api/lookup*",
+      "allowedRoles": ["anonymous"]
+    },
     {
       "route": "/",
       "allowedRoles": ["anonymous"]
     },
     {
-      "route": "/login",
+      "route": "/404",
       "allowedRoles": ["anonymous"]
     },
     {
-      "route": "/register",
+      "route": "/error/acces",
       "allowedRoles": ["anonymous"]
     },
     {
-      "route": "/password-reset",
+      "route": "/redirect",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/terms",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/privacy",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/play*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/css*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/js*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/images*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/fonts*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/scss*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/ajax*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*.png",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*.xml",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*.ico",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*.svg",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*.webmanifest",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/_next*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*.txt",
       "allowedRoles": ["anonymous"]
     },
     {
       "route": "/*",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/*",
       "allowedRoles": ["authenticated"]
     }
   ],
@@ -32,14 +149,37 @@
     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
     "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://dc.services.visualstudio.com; frame-ancestors 'none'"
   },
+  "auth": {
+    "rolesSource": "/api/GetRoles",
+    "identityProviders": {
+      "customOpenIdConnectProviders": {
+        "b2c": {
+          "registration": {
+            "clientIdSettingName": "B2C_CLIENT_ID",
+            "clientCredential": {
+              "clientSecretSettingName": "B2C_CLIENT_SECRET"
+            },
+            "openIdConnectConfiguration": {
+              "wellKnownOpenIdConfiguration": "https://ourgameauth.b2clogin.com/ourgameauth.onmicrosoft.com/B2C_1_SUSI/v2.0/.well-known/openid-configuration"
+            }
+          },
+          "login": {
+            "nameClaimType": "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name",
+            "scopes": [
+              "offline_access",
+              "openid",
+              "https://ourgameauth.onmicrosoft.com/app-api/app.read",
+              "https://ourgameauth.onmicrosoft.com/app-api/app.write"
+            ]
+          }
+        }
+      }
+    }
+  },
   "responseOverrides": {
     "401": {
       "statusCode": 302,
-      "redirect": "/.auth/login/aad?post_login_redirect_uri=.referrer"
-    },
-    "404": {
-      "rewrite": "/index.html",
-      "statusCode": 200
+      "redirect": "/.auth/login/b2c?post_login_redirect_uri=.referrer"
     }
   }
 }
