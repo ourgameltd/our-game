@@ -82,6 +82,8 @@ jobs:
       storageAccountName: ${{ steps.deploy.outputs.storageAccountName }}
       sqlServerName: ${{ steps.deploy.outputs.sqlServerName }}
       sqlServerFqdn: ${{ steps.deploy.outputs.sqlServerFqdn }}
+      managedIdentityName: ${{ steps.deploy.outputs.managedIdentityName }}
+      managedIdentityClientId: ${{ steps.deploy.outputs.managedIdentityClientId }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -129,6 +131,8 @@ jobs:
         echo "storageAccountName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.storageAccountName.value')" >> $GITHUB_OUTPUT
         echo "sqlServerName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerName.value')" >> $GITHUB_OUTPUT
         echo "sqlServerFqdn=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerFqdn.value')" >> $GITHUB_OUTPUT
+        echo "managedIdentityName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.managedIdentityName.value')" >> $GITHUB_OUTPUT
+        echo "managedIdentityClientId=$(echo $DEPLOYMENT_OUTPUT | jq -r '.managedIdentityClientId.value')" >> $GITHUB_OUTPUT
 
   provision-database:
     runs-on: ubuntu-latest
@@ -163,20 +167,22 @@ jobs:
 
     - name: Create SQL contained user for Function App managed identity
       run: |
-        FUNC_APP_NAME="${{ needs.deploy-infrastructure.outputs.functionAppName }}"
+        IDENTITY_NAME="${{ needs.deploy-infrastructure.outputs.managedIdentityName }}"
         SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
         
-        # Use ActiveDirectoryAzCli to authenticate via the az login session established earlier
+        # The Function App uses a User-Assigned Managed Identity whose Object ID is
+        # stable across redeployments. The SQL contained user only needs to be created
+        # once; subsequent runs are no-ops.
         sqlcmd -S "tcp:${SQL_SERVER},1433" -d OurGame --authentication-method=ActiveDirectoryAzCli -Q "
-          IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = '${FUNC_APP_NAME}')
+          IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = '${IDENTITY_NAME}')
           BEGIN
-            CREATE USER [${FUNC_APP_NAME}] FROM EXTERNAL PROVIDER;
-            ALTER ROLE db_datareader ADD MEMBER [${FUNC_APP_NAME}];
-            ALTER ROLE db_datawriter ADD MEMBER [${FUNC_APP_NAME}];
-            ALTER ROLE db_ddladmin ADD MEMBER [${FUNC_APP_NAME}];
+            CREATE USER [${IDENTITY_NAME}] FROM EXTERNAL PROVIDER;
+            ALTER ROLE db_datareader ADD MEMBER [${IDENTITY_NAME}];
+            ALTER ROLE db_datawriter ADD MEMBER [${IDENTITY_NAME}];
+            ALTER ROLE db_ddladmin ADD MEMBER [${IDENTITY_NAME}];
           END
         "
-        echo "✅ SQL user [${FUNC_APP_NAME}] provisioned with datareader, datawriter, and ddladmin roles"
+        echo "✅ SQL user [${IDENTITY_NAME}] provisioned with datareader, datawriter, and ddladmin roles"
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4

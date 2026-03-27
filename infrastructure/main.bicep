@@ -27,8 +27,6 @@ param sqlAdminTenantId string
 // Normalize by lowercasing and removing hyphens, then truncate to 24 characters.
 var storageAccountNameRaw = replace(toLower('${baseName}storage${environmentName}'), '-', '')
 var storageAccountName = substring(storageAccountNameRaw, 0, min(length(storageAccountNameRaw), 24))
-// Shared managed identity connection string for Azure Functions and table storage
-var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccount.name};EndpointSuffix=${environment().suffixes.storage};Authentication=ManagedIdentity;RunAs=App'
 var staticWebAppName = '${baseName}-swa-${environmentName}'
 var functionAppName = '${baseName}-func-${environmentName}'
 var appServicePlanName = '${baseName}-asp-${environmentName}'
@@ -36,6 +34,13 @@ var logAnalyticsName = '${baseName}-log-${environmentName}'
 var appInsightsName = '${baseName}-ai-${environmentName}'
 var sqlServerName = '${baseName}-sql-${environmentName}'
 var sqlDatabaseName = 'OurGame'
+var managedIdentityName = '${baseName}-id-${environmentName}'
+
+// User-Assigned Managed Identity — stable identity that survives Function App redeployments
+resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
+  name: managedIdentityName
+  location: location
+}
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -105,7 +110,10 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   location: location
   kind: 'functionapp'
   identity: {
-    type: 'SystemAssigned'
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${managedIdentity.id}': {}
+    }
   }
   properties: {
     serverFarmId: appServicePlan.id
@@ -114,12 +122,16 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {     
       appSettings: [
         {
-          name: 'AzureWebJobsStorage'
-          value: storageConnectionString
+          name: 'AzureWebJobsStorage__accountName'
+          value: storageAccount.name
         }
         {
-          name: 'TableStorageConnectionString'
-          value: storageConnectionString
+          name: 'AzureWebJobsStorage__credential'
+          value: 'managedidentity'
+        }
+        {
+          name: 'AzureWebJobsStorage__clientId'
+          value: managedIdentity.properties.clientId
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
@@ -139,10 +151,44 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'ConnectionStrings__DefaultConnection'
-          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDatabaseName};Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;'
+          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDatabaseName};Authentication=Active Directory Default;User Id=${managedIdentity.properties.clientId};Encrypt=True;TrustServerCertificate=False;'
         }
       ]
     }
+  }
+}
+
+// Role assignments for User-Assigned Managed Identity on Storage Account
+// Storage Blob Data Owner
+resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, managedIdentity.id, 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage Table Data Contributor
+resource storageTableDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, managedIdentity.id, '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
+  }
+}
+
+// Storage Queue Data Contributor
+resource storageQueueDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(storageAccount.id, managedIdentity.id, '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
+  scope: storageAccount
+  properties: {
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
+    principalId: managedIdentity.properties.principalId
+    principalType: 'ServicePrincipal'
   }
 }
 
@@ -228,3 +274,5 @@ output functionAppName string = functionApp.name
 output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
 output sqlServerName string = sqlServer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
+output managedIdentityName string = managedIdentity.name
+output managedIdentityClientId string = managedIdentity.properties.clientId

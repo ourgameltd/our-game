@@ -60,3 +60,5 @@ output functionAppName string = infrastructure.outputs.functionAppName
 output functionAppUrl string = infrastructure.outputs.functionAppUrl
 output sqlServerName string = infrastructure.outputs.sqlServerName
 output sqlServerFqdn string = infrastructure.outputs.sqlServerFqdn
+output managedIdentityName string = infrastructure.outputs.managedIdentityName
+output managedIdentityClientId string = infrastructure.outputs.managedIdentityClientId
