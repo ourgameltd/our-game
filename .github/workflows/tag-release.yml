@@ -82,6 +82,7 @@ jobs:
       storageAccountName: ${{ steps.deploy.outputs.storageAccountName }}
       sqlServerName: ${{ steps.deploy.outputs.sqlServerName }}
       sqlServerFqdn: ${{ steps.deploy.outputs.sqlServerFqdn }}
+      sqlAdminUsername: ${{ steps.deploy.outputs.sqlAdminUsername }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -90,6 +91,26 @@ jobs:
       uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Resolve SQL admin username
+      id: sql_admin
+      shell: bash
+      run: |
+        SQL_ADMIN_USERNAME="${{ vars.SQL_ADMIN_USERNAME }}"
+
+        # Use a safe default if repository variable is not configured.
+        if [ -z "$SQL_ADMIN_USERNAME" ]; then
+          SQL_ADMIN_USERNAME="ourgame_sql_admin"
+        fi
+
+        # Enforce a conservative, Azure SQL-compatible login format.
+        if [[ ! "$SQL_ADMIN_USERNAME" =~ ^[A-Za-z][A-Za-z0-9_]{2,127}$ ]]; then
+          echo "Invalid SQL admin username: '$SQL_ADMIN_USERNAME'"
+          echo "Expected pattern: starts with a letter, then letters/numbers/underscore, length 3-128"
+          exit 1
+        fi
+
+        echo "sqlAdminUsername=$SQL_ADMIN_USERNAME" >> $GITHUB_OUTPUT
         
     - name: Deploy Bicep template at subscription level
       id: deploy
@@ -105,7 +126,7 @@ jobs:
           --parameters environmentName=prod \
           --parameters baseName=ourgame \
           --parameters storageAccountSku=Standard_LRS \
-          --parameters sqlAdminUsername="${{ vars.SQL_ADMIN_USERNAME }}" \
+          --parameters sqlAdminUsername="${{ steps.sql_admin.outputs.sqlAdminUsername }}" \
           --parameters sqlAdminPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
           --query 'properties.outputs' \
           --output json)
@@ -117,6 +138,7 @@ jobs:
         echo "storageAccountName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.storageAccountName.value')" >> $GITHUB_OUTPUT
         echo "sqlServerName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerName.value')" >> $GITHUB_OUTPUT
         echo "sqlServerFqdn=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerFqdn.value')" >> $GITHUB_OUTPUT
+        echo "sqlAdminUsername=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlAdminUsername.value')" >> $GITHUB_OUTPUT
 
   provision-database:
     runs-on: ubuntu-latest
@@ -151,7 +173,8 @@ jobs:
     - name: Run database seeder (migrations + seed data)
       run: |
         SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
-        export ConnectionStrings__DefaultConnection="Server=tcp:${SQL_SERVER},1433;Database=OurGame;User ID=${{ vars.SQL_ADMIN_USERNAME }};Password=${{ secrets.SQL_ADMIN_PASSWORD }};Encrypt=True;TrustServerCertificate=False;"
+        SQL_ADMIN_USERNAME="${{ needs.deploy-infrastructure.outputs.sqlAdminUsername }}"
+        export ConnectionStrings__DefaultConnection="Server=tcp:${SQL_SERVER},1433;Database=OurGame;User ID=${SQL_ADMIN_USERNAME};Password=${{ secrets.SQL_ADMIN_PASSWORD }};Encrypt=True;TrustServerCertificate=False;"
         dotnet run --project api/OurGame.Seeder
 
     - name: Remove runner IP from SQL Server firewall
