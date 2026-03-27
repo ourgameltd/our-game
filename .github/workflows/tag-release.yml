@@ -98,18 +98,6 @@ jobs:
       run: |
         SQL_ADMIN_USERNAME="${{ vars.SQL_ADMIN_USERNAME }}"
 
-        # If the SQL server already exists, preserve its immutable admin login.
-        EXISTING_SQL_SERVER_NAME="ourgame-sql-prod"
-        EXISTING_LOGIN=$(az sql server show \
-          --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
-          --name "$EXISTING_SQL_SERVER_NAME" \
-          --query administratorLogin \
-          --output tsv 2>/dev/null || true)
-
-        if [ -n "$EXISTING_LOGIN" ]; then
-          SQL_ADMIN_USERNAME="$EXISTING_LOGIN"
-        fi
-
         # Use a safe default if repository variable is not configured.
         if [ -z "$SQL_ADMIN_USERNAME" ]; then
           SQL_ADMIN_USERNAME="ourgame_sql_admin"
@@ -123,6 +111,14 @@ jobs:
         fi
 
         echo "sqlAdminUsername=$SQL_ADMIN_USERNAME" >> $GITHUB_OUTPUT
+
+    - name: Validate SQL admin password secret
+      shell: bash
+      run: |
+        if [ -z "${{ secrets.SQL_ADMIN_PASSWORD }}" ]; then
+          echo "GitHub secret SQL_ADMIN_PASSWORD is required and must not be empty"
+          exit 1
+        fi
         
     - name: Deploy Bicep template at subscription level
       id: deploy
@@ -181,19 +177,6 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
-
-    - name: Ensure SQL auth is enabled
-      run: |
-        az sql server ad-only-auth disable \
-          --resource-group ${{ needs.deploy-infrastructure.outputs.resourceGroupName }} \
-          --server ${{ needs.deploy-infrastructure.outputs.sqlServerName }}
-
-    - name: Reset SQL admin password
-      run: |
-        az sql server update \
-          --resource-group ${{ needs.deploy-infrastructure.outputs.resourceGroupName }} \
-          --name ${{ needs.deploy-infrastructure.outputs.sqlServerName }} \
-          --admin-password "${{ secrets.SQL_ADMIN_PASSWORD }}"
 
     - name: Run database seeder (migrations + seed data)
       run: |
