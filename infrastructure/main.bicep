@@ -6,6 +6,7 @@ param location string = resourceGroup().location
 param environmentName string
 
 @description('Base name for resources')
+@minLength(1)
 param baseName string = 'ourgame'
 
 @description('Storage account SKU')
@@ -27,7 +28,8 @@ param sqlAdminTenantId string
 // Storage account names must be 3-24 chars, lowercase letters and numbers only.
 // Normalize by lowercasing and removing hyphens, then truncate to 24 characters.
 var storageAccountNameRaw = replace(toLower('${baseName}storage${environmentName}'), '-', '')
-var storageAccountName = substring(storageAccountNameRaw, 0, min(length(storageAccountNameRaw), 24))
+var storageAccountNameSeed = empty(storageAccountNameRaw) ? 'ourgame' : storageAccountNameRaw
+var storageAccountName = substring('${storageAccountNameSeed}001', 0, min(length('${storageAccountNameSeed}001'), 24))
 var staticWebAppName = '${baseName}-swa-${environmentName}'
 var functionAppName = '${baseName}-func-${environmentName}'
 var appServicePlanName = '${baseName}-asp-${environmentName}'
@@ -236,3 +238,4 @@ output sqlServerName string = sqlServer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output managedIdentityName string = managedIdentity.name
 output managedIdentityClientId string = managedIdentity.properties.clientId
+output managedIdentityPrincipalId string = managedIdentity.properties.principalId

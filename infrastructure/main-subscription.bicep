@@ -62,3 +62,4 @@ output sqlServerName string = infrastructure.outputs.sqlServerName
 output sqlServerFqdn string = infrastructure.outputs.sqlServerFqdn
 output managedIdentityName string = infrastructure.outputs.managedIdentityName
 output managedIdentityClientId string = infrastructure.outputs.managedIdentityClientId
+output managedIdentityPrincipalId string = infrastructure.outputs.managedIdentityPrincipalId
