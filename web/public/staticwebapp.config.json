@@ -127,6 +127,18 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/assets/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*.js",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/*.css",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/_next*",
       "allowedRoles": ["anonymous"]
     },
