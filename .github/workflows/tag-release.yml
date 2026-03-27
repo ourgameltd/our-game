@@ -74,6 +74,7 @@ jobs:
   deploy-infrastructure:
     runs-on: ubuntu-latest
     needs: [build-backend, build-frontend]
+    environment: live
     outputs:
       resourceGroupName: ${{ steps.deploy.outputs.resourceGroupName }}
       functionAppName: ${{ steps.deploy.outputs.functionAppName }}
