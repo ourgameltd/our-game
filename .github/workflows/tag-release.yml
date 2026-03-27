@@ -182,6 +182,19 @@ jobs:
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
 
+    - name: Ensure SQL auth is enabled
+      run: |
+        az sql server ad-only-auth disable \
+          --resource-group ${{ needs.deploy-infrastructure.outputs.resourceGroupName }} \
+          --server ${{ needs.deploy-infrastructure.outputs.sqlServerName }}
+
+    - name: Reset SQL admin password
+      run: |
+        az sql server update \
+          --resource-group ${{ needs.deploy-infrastructure.outputs.resourceGroupName }} \
+          --name ${{ needs.deploy-infrastructure.outputs.sqlServerName }} \
+          --admin-password "${{ secrets.SQL_ADMIN_PASSWORD }}"
+
     - name: Run database seeder (migrations + seed data)
       run: |
         SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
