@@ -82,9 +82,6 @@ jobs:
       storageAccountName: ${{ steps.deploy.outputs.storageAccountName }}
       sqlServerName: ${{ steps.deploy.outputs.sqlServerName }}
       sqlServerFqdn: ${{ steps.deploy.outputs.sqlServerFqdn }}
-      managedIdentityName: ${{ steps.deploy.outputs.managedIdentityName }}
-      managedIdentityClientId: ${{ steps.deploy.outputs.managedIdentityClientId }}
-      managedIdentityPrincipalId: ${{ steps.deploy.outputs.managedIdentityPrincipalId }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -93,17 +90,6 @@ jobs:
       uses: azure/login@v2
       with:
         creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-    - name: Resolve service principal details for SQL admin
-      id: sp
-      run: |
-        CLIENT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r '.clientId')
-        TENANT_ID=$(echo '${{ secrets.AZURE_CREDENTIALS }}' | jq -r '.tenantId')
-        SP_OBJECT_ID=$(az ad sp show --id "$CLIENT_ID" --query id -o tsv)
-        SP_DISPLAY_NAME=$(az ad sp show --id "$CLIENT_ID" --query displayName -o tsv)
-        echo "objectId=$SP_OBJECT_ID" >> $GITHUB_OUTPUT
-        echo "displayName=$SP_DISPLAY_NAME" >> $GITHUB_OUTPUT
-        echo "tenantId=$TENANT_ID" >> $GITHUB_OUTPUT
         
     - name: Deploy Bicep template at subscription level
       id: deploy
@@ -119,9 +105,8 @@ jobs:
           --parameters environmentName=prod \
           --parameters baseName=ourgame \
           --parameters storageAccountSku=Standard_LRS \
-          --parameters sqlAdminObjectId="${{ steps.sp.outputs.objectId }}" \
-          --parameters sqlAdminLoginName="${{ steps.sp.outputs.displayName }}" \
-          --parameters sqlAdminTenantId="${{ steps.sp.outputs.tenantId }}" \
+          --parameters sqlAdminUsername="${{ vars.SQL_ADMIN_USERNAME }}" \
+          --parameters sqlAdminPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
           --query 'properties.outputs' \
           --output json)
         
@@ -132,9 +117,6 @@ jobs:
         echo "storageAccountName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.storageAccountName.value')" >> $GITHUB_OUTPUT
         echo "sqlServerName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerName.value')" >> $GITHUB_OUTPUT
         echo "sqlServerFqdn=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerFqdn.value')" >> $GITHUB_OUTPUT
-        echo "managedIdentityName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.managedIdentityName.value')" >> $GITHUB_OUTPUT
-        echo "managedIdentityClientId=$(echo $DEPLOYMENT_OUTPUT | jq -r '.managedIdentityClientId.value')" >> $GITHUB_OUTPUT
-        echo "managedIdentityPrincipalId=$(echo $DEPLOYMENT_OUTPUT | jq -r '.managedIdentityPrincipalId.value')" >> $GITHUB_OUTPUT
 
   provision-database:
     runs-on: ubuntu-latest
@@ -161,83 +143,6 @@ jobs:
           --start-ip-address "$RUNNER_IP" \
           --end-ip-address "$RUNNER_IP"
 
-    - name: Install sqlcmd (go-sqlcmd)
-      run: |
-        curl -sSL https://github.com/microsoft/go-sqlcmd/releases/latest/download/sqlcmd-linux-amd64.tar.bz2 | tar xj -C /tmp
-        sudo install -m 755 /tmp/sqlcmd /usr/local/bin/sqlcmd
-        sqlcmd --version
-
-    - name: Create SQL contained user for Function App managed identity
-      run: |
-        IDENTITY_NAME="${{ needs.deploy-infrastructure.outputs.managedIdentityName }}"
-        IDENTITY_OBJECT_ID="${{ needs.deploy-infrastructure.outputs.managedIdentityPrincipalId }}"
-        IDENTITY_SQL_USER="${IDENTITY_NAME}_$(echo "${IDENTITY_OBJECT_ID}" | cut -c1-8)"
-        FUNC_APP_NAME="${{ needs.deploy-infrastructure.outputs.functionAppName }}"
-        SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
-        
-        sqlcmd -b -r 1 -S "tcp:${SQL_SERVER},1433" -d OurGame --authentication-method=ActiveDirectoryAzCli -Q "
-          -- Clean up old system-assigned identity user if it exists (one-time)
-          IF EXISTS (SELECT 1 FROM sys.database_principals WHERE name = '${FUNC_APP_NAME}')
-            DROP USER [${FUNC_APP_NAME}];
-
-          -- Create UAMI user bound to object ID so name collisions in Entra don't break mapping
-          IF NOT EXISTS (SELECT 1 FROM sys.database_principals WHERE name = '${IDENTITY_SQL_USER}')
-          BEGIN
-            CREATE USER [${IDENTITY_SQL_USER}] FROM EXTERNAL PROVIDER WITH OBJECT_ID = '${IDENTITY_OBJECT_ID}';
-          END
-          ELSE
-          BEGIN
-            IF EXISTS (
-              SELECT 1
-              FROM sys.database_principals
-              WHERE name = '${IDENTITY_SQL_USER}'
-                AND CAST(sid AS uniqueidentifier) <> '${IDENTITY_OBJECT_ID}'
-            )
-            BEGIN
-              DROP USER [${IDENTITY_SQL_USER}];
-              CREATE USER [${IDENTITY_SQL_USER}] FROM EXTERNAL PROVIDER WITH OBJECT_ID = '${IDENTITY_OBJECT_ID}';
-            END
-          END
-
-          IF NOT EXISTS (
-            SELECT 1
-            FROM sys.database_role_members drm
-            JOIN sys.database_principals r ON drm.role_principal_id = r.principal_id
-            JOIN sys.database_principals m ON drm.member_principal_id = m.principal_id
-            WHERE r.name = 'db_datareader' AND m.name = '${IDENTITY_SQL_USER}'
-          )
-            ALTER ROLE db_datareader ADD MEMBER [${IDENTITY_SQL_USER}];
-
-          IF NOT EXISTS (
-            SELECT 1
-            FROM sys.database_role_members drm
-            JOIN sys.database_principals r ON drm.role_principal_id = r.principal_id
-            JOIN sys.database_principals m ON drm.member_principal_id = m.principal_id
-            WHERE r.name = 'db_datawriter' AND m.name = '${IDENTITY_SQL_USER}'
-          )
-            ALTER ROLE db_datawriter ADD MEMBER [${IDENTITY_SQL_USER}];
-
-          IF NOT EXISTS (
-            SELECT 1
-            FROM sys.database_role_members drm
-            JOIN sys.database_principals r ON drm.role_principal_id = r.principal_id
-            JOIN sys.database_principals m ON drm.member_principal_id = m.principal_id
-            WHERE r.name = 'db_ddladmin' AND m.name = '${IDENTITY_SQL_USER}'
-          )
-            ALTER ROLE db_ddladmin ADD MEMBER [${IDENTITY_SQL_USER}];
-        "
-
-        sqlcmd -b -r 1 -S "tcp:${SQL_SERVER},1433" -d OurGame --authentication-method=ActiveDirectoryAzCli -Q "
-          SELECT
-            name,
-            type_desc,
-            CAST(sid AS uniqueidentifier) AS object_id
-          FROM sys.database_principals
-          WHERE name = '${IDENTITY_SQL_USER}';
-        "
-
-        echo "✅ SQL user [${IDENTITY_SQL_USER}] bound to object ID [${IDENTITY_OBJECT_ID}] with required roles"
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -246,7 +151,7 @@ jobs:
     - name: Run database seeder (migrations + seed data)
       run: |
         SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
-        export ConnectionStrings__DefaultConnection="Server=tcp:${SQL_SERVER},1433;Database=OurGame;Authentication=Active Directory Default;Encrypt=True;TrustServerCertificate=False;"
+        export ConnectionStrings__DefaultConnection="Server=tcp:${SQL_SERVER},1433;Database=OurGame;User ID=${{ vars.SQL_ADMIN_USERNAME }};Password=${{ secrets.SQL_ADMIN_PASSWORD }};Encrypt=True;TrustServerCertificate=False;"
         dotnet run --project api/OurGame.Seeder
 
     - name: Remove runner IP from SQL Server firewall

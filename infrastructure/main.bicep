@@ -16,14 +16,12 @@ param storageAccountSku string = 'Standard_LRS'
 @allowed(['Allow', 'Deny'])
 param storageDefaultAction string = 'Deny'
 
-@description('Object ID of the Azure AD principal to set as SQL Server administrator')
-param sqlAdminObjectId string
+@description('SQL Server administrator username')
+param sqlAdminUsername string
 
-@description('Login name (display name) of the Azure AD SQL administrator')
-param sqlAdminLoginName string
-
-@description('Azure AD tenant ID for SQL administrator')
-param sqlAdminTenantId string
+@description('SQL Server administrator password')
+@secure()
+param sqlAdminPassword string
 
 // Storage account names must be 3-24 chars, lowercase letters and numbers only.
 // Normalize by lowercasing and removing hyphens, then truncate to 24 characters.
@@ -37,14 +35,7 @@ var logAnalyticsName = '${baseName}-log-${environmentName}'
 var appInsightsName = '${baseName}-ai-${environmentName}'
 var sqlServerName = '${baseName}-sql-${environmentName}'
 var sqlDatabaseName = 'OurGame'
-var managedIdentityName = '${baseName}-id-${environmentName}'
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey='
-
-// User-Assigned Managed Identity — stable identity that survives Function App redeployments
-resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
-  name: managedIdentityName
-  location: location
-}
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -113,12 +104,6 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
   name: functionAppName
   location: location
   kind: 'functionapp'
-  identity: {
-    type: 'UserAssigned'
-    userAssignedIdentities: {
-      '${managedIdentity.id}': {}
-    }
-  }
   properties: {
     serverFarmId: appServicePlan.id
     httpsOnly: true
@@ -147,27 +132,21 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'ConnectionStrings__DefaultConnection'
-          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDatabaseName};Authentication=Active Directory Managed Identity;User Id=${managedIdentity.properties.clientId};Encrypt=True;TrustServerCertificate=False;'
+          value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDatabaseName};User ID=${sqlAdminUsername};Password=${sqlAdminPassword};Encrypt=True;TrustServerCertificate=False;'
         }
       ]
     }
   }
 }
 
-// SQL Server - Azure AD only authentication (no SQL auth)
+// SQL Server - SQL authentication
 resource sqlServer 'Microsoft.Sql/servers@2023-08-01-preview' = {
   name: sqlServerName
   location: location
   properties: {
     minimalTlsVersion: '1.2'
-    administrators: {
-      administratorType: 'ActiveDirectory'
-      login: sqlAdminLoginName
-      sid: sqlAdminObjectId
-      tenantId: sqlAdminTenantId
-      principalType: 'Application'
-      azureADOnlyAuthentication: true
-    }
+    administratorLogin: sqlAdminUsername
+    administratorLoginPassword: sqlAdminPassword
   }
 }
 
@@ -236,6 +215,3 @@ output functionAppName string = functionApp.name
 output functionAppUrl string = 'https://${functionApp.properties.defaultHostName}'
 output sqlServerName string = sqlServer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
-output managedIdentityName string = managedIdentity.name
-output managedIdentityClientId string = managedIdentity.properties.clientId
-output managedIdentityPrincipalId string = managedIdentity.properties.principalId

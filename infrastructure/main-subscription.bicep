@@ -15,14 +15,12 @@ param baseName string = 'ourgame'
 @description('Storage account SKU')
 param storageAccountSku string = 'Standard_LRS'
 
-@description('Object ID of the Azure AD principal to set as SQL Server administrator')
-param sqlAdminObjectId string
+@description('SQL Server administrator username')
+param sqlAdminUsername string
 
-@description('Login name (display name) of the Azure AD SQL administrator')
-param sqlAdminLoginName string
-
-@description('Azure AD tenant ID for SQL administrator')
-param sqlAdminTenantId string
+@description('SQL Server administrator password')
+@secure()
+param sqlAdminPassword string
 
 // Create the resource group
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
@@ -44,9 +42,8 @@ module infrastructure 'main.bicep' = {
     environmentName: environmentName
     baseName: baseName
     storageAccountSku: storageAccountSku
-    sqlAdminObjectId: sqlAdminObjectId
-    sqlAdminLoginName: sqlAdminLoginName
-    sqlAdminTenantId: sqlAdminTenantId
+    sqlAdminUsername: sqlAdminUsername
+    sqlAdminPassword: sqlAdminPassword
   }
 }
 
@@ -60,6 +57,3 @@ output functionAppName string = infrastructure.outputs.functionAppName
 output functionAppUrl string = infrastructure.outputs.functionAppUrl
 output sqlServerName string = infrastructure.outputs.sqlServerName
 output sqlServerFqdn string = infrastructure.outputs.sqlServerFqdn
-output managedIdentityName string = infrastructure.outputs.managedIdentityName
-output managedIdentityClientId string = infrastructure.outputs.managedIdentityClientId
-output managedIdentityPrincipalId string = infrastructure.outputs.managedIdentityPrincipalId
