@@ -621,6 +621,13 @@ static string? FindApiDirectory(string startDirectory)
             return candidate;
         }
 
+        // Look for api/OurGame.Api subdirectory (repo root in CI)
+        var nestedCandidate = Path.Combine(directoryInfo.FullName, "api", "OurGame.Api");
+        if (Directory.Exists(nestedCandidate) && File.Exists(Path.Combine(nestedCandidate, "appsettings.json")))
+        {
+            return nestedCandidate;
+        }
+
         // If we're already in the api folder, look for sibling
         if (directoryInfo.Name == "api" || directoryInfo.Name == "OurGame.Seeder")
         {
