@@ -2,6 +2,7 @@
 param location string = resourceGroup().location
 
 @description('Environment name (e.g., dev, staging, prod)')
+@minLength(1)
 param environmentName string
 
 @description('Base name for resources')
@@ -35,6 +36,7 @@ var appInsightsName = '${baseName}-ai-${environmentName}'
 var sqlServerName = '${baseName}-sql-${environmentName}'
 var sqlDatabaseName = 'OurGame'
 var managedIdentityName = '${baseName}-id-${environmentName}'
+var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey='
 
 // User-Assigned Managed Identity — stable identity that survives Function App redeployments
 resource managedIdentity 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
@@ -122,16 +124,8 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
     siteConfig: {     
       appSettings: [
         {
-          name: 'AzureWebJobsStorage__accountName'
-          value: storageAccount.name
-        }
-        {
-          name: 'AzureWebJobsStorage__credential'
-          value: 'managedidentity'
-        }
-        {
-          name: 'AzureWebJobsStorage__clientId'
-          value: managedIdentity.properties.clientId
+          name: 'AzureWebJobsStorage'
+          value: '${storageConnectionString}${storageAccount.listKeys().keys[0].value}'
         }
         {
           name: 'FUNCTIONS_WORKER_RUNTIME'
@@ -155,40 +149,6 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
       ]
     }
-  }
-}
-
-// Role assignments for User-Assigned Managed Identity on Storage Account
-// Storage Blob Data Owner
-resource storageBlobDataOwnerRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storageAccount.id, managedIdentity.id, 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
-  scope: storageAccount
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', 'b7e6dc6d-f1e8-4753-8033-0f276bb0955b')
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// Storage Table Data Contributor
-resource storageTableDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storageAccount.id, managedIdentity.id, '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
-  scope: storageAccount
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '0a9a7e1f-b9d0-4cc4-a60d-0319b160aaa3')
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
-  }
-}
-
-// Storage Queue Data Contributor
-resource storageQueueDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(storageAccount.id, managedIdentity.id, '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
-  scope: storageAccount
-  properties: {
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '974c5e8b-45b9-4653-ba55-5f855dd0fb88')
-    principalId: managedIdentity.properties.principalId
-    principalType: 'ServicePrincipal'
   }
 }
 
