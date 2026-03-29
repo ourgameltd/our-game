@@ -32,7 +32,7 @@ That combination is rarer than any one feature by itself.
 
 ### 1.1 Product aim
 
-The repository frames the product as football management “at all level” with a goal of organizing under-supported grassroots football better (`README.md`). The frontend README describes a “responsive, mobile-first web portal” for managing clubs, teams, players, matches, training, and community workflows (`web/README.md`).
+The repository frames the product as football management “at all levels” with a goal of organizing under-supported grassroots football better (`README.md`). The frontend README describes a “responsive, mobile-first web portal” for managing clubs, teams, players, matches, training, and community workflows (`web/README.md`).
 
 This fits a clear market problem: most grassroots clubs are run by volunteers using a mix of WhatsApp, spreadsheets, paper forms, shared drives, text messages, and league/association portals that do not work together.
 
