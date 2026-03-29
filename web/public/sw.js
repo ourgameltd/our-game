@@ -6,6 +6,8 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll([OFFLINE_URL]);
+    }).catch((err) => {
+      console.warn('Service worker install: failed to cache offline URL', err);
     })
   );
   self.skipWaiting();

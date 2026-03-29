@@ -36,6 +36,6 @@ public class PushSubscriptionConfiguration : IEntityTypeConfiguration<PushSubscr
         builder.HasOne(ps => ps.User)
             .WithMany()
             .HasForeignKey(ps => ps.UserId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

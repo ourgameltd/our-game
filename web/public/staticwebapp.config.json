@@ -139,10 +139,6 @@
       "allowedRoles": ["anonymous"]
     },
     {
-      "route": "/sw.js",
-      "allowedRoles": ["anonymous"]
-    },
-    {
       "route": "/*.css",
       "allowedRoles": ["anonymous"]
     },

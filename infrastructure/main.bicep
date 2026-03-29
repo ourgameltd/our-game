@@ -26,8 +26,6 @@ param vapidPublicKey string = ''
 @secure()
 param vapidPrivateKey string = ''
 
-
-
 @description('SQL Server administrator password')
 @secure()
 param sqlAdminPassword string
