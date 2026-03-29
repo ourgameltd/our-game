@@ -12,6 +12,7 @@ namespace OurGame.Application.UseCases.Invites.Queries.GetInviteByCode;
 /// </summary>
 public class GetInviteByCodeHandler : IRequestHandler<GetInviteByCodeQuery, InviteDetailsDto>
 {
+    private const int MaxMaskedCharacters = 4;
     private readonly OurGameContext _db;
 
     public GetInviteByCodeHandler(OurGameContext db)
@@ -50,7 +51,7 @@ public class GetInviteByCodeHandler : IRequestHandler<GetInviteByCodeQuery, Invi
 
         var local = email[..atIndex];
         var domain = email[atIndex..];
-        var maskedLocal = local[0] + new string('*', Math.Min(local.Length - 1, 4));
+        var maskedLocal = local[0] + new string('*', Math.Min(local.Length - 1, MaxMaskedCharacters));
         return maskedLocal + domain;
     }
 }

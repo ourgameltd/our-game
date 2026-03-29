@@ -16,6 +16,7 @@ namespace OurGame.Application.UseCases.Invites.Commands.CreateInvite;
 public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDto>
 {
     private const string CodeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    private const int InviteExpiryDays = 30;
 
     private readonly OurGameContext _db;
 
@@ -75,7 +76,7 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
             Status = InviteStatus.Pending,
             CreatedByUserId = creatingUser.Id,
             CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
+            ExpiresAt = DateTime.UtcNow.AddDays(InviteExpiryDays)
         };
 
         _db.Invites.Add(invite);

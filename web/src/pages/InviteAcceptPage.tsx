@@ -218,7 +218,7 @@ export default function InviteAcceptPage() {
             ) : (
               <div className="text-center space-y-4">
                 <p className="text-gray-600 text-sm">
-                  You're signed in{user?.userDetails ? ` as <strong>${user.userDetails}</strong>` : ''}.
+                  You're signed in{user?.userDetails ? <> as <strong>{user.userDetails}</strong></> : ''}.
                   Click below to accept this invite and join{' '}
                   <strong>{invite?.clubName}</strong> as a {roleLabel}.
                 </p>
