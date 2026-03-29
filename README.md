@@ -5,6 +5,10 @@ Football managment at all level organised and done properly.
 ## Why?
 Cause just now Scottish football is an underfunded shambles.
 
+## Strategy report
+
+- Market, competitor, and go-to-market analysis: [`docs/market-competitive-analysis.md`](docs/market-competitive-analysis.md)
+
 ## Technology Stack
 
 - **Frontend**: React 19 + TypeScript with Vite
