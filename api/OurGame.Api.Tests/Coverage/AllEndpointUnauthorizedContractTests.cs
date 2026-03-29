@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
+using OurGame.Api.Attributes;
 using OurGame.Api.Functions;
 using OurGame.Api.Tests.TestInfrastructure;
 using OurGame.Persistence.Models;
@@ -56,7 +57,8 @@ public class AllEndpointUnauthorizedContractTests
     {
         return method.ReturnType == typeof(Task<HttpResponseData>)
             && method.GetParameters().Length > 0
-            && method.GetParameters()[0].ParameterType == typeof(HttpRequestData);
+            && method.GetParameters()[0].ParameterType == typeof(HttpRequestData)
+            && !method.IsDefined(typeof(AllowAnonymousEndpointAttribute), inherit: false);
     }
 
     private static object CreateFunctionInstance(Type functionType)

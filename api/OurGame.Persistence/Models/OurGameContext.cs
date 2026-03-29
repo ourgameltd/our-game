@@ -43,6 +43,8 @@ public partial class OurGameContext : DbContext
 
     public virtual DbSet<Formation> Formations { get; set; }
 
+    public virtual DbSet<Invite> Invites { get; set; }
+
     public virtual DbSet<FormationPosition> FormationPositions { get; set; }
 
     public virtual DbSet<Goal> Goals { get; set; }
