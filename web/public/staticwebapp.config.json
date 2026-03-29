@@ -151,6 +151,15 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/api/v1/invites/*",
+      "methods": ["GET"],
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/invite/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/api/*",
       "allowedRoles": ["authenticated"]
     },

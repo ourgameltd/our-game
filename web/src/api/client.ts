@@ -24,6 +24,62 @@ export interface AddPlayerToTeamRequest {
   squadNumber: number;
 }
 
+// Invite Types
+export type InviteType = 0 | 1 | 2; // Coach=0, Player=1, Parent=2
+export type InviteStatus = 0 | 1 | 2 | 3; // Pending=0, Accepted=1, Expired=2, Revoked=3
+
+export interface InviteDetailsDto {
+  code: string;
+  maskedEmail: string;
+  type: InviteType;
+  clubName: string;
+  status: InviteStatus;
+  expiresAt: string;
+}
+
+export interface InviteDto {
+  id: string;
+  code: string;
+  email: string;
+  type: InviteType;
+  entityId: string;
+  clubId: string;
+  clubName: string;
+  status: InviteStatus;
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt?: string;
+}
+
+export interface ClubInviteDto {
+  id: string;
+  code: string;
+  email: string;
+  type: InviteType;
+  entityId: string;
+  status: InviteStatus;
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt?: string;
+}
+
+export interface CreateInviteRequest {
+  email: string;
+  type: InviteType;
+  entityId: string;
+  clubId: string;
+}
+
+export interface AcceptInviteRequest {
+  firstName?: string;
+  lastName?: string;
+}
+
+export interface AcceptInviteResult {
+  inviteId: string;
+  message: string;
+}
+
 export interface AddPlayerToTeamResult {
   playerId: string;
   teamId: string;
@@ -3616,6 +3672,71 @@ export const apiClient = {
           `/v1/reports/${reportId}`,
           request
         );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  },
+
+  invites: {
+    /**
+     * Get invite details by code (anonymous)
+     */
+    getByCode: async (code: string): Promise<ApiResponse<InviteDetailsDto>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<InviteDetailsDto>>(`/v1/invites/${code}`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Accept an invite and link the authenticated user's account
+     */
+    accept: async (code: string, request?: AcceptInviteRequest): Promise<ApiResponse<AcceptInviteResult>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<AcceptInviteResult>>(
+          `/v1/invites/${code}/accept`,
+          request ?? {}
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Create a new invite
+     */
+    create: async (request: CreateInviteRequest): Promise<ApiResponse<InviteDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<InviteDto>>('/v1/invites', request);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Get all invites for a club
+     */
+    getForClub: async (clubId: string): Promise<ApiResponse<ClubInviteDto[]>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<ClubInviteDto[]>>(`/v1/clubs/${clubId}/invites`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Revoke a pending invite
+     */
+    revoke: async (inviteId: string): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.delete<ApiResponse<void>>(`/v1/invites/${inviteId}`);
         return response.data;
       } catch (error) {
         return handleApiError(error);

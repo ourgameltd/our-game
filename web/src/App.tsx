@@ -68,6 +68,7 @@ import DrillsListPage from '@pages/drills/DrillsListPage';
 import DrillTemplatesListPage from '@pages/drills/DrillTemplatesListPage';
 import DrillFormPage from '@pages/drills/DrillFormPage';
 import DrillTemplateFormPage from '@pages/drills/DrillTemplateFormPage';
+import InviteAcceptPage from '@pages/InviteAcceptPage';
 import Header from '@components/layout/Header';
 import ScrollToTop from '@components/common/ScrollToTop';
 
@@ -91,7 +92,8 @@ function AppContent() {
   const hideHeader = location.pathname === '/' || 
                      location.pathname === '/login' || 
                      location.pathname === '/register' || 
-                     location.pathname === '/password-reset';
+                     location.pathname === '/password-reset' ||
+                     location.pathname.startsWith('/invite/');
 
   const getMarginLeft = () => {
     if (hideHeader || !isDesktop) return '0';
@@ -115,6 +117,7 @@ function AppContent() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/password-reset" element={<PasswordResetPage />} />
+        <Route path="/invite/:code" element={<InviteAcceptPage />} />
 
         {/* Profile */}
         <Route path="/profile" element={<ProfilePage />} />
