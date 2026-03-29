@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import PageTitle from '@/components/common/PageTitle';
-import { Bell, Check, CheckCheck, Trash2, Filter, Trophy, Users, Calendar, Megaphone, MessageSquare } from 'lucide-react';
+import { Bell, BellOff, Check, CheckCheck, Trash2, Filter, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2 } from 'lucide-react';
 import { getNotificationTypeColors } from '@/data/referenceData';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 
 interface Notification {
   id: string;
@@ -67,6 +68,7 @@ export default function NotificationsPage() {
 
   const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const push = usePushNotifications();
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -141,6 +143,83 @@ export default function NotificationsPage() {
         />
 
         <div className="max-w-4xl mx-auto">
+        {/* Push Notification Opt-in Banner */}
+        {push.isSupported && !push.isSubscribed && push.permission !== 'denied' && (
+          <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="p-2 bg-primary-100 dark:bg-primary-800 rounded-lg flex-shrink-0">
+                <Smartphone className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-primary-900 dark:text-primary-100">
+                  Get push notifications
+                </p>
+                <p className="text-xs text-primary-700 dark:text-primary-300">
+                  Receive instant alerts on this device for matches, training, and club updates.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={push.subscribe}
+              disabled={push.isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60 flex-shrink-0"
+            >
+              {push.isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Bell className="w-4 h-4" />
+              )}
+              Enable notifications
+            </button>
+          </div>
+        )}
+
+        {push.isSupported && push.permission === 'denied' && (
+          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 mb-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-amber-800 dark:text-amber-200">
+              Push notifications are blocked. To enable them, update your browser notification
+              settings for this site and reload the page.
+            </p>
+          </div>
+        )}
+
+        {push.isSupported && push.isSubscribed && (
+          <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
+            <div className="flex items-center gap-3 flex-1">
+              <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg flex-shrink-0">
+                <Bell className="w-5 h-5 text-green-600 dark:text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-green-900 dark:text-green-100">
+                  Push notifications are enabled
+                </p>
+                <p className="text-xs text-green-700 dark:text-green-300">
+                  You'll receive alerts on this device.
+                </p>
+              </div>
+            </div>
+            <button
+              onClick={push.unsubscribe}
+              disabled={push.isLoading}
+              className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg transition-colors disabled:opacity-60 flex-shrink-0"
+            >
+              {push.isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <BellOff className="w-4 h-4" />
+              )}
+              Disable notifications
+            </button>
+          </div>
+        )}
+
+        {push.error && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-3 mb-4 flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+            <p className="text-sm text-red-700 dark:text-red-300">{push.error}</p>
+          </div>
+        )}
         {/* Actions Bar */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

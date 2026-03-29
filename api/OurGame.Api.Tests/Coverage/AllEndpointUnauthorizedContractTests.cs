@@ -11,6 +11,16 @@ namespace OurGame.Api.Tests.Coverage;
 
 public class AllEndpointUnauthorizedContractTests
 {
+    /// <summary>
+    /// Endpoints that are intentionally public (anonymous) and do not require authentication.
+    /// These are excluded from the unauthorized contract test.
+    /// </summary>
+    private static readonly HashSet<string> AnonymousEndpoints = new(StringComparer.OrdinalIgnoreCase)
+    {
+        // VAPID public key must be accessible without auth so the browser can subscribe to push
+        "GetVapidPublicKey",
+    };
+
     [Theory]
     [MemberData(nameof(GetEndpointMethods))]
     public async Task Endpoint_ReturnsUnauthorized_WhenClientPrincipalMissing(Type functionType, MethodInfo method)
@@ -48,6 +58,7 @@ public class AllEndpointUnauthorizedContractTests
             .SelectMany(static type => type
                 .GetMethods(BindingFlags.Instance | BindingFlags.Public)
                 .Where(static method => IsEndpointMethod(method))
+                .Where(method => !AnonymousEndpoints.Contains(method.Name))
                 .OrderBy(static method => method.Name, StringComparer.Ordinal)
                 .Select(method => new object[] { type, method }));
     }
