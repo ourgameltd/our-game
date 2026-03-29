@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OurGame.Persistence.Models;
 
@@ -11,9 +12,11 @@ using OurGame.Persistence.Models;
 namespace OurGame.Persistence.Migrations
 {
     [DbContext(typeof(OurGameContext))]
-    partial class OurGameContextModelSnapshot : ModelSnapshot
+    [Migration("20260329100239_AddPushSubscriptions")]
+    partial class AddPushSubscriptions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -1066,72 +1069,6 @@ namespace OurGame.Persistence.Migrations
                     b.HasIndex("PlayerId");
 
                     b.ToTable("Injuries");
-                });
-
-            modelBuilder.Entity("OurGame.Persistence.Models.Invite", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier")
-                        .HasDefaultValueSql("NEWID()");
-
-                    b.Property<DateTime?>("AcceptedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<Guid?>("AcceptedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("ClubId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Code")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("nvarchar(8)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<Guid>("CreatedByUserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Email")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<Guid>("EntityId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("ExpiresAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AcceptedByUserId");
-
-                    b.HasIndex("ClubId")
-                        .HasDatabaseName("IX_Invites_ClubId");
-
-                    b.HasIndex("Code")
-                        .IsUnique()
-                        .HasDatabaseName("UX_Invites_Code");
-
-                    b.HasIndex("EntityId")
-                        .HasDatabaseName("IX_Invites_EntityId");
-
-                    b.HasIndex("Email", "Status")
-                        .HasDatabaseName("IX_Invites_Email_Status");
-
-                    b.ToTable("Invites", (string)null);
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Kit", b =>
@@ -3042,26 +2979,6 @@ namespace OurGame.Persistence.Migrations
                     b.Navigation("MatchReport");
 
                     b.Navigation("Player");
-                });
-
-            modelBuilder.Entity("OurGame.Persistence.Models.Invite", b =>
-                {
-                    b.HasOne("OurGame.Persistence.Models.User", "AcceptedByUser")
-                        .WithMany()
-                        .HasForeignKey("AcceptedByUserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .HasConstraintName("FK_Invites_Users_AcceptedBy");
-
-                    b.HasOne("OurGame.Persistence.Models.Club", "Club")
-                        .WithMany()
-                        .HasForeignKey("ClubId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired()
-                        .HasConstraintName("FK_Invites_Clubs");
-
-                    b.Navigation("AcceptedByUser");
-
-                    b.Navigation("Club");
                 });
 
             modelBuilder.Entity("OurGame.Persistence.Models.Kit", b =>

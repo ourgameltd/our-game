@@ -16,8 +16,15 @@ param storageAccountSku string = 'Standard_LRS'
 @allowed(['Allow', 'Deny'])
 param storageDefaultAction string = 'Deny'
 
-@description('SQL Server administrator username')
-param sqlAdminUsername string
+@description('VAPID subject for Web Push notifications (e.g. mailto:admin@yourdomain.com)')
+param vapidSubject string = 'mailto:admin@ourgame.app'
+
+@description('VAPID public key for Web Push notifications (base64url-encoded). Generate with: npx web-push generate-vapid-keys')
+param vapidPublicKey string = ''
+
+@description('VAPID private key for Web Push notifications (base64url-encoded). Generate with: npx web-push generate-vapid-keys')
+@secure()
+param vapidPrivateKey string = ''
 
 @description('SQL Server administrator password')
 @secure()
@@ -133,6 +140,18 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'ConnectionStrings__DefaultConnection'
           value: 'Server=tcp:${sqlServer.properties.fullyQualifiedDomainName},1433;Database=${sqlDatabaseName};User ID=${sqlAdminUsername};Password=${sqlAdminPassword};Encrypt=True;TrustServerCertificate=False;'
+        }
+        {
+          name: 'Vapid__Subject'
+          value: vapidSubject
+        }
+        {
+          name: 'Vapid__PublicKey'
+          value: vapidPublicKey
+        }
+        {
+          name: 'Vapid__PrivateKey'
+          value: vapidPrivateKey
         }
       ]
     }
