@@ -29,27 +29,8 @@ param vapidPrivateKey string = ''
 @description('Data location for Azure Communication Services (e.g. Europe, United States, Asia Pacific, Australia)')
 param acsDataLocation string = 'Europe'
 
-@description('Local-part for ACS sender email address (left side of @).')
-param emailSenderLocalPart string = 'DoNotReply'
-
-@description('Custom sender domain for ACS email (for example, isourgame.com). Leave empty to use the Azure-managed domain.')
-param emailSenderCustomDomain string = ''
-
 @description('Frontend base URL used in transactional emails (e.g. invite links). Defaults to the Static Web App URL.')
 param frontendBaseUrl string = ''
-
-@description('Static Web App custom domain host name (for example, football.isourgame.com). Leave empty to skip custom domain setup.')
-param staticWebCustomDomainHostName string = ''
-
-@description('Azure DNS zone name for the custom domain (for example, isourgame.com).')
-param staticWebCustomDomainDnsZoneName string = ''
-
-@description('Azure DNS record-set name for the custom domain (for example, football).')
-param staticWebCustomDomainDnsRecordSetName string = ''
-
-@description('TTL (seconds) for the Azure DNS CNAME record used by the Static Web App custom domain.')
-@minValue(60)
-param staticWebCustomDomainDnsTtl int = 3600
 
 @description('SQL Server administrator username')
 param sqlAdminUsername string
@@ -194,7 +175,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'AzureCommunicationServices__SenderAddress'
-          value: emailSenderAddress
+          value: 'DoNotReply@${emailDomain.properties.fromSenderDomain}'
         }
         {
           name: 'App__FrontendBaseUrl'
