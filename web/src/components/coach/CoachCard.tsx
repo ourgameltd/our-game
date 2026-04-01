@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Coach } from '@/types';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
+import { apiClient, CreateInviteRequest } from '@/api/client';
 import { ReactNode } from 'react';
 
 interface CoachCardProps {
@@ -15,10 +17,25 @@ export default function CoachCard({ coach, onClick, badges, actions }: CoachCard
     ? new Date().getFullYear() - birthDate.getFullYear()
     : null;
 
-  const handleSendInvite = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click when clicking invite button
-    // In a real app, this would send an invite email via the backend
-    alert(`Invite sent to ${coach.email}! (Demo - not actually sent)`);
+  const [inviteState, setInviteState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  const handleSendInvite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (inviteState === 'sending' || inviteState === 'sent' || !coach.email) return;
+
+    setInviteState('sending');
+    try {
+      const request: CreateInviteRequest = {
+        email: coach.email,
+        type: 0, // Coach
+        entityId: coach.id,
+        clubId: coach.clubId,
+      };
+      const result = await apiClient.invites.create(request);
+      setInviteState(result.success ? 'sent' : 'error');
+    } catch {
+      setInviteState('error');
+    }
   };
 
   return (
@@ -122,13 +139,28 @@ export default function CoachCard({ coach, onClick, badges, actions }: CoachCard
           ) : (
             <button
               onClick={handleSendInvite}
-              className="inline-flex items-center px-2 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+              disabled={inviteState === 'sending' || inviteState === 'sent' || !coach.email}
+              className={`inline-flex items-center px-2 py-1 text-xs font-medium rounded-md transition-colors ${
+                inviteState === 'sent'
+                  ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                  : inviteState === 'error'
+                  ? 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                  : 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+              } disabled:opacity-50 disabled:cursor-not-allowed`}
             >
-              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <span className="hidden md:inline">Invite</span>
-              <span className="md:hidden">Send Invite</span>
+              {inviteState === 'sending' ? (
+                <span className="animate-spin rounded-full h-3 w-3 border-b-2 border-current mr-1" />
+              ) : (
+                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+              )}
+              <span className="hidden md:inline">
+                {inviteState === 'sent' ? 'Sent' : inviteState === 'error' ? 'Failed' : inviteState === 'sending' ? 'Sending...' : 'Invite'}
+              </span>
+              <span className="md:hidden">
+                {inviteState === 'sent' ? 'Invite Sent' : inviteState === 'error' ? 'Failed' : inviteState === 'sending' ? 'Sending...' : 'Send Invite'}
+              </span>
             </button>
           )}
           {/* Custom actions */}

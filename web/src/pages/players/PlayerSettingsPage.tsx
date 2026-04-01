@@ -57,8 +57,8 @@ function PositionsSkeleton() {
   );
 }
 
-// Skeleton for emergency contacts
-function EmergencyContactsSkeleton() {
+// Skeleton for guardians
+function GuardiansSkeleton() {
   return (
     <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 animate-pulse">
       <div className="flex items-center justify-between mb-3">
@@ -408,7 +408,7 @@ export default function PlayerSettingsPage() {
               <div className="space-y-2">
                 <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
                 <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-                <EmergencyContactsSkeleton />
+                <GuardiansSkeleton />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-4 animate-pulse">
@@ -721,14 +721,14 @@ export default function PlayerSettingsPage() {
               <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Emergency Contacts
+                    Guardians
                   </h4>
                   <button
                     type="button"
                     onClick={handleAddEmergencyContact}
                     disabled={isFormDisabled}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                    title="Add Contact"
+                    title="Add Guardian"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -736,7 +736,7 @@ export default function PlayerSettingsPage() {
                 
                 {emergencyContacts.length === 0 ? (
                   <p className="text-gray-500 dark:text-gray-400 text-sm italic">
-                    No emergency contacts added yet.
+                    No guardians added yet.
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -745,7 +745,7 @@ export default function PlayerSettingsPage() {
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              Contact {index + 1}
+                              Guardian {index + 1}
                             </span>
                             {contact.isPrimary && (
                               <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded">
@@ -769,7 +769,7 @@ export default function PlayerSettingsPage() {
                               onClick={() => handleRemoveEmergencyContact(contact.id || `contact-${index}`)}
                               disabled={isFormDisabled}
                               className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Remove contact"
+                              title="Remove guardian"
                             >
                               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

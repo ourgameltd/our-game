@@ -26,6 +26,15 @@ param vapidPublicKey string = ''
 @secure()
 param vapidPrivateKey string = ''
 
+@description('Data location for Azure Communication Services (e.g. Europe, United States, Asia Pacific, Australia)')
+param acsDataLocation string = 'Europe'
+
+@description('Frontend base URL used in transactional emails (e.g. invite links). Defaults to the Static Web App URL.')
+param frontendBaseUrl string = ''
+
+@description('SQL Server administrator username')
+param sqlAdminUsername string
+
 @description('SQL Server administrator password')
 @secure()
 param sqlAdminPassword string
@@ -42,6 +51,8 @@ var logAnalyticsName = '${baseName}-log-${environmentName}'
 var appInsightsName = '${baseName}-ai-${environmentName}'
 var sqlServerName = '${baseName}-sql-${environmentName}'
 var sqlDatabaseName = 'OurGame'
+var communicationServiceName = '${baseName}-acs-${environmentName}'
+var emailServiceName = '${baseName}-email-${environmentName}'
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey='
 
 // Storage Account
@@ -153,6 +164,18 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           name: 'Vapid__PrivateKey'
           value: vapidPrivateKey
         }
+        {
+          name: 'AzureCommunicationServices__ConnectionString'
+          value: communicationService.listKeys().primaryConnectionString
+        }
+        {
+          name: 'AzureCommunicationServices__SenderAddress'
+          value: 'DoNotReply@${emailDomain.properties.fromSenderDomain}'
+        }
+        {
+          name: 'App__FrontendBaseUrl'
+          value: empty(frontendBaseUrl) ? 'https://${staticWebApp.properties.defaultHostname}' : frontendBaseUrl
+        }
       ]
     }
   }
@@ -199,6 +222,38 @@ resource sqlFirewallAllowAzure 'Microsoft.Sql/servers/firewallRules@2023-08-01-p
   }
 }
 
+// Azure Communication Services - Email Service
+resource emailService 'Microsoft.Communication/emailServices@2023-04-01' = {
+  name: emailServiceName
+  location: 'global'
+  properties: {
+    dataLocation: acsDataLocation
+  }
+}
+
+// Azure-managed email domain (provides DoNotReply@<guid>.azurecomm.net sender)
+resource emailDomain 'Microsoft.Communication/emailServices/domains@2023-04-01' = {
+  parent: emailService
+  name: 'AzureManagedDomain'
+  location: 'global'
+  properties: {
+    domainManagement: 'AzureManaged'
+    userEngagementTracking: 'Disabled'
+  }
+}
+
+// Azure Communication Services (linked to email domain)
+resource communicationService 'Microsoft.Communication/communicationServices@2023-04-01' = {
+  name: communicationServiceName
+  location: 'global'
+  properties: {
+    dataLocation: acsDataLocation
+    linkedDomains: [
+      emailDomain.id
+    ]
+  }
+}
+
 // Static Web App - Standard tier to support linked backends
 resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
   name: staticWebAppName
@@ -235,3 +290,4 @@ output functionAppUrl string = 'https://${functionApp.properties.defaultHostName
 output sqlServerName string = sqlServer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output sqlAdminUsername string = sqlAdminUsername
+output communicationServiceName string = communicationService.name

@@ -3,6 +3,7 @@
     "rewrite": "/index.html",
     "exclude": [
       "/api/*",
+      "/.auth/*",
       "/images/*.{png,jpg,gif}",
       "/css/*"
     ]
@@ -151,6 +152,22 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/@vite/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/@react-refresh",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/src/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/node_modules/*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/.auth/*",
       "allowedRoles": ["anonymous"]
     },
@@ -209,7 +226,7 @@
   "responseOverrides": {
     "401": {
       "statusCode": 302,
-      "redirect": "/.auth/login/b2c"
+      "redirect": "/.auth/login/btoc"
     }
   }
 }

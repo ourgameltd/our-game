@@ -85,7 +85,7 @@ export default function InviteAcceptPage() {
   };
 
   const handleSignIn = () => {
-    window.location.href = `/.auth/login/b2c?post_login_redirect_uri=/invite/${code}`;
+    window.location.href = `/.auth/login/btoc?post_login_redirect_uri=/invite/${code}`;
   };
 
   if (authLoading || pageState === 'LOADING') {

@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useCoach } from '@/api/hooks';
 import { Routes } from '@utils/routes';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
+import { useInvite } from '@/hooks/useInvite';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -167,10 +168,15 @@ export default function CoachProfilePage() {
     );
   }
 
+  const { sendInvite, isSending, isSuccess, error: inviteError } = useInvite({
+    email: coach?.email ?? '',
+    type: 0, // Coach
+    entityId: coachId ?? '',
+    clubId: clubId ?? '',
+  });
+
   const handleSendInvite = () => {
-    if (coach) {
-      alert(`Invite sent to ${coach.email}! (Demo - not actually sent)`);
-    }
+    sendInvite();
   };
 
   // Helper to safely parse specializations (handles both arrays and JSON strings)
@@ -239,12 +245,23 @@ export default function CoachProfilePage() {
                     ) : (
                       <button
                         onClick={handleSendInvite}
-                        className="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-md hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                        disabled={isSending || isSuccess || !coach.email}
+                        className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-md transition-colors ${
+                          isSuccess
+                            ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
+                            : inviteError
+                            ? 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
+                            : 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
                       >
-                        <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Send Invite
+                        {isSending ? (
+                          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-1" />
+                        ) : (
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                          </svg>
+                        )}
+                        {isSuccess ? 'Invite Sent!' : inviteError ? 'Failed' : isSending ? 'Sending...' : 'Send Invite'}
                       </button>
                     )}
                   </div>
