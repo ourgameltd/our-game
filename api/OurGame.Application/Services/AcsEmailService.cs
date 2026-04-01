@@ -35,12 +35,8 @@ public class AcsEmailService : IEmailService
             return false;
         }
 
-        var senderAddress = _configuration["AzureCommunicationServices:SenderAddress"];
-        if (string.IsNullOrWhiteSpace(senderAddress))
-        {
-            _logger.LogWarning("ACS sender address is not configured – skipping invite email to {Email}", recipientEmail);
-            return false;
-        }
+        var senderAddress = _configuration["AzureCommunicationServices:SenderAddress"]
+            ?? "DoNotReply@ourgame.app";
         var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "https://ourgame.app";
 
         var inviteUrl = $"{frontendBaseUrl.TrimEnd('/')}/invite/{inviteCode}";
@@ -75,11 +71,6 @@ public class AcsEmailService : IEmailService
                 "ACS returned {StatusCode} when sending invite email to {Email}: {Message}",
                 ex.Status, recipientEmail, ex.Message);
             return false;
-        }
-        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
-        {
-            _logger.LogInformation(ex, "Sending invite email to {Email} was canceled.", recipientEmail);
-            throw;
         }
         catch (Exception ex)
         {

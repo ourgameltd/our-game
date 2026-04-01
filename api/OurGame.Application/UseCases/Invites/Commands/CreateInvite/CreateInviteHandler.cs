@@ -29,18 +29,12 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
 
     private readonly OurGameContext _db;
     private readonly IEmailService _emailService;
-    private readonly INotificationService _notificationService;
     private readonly ILogger<CreateInviteHandler> _logger;
 
-    public CreateInviteHandler(
-        OurGameContext db,
-        IEmailService emailService,
-        INotificationService notificationService,
-        ILogger<CreateInviteHandler> logger)
+    public CreateInviteHandler(OurGameContext db, IEmailService emailService, ILogger<CreateInviteHandler> logger)
     {
         _db = db;
         _emailService = emailService;
-        _notificationService = notificationService;
         _logger = logger;
     }
 
@@ -117,15 +111,6 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
                 "Invite {InviteId} created but email delivery to {Email} failed. Code: {Code}",
                 invite.Id, invite.Email, invite.Code);
         }
-
-        await _notificationService.CreateAsync(
-            creatingUser.Id,
-            "announcement",
-            "Invite sent",
-            $"Invite sent to {invite.Email} for {roleLabel} in {club.Name}.",
-            "/notifications",
-            sendPush: true,
-            cancellationToken);
 
         return new InviteDto
         {
