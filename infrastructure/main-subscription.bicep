@@ -22,6 +22,9 @@ param sqlAdminUsername string
 @secure()
 param sqlAdminPassword string
 
+@description('Frontend base URL used in transactional emails. Defaults to the Static Web App URL.')
+param frontendBaseUrl string = ''
+
 // Create the resource group
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: resourceGroupName
@@ -44,6 +47,7 @@ module infrastructure 'main.bicep' = {
     storageAccountSku: storageAccountSku
     sqlAdminUsername: sqlAdminUsername
     sqlAdminPassword: sqlAdminPassword
+    frontendBaseUrl: frontendBaseUrl
   }
 }
 
@@ -58,3 +62,4 @@ output functionAppUrl string = infrastructure.outputs.functionAppUrl
 output sqlServerName string = infrastructure.outputs.sqlServerName
 output sqlServerFqdn string = infrastructure.outputs.sqlServerFqdn
 output sqlAdminUsername string = infrastructure.outputs.sqlAdminUsername
+output communicationServiceName string = infrastructure.outputs.communicationServiceName
