@@ -76,6 +76,11 @@ public class AcsEmailService : IEmailService
                 ex.Status, recipientEmail, ex.Message);
             return false;
         }
+        catch (OperationCanceledException ex) when (ex.CancellationToken == cancellationToken)
+        {
+            _logger.LogInformation(ex, "Sending invite email to {Email} was canceled.", recipientEmail);
+            throw;
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to send invite email to {Email}", recipientEmail);
