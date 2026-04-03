@@ -16,11 +16,13 @@ public class CreateInviteHandlerTests
     private static CreateInviteHandler BuildHandler(
         OurGameContext db,
         IEmailService? emailService = null,
+        INotificationService? notificationService = null,
         ILogger<CreateInviteHandler>? logger = null)
     {
         return new CreateInviteHandler(
             db,
             emailService ?? new StubEmailService(true),
+            notificationService ?? new StubNotificationService(),
             logger ?? NullLogger<CreateInviteHandler>.Instance);
     }
 
@@ -53,7 +55,8 @@ public class CreateInviteHandlerTests
         await db.SeedUserAsync("sender-auth");
 
         var emailService = new StubEmailService(true);
-        var handler = BuildHandler(db.Context, emailService);
+        var notificationService = new StubNotificationService();
+        var handler = BuildHandler(db.Context, emailService, notificationService);
 
         var command = new CreateInviteCommand("sender-auth", new CreateInviteRequestDto
         {
@@ -81,6 +84,7 @@ public class CreateInviteHandlerTests
         Assert.Single(emailService.SentEmails);
         Assert.Equal("coach@example.com", emailService.SentEmails[0].RecipientEmail);
         Assert.Equal("Coach", emailService.SentEmails[0].RoleName);
+        Assert.Single(notificationService.CreatedNotifications);
     }
 
     [Fact]
@@ -362,5 +366,27 @@ public class CreateInviteHandlerTests
         }
 
         public record SentEmail(string RecipientEmail, string RecipientName, string ClubName, string RoleName, string InviteCode);
+    }
+
+    private sealed class StubNotificationService : INotificationService
+    {
+        public List<Notification> CreatedNotifications { get; } = new();
+
+        public Task<Notification> CreateAsync(Guid? userId, string type, string title, string message, string? url = null, bool sendPush = false, CancellationToken cancellationToken = default)
+        {
+            var notification = new Notification
+            {
+                Id = Guid.NewGuid(),
+                UserId = userId,
+                Type = type,
+                Title = title,
+                Message = message,
+                Url = url,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            CreatedNotifications.Add(notification);
+            return Task.FromResult(notification);
+        }
     }
 }

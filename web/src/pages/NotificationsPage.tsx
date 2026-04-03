@@ -1,76 +1,38 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import PageTitle from '@/components/common/PageTitle';
 import { Bell, BellOff, Check, CheckCheck, Trash2, Filter, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2 } from 'lucide-react';
 import { getNotificationTypeColors } from '@/data/referenceData';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
-
-interface Notification {
-  id: string;
-  type: 'match' | 'training' | 'team' | 'announcement' | 'message';
-  title: string;
-  message: string;
-  timestamp: Date;
-  read: boolean;
-  link?: string;
-}
-
-// Sample notification data
-const initialNotifications: Notification[] = [
-  {
-    id: '1',
-    type: 'match',
-    title: 'Match Report Available',
-    message: 'The match report for U14 Blues vs Greenwood FC is now available to review.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutes ago
-    read: false,
-    link: '/clubs/vale-juniors/age-groups/u14/teams/blues/matches/1'
-  },
-  {
-    id: '2',
-    type: 'training',
-    title: 'Training Session Tomorrow',
-    message: 'Training session scheduled for tomorrow at 6:00 PM at Vale Park.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-    read: false,
-    link: '/clubs/vale-juniors/age-groups/u14/teams/blues/training'
-  },
-  {
-    id: '3',
-    type: 'announcement',
-    title: 'New Kit Available',
-    message: 'The new home kit for the 2025 season is now available to order.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 5), // 5 hours ago
-    read: false,
-    link: '/clubs/vale-juniors/kits'
-  },
-  {
-    id: '4',
-    type: 'team',
-    title: 'Player Added to Squad',
-    message: 'Oliver Thompson has been added to the U14 Blues squad.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-    read: true,
-    link: '/clubs/vale-juniors/age-groups/u14/teams/blues/squad'
-  },
-  {
-    id: '5',
-    type: 'message',
-    title: 'Coach Comment',
-    message: 'Coach Sarah Williams added a comment on your training performance.',
-    timestamp: new Date(Date.now() - 1000 * 60 * 60 * 48), // 2 days ago
-    read: true
-  }
-];
+import { apiClient, type NotificationDto } from '@/api/client';
 
 export default function NotificationsPage() {
   usePageTitle(['Notifications']);
 
-  const [notifications, setNotifications] = useState<Notification[]>(initialNotifications);
+  const [notifications, setNotifications] = useState<NotificationDto[]>([]);
   const [filter, setFilter] = useState<'all' | 'unread'>('all');
+  const [loading, setLoading] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
   const push = usePushNotifications();
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  const loadNotifications = useCallback(async () => {
+    setLoading(true);
+    setDataError(null);
+    const response = await apiClient.notifications.getMyNotifications(filter === 'unread');
+    if (response.success && response.data) {
+      setNotifications(response.data);
+    } else {
+      setNotifications([]);
+      setDataError(response.error?.message ?? 'Failed to load notifications.');
+    }
+    setLoading(false);
+  }, [filter]);
+
+  useEffect(() => {
+    void loadNotifications();
+  }, [loadNotifications]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -114,16 +76,22 @@ export default function NotificationsPage() {
     }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev =>
-      prev.map(n => n.id === id ? { ...n, read: true } : n)
-    );
+  const markAsRead = async (id: string) => {
+    const response = await apiClient.notifications.markAsRead(id);
+    if (response.success || response.statusCode === 204) {
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, isRead: true } : n)
+      );
+    }
   };
 
-  const markAllAsRead = () => {
-    setNotifications(prev =>
-      prev.map(n => ({ ...n, read: true }))
-    );
+  const markAllAsRead = async () => {
+    const response = await apiClient.notifications.markAllAsRead();
+    if (response.success || response.statusCode === 204) {
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, isRead: true }))
+      );
+    }
   };
 
   const deleteNotification = (id: string) => {
@@ -132,7 +100,7 @@ export default function NotificationsPage() {
 
   const filteredNotifications = filter === 'all' 
     ? notifications 
-    : notifications.filter(n => !n.read);
+    : notifications.filter(n => !n.isRead);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -270,7 +238,16 @@ export default function NotificationsPage() {
 
         {/* Notifications List */}
         <div className="space-y-2">
-          {filteredNotifications.length === 0 ? (
+          {loading ? (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
+              <Loader2 className="w-8 h-8 mx-auto text-primary-500 animate-spin mb-3" />
+              <p className="text-gray-600 dark:text-gray-400">Loading notifications...</p>
+            </div>
+          ) : dataError ? (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+              <p className="text-sm text-red-700 dark:text-red-300">{dataError}</p>
+            </div>
+          ) : filteredNotifications.length === 0 ? (
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
               <Bell className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
               <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
@@ -288,7 +265,7 @@ export default function NotificationsPage() {
               <div
                 key={notification.id}
                 className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-all hover:shadow-md ${
-                  !notification.read ? 'border-l-4 border-primary-500' : ''
+                  !notification.isRead ? 'border-l-4 border-primary-500' : ''
                 }`}
               >
                 <div className="p-4">
@@ -303,7 +280,7 @@ export default function NotificationsPage() {
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <h3 className={`text-sm font-semibold mb-1 ${
-                            !notification.read 
+                            !notification.isRead 
                               ? 'text-gray-900 dark:text-white' 
                               : 'text-gray-700 dark:text-gray-300'
                           }`}>
@@ -313,30 +290,30 @@ export default function NotificationsPage() {
                             {notification.message}
                           </p>
                           <span className="text-xs text-gray-500 dark:text-gray-500">
-                            {formatTimestamp(notification.timestamp)}
+                            {formatTimestamp(new Date(notification.createdAt))}
                           </span>
                         </div>
 
                         {/* Unread indicator */}
-                        {!notification.read && (
+                        {!notification.isRead && (
                           <div className="w-2 h-2 bg-primary-500 rounded-full flex-shrink-0 mt-1" />
                         )}
                       </div>
 
                       {/* Actions */}
                       <div className="flex items-center gap-2 mt-3">
-                        {!notification.read && (
+                        {!notification.isRead && (
                           <button
-                            onClick={() => markAsRead(notification.id)}
+                            onClick={() => void markAsRead(notification.id)}
                             className="text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 transition-colors flex items-center gap-1"
                           >
                             <Check className="w-3 h-3" />
                             Mark as read
                           </button>
                         )}
-                        {notification.link && (
+                        {notification.url && (
                           <a
-                            href={notification.link}
+                            href={notification.url}
                             className="text-xs px-3 py-1.5 rounded-lg bg-primary-100 hover:bg-primary-200 text-primary-700 dark:bg-primary-900/30 dark:hover:bg-primary-900/50 dark:text-primary-400 transition-colors"
                           >
                             View Details
