@@ -97,7 +97,7 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
                 ml.IsPublic,
                 ml.DisplayOrder
             FROM ClubMediaLinks ml
-            WHERE ml.ClubId = {0}
+            WHERE ml.ClubId = {{0}}
               {visibilityFilter}
             ORDER BY ml.DisplayOrder, ml.CreatedAt";
 
