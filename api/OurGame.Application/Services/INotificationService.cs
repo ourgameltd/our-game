@@ -15,7 +15,7 @@ public interface INotificationService
         CancellationToken cancellationToken = default);
 }
 
-public class NotificationService : INotificationService
+internal class NotificationService : INotificationService
 {
     private readonly OurGameContext _db;
     private readonly IPushNotificationService _pushNotificationService;
