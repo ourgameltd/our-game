@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useEffect } from 'react';
-import { Settings } from 'lucide-react';
-import { useMatchReport } from '@/api/hooks';
+import { useEffect, useMemo, useState } from 'react';
+import { Settings, Share2 } from 'lucide-react';
+import { useMatchReport, usePublishMatchReport } from '@/api/hooks';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@/utils/routes';
@@ -11,7 +11,10 @@ export default function MatchReportPage() {
   const { matchId, clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
   const { data: match, isLoading, error } = useMatchReport(matchId);
+  const { publishMatchReport, isSubmitting } = usePublishMatchReport(matchId || '');
   const { setEntityName } = useNavigation();
+  const [publishError, setPublishError] = useState<string | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
 
   usePageTitle(
     [
@@ -140,12 +143,47 @@ export default function MatchReportPage() {
   // Separate starting XI and substitutes from lineup players
   const startingEleven = match.lineup?.players.filter(p => p.isStarting) || [];
   const substitutes = match.lineup?.players.filter(p => !p.isStarting) || [];
+  const socialShareUrl = useMemo(
+    () => `${window.location.origin}${Routes.socialMatchReport(match.id)}`,
+    [match.id]
+  );
+
+  useEffect(() => {
+    setIsPublished(match.isPublished);
+  }, [match.isPublished]);
+
+  const handlePublishToggle = async () => {
+    if (!matchId || !clubId || !ageGroupId || !teamId) {
+      return;
+    }
+
+    setPublishError(null);
+
+    const nextPublishedState = !isPublished;
+    const response = await publishMatchReport(nextPublishedState);
+
+    if (!response.success) {
+      setPublishError(response.error?.message || 'Failed to update publish status.');
+      return;
+    }
+
+    setIsPublished(nextPublishedState);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">     
         {/* Action Button */}
         <div className="flex justify-end gap-3 mb-4">
+          <button
+            onClick={handlePublishToggle}
+            disabled={isSubmitting || !match.report}
+            className="btn-md btn-secondary whitespace-nowrap flex items-center gap-2 disabled:opacity-50"
+            title="Publish report"
+          >
+            <Share2 className="w-5 h-5" />
+            {isPublished ? 'Unpublish' : 'Publish'}
+          </button>
           <button
             onClick={() => navigate(Routes.matchEdit(clubId!, ageGroupId!, teamId!, matchId!))}
             className="btn-md btn-primary whitespace-nowrap flex items-center gap-2"
@@ -155,6 +193,21 @@ export default function MatchReportPage() {
             {isLocked && <span>🔒</span>}
           </button>
         </div>
+
+        {publishError && (
+          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+            {publishError}
+          </div>
+        )}
+
+        {isPublished && (
+          <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
+            Published at{' '}
+            <a className="underline" href={socialShareUrl} target="_blank" rel="noopener noreferrer">
+              {socialShareUrl}
+            </a>
+          </div>
+        )}
 
         {/* Match Header */}
         <div className="card mb-4">

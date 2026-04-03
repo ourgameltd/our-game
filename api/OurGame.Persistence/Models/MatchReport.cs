@@ -17,6 +17,8 @@ public partial class MatchReport
 
     public Guid? PlayerOfMatchId { get; set; }
 
+    public bool IsPublished { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public virtual Player Captain { get; set; }

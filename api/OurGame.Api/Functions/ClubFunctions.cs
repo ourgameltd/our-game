@@ -4,6 +4,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using OurGame.Api.Attributes;
 using OurGame.Api.Extensions;
 using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Clubs.Queries.GetClubById;
@@ -95,6 +96,73 @@ public class ClubFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.SuccessResponse(club));
+        return response;
+    }
+
+    /// <summary>
+    /// Get public media information for social sharing without login.
+    /// </summary>
+    [Function("GetClubPublicMedia")]
+    [AllowAnonymousEndpoint]
+    [OpenApiOperation(operationId: "GetClubPublicMedia", tags: new[] { "Clubs", "Public" }, Summary = "Get club public media", Description = "Retrieves club profile + public media links for share pages without authentication")]
+    [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club ID")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<ClubPublicMediaDto>), Description = "Public media payload")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<ClubPublicMediaDto>), Description = "Club not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<ClubPublicMediaDto>), Description = "Invalid club ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<ClubPublicMediaDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> GetClubPublicMedia(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/clubs/{clubId}/public-media")] HttpRequestData req,
+        string clubId)
+    {
+        if (!Guid.TryParse(clubId, out var clubGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubPublicMediaDto>.ErrorResponse(
+                "Invalid club ID format", 400));
+            return badRequestResponse;
+        }
+
+        var club = await _mediator.Send(new GetClubByIdQuery(clubGuid));
+        if (club == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<ClubPublicMediaDto>.ErrorResponse(
+                "Club not found", 404));
+            return notFoundResponse;
+        }
+
+        var dto = new ClubPublicMediaDto
+        {
+            ClubId = club.Id,
+            ClubName = club.Name,
+            ClubShortName = club.ShortName,
+            ClubLogo = club.Logo,
+            ClubPrimaryColor = club.Colors.Primary,
+            ClubSecondaryColor = club.Colors.Secondary,
+            ClubAccentColor = club.Colors.Accent,
+            ClubEthos = club.Ethos,
+            MediaLinks = club.MediaLinks
+                .Where(link => link.IsPublic)
+                .Select(link => new ClubPublicMediaLinkDto
+                {
+                    Id = link.Id,
+                    Url = link.Url,
+                    Title = link.Title,
+                    Type = link.Type
+                })
+                .ToList()
+        };
+
+        var topMedia = dto.MediaLinks.FirstOrDefault();
+        dto.OgTitle = $"{dto.ClubName} media on OurGame";
+        dto.OgDescription = topMedia?.Title
+            ?? (!string.IsNullOrWhiteSpace(dto.ClubEthos)
+                ? dto.ClubEthos
+                : $"Latest media, match reports, results and clips from {dto.ClubName}.");
+        dto.OgImage = dto.ClubLogo;
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<ClubPublicMediaDto>.SuccessResponse(dto));
         return response;
     }
 
@@ -748,4 +816,28 @@ public class ClubFunctions
         await response.WriteAsJsonAsync(ApiResponse<List<ClubDevelopmentPlanDto>>.SuccessResponse(developmentPlans));
         return response;
     }
+}
+
+public class ClubPublicMediaDto
+{
+    public Guid ClubId { get; set; }
+    public string ClubName { get; set; } = string.Empty;
+    public string ClubShortName { get; set; } = string.Empty;
+    public string? ClubLogo { get; set; }
+    public string ClubPrimaryColor { get; set; } = "#000000";
+    public string ClubSecondaryColor { get; set; } = "#ffffff";
+    public string ClubAccentColor { get; set; } = "#cccccc";
+    public string? ClubEthos { get; set; }
+    public string OgTitle { get; set; } = string.Empty;
+    public string OgDescription { get; set; } = string.Empty;
+    public string? OgImage { get; set; }
+    public List<ClubPublicMediaLinkDto> MediaLinks { get; set; } = new();
+}
+
+public class ClubPublicMediaLinkDto
+{
+    public Guid Id { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public string? Title { get; set; }
+    public string Type { get; set; } = "other";
 }

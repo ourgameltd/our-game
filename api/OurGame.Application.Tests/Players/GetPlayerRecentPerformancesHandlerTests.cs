@@ -35,7 +35,7 @@ public class GetPlayerRecentPerformancesHandlerTests
 
         var reportId = Guid.NewGuid();
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, CreatedAt) VALUES ({reportId}, {matchId}, 'Good game', NULL, NULL, GETUTCDATE())");
+            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt) VALUES ({reportId}, {matchId}, 'Good game', NULL, NULL, {false}, GETUTCDATE())");
 
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO PerformanceRatings (Id, MatchReportId, PlayerId, Rating) VALUES ({Guid.NewGuid()}, {reportId}, {playerId}, 7.5)");
@@ -66,7 +66,7 @@ public class GetPlayerRecentPerformancesHandlerTests
             $"UPDATE Matches SET HomeScore = 3, AwayScore = 1, IsHome = 1 WHERE Id = {matchWin}");
         var reportWin = Guid.NewGuid();
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, CreatedAt) VALUES ({reportWin}, {matchWin}, 'Win', NULL, NULL, GETUTCDATE())");
+            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt) VALUES ({reportWin}, {matchWin}, 'Win', NULL, NULL, {false}, GETUTCDATE())");
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO PerformanceRatings (Id, MatchReportId, PlayerId, Rating) VALUES ({Guid.NewGuid()}, {reportWin}, {playerId}, 8.0)");
 
@@ -76,7 +76,7 @@ public class GetPlayerRecentPerformancesHandlerTests
             $"UPDATE Matches SET HomeScore = 3, AwayScore = 1, IsHome = 0 WHERE Id = {matchLoss}");
         var reportLoss = Guid.NewGuid();
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, CreatedAt) VALUES ({reportLoss}, {matchLoss}, 'Loss', NULL, NULL, GETUTCDATE())");
+            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt) VALUES ({reportLoss}, {matchLoss}, 'Loss', NULL, NULL, {false}, GETUTCDATE())");
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO PerformanceRatings (Id, MatchReportId, PlayerId, Rating) VALUES ({Guid.NewGuid()}, {reportLoss}, {playerId}, 5.0)");
 
@@ -86,7 +86,7 @@ public class GetPlayerRecentPerformancesHandlerTests
             $"UPDATE Matches SET HomeScore = 2, AwayScore = 2, IsHome = 1 WHERE Id = {matchDraw}");
         var reportDraw = Guid.NewGuid();
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, CreatedAt) VALUES ({reportDraw}, {matchDraw}, 'Draw', NULL, NULL, GETUTCDATE())");
+            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt) VALUES ({reportDraw}, {matchDraw}, 'Draw', NULL, NULL, {false}, GETUTCDATE())");
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO PerformanceRatings (Id, MatchReportId, PlayerId, Rating) VALUES ({Guid.NewGuid()}, {reportDraw}, {playerId}, 6.5)");
 

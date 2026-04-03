@@ -250,6 +250,37 @@ export interface ClubDetailDto {
   history?: string;
   ethos?: string;
   principles: string[];
+  mediaLinks: ClubMediaLinkDto[];
+}
+
+export interface ClubMediaLinkDto {
+  id: string;
+  url: string;
+  title?: string;
+  type: string;
+  isPublic: boolean;
+}
+
+export interface ClubPublicMediaLinkDto {
+  id: string;
+  url: string;
+  title?: string;
+  type: string;
+}
+
+export interface ClubPublicMediaDto {
+  clubId: string;
+  clubName: string;
+  clubShortName: string;
+  clubLogo?: string;
+  clubPrimaryColor: string;
+  clubSecondaryColor: string;
+  clubAccentColor: string;
+  clubEthos?: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogImage?: string;
+  mediaLinks: ClubPublicMediaLinkDto[];
 }
 
 export interface MatchScoreDto {
@@ -1938,6 +1969,15 @@ export interface UpdateClubRequest {
   history: string;
   ethos: string;
   principles: string[];
+  mediaLinks?: UpdateClubMediaLinkRequest[];
+}
+
+export interface UpdateClubMediaLinkRequest {
+  id?: string;
+  url: string;
+  title?: string;
+  type: string;
+  isPublic: boolean;
 }
 
 export interface CreateTeamRequest {
@@ -2028,6 +2068,7 @@ export interface MatchDetailDto {
   notes?: string;
   weatherCondition?: string;
   weatherTemperature?: number;
+  isPublished: boolean;
   createdAt: string;
   updatedAt: string;
   lineup?: MatchLineupDto;
@@ -2035,6 +2076,23 @@ export interface MatchDetailDto {
   coaches: MatchCoachDetailDto[];
   substitutions: MatchSubstitutionDetailDto[];
   attendance: MatchAttendanceDetailDto[];
+}
+
+export interface PublishedMatchReportDto {
+  matchId: string;
+  clubId: string;
+  clubName: string;
+  teamName: string;
+  opposition: string;
+  matchDate: string;
+  competition: string;
+  location: string;
+  isHome: boolean;
+  homeScore?: number;
+  awayScore?: number;
+  summary?: string;
+  ogTitle: string;
+  ogDescription: string;
 }
 
 export interface MatchLineupDto {
@@ -3020,6 +3078,20 @@ export const apiClient = {
         return handleApiError(error);
       }
     },
+
+    /**
+     * Get public media profile for a club (anonymous endpoint)
+     */
+    getPublicMedia: async (clubId: string): Promise<ApiResponse<ClubPublicMediaDto>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<ClubPublicMediaDto>>(
+          `/v1/clubs/${clubId}/public-media`
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
   },
 
   ageGroups: {
@@ -3591,6 +3663,35 @@ export const apiClient = {
     getReport: async (matchId: string): Promise<ApiResponse<MatchDetailDto>> => {
       const response = await axiosInstance.get<ApiResponse<MatchDetailDto>>(`/v1/matches/${matchId}/report`);
       return response.data;
+    },
+
+    /**
+     * Get a published social match report (anonymous)
+     */
+    getPublishedReport: async (matchId: string): Promise<ApiResponse<PublishedMatchReportDto>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<PublishedMatchReportDto>>(
+          `/v1/social/match/${matchId}/report`
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Publish/unpublish a match report
+     */
+    publishReport: async (matchId: string, isPublished: boolean): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<void>>(
+          `/v1/matches/${matchId}/report/publish`,
+          { isPublished }
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
 
     /**

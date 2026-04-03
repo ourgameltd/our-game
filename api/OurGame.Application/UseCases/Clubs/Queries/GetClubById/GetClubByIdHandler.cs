@@ -77,8 +77,42 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
             Founded = club.FoundedYear,
             History = club.History,
             Ethos = club.Ethos,
-            Principles = ParsePrinciples(club.Principles)
+            Principles = ParsePrinciples(club.Principles),
+            MediaLinks = await GetMediaLinksAsync(query.ClubId, true, cancellationToken)
         };
+    }
+
+    private async Task<List<ClubMediaLinkDto>> GetMediaLinksAsync(
+        Guid clubId,
+        bool publicOnly,
+        CancellationToken cancellationToken)
+    {
+        var visibilityFilter = publicOnly ? "AND ml.IsPublic = 1" : string.Empty;
+        var sql = $@"
+            SELECT
+                ml.Id,
+                ml.Url,
+                ml.Title,
+                ml.Type,
+                ml.IsPublic,
+                ml.DisplayOrder
+            FROM ClubMediaLinks ml
+            WHERE ml.ClubId = {{0}}
+              {visibilityFilter}
+            ORDER BY ml.DisplayOrder, ml.CreatedAt";
+
+        var links = await _db.Database
+            .SqlQueryRaw<ClubMediaLinkRawDto>(sql, clubId)
+            .ToListAsync(cancellationToken);
+
+        return links.Select(link => new ClubMediaLinkDto
+        {
+            Id = link.Id,
+            Url = link.Url ?? string.Empty,
+            Title = link.Title,
+            Type = string.IsNullOrWhiteSpace(link.Type) ? "other" : link.Type,
+            IsPublic = link.IsPublic
+        }).ToList();
     }
 
     /// <summary>
@@ -133,4 +167,14 @@ public class ClubRawDto
     public string? History { get; set; }
     public string? Ethos { get; set; }
     public string? Principles { get; set; }
+}
+
+public class ClubMediaLinkRawDto
+{
+    public Guid Id { get; set; }
+    public string? Url { get; set; }
+    public string? Title { get; set; }
+    public string? Type { get; set; }
+    public bool IsPublic { get; set; }
+    public int DisplayOrder { get; set; }
 }

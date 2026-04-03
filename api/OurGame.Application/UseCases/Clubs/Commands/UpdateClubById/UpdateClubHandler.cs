@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.UseCases.Clubs.Commands.UpdateClubById.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries.GetClubById;
 using OurGame.Application.UseCases.Clubs.Queries.GetClubById.DTOs;
 using OurGame.Persistence.Models;
@@ -75,6 +76,25 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
         if (!string.IsNullOrEmpty(dto.AccentColor) && !HexColorRegex.IsMatch(dto.AccentColor))
             errors.Add("AccentColor", new[] { "Accent color must be a valid hex color (e.g. #CCCCCC)." });
 
+        if (dto.MediaLinks is not null)
+        {
+            for (var i = 0; i < dto.MediaLinks.Count; i++)
+            {
+                var link = dto.MediaLinks[i];
+                if (string.IsNullOrWhiteSpace(link.Url))
+                {
+                    errors[$"MediaLinks[{i}].Url"] = new[] { "URL is required." };
+                    continue;
+                }
+
+                if (!Uri.TryCreate(link.Url, UriKind.Absolute, out var parsedUri)
+                    || (parsedUri.Scheme != Uri.UriSchemeHttp && parsedUri.Scheme != Uri.UriSchemeHttps))
+                {
+                    errors[$"MediaLinks[{i}].Url"] = new[] { "URL must be an absolute http/https URL." };
+                }
+            }
+        }
+
         if (errors.Count > 0)
         {
             throw new ValidationException(errors);
@@ -115,6 +135,38 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
             throw new NotFoundException("Club", clubId.ToString());
         }
 
+        // 6b. Replace media links for this club
+        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM ClubMediaLinks
+            WHERE ClubId = {clubId}
+        ", cancellationToken);
+
+        var mediaLinks = dto.MediaLinks ?? new List<UpdateClubMediaLinkDto>();
+        var mediaEntities = new List<ClubMediaLink>(mediaLinks.Count);
+        for (var i = 0; i < mediaLinks.Count; i++)
+        {
+            var link = mediaLinks[i];
+            var normalizedType = NormalizeMediaType(link.Type);
+            mediaEntities.Add(new ClubMediaLink
+            {
+                Id = Guid.NewGuid(),
+                ClubId = clubId,
+                Url = link.Url,
+                Title = link.Title,
+                Type = normalizedType,
+                IsPublic = link.IsPublic,
+                DisplayOrder = i,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+        }
+
+        if (mediaEntities.Count > 0)
+        {
+            await _db.ClubMediaLinks.AddRangeAsync(mediaEntities, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
+
         // 7. Query back the updated club
         var club = await _db.Database
             .SqlQueryRaw<UpdatedClubRawDto>(@"
@@ -145,6 +197,15 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
         }
 
         // 8. Map to ClubDetailDto
+        var mediaLinksResult = await _db.Database
+            .SqlQueryRaw<UpdatedClubMediaLinkRawDto>(@"
+                SELECT Id, Url, Title, Type, IsPublic, DisplayOrder
+                FROM ClubMediaLinks
+                WHERE ClubId = {0}
+                ORDER BY DisplayOrder, CreatedAt
+            ", clubId)
+            .ToListAsync(cancellationToken);
+
         return new ClubDetailDto
         {
             Id = club.Id,
@@ -167,7 +228,37 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
             Founded = club.FoundedYear,
             History = club.History,
             Ethos = club.Ethos,
-            Principles = ParsePrinciples(club.Principles)
+            Principles = ParsePrinciples(club.Principles),
+            MediaLinks = mediaLinksResult.Select(link => new ClubMediaLinkDto
+            {
+                Id = link.Id,
+                Url = link.Url ?? string.Empty,
+                Title = link.Title,
+                Type = string.IsNullOrWhiteSpace(link.Type) ? "other" : link.Type,
+                IsPublic = link.IsPublic
+            }).ToList()
+        };
+    }
+
+    private static string NormalizeMediaType(string? type)
+    {
+        var normalized = (type ?? "other").Trim().ToLowerInvariant();
+
+        return normalized switch
+        {
+            "youtube" => "youtube",
+            "instagram" => "instagram",
+            "tiktok" => "tiktok",
+            "website" => "website",
+            "facebook" => "facebook",
+            "x" => "x",
+            "twitter" => "twitter",
+            "sponsor" => "sponsor",
+            "match-report" => "match-report",
+            "result" => "result",
+            "fixture" => "fixture",
+            "clip" => "clip",
+            _ => "other"
         };
     }
 
@@ -229,4 +320,14 @@ internal class UpdatedClubRawDto
     public string? History { get; set; }
     public string? Ethos { get; set; }
     public string? Principles { get; set; }
+}
+
+internal class UpdatedClubMediaLinkRawDto
+{
+    public Guid Id { get; set; }
+    public string? Url { get; set; }
+    public string? Title { get; set; }
+    public string? Type { get; set; }
+    public bool IsPublic { get; set; }
+    public int DisplayOrder { get; set; }
 }

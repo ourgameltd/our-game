@@ -4,6 +4,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Azure.WebJobs.Extensions.OpenApi.Core.Attributes;
 using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
+using OurGame.Api.Attributes;
 using OurGame.Api.Extensions;
 using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Abstractions.Responses;
@@ -11,6 +12,8 @@ using OurGame.Application.UseCases.Matches.Commands.CreateMatch;
 using OurGame.Application.UseCases.Matches.Commands.CreateMatch.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMatch;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMatch.DTOs;
+using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport;
+using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport.DTOs;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 using System.Net;
@@ -178,6 +181,83 @@ public class MatchFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<MatchDetailDto>.SuccessResponse(match));
+        return response;
+    }
+
+    /// <summary>
+    /// Get a published social match report by match ID (anonymous).
+    /// </summary>
+    [Function("GetPublishedMatchReport")]
+    [AllowAnonymousEndpoint]
+    [OpenApiOperation(
+        operationId: "GetPublishedMatchReport",
+        tags: new[] { "Matches", "Public" },
+        Summary = "Get published match report",
+        Description = "Retrieves a published public match report for social sharing.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The match ID")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.OK,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<PublishedMatchReportDto>),
+        Description = "Published match report retrieved successfully")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<PublishedMatchReportDto>),
+        Description = "Published match report not found")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.BadRequest,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<PublishedMatchReportDto>),
+        Description = "Invalid match ID format")]
+    public async Task<HttpResponseData> GetPublishedMatchReport(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/social/match/{id}/report")] HttpRequestData req,
+        string id)
+    {
+        if (!Guid.TryParse(id, out var matchGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<PublishedMatchReportDto>.ErrorResponse(
+                "Invalid match ID format", 400));
+            return badRequestResponse;
+        }
+
+        var match = await _mediator.Send(new GetMatchByIdQuery(matchGuid));
+        if (match == null || !match.IsPublished || match.Report == null)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<PublishedMatchReportDto>.ErrorResponse(
+                "Published match report not found", 404));
+            return notFoundResponse;
+        }
+
+        var dto = new PublishedMatchReportDto
+        {
+            MatchId = match.Id,
+            ClubId = match.ClubId,
+            ClubName = match.ClubName,
+            TeamName = match.TeamName,
+            Opposition = match.Opposition,
+            MatchDate = match.MatchDate,
+            Competition = match.Competition,
+            Location = match.Location,
+            IsHome = match.IsHome,
+            HomeScore = match.HomeScore,
+            AwayScore = match.AwayScore,
+            Summary = match.Report.Summary,
+            OgTitle = $"{match.TeamName} vs {match.Opposition} match report",
+            OgDescription = !string.IsNullOrWhiteSpace(match.Report.Summary)
+                ? match.Report.Summary
+                : $"{match.TeamName} vs {match.Opposition} in {match.Competition}."
+        };
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        await response.WriteAsJsonAsync(ApiResponse<PublishedMatchReportDto>.SuccessResponse(dto));
         return response;
     }
 
@@ -385,4 +465,121 @@ public class MatchFunctions
             return errorResponse;
         }
     }
+
+    /// <summary>
+    /// Publish/unpublish a match report for social sharing.
+    /// </summary>
+    [Function("PublishMatchReport")]
+    [OpenApiOperation(
+        operationId: "PublishMatchReport",
+        tags: new[] { "Matches" },
+        Summary = "Publish or unpublish match report",
+        Description = "Sets whether a match report is publicly visible at /social/match/{id}/report.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The match ID")]
+    [OpenApiRequestBody(
+        contentType: "application/json",
+        bodyType: typeof(PublishMatchReportRequestDto),
+        Required = true,
+        Description = "Publish state payload")]
+    [OpenApiResponseWithoutBody(
+        statusCode: HttpStatusCode.NoContent,
+        Description = "Publish state updated successfully")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.BadRequest,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Invalid request")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Match or report not found")]
+    public async Task<HttpResponseData> PublishMatchReport(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "v1/matches/{id}/report/publish")] HttpRequestData req,
+        string id)
+    {
+        var userId = req.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Authentication required",
+                (int)HttpStatusCode.Unauthorized));
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(id, out var matchGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Invalid match ID format", 400));
+            return badRequestResponse;
+        }
+
+        PublishMatchReportRequestDto? dto;
+        try
+        {
+            dto = await req.ReadFromJsonAsync<PublishMatchReportRequestDto>();
+            if (dto == null)
+            {
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                    "Invalid request body",
+                    (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+        }
+        catch (System.Text.Json.JsonException ex)
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "Invalid request body: " + ex.Message,
+                (int)HttpStatusCode.BadRequest));
+            return badRequestResponse;
+        }
+
+        try
+        {
+            await _mediator.Send(new PublishMatchReportCommand(matchGuid, dto));
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating match report publish status");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "An error occurred while updating publish status",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+}
+
+public class PublishedMatchReportDto
+{
+    public Guid MatchId { get; set; }
+    public Guid ClubId { get; set; }
+    public string ClubName { get; set; } = string.Empty;
+    public string TeamName { get; set; } = string.Empty;
+    public string Opposition { get; set; } = string.Empty;
+    public DateTime MatchDate { get; set; }
+    public string Competition { get; set; } = string.Empty;
+    public string Location { get; set; } = string.Empty;
+    public bool IsHome { get; set; }
+    public int? HomeScore { get; set; }
+    public int? AwayScore { get; set; }
+    public string? Summary { get; set; }
+    public string OgTitle { get; set; } = string.Empty;
+    public string OgDescription { get; set; } = string.Empty;
 }

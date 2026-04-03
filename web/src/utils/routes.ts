@@ -40,6 +40,10 @@ export class Routes {
     return '/';
   }
 
+  static socialMatchReport(matchId: string): string {
+    return `/social/match/${validateParam(matchId, 'matchId')}/report`;
+  }
+
   // Dashboard (Clubs)
   static clubs(): string {
     return '/dashboard';
@@ -87,6 +91,10 @@ export class Routes {
 
   static clubSettings(clubId: string): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}/settings`;
+  }
+
+  static clubPublicMedia(clubId: string): string {
+    return `/play/${validateParam(clubId, 'clubId')}/media`;
   }
 
   // Age Groups

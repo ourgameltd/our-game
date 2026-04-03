@@ -27,5 +27,8 @@ public class MatchReportConfiguration : IEntityTypeConfiguration<MatchReport>
             .WithMany()
             .HasForeignKey(e => e.PlayerOfMatchId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Property(e => e.IsPublished)
+            .HasDefaultValue(false);
     }
 }

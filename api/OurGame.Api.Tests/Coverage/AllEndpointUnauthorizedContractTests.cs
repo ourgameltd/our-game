@@ -20,6 +20,7 @@ public class AllEndpointUnauthorizedContractTests
     {
         // VAPID public key must be accessible without auth so the browser can subscribe to push
         "GetVapidPublicKey",
+        "GetPublishedMatchReport",
     };
 
     [Theory]

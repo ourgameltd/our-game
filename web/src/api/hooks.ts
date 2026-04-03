@@ -17,6 +17,7 @@ import {
   TeamWithStatsDto,
   ChildPlayerDto,
   ClubDetailDto,
+  ClubPublicMediaDto,
   ClubStatisticsDto,
   AgeGroupListDto,
   AgeGroupDetailDto,
@@ -47,6 +48,7 @@ import {
   CoachDetailDto,
   DevelopmentPlanDetailDto,
   MatchDetailDto,
+  PublishedMatchReportDto,
   TeamPlayerDto,
   TeamCoachDto,
   TeamMatchesDto,
@@ -1177,6 +1179,17 @@ export function useMatchReport(matchId: string | undefined): UseApiState<MatchDe
   );
 }
 
+/**
+ * Hook to fetch a published social match report (anonymous).
+ */
+export function usePublishedMatchReport(matchId: string | undefined): UseApiState<PublishedMatchReportDto> {
+  return useApiCall<PublishedMatchReportDto>(
+    () => apiClient.matches.getPublishedReport(matchId!),
+    [matchId],
+    isValidId(matchId)
+  );
+}
+
 // ============================================================
 // Report Card Hooks
 // ============================================================
@@ -1357,6 +1370,17 @@ export function useUpdateClub(clubId: string): UseMutationState<ClubDetailDto> &
 }
 
 /**
+ * Hook to fetch a club's public media profile.
+ */
+export function useClubPublicMedia(clubId: string | undefined): UseApiState<ClubPublicMediaDto> {
+  return useApiCall<ClubPublicMediaDto>(
+    () => apiClient.clubs.getPublicMedia(clubId!),
+    [clubId],
+    isValidId(clubId)
+  );
+}
+
+/**
  * Hook to create a match.
  * Returns a mutation function, submitting state, response data, and error
  * with validation details preserved for field-level error mapping.
@@ -1444,6 +1468,46 @@ export function useUpdateMatch(matchId: string): UseMutationState<MatchDetailDto
   }, [matchId]);
 
   return { updateMatch, isSubmitting, data, error };
+}
+
+export function usePublishMatchReport(matchId: string): UseMutationState<void> & {
+  publishMatchReport: (isPublished: boolean) => Promise<ApiResponse<void>>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const publishMatchReport = useCallback(async (isPublished: boolean): Promise<ApiResponse<void>> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.matches.publishReport(matchId, isPublished);
+      if (response.success) {
+        setData(undefined);
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to update publish status',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+      }
+      return response;
+    } catch (err) {
+      const apiError = {
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      };
+      setError(apiError);
+      return {
+        success: false,
+        error: apiError,
+      };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [matchId]);
+
+  return { publishMatchReport, isSubmitting, data, error };
 }
 
 // ============================================================
@@ -2476,4 +2540,3 @@ export function useArchiveTeam(teamId: string | undefined): UseMutationState<voi
 
   return { archiveTeam, isSubmitting, data, error };
 }
-
