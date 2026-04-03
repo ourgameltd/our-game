@@ -89,6 +89,14 @@ export class Routes {
     return `/dashboard/${validateParam(clubId, 'clubId')}/settings`;
   }
 
+  static clubPosts(clubId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/posts`;
+  }
+
+  static publicPost(postId: string): string {
+    return `/play/share/${validateParam(postId, 'postId')}`;
+  }
+
   // Age Groups
   static ageGroups(clubId: string): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups`;

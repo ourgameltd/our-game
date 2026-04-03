@@ -252,6 +252,73 @@ export interface ClubDetailDto {
   principles: string[];
 }
 
+export interface ClubSocialLinksDto {
+  id: string;
+  clubId: string;
+  website?: string;
+  twitter?: string;
+  instagram?: string;
+  facebook?: string;
+  youTube?: string;
+  tikTok?: string;
+}
+
+export interface UpdateClubSocialLinksRequest {
+  website?: string;
+  twitter?: string;
+  instagram?: string;
+  facebook?: string;
+  youTube?: string;
+  tikTok?: string;
+}
+
+export type ClubPostType = 'match_report' | 'player_spotlight' | 'upcoming_fixture' | 'result' | 'clip';
+
+export interface ClubPostDto {
+  id: string;
+  clubId: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  externalUrl?: string;
+  postType: ClubPostType;
+  isPublic: boolean;
+  linkedEntityId?: string;
+  linkedEntityType?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateClubPostRequest {
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  externalUrl?: string;
+  postType: ClubPostType;
+  isPublic: boolean;
+  linkedEntityId?: string;
+  linkedEntityType?: string;
+}
+
+export type UpdateClubPostRequest = CreateClubPostRequest;
+
+export interface PublicClubPostDto {
+  id: string;
+  clubId: string;
+  clubName: string;
+  clubLogo?: string;
+  clubPrimaryColor?: string;
+  title: string;
+  description?: string;
+  imageUrl?: string;
+  externalUrl?: string;
+  postType: ClubPostType;
+  isPublic: boolean;
+  linkedEntityId?: string;
+  linkedEntityType?: string;
+  createdAt: string;
+}
+
 export interface MatchScoreDto {
   home: number;
   away: number;
@@ -3015,6 +3082,92 @@ export const apiClient = {
           `/v1/clubs/${clubId}`,
           request
         );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Get club social links
+     */
+    getSocialLinks: async (clubId: string): Promise<ApiResponse<ClubSocialLinksDto | null>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<ClubSocialLinksDto | null>>(`/v1/clubs/${clubId}/social-links`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update club social links
+     */
+    updateSocialLinks: async (clubId: string, request: UpdateClubSocialLinksRequest): Promise<ApiResponse<ClubSocialLinksDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<ClubSocialLinksDto>>(`/v1/clubs/${clubId}/social-links`, request);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Get all posts for a club
+     */
+    getPosts: async (clubId: string): Promise<ApiResponse<ClubPostDto[]>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<ClubPostDto[]>>(`/v1/clubs/${clubId}/posts`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Create a new club post
+     */
+    createPost: async (clubId: string, request: CreateClubPostRequest): Promise<ApiResponse<ClubPostDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<ClubPostDto>>(`/v1/clubs/${clubId}/posts`, request);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update a club post
+     */
+    updatePost: async (clubId: string, postId: string, request: UpdateClubPostRequest): Promise<ApiResponse<ClubPostDto>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<ClubPostDto>>(`/v1/clubs/${clubId}/posts/${postId}`, request);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Delete a club post
+     */
+    deletePost: async (clubId: string, postId: string): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.delete<ApiResponse<void>>(`/v1/clubs/${clubId}/posts/${postId}`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  },
+
+  public: {
+    /**
+     * Get a public post by ID (no auth required)
+     */
+    getPost: async (postId: string): Promise<ApiResponse<PublicClubPostDto>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<PublicClubPostDto>>(`/v1/public/posts/${postId}`);
         return response.data;
       } catch (error) {
         return handleApiError(error);

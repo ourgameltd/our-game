@@ -20,6 +20,8 @@ public class AllEndpointUnauthorizedContractTests
     {
         // VAPID public key must be accessible without auth so the browser can subscribe to push
         "GetVapidPublicKey",
+        // Public post endpoint is intentionally unauthenticated for shareable links / OG tags
+        "GetPublicPost",
     };
 
     [Theory]

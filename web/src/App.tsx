@@ -68,6 +68,8 @@ import DrillsListPage from '@pages/drills/DrillsListPage';
 import DrillTemplatesListPage from '@pages/drills/DrillTemplatesListPage';
 import DrillFormPage from '@pages/drills/DrillFormPage';
 import DrillTemplateFormPage from '@pages/drills/DrillTemplateFormPage';
+import ClubPostsPage from '@pages/clubs/ClubPostsPage';
+import PublicPostPage from '@pages/public/PublicPostPage';
 import InviteAcceptPage from '@pages/InviteAcceptPage';
 import Header from '@components/layout/Header';
 import ScrollToTop from '@components/common/ScrollToTop';
@@ -93,7 +95,8 @@ function AppContent() {
                      location.pathname === '/login' || 
                      location.pathname === '/register' || 
                      location.pathname === '/password-reset' ||
-                     location.pathname.startsWith('/invite/');
+                     location.pathname.startsWith('/invite/') ||
+                     location.pathname.startsWith('/play/');
 
   const getMarginLeft = () => {
     if (hideHeader || !isDesktop) return '0';
@@ -118,6 +121,7 @@ function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/password-reset" element={<PasswordResetPage />} />
         <Route path="/invite/:code" element={<InviteAcceptPage />} />
+        <Route path="/play/share/:postId" element={<PublicPostPage />} />
 
         {/* Profile */}
         <Route path="/profile" element={<ProfilePage />} />
@@ -142,6 +146,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/training" element={<ClubTrainingSessionsPage />} />
         <Route path="/dashboard/:clubId/kits" element={<ClubKitsPage />} />
         <Route path="/dashboard/:clubId/settings" element={<ClubSettingsPage />} />
+        <Route path="/dashboard/:clubId/posts" element={<ClubPostsPage />} />
         <Route path="/dashboard/:clubId/report-cards" element={<ClubReportCardsPage />} />
         <Route path="/dashboard/:clubId/development-plans" element={<ClubDevelopmentPlansPage />} />
 

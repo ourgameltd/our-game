@@ -43,6 +43,10 @@ public partial class Club
 
     public virtual ICollection<AgeGroup> AgeGroups { get; set; } = new List<AgeGroup>();
 
+    public virtual ICollection<ClubPost> ClubPosts { get; set; } = new List<ClubPost>();
+
+    public virtual ICollection<ClubSocialLinks> ClubSocialLinks { get; set; } = new List<ClubSocialLinks>();
+
     public virtual ICollection<Coach> Coaches { get; set; } = new List<Coach>();
 
     public virtual ICollection<Kit> Kits { get; set; } = new List<Kit>();

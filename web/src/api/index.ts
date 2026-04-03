@@ -179,6 +179,13 @@ export type {
   CreateTeamRequest,
   UpdateTeamRequest,
   UpdateCoachRequest,
+  ClubSocialLinksDto,
+  UpdateClubSocialLinksRequest,
+  ClubPostDto,
+  ClubPostType,
+  CreateClubPostRequest,
+  UpdateClubPostRequest,
+  PublicClubPostDto,
 } from './client';
 
 // React hooks
@@ -259,6 +266,13 @@ export {
   useAssignTeamCoach,
   useRemoveTeamCoach,
   useUpdateTeamCoachRole,
+  useClubSocialLinks,
+  useUpdateClubSocialLinks,
+  useClubPosts,
+  useCreateClubPost,
+  useUpdateClubPost,
+  useDeleteClubPost,
+  usePublicPost,
 } from './hooks';
 export type { ApiError, UseMutationState } from './hooks';
 

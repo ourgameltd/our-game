@@ -81,6 +81,12 @@ import {
   CreateTeamKitRequest,
   UpdateTeamKitRequest,
   UpdateClubKitRequest,
+  ClubSocialLinksDto,
+  UpdateClubSocialLinksRequest,
+  ClubPostDto,
+  CreateClubPostRequest,
+  UpdateClubPostRequest,
+  PublicClubPostDto,
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 import { normalizeCoachDetail } from './mappers';
@@ -2475,5 +2481,151 @@ export function useArchiveTeam(teamId: string | undefined): UseMutationState<voi
   }, [teamId]);
 
   return { archiveTeam, isSubmitting, data, error };
+}
+
+// ─── Club Social Links ────────────────────────────────────────────────────────
+
+export function useClubSocialLinks(clubId: string | undefined) {
+  const [data, setData] = useState<ClubSocialLinksDto | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<{ message: string } | null>(null);
+
+  useEffect(() => {
+    if (!isValidId(clubId)) return;
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    apiClient.clubs.getSocialLinks(clubId!).then(res => {
+      if (cancelled) return;
+      if (res.success) setData(res.data ?? null);
+      else setError({ message: res.error?.message ?? 'Failed to load social links' });
+    }).finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
+  }, [clubId]);
+
+  return { data, isLoading, error };
+}
+
+export function useUpdateClubSocialLinks(clubId: string) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<{ message: string; validationErrors?: Record<string, string[]> } | null>(null);
+
+  const updateSocialLinks = useCallback(async (request: UpdateClubSocialLinksRequest): Promise<ClubSocialLinksDto | null> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await apiClient.clubs.updateSocialLinks(clubId, request);
+      if (res.success) return res.data ?? null;
+      setError({ message: res.error?.message ?? 'Failed to update social links', validationErrors: res.error?.validationErrors });
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId]);
+
+  return { updateSocialLinks, isSubmitting, error };
+}
+
+// ─── Club Posts ───────────────────────────────────────────────────────────────
+
+export function useClubPosts(clubId: string | undefined) {
+  const [data, setData] = useState<ClubPostDto[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<{ message: string } | null>(null);
+
+  const refetch = useCallback(() => {
+    if (!isValidId(clubId)) return;
+    setIsLoading(true);
+    setError(null);
+    apiClient.clubs.getPosts(clubId!).then(res => {
+      if (res.success) setData(res.data ?? []);
+      else setError({ message: res.error?.message ?? 'Failed to load posts' });
+    }).finally(() => setIsLoading(false));
+  }, [clubId]);
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  return { data, isLoading, error, refetch };
+}
+
+export function useCreateClubPost(clubId: string) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<{ message: string; validationErrors?: Record<string, string[]> } | null>(null);
+
+  const createPost = useCallback(async (request: CreateClubPostRequest): Promise<ClubPostDto | null> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await apiClient.clubs.createPost(clubId, request);
+      if (res.success) return res.data ?? null;
+      setError({ message: res.error?.message ?? 'Failed to create post', validationErrors: res.error?.validationErrors });
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId]);
+
+  return { createPost, isSubmitting, error };
+}
+
+export function useUpdateClubPost(clubId: string) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<{ message: string; validationErrors?: Record<string, string[]> } | null>(null);
+
+  const updatePost = useCallback(async (postId: string, request: UpdateClubPostRequest): Promise<ClubPostDto | null> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const res = await apiClient.clubs.updatePost(clubId, postId, request);
+      if (res.success) return res.data ?? null;
+      setError({ message: res.error?.message ?? 'Failed to update post', validationErrors: res.error?.validationErrors });
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId]);
+
+  return { updatePost, isSubmitting, error };
+}
+
+export function useDeleteClubPost(clubId: string) {
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<{ message: string } | null>(null);
+
+  const deletePost = useCallback(async (postId: string): Promise<boolean> => {
+    setIsDeleting(true);
+    setError(null);
+    try {
+      const res = await apiClient.clubs.deletePost(clubId, postId);
+      if (res.success || res.statusCode === 204) return true;
+      setError({ message: res.error?.message ?? 'Failed to delete post' });
+      return false;
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [clubId]);
+
+  return { deletePost, isDeleting, error };
+}
+
+export function usePublicPost(postId: string | undefined) {
+  const [data, setData] = useState<PublicClubPostDto | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<{ message: string } | null>(null);
+
+  useEffect(() => {
+    if (!isValidId(postId)) return;
+    let cancelled = false;
+    setIsLoading(true);
+    setError(null);
+    apiClient.public.getPost(postId!).then(res => {
+      if (cancelled) return;
+      if (res.success) setData(res.data ?? null);
+      else setError({ message: res.error?.message ?? 'Post not found' });
+    }).finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
+  }, [postId]);
+
+  return { data, isLoading, error };
 }
 

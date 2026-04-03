@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useClubById, useUpdateClub, UpdateClubRequest } from '@/api';
+import { useClubById, useUpdateClub, UpdateClubRequest, useClubSocialLinks, useUpdateClubSocialLinks, UpdateClubSocialLinksRequest } from '@/api';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
@@ -92,6 +92,20 @@ export default function ClubSettingsPage() {
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [logoDataUri, setLogoDataUri] = useState<string>('');
 
+  // Social links state
+  const { data: socialLinks, isLoading: socialLinksLoading } = useClubSocialLinks(clubId);
+  const { updateSocialLinks, isSubmitting: socialLinksSubmitting, error: socialLinksError } = useUpdateClubSocialLinks(clubId || '');
+  const [socialLinksInitialized, setSocialLinksInitialized] = useState(false);
+  const [socialLinksForm, setSocialLinksForm] = useState({
+    website: '',
+    twitter: '',
+    instagram: '',
+    facebook: '',
+    youTube: '',
+    tikTok: '',
+  });
+  const [socialLinksSaved, setSocialLinksSaved] = useState(false);
+
   // Initialize form state from API data (only once)
   useEffect(() => {
     if (club && !formInitialized) {
@@ -115,6 +129,21 @@ export default function ClubSettingsPage() {
       setFormInitialized(true);
     }
   }, [club, formInitialized]);
+
+  // Initialize social links from API data (only once)
+  useEffect(() => {
+    if (socialLinks !== undefined && !socialLinksInitialized) {
+      setSocialLinksForm({
+        website: socialLinks?.website || '',
+        twitter: socialLinks?.twitter || '',
+        instagram: socialLinks?.instagram || '',
+        facebook: socialLinks?.facebook || '',
+        youTube: socialLinks?.youTube || '',
+        tikTok: socialLinks?.tikTok || '',
+      });
+      setSocialLinksInitialized(true);
+    }
+  }, [socialLinks, socialLinksInitialized]);
 
   // Club not found after loading
   if (!isLoading && error && !club) {
@@ -192,6 +221,28 @@ export default function ClubSettingsPage() {
 
   const handleCancel = () => {
     navigate(Routes.clubOverview(clubId!));
+  };
+
+  const handleSocialLinksSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const request: UpdateClubSocialLinksRequest = {
+      website: socialLinksForm.website || undefined,
+      twitter: socialLinksForm.twitter || undefined,
+      instagram: socialLinksForm.instagram || undefined,
+      facebook: socialLinksForm.facebook || undefined,
+      youTube: socialLinksForm.youTube || undefined,
+      tikTok: socialLinksForm.tikTok || undefined,
+    };
+    const result = await updateSocialLinks(request);
+    if (result) {
+      setSocialLinksSaved(true);
+      setTimeout(() => setSocialLinksSaved(false), 3000);
+    }
+  };
+
+  const handleSocialLinksChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSocialLinksForm(prev => ({ ...prev, [name]: value }));
   };
 
   return (
@@ -506,6 +557,120 @@ export default function ClubSettingsPage() {
               saveDisabled={isSubmitting || isLoading || !clubId}
             />
           </form>
+        )}
+
+        {/* Social Media Section */}
+        {isLoading || socialLinksLoading ? (
+          <SettingsCardSkeleton inputs={6} columns={2} />
+        ) : (
+          <form onSubmit={handleSocialLinksSubmit} className="space-y-4">
+            <div className="card">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Social Media</h2>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Link your club's social media profiles. Share these links publicly on your club's shareable posts.
+              </p>
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">Website</label>
+                  <input
+                    type="url"
+                    name="website"
+                    value={socialLinksForm.website}
+                    onChange={handleSocialLinksChange}
+                    className="input"
+                    placeholder="https://www.yourclub.com"
+                  />
+                </div>
+                <div>
+                  <label className="label">Twitter / X</label>
+                  <input
+                    type="url"
+                    name="twitter"
+                    value={socialLinksForm.twitter}
+                    onChange={handleSocialLinksChange}
+                    className="input"
+                    placeholder="https://twitter.com/yourclub"
+                  />
+                </div>
+                <div>
+                  <label className="label">Instagram</label>
+                  <input
+                    type="url"
+                    name="instagram"
+                    value={socialLinksForm.instagram}
+                    onChange={handleSocialLinksChange}
+                    className="input"
+                    placeholder="https://instagram.com/yourclub"
+                  />
+                </div>
+                <div>
+                  <label className="label">Facebook</label>
+                  <input
+                    type="url"
+                    name="facebook"
+                    value={socialLinksForm.facebook}
+                    onChange={handleSocialLinksChange}
+                    className="input"
+                    placeholder="https://facebook.com/yourclub"
+                  />
+                </div>
+                <div>
+                  <label className="label">YouTube</label>
+                  <input
+                    type="url"
+                    name="youTube"
+                    value={socialLinksForm.youTube}
+                    onChange={handleSocialLinksChange}
+                    className="input"
+                    placeholder="https://youtube.com/@yourclub"
+                  />
+                </div>
+                <div>
+                  <label className="label">TikTok</label>
+                  <input
+                    type="url"
+                    name="tikTok"
+                    value={socialLinksForm.tikTok}
+                    onChange={handleSocialLinksChange}
+                    className="input"
+                    placeholder="https://tiktok.com/@yourclub"
+                  />
+                </div>
+              </div>
+              {socialLinksError && (
+                <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                  <p className="text-sm font-medium text-red-800 dark:text-red-300">{socialLinksError.message}</p>
+                </div>
+              )}
+              {socialLinksSaved && (
+                <div className="mt-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+                  <p className="text-sm font-medium text-green-800 dark:text-green-300">Social media links saved successfully.</p>
+                </div>
+              )}
+            </div>
+            <div className="flex justify-end gap-3">
+              <button
+                type="submit"
+                disabled={socialLinksSubmitting || isLoading}
+                className="btn btn-primary"
+              >
+                {socialLinksSubmitting ? 'Saving...' : 'Save Social Links'}
+              </button>
+            </div>
+          </form>
+        )}
+
+        {/* Posts & Sharing */}
+        {!isLoading && (
+          <div className="card">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">Posts & Sharing</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+              Create shareable posts for match reports, player spotlights, upcoming fixtures, results, and clips. Control which content is public or members-only.
+            </p>
+            <a href={Routes.clubPosts(clubId!)} className="btn btn-primary inline-flex items-center gap-2">
+              Manage Posts
+            </a>
+          </div>
         )}
       </main>
     </div>

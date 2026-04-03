@@ -20,7 +20,8 @@ import {
   ChevronUp,
   Settings,
   Calendar,
-  Dumbbell
+  Dumbbell,
+  Share2
 } from 'lucide-react';
 import { useClubById, useTeamOverview, useAgeGroup, usePlayer, useCoach } from '@/api/hooks';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -632,6 +633,15 @@ export default function MobileNavigation() {
                               >
                                 <FileText className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Report Cards</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link 
+                                to={Routes.clubPosts(clubId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubPosts(clubId as string)) ? 'active' : ''}`}
+                              >
+                                <Share2 className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Posts</span>
                               </Link>
                             </li>
                           </ul>

@@ -25,6 +25,10 @@ public partial class OurGameContext : DbContext
 
     public virtual DbSet<Club> Clubs { get; set; }
 
+    public virtual DbSet<ClubPost> ClubPosts { get; set; }
+
+    public virtual DbSet<ClubSocialLinks> ClubSocialLinks { get; set; }
+
     public virtual DbSet<Coach> Coaches { get; set; }
 
     public virtual DbSet<DevelopmentGoal> DevelopmentGoals { get; set; }
