@@ -51,7 +51,7 @@ public class GetMatchByIdHandlerTests
 
         var reportId = Guid.NewGuid();
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, CreatedAt) VALUES ({reportId}, {matchId}, 'Good game', NULL, NULL, GETUTCDATE())");
+            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt) VALUES ({reportId}, {matchId}, 'Good game', NULL, NULL, {false}, GETUTCDATE())");
 
         var goalId = Guid.NewGuid();
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
@@ -70,5 +70,25 @@ public class GetMatchByIdHandlerTests
         Assert.Equal(45, result.Report.Goals[0].Minute);
         Assert.Equal("first-half", result.Report.Goals[0].Period);
         Assert.Equal("completed", result.Status);
+    }
+
+    [Fact]
+    public async Task Handle_IncludesIsPublished_FromMatchReport()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var matchId = await db.SeedMatchAsync(teamId, "Rivals FC", MatchStatus.Completed, DateTime.UtcNow.AddDays(-1));
+
+        var reportId = Guid.NewGuid();
+        await db.Context.Database.ExecuteSqlInterpolatedAsync(
+            $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt) VALUES ({reportId}, {matchId}, 'Good game', NULL, NULL, {true}, GETUTCDATE())");
+
+        var handler = new GetMatchByIdHandler(db.Context);
+
+        var result = await handler.Handle(
+            new GetMatchByIdQuery(matchId), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.True(result!.IsPublished);
     }
 }

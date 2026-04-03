@@ -7,6 +7,8 @@ using OurGame.Application.UseCases.Matches.Commands.CreateMatch;
 using OurGame.Application.UseCases.Matches.Commands.CreateMatch.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMatch;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMatch.DTOs;
+using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport;
+using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport.DTOs;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 
@@ -158,6 +160,109 @@ public class MatchFunctionsTests
         Assert.NotNull(payload.Data);
         Assert.Equal(matchId, payload.Data!.Id);
         Assert.Equal("City United", payload.Data.Opposition);
+    }
+
+    [Fact]
+    public async Task GetPublishedMatchReport_ReturnsBadRequest_WhenIdIsNotValidGuid()
+    {
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("GET", "https://localhost/v1/social/match/not-a-guid/report");
+
+        var response = await sut.GetPublishedMatchReport(req, "not-a-guid");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<PublishedMatchReportDto>(response);
+        Assert.False(payload.Success);
+        Assert.Equal(400, payload.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetPublishedMatchReport_ReturnsNotFound_WhenMatchIsUnpublished()
+    {
+        var matchId = Guid.NewGuid();
+        var expected = new MatchDetailDto
+        {
+            Id = matchId,
+            TeamId = Guid.NewGuid(),
+            Opposition = "City United",
+            Status = "completed",
+            IsPublished = false
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<GetMatchByIdQuery, MatchDetailDto?>((query, _) =>
+            Task.FromResult<MatchDetailDto?>(query.MatchId == matchId ? expected : null));
+
+        var sut = BuildSut(mediator);
+        var req = CreateRequest("GET", $"https://localhost/v1/social/match/{matchId}/report");
+
+        var response = await sut.GetPublishedMatchReport(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetPublishedMatchReport_ReturnsOk_WhenPublished()
+    {
+        var matchId = Guid.NewGuid();
+        var expected = new MatchDetailDto
+        {
+            Id = matchId,
+            TeamId = Guid.NewGuid(),
+            ClubId = Guid.NewGuid(),
+            ClubName = "Vale FC",
+            TeamName = "Blues",
+            Opposition = "City United",
+            MatchDate = DateTime.UtcNow.AddDays(-1),
+            Competition = "League",
+            Location = "Vale Park",
+            IsHome = true,
+            HomeScore = 3,
+            AwayScore = 1,
+            Status = "completed",
+            IsPublished = true,
+            Report = new MatchReportDetailDto
+            {
+                Id = Guid.NewGuid(),
+                Summary = "Strong team performance."
+            }
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<GetMatchByIdQuery, MatchDetailDto?>((query, _) =>
+            Task.FromResult<MatchDetailDto?>(query.MatchId == matchId ? expected : null));
+
+        var sut = BuildSut(mediator);
+        var req = CreateRequest("GET", $"https://localhost/v1/social/match/{matchId}/report");
+
+        var response = await sut.GetPublishedMatchReport(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<PublishedMatchReportDto>(response);
+        Assert.True(payload.Success);
+        Assert.NotNull(payload.Data);
+        Assert.Equal(matchId, payload.Data!.MatchId);
+        Assert.Equal("Blues vs City United match report", payload.Data.OgTitle);
+    }
+
+    [Fact]
+    public async Task PublishMatchReport_ReturnsNoContent_WhenValid()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+        var mediator = new TestMediator();
+        mediator.Register<PublishMatchReportCommand>((_, _) => Task.CompletedTask);
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest(
+            "PUT",
+            $"https://localhost/v1/matches/{matchId}/report/publish",
+            authId,
+            "{\"IsPublished\":true}");
+
+        var response = await sut.PublishMatchReport(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
     }
 
     // ───────────────────────────────────────────────

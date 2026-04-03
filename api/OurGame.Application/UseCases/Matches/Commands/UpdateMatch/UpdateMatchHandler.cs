@@ -52,6 +52,11 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
         var statusInt = ParseStatus(dto.Status);
 
         var now = DateTime.UtcNow;
+        var existingPublishedFlag = await _db.Database
+            .SqlQueryRaw<ExistingMatchReportRaw>(
+                "SELECT TOP 1 IsPublished FROM MatchReports WHERE MatchId = {0}", matchId)
+            .FirstOrDefaultAsync(cancellationToken);
+        var isPublished = existingPublishedFlag?.IsPublished ?? false;
         var location = dto.Location ?? string.Empty;
         var competition = dto.Competition ?? string.Empty;
         var notes = dto.Notes ?? string.Empty;
@@ -200,8 +205,8 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
                 var reportId = Guid.NewGuid();
                 var summary = dto.Report.Summary ?? string.Empty;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, CreatedAt)
-                VALUES ({reportId}, {matchId}, {summary}, {dto.Report.CaptainId}, {dto.Report.PlayerOfMatchId}, {now})
+                INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt)
+                VALUES ({reportId}, {matchId}, {summary}, {dto.Report.CaptainId}, {dto.Report.PlayerOfMatchId}, {isPublished}, {now})
             ", cancellationToken);
 
                 foreach (var goal in dto.Report.Goals)
@@ -443,4 +448,9 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
 
         public Guid? ParentFormationId { get; init; }
     }
+}
+
+internal class ExistingMatchReportRaw
+{
+    public bool IsPublished { get; set; }
 }

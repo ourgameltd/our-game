@@ -131,8 +131,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
             var reportId = Guid.NewGuid();
             var summary = dto.Report.Summary ?? string.Empty;
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, CreatedAt)
-                VALUES ({reportId}, {matchId}, {summary}, {dto.Report.CaptainId}, {dto.Report.PlayerOfMatchId}, {now})
+                INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt)
+                VALUES ({reportId}, {matchId}, {summary}, {dto.Report.CaptainId}, {dto.Report.PlayerOfMatchId}, {false}, {now})
             ", cancellationToken);
 
             // Insert goals

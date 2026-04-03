@@ -81,4 +81,38 @@ public class CreateMatchHandlerTests
         Assert.Null(result.Lineup);
         Assert.Null(result.Report);
     }
+
+    [Fact]
+    public async Task Handle_WithReport_SetsPublishedToFalseByDefault()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var playerId = await db.SeedPlayerAsync(clubId);
+        var handler = new CreateMatchHandler(db.Context);
+        var matchDate = DateTime.UtcNow.AddDays(1);
+
+        var dto = new CreateMatchRequest
+        {
+            TeamId = teamId,
+            SeasonId = "2025-26",
+            SquadSize = 11,
+            Opposition = "Rivals FC",
+            MatchDate = matchDate,
+            IsHome = true,
+            Status = "scheduled",
+            Report = new CreateMatchReportRequest
+            {
+                Summary = "Summary",
+                Goals = new(),
+                Cards = new(),
+                Injuries = new(),
+                PerformanceRatings = new()
+            }
+        };
+
+        var result = await handler.Handle(new CreateMatchCommand(dto), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.False(result.IsPublished);
+    }
 }

@@ -2068,6 +2068,7 @@ export interface MatchDetailDto {
   notes?: string;
   weatherCondition?: string;
   weatherTemperature?: number;
+  isPublished: boolean;
   createdAt: string;
   updatedAt: string;
   lineup?: MatchLineupDto;
@@ -2075,6 +2076,23 @@ export interface MatchDetailDto {
   coaches: MatchCoachDetailDto[];
   substitutions: MatchSubstitutionDetailDto[];
   attendance: MatchAttendanceDetailDto[];
+}
+
+export interface PublishedMatchReportDto {
+  matchId: string;
+  clubId: string;
+  clubName: string;
+  teamName: string;
+  opposition: string;
+  matchDate: string;
+  competition: string;
+  location: string;
+  isHome: boolean;
+  homeScore?: number;
+  awayScore?: number;
+  summary?: string;
+  ogTitle: string;
+  ogDescription: string;
 }
 
 export interface MatchLineupDto {
@@ -3645,6 +3663,35 @@ export const apiClient = {
     getReport: async (matchId: string): Promise<ApiResponse<MatchDetailDto>> => {
       const response = await axiosInstance.get<ApiResponse<MatchDetailDto>>(`/v1/matches/${matchId}/report`);
       return response.data;
+    },
+
+    /**
+     * Get a published social match report (anonymous)
+     */
+    getPublishedReport: async (matchId: string): Promise<ApiResponse<PublishedMatchReportDto>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<PublishedMatchReportDto>>(
+          `/v1/social/match/${matchId}/report`
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Publish/unpublish a match report
+     */
+    publishReport: async (matchId: string, isPublished: boolean): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<void>>(
+          `/v1/matches/${matchId}/report/publish`,
+          { isPublished }
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
 
     /**

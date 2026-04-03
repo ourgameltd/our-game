@@ -190,7 +190,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 capP.Photo AS CaptainPhoto,
                 mr.PlayerOfMatchId,
                 pomP.FirstName + ' ' + pomP.LastName AS PlayerOfMatchName,
-                pomP.Photo AS PlayerOfMatchPhoto
+                pomP.Photo AS PlayerOfMatchPhoto,
+                mr.IsPublished
             FROM MatchReports mr
             LEFT JOIN Players capP ON mr.CaptainId = capP.Id
             LEFT JOIN Players pomP ON mr.PlayerOfMatchId = pomP.Id
@@ -315,6 +316,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             WeatherTemperature = match.WeatherTemperature,
             CreatedAt = match.CreatedAt,
             UpdatedAt = match.UpdatedAt,
+            IsPublished = report?.IsPublished ?? false,
             Lineup = lineup == null ? null : new MatchLineupDto
             {
                 Id = lineup.Id,
@@ -555,6 +557,7 @@ public class ReportRaw
     public Guid? PlayerOfMatchId { get; set; }
     public string? PlayerOfMatchName { get; set; }
     public string? PlayerOfMatchPhoto { get; set; }
+    public bool IsPublished { get; set; }
 }
 
 public class GoalRaw

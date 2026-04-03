@@ -88,6 +88,10 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/social*",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/css*",
       "allowedRoles": ["anonymous"]
     },

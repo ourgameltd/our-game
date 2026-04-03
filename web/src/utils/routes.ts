@@ -40,6 +40,10 @@ export class Routes {
     return '/';
   }
 
+  static socialMatchReport(matchId: string): string {
+    return `/social/match/${validateParam(matchId, 'matchId')}/report`;
+  }
+
   // Dashboard (Clubs)
   static clubs(): string {
     return '/dashboard';
