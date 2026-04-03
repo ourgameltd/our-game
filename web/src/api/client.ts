@@ -18,6 +18,16 @@ export interface ApiResponse<T> {
   statusCode?: number;
 }
 
+export interface NotificationDto {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  url?: string;
+  createdAt: string;
+  isRead: boolean;
+}
+
 // Team Players Request/Response Types
 export interface AddPlayerToTeamRequest {
   playerId: string;
@@ -3737,6 +3747,36 @@ export const apiClient = {
     revoke: async (inviteId: string): Promise<ApiResponse<void>> => {
       try {
         const response = await axiosInstance.delete<ApiResponse<void>>(`/v1/invites/${inviteId}`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  },
+
+  notifications: {
+    getMyNotifications: async (unreadOnly: boolean = false): Promise<ApiResponse<NotificationDto[]>> => {
+      try {
+        const query = unreadOnly ? '?unreadOnly=true' : '';
+        const response = await axiosInstance.get<ApiResponse<NotificationDto[]>>(`/v1/notifications${query}`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    markAsRead: async (notificationId: string): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<void>>(`/v1/notifications/${notificationId}/read`, {});
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    markAllAsRead: async (): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<void>>('/v1/notifications/read-all', {});
         return response.data;
       } catch (error) {
         return handleApiError(error);
