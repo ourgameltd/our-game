@@ -7,7 +7,8 @@ import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 type MediaLinkForm = {
-  id?: string;
+  id: string;
+  persistedId?: string;
   url: string;
   title: string;
   type: string;
@@ -122,6 +123,7 @@ export default function ClubSettingsPage() {
       setMediaLinks(
         (club.mediaLinks ?? []).map(link => ({
           id: link.id,
+          persistedId: link.id,
           url: link.url,
           title: link.title ?? '',
           type: link.type || 'other',
@@ -200,7 +202,7 @@ export default function ClubSettingsPage() {
         .filter(line => line.length > 0),
       mediaLinks: mediaLinks
         .map(link => ({
-          id: link.id,
+          id: link.persistedId,
           url: link.url.trim(),
           title: link.title.trim() || undefined,
           type: link.type.trim() || 'other',
@@ -222,7 +224,7 @@ export default function ClubSettingsPage() {
   };
 
   const addMediaLink = () => {
-    setMediaLinks(prev => [...prev, { url: '', title: '', type: 'other', isPublic: false }]);
+    setMediaLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', title: '', type: 'other', isPublic: false }]);
   };
 
   const updateMediaLink = (index: number, patch: Partial<MediaLinkForm>) => {
@@ -563,7 +565,7 @@ export default function ClubSettingsPage() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">No media links configured yet.</p>
                 ) : (
                   mediaLinks.map((link, index) => (
-                    <div key={link.id ?? `${index}-${link.url}`} className="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                    <div key={link.id} className="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
                       <div className="grid gap-3 md:grid-cols-2">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL</label>

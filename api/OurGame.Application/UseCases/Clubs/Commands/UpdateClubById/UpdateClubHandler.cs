@@ -142,29 +142,29 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
         ", cancellationToken);
 
         var mediaLinks = dto.MediaLinks ?? new List<UpdateClubMediaLinkDto>();
+        var mediaEntities = new List<ClubMediaLink>(mediaLinks.Count);
         for (var i = 0; i < mediaLinks.Count; i++)
         {
             var link = mediaLinks[i];
             var normalizedType = NormalizeMediaType(link.Type);
+            mediaEntities.Add(new ClubMediaLink
+            {
+                Id = Guid.NewGuid(),
+                ClubId = clubId,
+                Url = link.Url,
+                Title = link.Title,
+                Type = normalizedType,
+                IsPublic = link.IsPublic,
+                DisplayOrder = i,
+                CreatedAt = now,
+                UpdatedAt = now
+            });
+        }
 
-            await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO ClubMediaLinks
-                (
-                    Id, ClubId, Url, Title, Type, IsPublic, DisplayOrder, CreatedAt, UpdatedAt
-                )
-                VALUES
-                (
-                    {Guid.NewGuid()},
-                    {clubId},
-                    {link.Url},
-                    {link.Title},
-                    {normalizedType},
-                    {link.IsPublic},
-                    {i},
-                    {now},
-                    {now}
-                )
-            ", cancellationToken);
+        if (mediaEntities.Count > 0)
+        {
+            await _db.ClubMediaLinks.AddRangeAsync(mediaEntities, cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
         }
 
         // 7. Query back the updated club

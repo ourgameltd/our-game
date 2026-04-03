@@ -21,6 +21,6 @@ public class ClubMediaLinkConfiguration : IEntityTypeConfiguration<ClubMediaLink
         builder.HasOne(x => x.Club)
             .WithMany(c => c.ClubMediaLinks)
             .HasForeignKey(x => x.ClubId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

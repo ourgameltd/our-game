@@ -3,6 +3,15 @@ import { Link, useParams } from 'react-router-dom';
 import { useClubPublicMedia } from '@/api';
 import { useSocialMetaTags } from '@/hooks/useSocialMetaTags';
 
+function getLinkLabel(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.hostname;
+  } catch {
+    return url;
+  }
+}
+
 export default function ClubMediaPage() {
   const { clubId } = useParams();
   const { data, isLoading, error } = useClubPublicMedia(clubId);
@@ -83,7 +92,7 @@ export default function ClubMediaPage() {
                     rel="noopener noreferrer"
                     className="block rounded border border-gray-200 px-4 py-3 text-sm hover:bg-gray-50 dark:border-gray-700 dark:hover:bg-gray-700/50"
                   >
-                    <span className="font-medium text-gray-900 dark:text-white">{link.title || link.url}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{link.title || getLinkLabel(link.url)}</span>
                     <span className="ml-2 text-xs uppercase text-gray-500 dark:text-gray-400">{link.type}</span>
                   </a>
                 </li>

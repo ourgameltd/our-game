@@ -87,7 +87,8 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
         bool publicOnly,
         CancellationToken cancellationToken)
     {
-        var sql = @"
+        var visibilityFilter = publicOnly ? "AND ml.IsPublic = 1" : string.Empty;
+        var sql = $@"
             SELECT
                 ml.Id,
                 ml.Url,
@@ -97,11 +98,11 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
                 ml.DisplayOrder
             FROM ClubMediaLinks ml
             WHERE ml.ClubId = {0}
-              AND ({1} = 0 OR ml.IsPublic = 1)
+              {visibilityFilter}
             ORDER BY ml.DisplayOrder, ml.CreatedAt";
 
         var links = await _db.Database
-            .SqlQueryRaw<ClubMediaLinkRawDto>(sql, clubId, publicOnly ? 1 : 0)
+            .SqlQueryRaw<ClubMediaLinkRawDto>(sql, clubId)
             .ToListAsync(cancellationToken);
 
         return links.Select(link => new ClubMediaLinkDto

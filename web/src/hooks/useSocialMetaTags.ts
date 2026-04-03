@@ -8,16 +8,12 @@ function setMetaAttribute(selector: string, attr: 'content', value: string | und
   let element = document.head.querySelector(selector) as HTMLMetaElement | null;
   if (!element) {
     element = document.createElement('meta');
-    if (selector.includes('property="')) {
-      const property = selector.split('property="')[1]?.split('"')[0];
-      if (property) {
-        element.setAttribute('property', property);
-      }
-    } else if (selector.includes('name="')) {
-      const name = selector.split('name="')[1]?.split('"')[0];
-      if (name) {
-        element.setAttribute('name', name);
-      }
+    const propertyMatch = selector.match(/property="([^"]+)"/);
+    const nameMatch = selector.match(/name="([^"]+)"/);
+    if (propertyMatch?.[1]) {
+      element.setAttribute('property', propertyMatch[1]);
+    } else if (nameMatch?.[1]) {
+      element.setAttribute('name', nameMatch[1]);
     }
     document.head.appendChild(element);
   }
