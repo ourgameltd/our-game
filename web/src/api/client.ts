@@ -250,6 +250,37 @@ export interface ClubDetailDto {
   history?: string;
   ethos?: string;
   principles: string[];
+  mediaLinks: ClubMediaLinkDto[];
+}
+
+export interface ClubMediaLinkDto {
+  id: string;
+  url: string;
+  title?: string;
+  type: string;
+  isPublic: boolean;
+}
+
+export interface ClubPublicMediaLinkDto {
+  id: string;
+  url: string;
+  title?: string;
+  type: string;
+}
+
+export interface ClubPublicMediaDto {
+  clubId: string;
+  clubName: string;
+  clubShortName: string;
+  clubLogo?: string;
+  clubPrimaryColor: string;
+  clubSecondaryColor: string;
+  clubAccentColor: string;
+  clubEthos?: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogImage?: string;
+  mediaLinks: ClubPublicMediaLinkDto[];
 }
 
 export interface MatchScoreDto {
@@ -1938,6 +1969,15 @@ export interface UpdateClubRequest {
   history: string;
   ethos: string;
   principles: string[];
+  mediaLinks?: UpdateClubMediaLinkRequest[];
+}
+
+export interface UpdateClubMediaLinkRequest {
+  id?: string;
+  url: string;
+  title?: string;
+  type: string;
+  isPublic: boolean;
 }
 
 export interface CreateTeamRequest {
@@ -3014,6 +3054,20 @@ export const apiClient = {
         const response = await axiosInstance.put<ApiResponse<ClubDetailDto>>(
           `/v1/clubs/${clubId}`,
           request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Get public media profile for a club (anonymous endpoint)
+     */
+    getPublicMedia: async (clubId: string): Promise<ApiResponse<ClubPublicMediaDto>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<ClubPublicMediaDto>>(
+          `/v1/clubs/${clubId}/public-media`
         );
         return response.data;
       } catch (error) {

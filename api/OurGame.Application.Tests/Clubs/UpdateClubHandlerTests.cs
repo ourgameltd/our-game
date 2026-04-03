@@ -215,6 +215,50 @@ public class UpdateClubHandlerTests
         Assert.Equal(string.Empty, result.Location.Address);
     }
 
+    [Fact]
+    public async Task Handle_WithInvalidMediaLinkUrl_ThrowsValidationException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var handler = new UpdateClubHandler(db.Context);
+        var dto = CreateValidDto() with
+        {
+            MediaLinks = new List<UpdateClubMediaLinkDto>
+            {
+                new() { Url = "not-a-url", Type = "website", IsPublic = true }
+            }
+        };
+        var command = new UpdateClubCommand(clubId, dto);
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(command, CancellationToken.None));
+
+        Assert.True(ex.Errors.ContainsKey("MediaLinks[0].Url"));
+    }
+
+    [Fact]
+    public async Task Handle_WithValidMediaLinks_ReturnsUpdatedMediaLinks()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var handler = new UpdateClubHandler(db.Context);
+        var dto = CreateValidDto() with
+        {
+            MediaLinks = new List<UpdateClubMediaLinkDto>
+            {
+                new() { Url = "https://example.com/report", Title = "Match report", Type = "match-report", IsPublic = true },
+                new() { Url = "https://example.com/private", Title = "Private sponsor file", Type = "sponsor", IsPublic = false }
+            }
+        };
+        var command = new UpdateClubCommand(clubId, dto);
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal(2, result.MediaLinks.Count);
+        Assert.Contains(result.MediaLinks, link => link.Url == "https://example.com/report" && link.IsPublic);
+        Assert.Contains(result.MediaLinks, link => link.Url == "https://example.com/private" && !link.IsPublic);
+    }
+
     private static UpdateClubRequestDto CreateValidDto() => new()
     {
         Name = "Vale FC",

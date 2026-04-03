@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Tests.TestInfrastructure;
 using OurGame.Application.UseCases.Clubs.Queries.GetClubById;
 
@@ -84,5 +85,30 @@ public class GetClubByIdHandlerTests
 
         Assert.NotNull(result);
         Assert.Empty(result!.Principles);
+    }
+
+    [Fact]
+    public async Task Handle_ReturnsOnlyPublicMediaLinks()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync("Vale FC");
+
+        await db.Context.Database.ExecuteSqlInterpolatedAsync($@"
+            INSERT INTO ClubMediaLinks
+            (Id, ClubId, Url, Title, Type, IsPublic, DisplayOrder, CreatedAt, UpdatedAt)
+            VALUES
+            ({Guid.NewGuid()}, {clubId}, {"https://example.com/public"}, {"Public link"}, {"website"}, {true}, {0}, {DateTime.UtcNow}, {DateTime.UtcNow}),
+            ({Guid.NewGuid()}, {clubId}, {"https://example.com/private"}, {"Private link"}, {"website"}, {false}, {1}, {DateTime.UtcNow}, {DateTime.UtcNow})
+        ");
+
+        var handler = new GetClubByIdHandler(db.Context);
+        var query = new GetClubByIdQuery(clubId);
+
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Single(result!.MediaLinks);
+        Assert.Equal("https://example.com/public", result.MediaLinks[0].Url);
+        Assert.True(result.MediaLinks[0].IsPublic);
     }
 }

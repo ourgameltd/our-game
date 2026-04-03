@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Collections.Generic;
 
 namespace OurGame.Application.UseCases.Clubs.Commands.UpdateClubById.DTOs;
 
@@ -93,4 +94,9 @@ public record UpdateClubRequestDto
     /// Club principles and values. Stored as a JSON array in the database.
     /// </summary>
     public string[]? Principles { get; init; }
+
+    /// <summary>
+    /// External media links (social, match report, clips, sponsors, etc.) for club sharing.
+    /// </summary>
+    public List<UpdateClubMediaLinkDto>? MediaLinks { get; init; }
 }

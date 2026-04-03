@@ -15,6 +15,7 @@ public class ClubDetailDto
     public string? History { get; set; }
     public string? Ethos { get; set; }
     public List<string> Principles { get; set; } = new();
+    public List<ClubMediaLinkDto> MediaLinks { get; set; } = new();
 }
 
 /// <summary>
@@ -36,4 +37,13 @@ public class ClubLocationDto
     public string Country { get; set; } = string.Empty;
     public string Venue { get; set; } = string.Empty;
     public string Address { get; set; } = string.Empty;
+}
+
+public class ClubMediaLinkDto
+{
+    public Guid Id { get; set; }
+    public string Url { get; set; } = string.Empty;
+    public string? Title { get; set; }
+    public string Type { get; set; } = "other";
+    public bool IsPublic { get; set; }
 }

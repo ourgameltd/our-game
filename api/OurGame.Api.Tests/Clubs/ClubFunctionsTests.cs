@@ -91,6 +91,55 @@ public class ClubFunctionsTests
         Assert.Equal(clubId, payload.Data!.Id);
     }
 
+    [Fact]
+    public async Task GetClubPublicMedia_ReturnsBadRequest_WhenClubIdIsNotValidGuid()
+    {
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("GET", "https://localhost/v1/clubs/not-a-guid/public-media");
+
+        var response = await sut.GetClubPublicMedia(req, "not-a-guid");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<ClubPublicMediaDto>(response);
+        Assert.False(payload.Success);
+        Assert.Equal(400, payload.StatusCode);
+        Assert.Equal("Invalid club ID format", payload.Error?.Message);
+    }
+
+    [Fact]
+    public async Task GetClubPublicMedia_ReturnsOk_WithoutAuthentication_WhenClubExists()
+    {
+        var clubId = Guid.NewGuid();
+        var expected = new ClubDetailDto
+        {
+            Id = clubId,
+            Name = "Vale FC",
+            ShortName = "VFC",
+            Colors = new ClubColorsDto { Primary = "#ff0000", Secondary = "#ffffff", Accent = "#000000" },
+            MediaLinks = new List<ClubMediaLinkDto>
+            {
+                new() { Id = Guid.NewGuid(), Url = "https://example.com/public", Title = "Public", Type = "website", IsPublic = true },
+                new() { Id = Guid.NewGuid(), Url = "https://example.com/private", Title = "Private", Type = "website", IsPublic = false }
+            }
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<GetClubByIdQuery, ClubDetailDto?>((_, _) => Task.FromResult<ClubDetailDto?>(expected));
+
+        var sut = BuildSut(mediator);
+        var req = CreateRequest("GET", $"https://localhost/v1/clubs/{clubId}/public-media");
+
+        var response = await sut.GetClubPublicMedia(req, clubId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<ClubPublicMediaDto>(response);
+        Assert.True(payload.Success);
+        Assert.NotNull(payload.Data);
+        Assert.Equal(clubId, payload.Data!.ClubId);
+        Assert.Single(payload.Data.MediaLinks);
+        Assert.Equal("https://example.com/public", payload.Data.MediaLinks[0].Url);
+    }
+
     // ── GetClubStatistics ────────────────────────────────────────────
 
     [Fact]

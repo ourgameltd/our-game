@@ -17,6 +17,7 @@ import {
   TeamWithStatsDto,
   ChildPlayerDto,
   ClubDetailDto,
+  ClubPublicMediaDto,
   ClubStatisticsDto,
   AgeGroupListDto,
   AgeGroupDetailDto,
@@ -1357,6 +1358,17 @@ export function useUpdateClub(clubId: string): UseMutationState<ClubDetailDto> &
 }
 
 /**
+ * Hook to fetch a club's public media profile.
+ */
+export function useClubPublicMedia(clubId: string | undefined): UseApiState<ClubPublicMediaDto> {
+  return useApiCall<ClubPublicMediaDto>(
+    () => apiClient.clubs.getPublicMedia(clubId!),
+    [clubId],
+    isValidId(clubId)
+  );
+}
+
+/**
  * Hook to create a match.
  * Returns a mutation function, submitting state, response data, and error
  * with validation details preserved for field-level error mapping.
@@ -2476,4 +2488,3 @@ export function useArchiveTeam(teamId: string | undefined): UseMutationState<voi
 
   return { archiveTeam, isSubmitting, data, error };
 }
-

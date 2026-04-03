@@ -69,6 +69,7 @@ import DrillTemplatesListPage from '@pages/drills/DrillTemplatesListPage';
 import DrillFormPage from '@pages/drills/DrillFormPage';
 import DrillTemplateFormPage from '@pages/drills/DrillTemplateFormPage';
 import InviteAcceptPage from '@pages/InviteAcceptPage';
+import ClubMediaPage from '@pages/public/ClubMediaPage';
 import Header from '@components/layout/Header';
 import ScrollToTop from '@components/common/ScrollToTop';
 
@@ -93,7 +94,8 @@ function AppContent() {
                      location.pathname === '/login' || 
                      location.pathname === '/register' || 
                      location.pathname === '/password-reset' ||
-                     location.pathname.startsWith('/invite/');
+                     location.pathname.startsWith('/invite/') ||
+                     location.pathname.startsWith('/play/');
 
   const getMarginLeft = () => {
     if (hideHeader || !isDesktop) return '0';
@@ -118,6 +120,7 @@ function AppContent() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/password-reset" element={<PasswordResetPage />} />
         <Route path="/invite/:code" element={<InviteAcceptPage />} />
+        <Route path="/play/:clubId/media" element={<ClubMediaPage />} />
 
         {/* Profile */}
         <Route path="/profile" element={<ProfilePage />} />

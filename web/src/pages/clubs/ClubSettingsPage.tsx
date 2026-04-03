@@ -6,6 +6,14 @@ import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
+type MediaLinkForm = {
+  id?: string;
+  url: string;
+  title: string;
+  type: string;
+  isPublic: boolean;
+};
+
 /**
  * Skeleton for the page title area
  */
@@ -88,6 +96,7 @@ export default function ClubSettingsPage() {
     ethos: '',
     principles: '',
   });
+  const [mediaLinks, setMediaLinks] = useState<MediaLinkForm[]>([]);
 
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [logoDataUri, setLogoDataUri] = useState<string>('');
@@ -110,6 +119,15 @@ export default function ClubSettingsPage() {
         ethos: club.ethos || '',
         principles: club.principles?.join('\n') || '',
       });
+      setMediaLinks(
+        (club.mediaLinks ?? []).map(link => ({
+          id: link.id,
+          url: link.url,
+          title: link.title ?? '',
+          type: link.type || 'other',
+          isPublic: !!link.isPublic,
+        }))
+      );
       setLogoPreview(club.logo || '');
       setLogoDataUri(club.logo || '');
       setFormInitialized(true);
@@ -180,6 +198,15 @@ export default function ClubSettingsPage() {
         .split('\n')
         .map(line => line.trim())
         .filter(line => line.length > 0),
+      mediaLinks: mediaLinks
+        .map(link => ({
+          id: link.id,
+          url: link.url.trim(),
+          title: link.title.trim() || undefined,
+          type: link.type.trim() || 'other',
+          isPublic: link.isPublic,
+        }))
+        .filter(link => link.url.length > 0),
     };
 
     await updateClub(request);
@@ -192,6 +219,20 @@ export default function ClubSettingsPage() {
 
   const handleCancel = () => {
     navigate(Routes.clubOverview(clubId!));
+  };
+
+  const addMediaLink = () => {
+    setMediaLinks(prev => [...prev, { url: '', title: '', type: 'other', isPublic: false }]);
+  };
+
+  const updateMediaLink = (index: number, patch: Partial<MediaLinkForm>) => {
+    setMediaLinks(prev =>
+      prev.map((item, i) => (i === index ? { ...item, ...patch } : item))
+    );
+  };
+
+  const removeMediaLink = (index: number) => {
+    setMediaLinks(prev => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -495,6 +536,98 @@ export default function ClubSettingsPage() {
                     placeholder="Inclusivity - Football for everyone&#10;Community - Building strong connections&#10;Development - Nurturing talent"
                   />
                 </div>
+              </div>
+            </div>
+
+            {/* Media Links */}
+            <div className="card">
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  Media Links
+                </h3>
+                <button
+                  type="button"
+                  onClick={addMediaLink}
+                  className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                >
+                  Add Link
+                </button>
+              </div>
+
+              <p className="mb-3 text-sm text-gray-600 dark:text-gray-400">
+                Add links to social profiles, match reports, sponsorship pages, results, fixtures, or clips. Set each as public or private.
+              </p>
+
+              <div className="space-y-3">
+                {mediaLinks.length === 0 ? (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No media links configured yet.</p>
+                ) : (
+                  mediaLinks.map((link, index) => (
+                    <div key={link.id ?? `${index}-${link.url}`} className="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL</label>
+                          <input
+                            type="url"
+                            value={link.url}
+                            onChange={(e) => updateMediaLink(index, { url: e.target.value })}
+                            placeholder="https://..."
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                          <input
+                            type="text"
+                            value={link.title}
+                            onChange={(e) => updateMediaLink(index, { title: e.target.value })}
+                            placeholder="Match highlights vs Blues"
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                          <select
+                            value={link.type}
+                            onChange={(e) => updateMediaLink(index, { type: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          >
+                            <option value="youtube">YouTube</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="tiktok">TikTok</option>
+                            <option value="website">Website</option>
+                            <option value="facebook">Facebook</option>
+                            <option value="twitter">Twitter/X</option>
+                            <option value="sponsor">Sponsor</option>
+                            <option value="match-report">Match Report</option>
+                            <option value="result">Result</option>
+                            <option value="fixture">Fixture</option>
+                            <option value="clip">Clip</option>
+                            <option value="other">Other</option>
+                          </select>
+                        </div>
+                        <div className="flex items-end justify-between gap-3">
+                          <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                            <input
+                              type="checkbox"
+                              checked={link.isPublic}
+                              onChange={(e) => updateMediaLink(index, { isPublic: e.target.checked })}
+                              className="h-4 w-4"
+                            />
+                            Publicly visible
+                          </label>
+                          <button
+                            type="button"
+                            onClick={() => removeMediaLink(index)}
+                            className="rounded border border-red-300 px-3 py-2 text-sm text-red-700 hover:bg-red-50 dark:border-red-700 dark:text-red-300 dark:hover:bg-red-900/20"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
