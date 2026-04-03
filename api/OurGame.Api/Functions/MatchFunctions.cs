@@ -252,7 +252,7 @@ public class MatchFunctions
             Summary = match.Report.Summary,
             OgTitle = $"{match.TeamName} vs {match.Opposition} match report",
             OgDescription = !string.IsNullOrWhiteSpace(match.Report.Summary)
-                ? match.Report.Summary!
+                ? match.Report.Summary
                 : $"{match.TeamName} vs {match.Opposition} in {match.Competition}."
         };
 

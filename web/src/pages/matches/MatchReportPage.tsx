@@ -14,6 +14,7 @@ export default function MatchReportPage() {
   const { publishMatchReport, isSubmitting } = usePublishMatchReport(matchId || '');
   const { setEntityName } = useNavigation();
   const [publishError, setPublishError] = useState<string | null>(null);
+  const [isPublished, setIsPublished] = useState(false);
 
   usePageTitle(
     [
@@ -147,6 +148,10 @@ export default function MatchReportPage() {
     [match.id]
   );
 
+  useEffect(() => {
+    setIsPublished(match.isPublished);
+  }, [match.isPublished]);
+
   const handlePublishToggle = async () => {
     if (!matchId || !clubId || !ageGroupId || !teamId) {
       return;
@@ -154,14 +159,15 @@ export default function MatchReportPage() {
 
     setPublishError(null);
 
-    const response = await publishMatchReport(!match.isPublished);
+    const nextPublishedState = !isPublished;
+    const response = await publishMatchReport(nextPublishedState);
 
     if (!response.success) {
       setPublishError(response.error?.message || 'Failed to update publish status.');
       return;
     }
 
-    window.location.reload();
+    setIsPublished(nextPublishedState);
   };
 
   return (
@@ -176,7 +182,7 @@ export default function MatchReportPage() {
             title="Publish report"
           >
             <Share2 className="w-5 h-5" />
-            {match.isPublished ? 'Unpublish' : 'Publish'}
+            {isPublished ? 'Unpublish' : 'Publish'}
           </button>
           <button
             onClick={() => navigate(Routes.matchEdit(clubId!, ageGroupId!, teamId!, matchId!))}
@@ -194,7 +200,7 @@ export default function MatchReportPage() {
           </div>
         )}
 
-        {match.isPublished && (
+        {isPublished && (
           <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
             Published at{' '}
             <a className="underline" href={socialShareUrl} target="_blank" rel="noopener noreferrer">
