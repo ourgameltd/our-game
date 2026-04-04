@@ -204,7 +204,7 @@
     "rolesSource": "/api/GetRoles",
     "identityProviders": {
       "customOpenIdConnectProviders": {
-        "b2c": {
+        "btoc": {
           "registration": {
             "clientIdSettingName": "B2C_CLIENT_ID",
             "clientCredential": {
