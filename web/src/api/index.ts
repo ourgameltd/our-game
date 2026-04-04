@@ -179,6 +179,7 @@ export type {
   UpdatePlayerAbilityEvaluationRequest,
   PlayerRecentPerformanceDto,
   PlayerUpcomingMatchDto,
+  CreateClubRequest,
   UpdateClubRequest,
   UpdateClubMediaLinkRequest,
   CreateTeamRequest,

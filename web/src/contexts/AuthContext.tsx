@@ -6,12 +6,13 @@
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getUserInfo, ClientPrincipal, getUserEmail, getUserDisplayName } from '@/api/auth';
+import { getUserInfo, ClientPrincipal, getUserEmail, getUserDisplayName, hasRole } from '@/api/auth';
 
 interface AuthContextType {
   user: ClientPrincipal | null;
   isLoading: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
   email: string | undefined;
   displayName: string | undefined;
   refreshUser: () => Promise<void>;
@@ -44,6 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isLoading,
     isAuthenticated: user !== null,
+    isAdmin: hasRole(user, 'admin'),
     email: getUserEmail(user),
     displayName: getUserDisplayName(user),
     refreshUser: fetchUser,

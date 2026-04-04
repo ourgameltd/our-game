@@ -9,7 +9,7 @@ export default function ClubsListPage() {
   usePageTitle(['Clubs List']);
 
   // Get authenticated user information
-  const { isLoading: authLoading } = useAuth();
+  const { isLoading: authLoading, isAdmin } = useAuth();
 
   // Fetch current user profile
   const { data: currentUser, isLoading: currentUserLoading } = useCurrentUser();
@@ -324,9 +324,19 @@ export default function ClubsListPage() {
 
         {/* Clubs Grid */}
         <div>
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-            My Clubs
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              My Clubs
+            </h2>
+            {isAdmin && (
+              <Link
+                to={Routes.newClub()}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
+              >
+                + Create Club
+              </Link>
+            )}
+          </div>
           
           {/* Loading State */}
           {myClubsLoading && (

@@ -113,12 +113,13 @@ public static class UserSeedData
             new User
             {
                 Id = MichaelLaw_Id,
-                AuthId = "00000001000000000000000000000101",
+                AuthId = "a65e474c-6215-423c-8227-d3a44c6961c0",
                 Email = "michael.law@valefc.com",
                 FirstName = "Michael",
                 LastName = "Law",
                 Photo = null,
                 Preferences = "{\"notifications\":true,\"theme\":\"dark\",\"navigationStyle\":\"modern\"}",
+                IsAdmin = true,
                 CreatedAt = now,
                 UpdatedAt = now
             }

@@ -12,6 +12,7 @@ import RegisterPage from '@pages/auth/RegisterPage';
 import PasswordResetPage from '@pages/auth/PasswordResetPage';
 import ProfilePage from '@pages/profile/ProfilePage';
 import ClubsListPage from '@pages/clubs/ClubsListPage';
+import CreateClubPage from '@pages/clubs/CreateClubPage';
 import ClubOverviewPage from '@pages/clubs/ClubOverviewPage';
 import ClubEthosPage from '@pages/clubs/ClubEthosPage';
 import ClubPlayersPage from '@pages/clubs/ClubPlayersPage';
@@ -136,6 +137,7 @@ function AppContent() {
         
         {/* Dashboard (Clubs) */}
         <Route path="/dashboard" element={<ClubsListPage />} />
+        <Route path="/dashboard/new-club" element={<CreateClubPage />} />
         <Route path="/dashboard/:clubId" element={<ClubOverviewPage />} />
         <Route path="/dashboard/:clubId/ethos" element={<ClubEthosPage />} />
         <Route path="/dashboard/:clubId/players" element={<ClubPlayersPage />} />

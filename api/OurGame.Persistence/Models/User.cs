@@ -21,6 +21,8 @@ public partial class User
 
     public string Preferences { get; set; }
 
+    public bool IsAdmin { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

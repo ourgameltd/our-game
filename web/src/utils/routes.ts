@@ -57,6 +57,10 @@ export class Routes {
     return `/dashboard/${validateParam(clubId, 'clubId')}`;
   }
 
+  static newClub(): string {
+    return '/dashboard/new-club';
+  }
+
   static clubOverview(clubId: string): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}`;
   }

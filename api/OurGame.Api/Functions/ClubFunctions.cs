@@ -21,6 +21,8 @@ using OurGame.Application.UseCases.Clubs.Queries.GetTrainingSessionsByClubId;
 using OurGame.Application.UseCases.Clubs.Queries.GetTrainingSessionsByClubId.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries.GetMatchesByClubId;
 using OurGame.Application.UseCases.Clubs.Queries.GetMatchesByClubId.DTOs;
+using OurGame.Application.UseCases.Clubs.Commands.CreateClub;
+using OurGame.Application.UseCases.Clubs.Commands.CreateClub.DTOs;
 using OurGame.Application.UseCases.Clubs.Commands.CreateClubKit;
 using OurGame.Application.UseCases.Clubs.Commands.CreateClubKit.DTOs;
 using OurGame.Application.UseCases.Clubs.Commands.UpdateClubKit;
@@ -815,6 +817,77 @@ public class ClubFunctions
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<List<ClubDevelopmentPlanDto>>.SuccessResponse(developmentPlans));
         return response;
+    }
+
+    /// <summary>
+    /// Create a new club (admin only)
+    /// </summary>
+    [Function("CreateClub")]
+    [OpenApiOperation(operationId: "CreateClub", tags: new[] { "Clubs" }, Summary = "Create a new club", Description = "Creates a new club. Requires admin role.")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(CreateClubRequestDto), Required = true, Description = "Club details")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Created, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "Club created successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Forbidden, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "User is not an admin")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "Invalid request data")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<ClubDetailDto>), Description = "Internal server error")]
+    public async Task<HttpResponseData> CreateClub(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/clubs")] HttpRequestData req)
+    {
+        var azureUserId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(azureUserId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ErrorResponse(
+                "Authentication required", (int)HttpStatusCode.Unauthorized));
+            return unauthorizedResponse;
+        }
+
+        if (!req.IsInRole("admin"))
+        {
+            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbiddenResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ErrorResponse(
+                "Admin access required", (int)HttpStatusCode.Forbidden));
+            return forbiddenResponse;
+        }
+
+        try
+        {
+            var dto = await req.ReadFromJsonAsync<CreateClubRequestDto>();
+            if (dto == null)
+            {
+                _logger.LogWarning("Failed to deserialize CreateClubRequestDto");
+                var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+                await badRequestResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ErrorResponse(
+                    "Invalid request body", (int)HttpStatusCode.BadRequest));
+                return badRequestResponse;
+            }
+
+            var command = new CreateClubCommand(dto);
+            var result = await _mediator.Send(command);
+
+            _logger.LogInformation("Club created successfully: {ClubId}", result.Id);
+            var successResponse = req.CreateResponse(HttpStatusCode.Created);
+            successResponse.Headers.Add("Location", $"/v1/clubs/{result.Id}");
+            await successResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.SuccessResponse(result, (int)HttpStatusCode.Created));
+            return successResponse;
+        }
+        catch (OurGame.Application.Abstractions.Exceptions.ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error during CreateClub");
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ValidationErrorResponse(
+                "Validation failed", ex.Errors));
+            return validationResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating club");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<ClubDetailDto>.ErrorResponse(
+                "An error occurred while creating the club", (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
     }
 }
 

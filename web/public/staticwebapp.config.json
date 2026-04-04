@@ -185,6 +185,11 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/api/v1/clubs",
+      "methods": ["POST"],
+      "allowedRoles": ["admin"]
+    },
+    {
       "route": "/api/*",
       "allowedRoles": ["authenticated"]
     },

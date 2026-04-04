@@ -57,6 +57,7 @@ import {
   UpdatePlayerRequest,
   CreatePlayerRequest,
   UpdateClubRequest,
+  CreateClubRequest,
   CreateMatchRequest,
   UpdateMatchRequest,
   CreateTeamRequest,
@@ -1328,6 +1329,45 @@ export function useUpdateAgeGroup(ageGroupId: string): UseMutationState<AgeGroup
   }, [ageGroupId]);
 
   return { updateAgeGroup, isSubmitting, data, error };
+}
+
+/**
+ * Hook to create a new club (admin only).
+ * Returns a mutation function, submitting state, response data, and error.
+ */
+export function useCreateClub(): UseMutationState<ClubDetailDto> & {
+  createClub: (request: CreateClubRequest) => Promise<boolean>;
+} {
+  const [data, setData] = useState<ClubDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const createClub = useCallback(async (request: CreateClubRequest): Promise<boolean> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<ClubDetailDto> = await apiClient.clubs.create(request);
+      if (response.success && response.data) {
+        setData(response.data);
+        return true;
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create club',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+        return false;
+      }
+    } catch (err) {
+      setError({ message: err instanceof Error ? err.message : 'An unexpected error occurred' });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, []);
+
+  return { createClub, isSubmitting, data, error };
 }
 
 /**

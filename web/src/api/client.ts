@@ -1954,6 +1954,23 @@ export interface CreatePlayerRequest {
   teamIds?: string[];
 }
 
+export interface CreateClubRequest {
+  name: string;
+  shortName: string;
+  logo?: string;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor?: string;
+  city: string;
+  country: string;
+  venue: string;
+  address?: string;
+  founded?: number | null;
+  history?: string;
+  ethos?: string;
+  principles?: string[];
+}
+
 export interface UpdateClubRequest {
   name: string;
   shortName: string;
@@ -2890,6 +2907,21 @@ export const apiClient = {
   },
 
   clubs: {
+    /**
+     * Create a new club (admin only)
+     */
+    create: async (request: CreateClubRequest): Promise<ApiResponse<ClubDetailDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<ClubDetailDto>>(
+          `/v1/clubs`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
     /**
      * Get club details by ID
      */
