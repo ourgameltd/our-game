@@ -152,7 +152,6 @@ jobs:
   provision-database:
     runs-on: ubuntu-latest
     needs: [deploy-infrastructure]
-    environment: live
     
     steps:
     - name: Checkout code
@@ -231,7 +230,6 @@ jobs:
   deploy-static-web-app:
     runs-on: ubuntu-latest
     needs: [build-frontend, deploy-infrastructure, deploy-function-app]
-    environment: live
     
     steps:
     - name: Checkout code
