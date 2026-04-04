@@ -231,6 +231,7 @@ jobs:
   deploy-static-web-app:
     runs-on: ubuntu-latest
     needs: [build-frontend, deploy-infrastructure, deploy-function-app]
+    environment: live
     
     steps:
     - name: Checkout code
