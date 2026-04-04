@@ -16,6 +16,24 @@
     },
     "storageAccountSku": {
       "value": "Standard_LRS"
+    },
+    "emailSenderLocalPart": {
+      "value": "noreply"
+    },
+    "emailSenderCustomDomain": {
+      "value": "isourgame.com"
+    },
+    "staticWebCustomDomainHostName": {
+      "value": "football.isourgame.com"
+    },
+    "staticWebCustomDomainDnsZoneName": {
+      "value": "isourgame.com"
+    },
+    "staticWebCustomDomainDnsRecordSetName": {
+      "value": "football"
+    },
+    "staticWebCustomDomainDnsTtl": {
+      "value": 3600
     }
   }
 }

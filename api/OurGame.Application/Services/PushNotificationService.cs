@@ -67,7 +67,7 @@ public class PushNotificationService : IPushNotificationService
     {
         var vapidPublicKey = _configuration["Vapid:PublicKey"];
         var vapidPrivateKey = _configuration["Vapid:PrivateKey"];
-        var vapidSubject = _configuration["Vapid:Subject"] ?? "mailto:admin@ourgame.app";
+        var vapidSubject = _configuration["Vapid:Subject"] ?? "mailto:admin@isourgame.com";
 
         if (string.IsNullOrEmpty(vapidPublicKey) || string.IsNullOrEmpty(vapidPrivateKey))
         {
