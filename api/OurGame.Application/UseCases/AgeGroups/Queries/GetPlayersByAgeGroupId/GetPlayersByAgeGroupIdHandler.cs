@@ -202,7 +202,7 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
         var parentSql = $@"
             SELECT 
                 pp.PlayerId,
-                pp.ParentUserId
+                pp.Id AS PlayerParentId
             FROM PlayerParents pp
             WHERE pp.PlayerId IN ({parameterNames})";
 
@@ -228,7 +228,7 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
 
         var parentsByPlayer = parentData
             .GroupBy(p => p.PlayerId)
-            .ToDictionary(g => g.Key, g => g.Select(p => p.ParentUserId).ToList());
+            .ToDictionary(g => g.Key, g => g.Select(p => p.PlayerParentId).ToList());
 
         // Map to DTOs
         return playerData
@@ -458,5 +458,5 @@ class PlayerTeamRawDto
 class PlayerParentRawDto
 {
     public Guid PlayerId { get; set; }
-    public Guid ParentUserId { get; set; }
+    public Guid PlayerParentId { get; set; }
 }

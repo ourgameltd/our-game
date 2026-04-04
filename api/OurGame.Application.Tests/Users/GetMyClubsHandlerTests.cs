@@ -60,7 +60,9 @@ public class GetMyClubsHandlerTests
         {
             Id = Guid.NewGuid(),
             PlayerId = playerId,
-            ParentUserId = parentUserId
+            ParentUserId = parentUserId,
+            FirstName = "Test",
+            LastName = "Parent"
         });
         await db.Context.SaveChangesAsync();
 

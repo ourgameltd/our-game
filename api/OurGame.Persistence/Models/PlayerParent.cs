@@ -11,7 +11,15 @@ public partial class PlayerParent
 
     public Guid PlayerId { get; set; }
 
-    public Guid ParentUserId { get; set; }
+    public Guid? ParentUserId { get; set; }
+
+    public string FirstName { get; set; }
+
+    public string LastName { get; set; }
+
+    public string Email { get; set; }
+
+    public string Phone { get; set; }
 
     public virtual User ParentUser { get; set; }
 

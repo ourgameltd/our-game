@@ -150,16 +150,45 @@ public class AcceptInviteHandler : IRequestHandler<AcceptInviteCommand, AcceptIn
 
     private async Task LinkParentAsync(Guid playerId, Guid parentUserId, CancellationToken cancellationToken)
     {
-        var exists = await _db.PlayerParents
+        // Check if this user is already linked to this player
+        var alreadyLinked = await _db.PlayerParents
             .AnyAsync(pp => pp.PlayerId == playerId && pp.ParentUserId == parentUserId, cancellationToken);
 
-        if (!exists)
+        if (alreadyLinked)
+            return;
+
+        // Find the user's email so we can match against existing unlinked PlayerParent records
+        var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == parentUserId, cancellationToken);
+        var userEmail = user?.Email;
+
+        // Try to find an existing unlinked PlayerParent for this player by email match
+        PlayerParent? existingParent = null;
+        if (!string.IsNullOrWhiteSpace(userEmail))
         {
+            existingParent = await _db.PlayerParents
+                .FirstOrDefaultAsync(pp => pp.PlayerId == playerId
+                                           && pp.ParentUserId == null
+                                           && pp.Email != null
+                                           && pp.Email.ToLower() == userEmail.ToLower(),
+                    cancellationToken);
+        }
+
+        if (existingParent != null)
+        {
+            // Link the existing guardian record to the newly registered user
+            existingParent.ParentUserId = parentUserId;
+        }
+        else
+        {
+            // No pre-existing guardian record — create a new one
             _db.PlayerParents.Add(new PlayerParent
             {
                 Id = Guid.NewGuid(),
                 PlayerId = playerId,
-                ParentUserId = parentUserId
+                ParentUserId = parentUserId,
+                FirstName = user?.FirstName ?? string.Empty,
+                LastName = user?.LastName ?? string.Empty,
+                Email = userEmail
             });
         }
     }

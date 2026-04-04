@@ -49,6 +49,7 @@ public static class CoachSeedData
         foreach (var admin in mergedAdmins)
         {
             var (firstName, lastName) = SplitName(admin.Name);
+            var isMichaelLaw = UserSeedData.NormalizeName(admin.Name) == "michael law";
 
             coaches.Add(new Coach
             {
@@ -61,11 +62,11 @@ public static class CoachSeedData
                 Email = UserSeedData.GetSafeAdminEmail(admin.Name, admin.Email, admin.Phone),
                 Phone = UserSeedData.NormalizePhone(admin.Phone),
                 AssociationId = UserSeedData.GetSafeCoachAssociationId(admin.Name, admin.AssociationId),
-                HasAccount = true,
+                HasAccount = isMichaelLaw,
                 Role = CoachRole.HeadCoach,
                 Biography = "Seeded from Vale of Leven administrator data.",
                 Specializations = "[]",
-                UserId = UserSeedData.GetAdminUserId(admin.Name),
+                UserId = isMichaelLaw ? UserSeedData.MichaelLaw_Id : null,
                 IsArchived = false,
                 CreatedAt = now,
                 UpdatedAt = now

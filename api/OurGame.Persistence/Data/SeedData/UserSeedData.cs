@@ -107,9 +107,10 @@ public static class UserSeedData
     public static List<User> GetUsers()
     {
         var now = DateTime.UtcNow;
-        var users = new List<User>
+
+        // Only seed the single admin user – all other users are created via B2C registration
+        return new List<User>
         {
-            // Stable seeded user with a fixed auth identity for local development flows
             new User
             {
                 Id = MichaelLaw_Id,
@@ -124,51 +125,6 @@ public static class UserSeedData
                 UpdatedAt = now
             }
         };
-
-        var mergedProfilesByName = BuildMergedProfilesByName();
-        var usedEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "michael.law@valefc.com" };
-
-        foreach (var profile in mergedProfilesByName.Values.OrderBy(profile => profile.Name, StringComparer.OrdinalIgnoreCase))
-        {
-            // Skip "Michael Law" - already added as the hardcoded test user above
-            if (NormalizeName(profile.Name) == TestUserNormalizedName)
-            {
-                continue;
-            }
-
-            var userId = GetUserIdByName(profile.Name);
-            var (firstName, lastName) = SplitName(profile.Name);
-
-            var email = GetSafeUserEmail(profile.Name, profile.Email, profile.Phone, profile.Scope);
-
-            // If email already used by another user, generate a unique fallback
-            if (!usedEmails.Add(email))
-            {
-                email = GetSafeUserEmail(profile.Name, null, profile.Phone, profile.Scope);
-
-                // In the unlikely event the fallback also collides, add a suffix
-                if (!usedEmails.Add(email))
-                {
-                    email = $"{userId:N}@seed.ourgame.local";
-                    usedEmails.Add(email);
-                }
-            }
-
-            users.Add(new User
-            {
-                Id = userId,
-                AuthId = $"seed-{userId:N}",
-                Email = email,
-                FirstName = firstName,
-                LastName = lastName,
-                Photo = null,
-                Preferences = "{}",
-                CreatedAt = now,
-                UpdatedAt = now
-            });
-        }
-
-        return users;
     }
 
     private static Dictionary<string, ContactProfile> BuildMergedProfilesByName()
