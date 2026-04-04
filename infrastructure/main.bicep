@@ -29,8 +29,27 @@ param vapidPrivateKey string = ''
 @description('Data location for Azure Communication Services (e.g. Europe, United States, Asia Pacific, Australia)')
 param acsDataLocation string = 'Europe'
 
+@description('Local-part for ACS sender email address (left side of @).')
+param emailSenderLocalPart string = 'DoNotReply'
+
+@description('Custom sender domain for ACS email (for example, isourgame.com). Leave empty to use the Azure-managed domain.')
+param emailSenderCustomDomain string = ''
+
 @description('Frontend base URL used in transactional emails (e.g. invite links). Defaults to the Static Web App URL.')
 param frontendBaseUrl string = ''
+
+@description('Static Web App custom domain host name (for example, football.isourgame.com). Leave empty to skip custom domain setup.')
+param staticWebCustomDomainHostName string = ''
+
+@description('Azure DNS zone name for the custom domain (for example, isourgame.com).')
+param staticWebCustomDomainDnsZoneName string = ''
+
+@description('Azure DNS record-set name for the custom domain (for example, football).')
+param staticWebCustomDomainDnsRecordSetName string = ''
+
+@description('TTL (seconds) for the Azure DNS CNAME record used by the Static Web App custom domain.')
+@minValue(60)
+param staticWebCustomDomainDnsTtl int = 3600
 
 @description('SQL Server administrator username')
 param sqlAdminUsername string
@@ -54,6 +73,11 @@ var sqlDatabaseName = 'OurGame'
 var communicationServiceName = '${baseName}-acs-${environmentName}'
 var emailServiceName = '${baseName}-email-${environmentName}'
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey='
+var emailSenderAddress = empty(emailSenderCustomDomain)
+  ? '${emailSenderLocalPart}@${emailDomain.properties.fromSenderDomain}'
+  : '${emailSenderLocalPart}@${emailSenderCustomDomain}'
+var shouldConfigureStaticWebCustomDomain = !empty(staticWebCustomDomainHostName)
+var shouldConfigureStaticWebCustomDomainDns = shouldConfigureStaticWebCustomDomain && !empty(staticWebCustomDomainDnsZoneName) && !empty(staticWebCustomDomainDnsRecordSetName)
 
 // Storage Account
 resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
@@ -170,7 +194,7 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         }
         {
           name: 'AzureCommunicationServices__SenderAddress'
-          value: 'DoNotReply@${emailDomain.properties.fromSenderDomain}'
+          value: emailSenderAddress
         }
         {
           name: 'App__FrontendBaseUrl'
@@ -265,6 +289,29 @@ resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = {
   properties: {
     repositoryUrl: ''
     branch: ''
+  }
+}
+
+resource staticWebCustomDomainDnsZone 'Microsoft.Network/dnsZones@2018-05-01' existing = if (shouldConfigureStaticWebCustomDomainDns) {
+  name: staticWebCustomDomainDnsZoneName
+}
+
+resource staticWebCustomDomainCnameRecord 'Microsoft.Network/dnsZones/CNAME@2018-05-01' = if (shouldConfigureStaticWebCustomDomainDns) {
+  parent: staticWebCustomDomainDnsZone
+  name: staticWebCustomDomainDnsRecordSetName
+  properties: {
+    TTL: staticWebCustomDomainDnsTtl
+    CNAMERecord: {
+      cname: staticWebApp.properties.defaultHostname
+    }
+  }
+}
+
+resource staticWebCustomDomain 'Microsoft.Web/staticSites/customDomains@2021-03-01' = if (shouldConfigureStaticWebCustomDomain) {
+  parent: staticWebApp
+  name: staticWebCustomDomainHostName
+  properties: {
+    validationMethod: 'cname-delegation'
   }
 }
 

@@ -41,7 +41,7 @@ public class AcsEmailService : IEmailService
             _logger.LogWarning("ACS sender address is not configured – skipping invite email to {Email}", recipientEmail);
             return false;
         }
-        var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "https://ourgame.app";
+        var frontendBaseUrl = _configuration["App:FrontendBaseUrl"] ?? "https://isourgame.com";
 
         var inviteUrl = $"{frontendBaseUrl.TrimEnd('/')}/invite/{inviteCode}";
         var subject = $"You've been invited to join {clubName} on OurGame";
