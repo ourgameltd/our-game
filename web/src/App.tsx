@@ -27,6 +27,7 @@ import AgeGroupOverviewPage from '@pages/ageGroups/AgeGroupOverviewPage';
 import AgeGroupPlayersPage from '@pages/ageGroups/AgeGroupPlayersPage';
 import AgeGroupCoachesPage from '@pages/ageGroups/AgeGroupCoachesPage';
 import AgeGroupSettingsPage from '@pages/ageGroups/AgeGroupSettingsPage';
+import AgeGroupInvitesPage from '@pages/ageGroups/AgeGroupInvitesPage';
 import AgeGroupMatchesPage from '@pages/ageGroups/AgeGroupMatchesPage';
 import AgeGroupTrainingSessionsPage from '@pages/ageGroups/AgeGroupTrainingSessionsPage';
 import AddEditAgeGroupPage from '@pages/ageGroups/AddEditAgeGroupPage';
@@ -163,6 +164,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/matches" element={<AgeGroupMatchesPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/training" element={<AgeGroupTrainingSessionsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/invites" element={<AgeGroupInvitesPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/report-cards" element={<AgeGroupReportCardsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/development-plans" element={<AgeGroupDevelopmentPlansPage />} />
 

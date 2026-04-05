@@ -138,6 +138,41 @@ public class CreateInviteHandlerTests
         Assert.Equal("Guardian", emailService.SentEmails[0].RoleName);
     }
 
+    [Fact]
+    public async Task CreateInvite_OpenInvite_UsesSystemPlaceholderEmailAndNoDuplicates()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, _) = await db.SeedClubWithTeamAsync();
+        await db.SeedUserAsync("sender-auth");
+
+        var emailService = new StubEmailService(true);
+        var handler = BuildHandler(db.Context, emailService);
+
+        var command = new CreateInviteCommand("sender-auth", new CreateInviteRequestDto
+        {
+            Email = "anything@ignored.com",
+            Type = InviteType.Player,
+            EntityId = ageGroupId,
+            ClubId = clubId,
+            IsOpenInvite = true
+        });
+
+        var result = await handler.Handle(command, CancellationToken.None);
+        Assert.Equal("open-invite@ourgame.local", result.Email);
+        Assert.True(result.IsOpenInvite);
+
+        var duplicate = new CreateInviteCommand("sender-auth", new CreateInviteRequestDto
+        {
+            Email = "different@ignored.com",
+            Type = InviteType.Player,
+            EntityId = ageGroupId,
+            ClubId = clubId,
+            IsOpenInvite = true
+        });
+
+        await Assert.ThrowsAsync<ValidationException>(() => handler.Handle(duplicate, CancellationToken.None));
+    }
+
     // ──────────────────────────────────────────────
     //  Email failure resilience
     // ──────────────────────────────────────────────

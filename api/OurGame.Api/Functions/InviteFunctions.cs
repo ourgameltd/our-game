@@ -13,10 +13,14 @@ using OurGame.Application.UseCases.Invites.Commands.AcceptInvite.DTOs;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite.DTOs;
 using OurGame.Application.UseCases.Invites.Commands.RevokeInvite;
+using OurGame.Application.UseCases.Invites.Commands.UpdateInviteLinks;
+using OurGame.Application.UseCases.Invites.Commands.UpdateInviteLinks.DTOs;
 using OurGame.Application.UseCases.Invites.Queries.GetClubInvites;
 using OurGame.Application.UseCases.Invites.Queries.GetClubInvites.DTOs;
 using OurGame.Application.UseCases.Invites.Queries.GetInviteByCode;
 using OurGame.Application.UseCases.Invites.Queries.GetInviteByCode.DTOs;
+using OurGame.Application.UseCases.Invites.Queries.GetInviteLinkOptions;
+using OurGame.Application.UseCases.Invites.Queries.GetInviteLinkOptions.DTOs;
 using System.Net;
 
 namespace OurGame.Api.Functions;
@@ -33,6 +37,99 @@ public class InviteFunctions
     {
         _mediator = mediator;
         _logger = logger;
+    }
+
+    /// <summary>
+    /// Get available linking candidates for an open invite
+    /// </summary>
+    [Function("GetInviteLinkOptions")]
+    [OpenApiOperation(operationId: "GetInviteLinkOptions", tags: new[] { "Invites" }, Summary = "Get invite link options", Description = "Returns available entities to link for an open invite code.")]
+    [OpenApiParameter(name: "code", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The 8-character invite code")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<InviteLinkOptionsDto>), Description = "Invite link options retrieved")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Invite not found")]
+    public async Task<HttpResponseData> GetInviteLinkOptions(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/invites/{code}/links")] HttpRequestData req,
+        string code,
+        CancellationToken ct = default)
+    {
+        var authId = req.GetUserId();
+        if (string.IsNullOrEmpty(authId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("User not authenticated", 401), ct);
+            return unauthorizedResponse;
+        }
+
+        try
+        {
+            var result = await _mediator.Send(new GetInviteLinkOptionsQuery(code, authId), ct);
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(ApiResponse<InviteLinkOptionsDto>.SuccessResponse(result), ct);
+            return response;
+        }
+        catch (NotFoundException ex)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFoundResponse;
+        }
+        catch (ValidationException ex)
+        {
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<object>.ValidationErrorResponse("Validation failed", ex.Errors), ct);
+            return validationResponse;
+        }
+    }
+
+    /// <summary>
+    /// Update account links for an open invite
+    /// </summary>
+    [Function("UpdateInviteLinks")]
+    [OpenApiOperation(operationId: "UpdateInviteLinks", tags: new[] { "Invites" }, Summary = "Update invite links", Description = "Creates/removes links between current user and invite-related entities.")]
+    [OpenApiParameter(name: "code", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The 8-character invite code")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(UpdateInviteLinksRequestDto), Required = true, Description = "Selected entities to link")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<AcceptInviteResultDto>), Description = "Invite links updated successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "User not authenticated")]
+    public async Task<HttpResponseData> UpdateInviteLinks(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "v1/invites/{code}/links")] HttpRequestData req,
+        string code,
+        CancellationToken ct = default)
+    {
+        var authId = req.GetUserId();
+        if (string.IsNullOrEmpty(authId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("User not authenticated", 401), ct);
+            return unauthorizedResponse;
+        }
+
+        var email = req.GetUserEmail() ?? req.GetUserDisplayName() ?? string.Empty;
+        var body = await req.ReadFromJsonAsync<UpdateInviteLinksRequestDto>(ct) ?? new UpdateInviteLinksRequestDto();
+
+        try
+        {
+            var firstName = req.GetUserDisplayName() ?? string.Empty;
+            var result = await _mediator.Send(
+                new UpdateInviteLinksCommand(code, authId, email, firstName, string.Empty, body),
+                ct);
+
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(ApiResponse<AcceptInviteResultDto>.SuccessResponse(result), ct);
+            return response;
+        }
+        catch (ValidationException ex)
+        {
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<object>.ValidationErrorResponse("Validation failed", ex.Errors), ct);
+            return validationResponse;
+        }
+        catch (NotFoundException ex)
+        {
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFoundResponse;
+        }
     }
 
     /// <summary>

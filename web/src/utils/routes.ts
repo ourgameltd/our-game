@@ -40,6 +40,10 @@ export class Routes {
     return '/';
   }
 
+  static invite(code: string): string {
+    return `/invite/${validateParam(code, 'code')}`;
+  }
+
   static socialMatchReport(matchId: string): string {
     return `/social/match/${validateParam(matchId, 'matchId')}/report`;
   }
@@ -120,6 +124,10 @@ export class Routes {
 
   static ageGroupSettings(clubId: string, ageGroupId: string): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/settings`;
+  }
+
+  static ageGroupInvites(clubId: string, ageGroupId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/invites`;
   }
 
   static ageGroupNew(clubId: string): string {

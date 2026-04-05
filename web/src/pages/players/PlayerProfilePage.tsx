@@ -248,7 +248,10 @@ export default function PlayerProfilePage() {
                         <div className="flex items-center gap-2 min-w-0">
                           <div className="min-w-0">
                             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{contact.name}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{contact.relationship} &bull; {contact.phone}</p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {contact.relationship} &bull; {contact.phone}
+                              {contact.email ? ` • ${contact.email}` : ''}
+                            </p>
                           </div>
                           {contact.isPrimary && (
                             <span className="px-1.5 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded shrink-0">

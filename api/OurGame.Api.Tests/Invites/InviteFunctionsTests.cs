@@ -7,10 +7,14 @@ using OurGame.Application.UseCases.Invites.Commands.AcceptInvite.DTOs;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite.DTOs;
 using OurGame.Application.UseCases.Invites.Commands.RevokeInvite;
+using OurGame.Application.UseCases.Invites.Commands.UpdateInviteLinks;
+using OurGame.Application.UseCases.Invites.Commands.UpdateInviteLinks.DTOs;
 using OurGame.Application.UseCases.Invites.Queries.GetClubInvites;
 using OurGame.Application.UseCases.Invites.Queries.GetClubInvites.DTOs;
 using OurGame.Application.UseCases.Invites.Queries.GetInviteByCode;
 using OurGame.Application.UseCases.Invites.Queries.GetInviteByCode.DTOs;
+using OurGame.Application.UseCases.Invites.Queries.GetInviteLinkOptions;
+using OurGame.Application.UseCases.Invites.Queries.GetInviteLinkOptions.DTOs;
 using OurGame.Persistence.Enums;
 
 namespace OurGame.Api.Tests.Invites;
@@ -116,9 +120,11 @@ public class InviteFunctionsTests
             Code = "ABC12345",
             MaskedEmail = "c****@test.com",
             Type = InviteType.Coach,
+            EntityId = Guid.NewGuid(),
             ClubName = "Vale FC",
             Status = InviteStatus.Pending,
-            ExpiresAt = DateTime.UtcNow.AddDays(30)
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            IsOpenInvite = false
         };
 
         var mediator = new TestMediator();
@@ -321,6 +327,73 @@ public class InviteFunctionsTests
         var response = await sut.RevokeInvite(req, Guid.NewGuid().ToString());
 
         Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    // ─── Invite link options/update ──────────────────────────────────────────
+
+    [Fact]
+    public async Task GetInviteLinkOptions_ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("GET", "https://localhost/v1/invites/ABC12345/links");
+
+        var response = await sut.GetInviteLinkOptions(req, "ABC12345");
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetInviteLinkOptions_ReturnsOk_WhenAuthenticated()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var mediator = new TestMediator();
+        mediator.Register<GetInviteLinkOptionsQuery, InviteLinkOptionsDto>((_, _) =>
+            Task.FromResult(new InviteLinkOptionsDto
+            {
+                Code = "ABC12345",
+                Type = InviteType.Player,
+                CanSelectMultiple = false,
+                HasSingleLinkAssigned = false
+            }));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("GET", "https://localhost/v1/invites/ABC12345/links", authId);
+
+        var response = await sut.GetInviteLinkOptions(req, "ABC12345");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateInviteLinks_ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("PUT", "https://localhost/v1/invites/ABC12345/links", "{\"selectedEntityIds\":[]}");
+
+        var response = await sut.UpdateInviteLinks(req, "ABC12345");
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task UpdateInviteLinks_ReturnsOk_WhenAuthenticated()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var inviteId = Guid.NewGuid();
+        var mediator = new TestMediator();
+        mediator.Register<UpdateInviteLinksCommand, AcceptInviteResultDto>((_, _) =>
+            Task.FromResult(new AcceptInviteResultDto
+            {
+                InviteId = inviteId,
+                Message = "Account links updated successfully."
+            }));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("PUT", "https://localhost/v1/invites/ABC12345/links", authId, "{\"selectedEntityIds\":[]}");
+
+        var response = await sut.UpdateInviteLinks(req, "ABC12345");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
     }
 
     [Fact]

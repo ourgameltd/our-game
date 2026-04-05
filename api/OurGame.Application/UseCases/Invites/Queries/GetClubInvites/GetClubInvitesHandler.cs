@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using OurGame.Application.UseCases.Invites;
 using OurGame.Application.UseCases.Invites.Queries.GetClubInvites.DTOs;
 using OurGame.Persistence.Models;
 
@@ -32,7 +33,8 @@ public class GetClubInvitesHandler : IRequestHandler<GetClubInvitesQuery, List<C
                 Status = i.Status,
                 CreatedAt = i.CreatedAt,
                 ExpiresAt = i.ExpiresAt,
-                AcceptedAt = i.AcceptedAt
+                AcceptedAt = i.AcceptedAt,
+                IsOpenInvite = i.Email == InviteConstants.OpenInviteEmail
             })
             .ToListAsync(cancellationToken);
     }

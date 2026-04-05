@@ -33,7 +33,7 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
                 c.LastName,
                 c.DateOfBirth,
                 c.Photo,
-                c.Email,
+                COALESCE(u.Email, c.Email) AS Email,
                 c.Phone,
                 c.AssociationId,
                 c.HasAccount,
@@ -46,6 +46,7 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
                 c.CreatedAt,
                 c.UpdatedAt
             FROM Coaches c
+            LEFT JOIN Users u ON u.Id = c.UserId
             INNER JOIN Clubs cl ON cl.Id = c.ClubId
             WHERE c.Id = {0}";
 

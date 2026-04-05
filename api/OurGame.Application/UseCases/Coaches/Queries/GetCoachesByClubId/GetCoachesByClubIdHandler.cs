@@ -36,7 +36,7 @@ public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery
                     c.LastName,
                     c.DateOfBirth,
                     c.Photo,
-                    c.Email,
+                    COALESCE(u.Email, c.Email) AS Email,
                     c.Phone,
                     c.AssociationId,
                     c.HasAccount,
@@ -45,6 +45,7 @@ public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery
                     c.Specializations,
                     c.IsArchived
                 FROM Coaches c
+                LEFT JOIN Users u ON u.Id = c.UserId
                 WHERE c.ClubId = {0}
                 ORDER BY c.FirstName, c.LastName"
             : @"
@@ -55,7 +56,7 @@ public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery
                     c.LastName,
                     c.DateOfBirth,
                     c.Photo,
-                    c.Email,
+                    COALESCE(u.Email, c.Email) AS Email,
                     c.Phone,
                     c.AssociationId,
                     c.HasAccount,
@@ -64,6 +65,7 @@ public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery
                     c.Specializations,
                     c.IsArchived
                 FROM Coaches c
+                LEFT JOIN Users u ON u.Id = c.UserId
                 WHERE c.ClubId = {0} AND c.IsArchived = 0
                 ORDER BY c.FirstName, c.LastName";
 

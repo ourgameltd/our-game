@@ -184,6 +184,7 @@ export default function MobileNavigation() {
       if (path.includes('/coaches')) return { title: 'Coaches', image: null };
       if (path.includes('/matches')) return { title: 'Matches', image: null };
       if (path.includes('/training')) return { title: 'Training', image: null };
+      if (path.includes('/invites')) return { title: 'Invites', image: null };
       if (path.includes('/drill-templates')) return { title: 'Sessions', image: null };
       if (path.includes('/drills')) return { title: 'Drills', image: null };
       if (path.includes('/tactics')) return { title: 'Formations', image: null };
@@ -383,6 +384,15 @@ export default function MobileNavigation() {
                               >
                                 <Shield className="mobile-nav-icon" />
                                 <span className="mobile-nav-text">Coaches</span>
+                              </Link>
+                            </li>
+                            <li className="mobile-nav-item">
+                              <Link
+                                to={Routes.ageGroupInvites(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupInvites(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
+                              >
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Invites</span>
                               </Link>
                             </li>
                           </ul>
@@ -1059,4 +1069,3 @@ export default function MobileNavigation() {
     </>
   );
 }
-
