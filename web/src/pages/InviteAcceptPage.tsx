@@ -1,118 +1,122 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { apiClient, InviteDetailsDto } from '@/api/client';
+import { apiClient, type InviteDetailsDto, type InviteLinkOptionsDto } from '@/api/client';
 
-type PageState =
-  | 'LOADING'
-  | 'INVITE_LOADED'
-  | 'ACCEPTING'
-  | 'ACCEPTED'
-  | 'ERROR';
+type PageState = 'LOADING' | 'READY' | 'SAVING' | 'ERROR';
 
 const INVITE_TYPE_LABELS: Record<number, string> = {
   0: 'Coach',
   1: 'Player',
-  2: 'Parent',
-};
-
-const INVITE_STATUS_LABELS: Record<number, string> = {
-  0: 'Pending',
-  1: 'Accepted',
-  2: 'Expired',
-  3: 'Revoked',
+  2: 'Player Parent',
 };
 
 export default function InviteAcceptPage() {
   const { code } = useParams<{ code: string }>();
-  const navigate = useNavigate();
-  const { isAuthenticated, isLoading: authLoading, user, displayName } = useAuth();
-
+  const { isAuthenticated, isLoading: authLoading, displayName, user } = useAuth();
   const [pageState, setPageState] = useState<PageState>('LOADING');
   const [invite, setInvite] = useState<InviteDetailsDto | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string>('');
+  const [linkOptions, setLinkOptions] = useState<InviteLinkOptionsDto | null>(null);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [message, setMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
 
-  // Load invite details
   useEffect(() => {
     if (!code) {
-      setErrorMessage('Invalid invite link.');
       setPageState('ERROR');
+      setErrorMessage('Invalid invite link.');
       return;
     }
 
-    const loadInvite = async () => {
-      try {
-        const result = await apiClient.invites.getByCode(code);
-        if (result.success && result.data) {
-          setInvite(result.data);
-          setPageState('INVITE_LOADED');
-        } else {
-          setErrorMessage(result.error?.message ?? 'Invite not found or has expired.');
-          setPageState('ERROR');
-        }
-      } catch {
-        setErrorMessage('Unable to load invite details. Please try again.');
+    const load = async () => {
+      setPageState('LOADING');
+      const inviteResponse = await apiClient.invites.getByCode(code);
+      if (!inviteResponse.success || !inviteResponse.data) {
         setPageState('ERROR');
+        setErrorMessage(inviteResponse.error?.message || 'Unable to load invite.');
+        return;
       }
+
+      setInvite(inviteResponse.data);
+
+      if (isAuthenticated && inviteResponse.data.isOpenInvite) {
+        const optionsResponse = await apiClient.invites.getLinkOptions(code);
+        if (optionsResponse.success && optionsResponse.data) {
+          setLinkOptions(optionsResponse.data);
+          setSelected(
+            optionsResponse.data.candidates.filter(c => c.isLinkedToCurrentUser).map(c => c.id)
+          );
+        } else {
+          setErrorMessage(optionsResponse.error?.message || 'Unable to load link options.');
+          setPageState('ERROR');
+          return;
+        }
+      }
+
+      setPageState('READY');
     };
 
-    loadInvite();
-  }, [code]);
+    load();
+  }, [code, isAuthenticated]);
 
-  const handleAccept = async () => {
-    if (!code) return;
+  const roleLabel = useMemo(
+    () => (invite ? INVITE_TYPE_LABELS[invite.type] || 'Member' : 'Member'),
+    [invite]
+  );
 
-    setPageState('ACCEPTING');
+  const signInUrl = `/.auth/login/btoc?post_login_redirect_uri=/invite/${code ?? ''}`;
 
-    try {
-      const nameParts = (displayName ?? '').split(' ');
-      const firstName = nameParts[0] ?? '';
-      const lastName = nameParts.slice(1).join(' ') ?? '';
-
-      const result = await apiClient.invites.accept(code, { firstName, lastName });
-
-      if (result.success) {
-        setPageState('ACCEPTED');
-        setTimeout(() => navigate('/clubs'), 3000);
-      } else {
-        setErrorMessage(result.error?.message ?? 'Failed to accept invite. Please try again.');
-        setPageState('ERROR');
-      }
-    } catch {
-      setErrorMessage('An unexpected error occurred. Please try again.');
-      setPageState('ERROR');
+  const toggleSelection = (entityId: string) => {
+    if (!linkOptions) return;
+    if (linkOptions.canSelectMultiple) {
+      setSelected(prev =>
+        prev.includes(entityId) ? prev.filter(id => id !== entityId) : [...prev, entityId]
+      );
+      return;
     }
+
+    const currentlySelected = selected.includes(entityId);
+    setSelected(currentlySelected ? [] : [entityId]);
   };
 
-  const handleSignIn = () => {
-    window.location.href = `/.auth/login/btoc?post_login_redirect_uri=/invite/${code}`;
+  const saveLinks = async () => {
+    if (!code || !invite) return;
+    setPageState('SAVING');
+
+    if (!invite.isOpenInvite) {
+      const names = (displayName ?? '').split(' ');
+      const accept = await apiClient.invites.accept(code, {
+        firstName: names[0] || '',
+        lastName: names.slice(1).join(' '),
+      });
+      if (accept.success) {
+        setMessage('Invite accepted. Your account is now linked.');
+        setPageState('READY');
+      } else {
+        setErrorMessage(accept.error?.message || 'Unable to accept invite.');
+        setPageState('ERROR');
+      }
+      return;
+    }
+
+    const update = await apiClient.invites.updateLinks(code, { selectedEntityIds: selected });
+    if (update.success) {
+      setMessage('Links updated successfully.');
+      const refreshed = await apiClient.invites.getLinkOptions(code);
+      if (refreshed.success && refreshed.data) {
+        setLinkOptions(refreshed.data);
+      }
+      setPageState('READY');
+    } else {
+      setErrorMessage(update.error?.message || 'Unable to save links.');
+      setPageState('ERROR');
+    }
   };
 
   if (authLoading || pageState === 'LOADING') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading invite details...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (pageState === 'ACCEPTED') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Invite Accepted!</h1>
-          <p className="text-gray-600 mb-4">
-            Your account has been linked successfully. Redirecting you to the dashboard...
-          </p>
-        </div>
+        <div className="text-center text-gray-600">Loading invite...</div>
       </div>
     );
   }
@@ -120,125 +124,89 @@ export default function InviteAcceptPage() {
   if (pageState === 'ERROR') {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8 text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Invite</h1>
-          <p className="text-gray-600 mb-6">{errorMessage}</p>
-          <button
-            onClick={() => navigate('/')}
-            className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors"
-          >
-            Go to Home
-          </button>
+        <div className="bg-white rounded-lg p-6 max-w-md w-full">
+          <h1 className="text-xl font-semibold text-gray-900 mb-2">Invite Error</h1>
+          <p className="text-sm text-red-600">{errorMessage}</p>
         </div>
       </div>
     );
   }
 
-  // INVITE_LOADED or ACCEPTING state
-  const statusLabel = invite ? INVITE_STATUS_LABELS[invite.status] : '';
-  const roleLabel = invite ? INVITE_TYPE_LABELS[invite.type] : '';
-  const isExpiredOrRevoked = invite && (invite.status === 2 || invite.status === 3);
-  const isAlreadyAccepted = invite && invite.status === 1;
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="max-w-md w-full bg-white rounded-lg shadow-md p-8">
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900">You've been invited!</h1>
-        </div>
+      <div className="bg-white rounded-lg p-6 max-w-xl w-full">
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Invite</h1>
+        <p className="text-sm text-gray-600 mb-4">
+          Join <strong>{invite?.clubName}</strong> as <strong>{roleLabel}</strong>.
+        </p>
 
-        {invite && (
-          <div className="bg-gray-50 rounded-lg p-4 mb-6 space-y-2">
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Club</span>
-              <span className="font-medium text-gray-900">{invite.clubName}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Role</span>
-              <span className="font-medium text-gray-900">{roleLabel}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Invited Email</span>
-              <span className="font-medium text-gray-900">{invite.maskedEmail}</span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Status</span>
-              <span className={`font-medium ${invite.status === 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {statusLabel}
-              </span>
-            </div>
-            <div className="flex justify-between text-sm">
-              <span className="text-gray-500">Expires</span>
-              <span className="font-medium text-gray-900">
-                {new Date(invite.expiresAt).toLocaleDateString()}
-              </span>
-            </div>
-          </div>
-        )}
+        {!isAuthenticated ? (
+          <a
+            href={signInUrl}
+            className="inline-flex px-4 py-2 rounded-lg bg-primary-600 text-white"
+          >
+            Sign in / Sign up
+          </a>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-sm text-gray-600">
+              Signed in as <strong>{user?.userDetails || 'account user'}</strong>
+            </p>
 
-        {isExpiredOrRevoked && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-center text-sm text-red-700">
-            This invite is no longer valid ({statusLabel.toLowerCase()}).
-            Please contact your club administrator for a new invite.
-          </div>
-        )}
-
-        {isAlreadyAccepted && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center text-sm text-yellow-700">
-            This invite has already been accepted.
-          </div>
-        )}
-
-        {!isExpiredOrRevoked && !isAlreadyAccepted && (
-          <>
-            {!isAuthenticated ? (
-              <div className="text-center space-y-4">
-                <p className="text-gray-600 text-sm">
-                  Please sign in or create an account to accept this invite and join{' '}
-                  <strong>{invite?.clubName}</strong>.
+            {invite?.isOpenInvite && linkOptions ? (
+              <div className="space-y-2">
+                <p className="text-sm text-gray-700">
+                  {linkOptions.canSelectMultiple
+                    ? 'Select one or more players to link.'
+                    : 'Select a single account to link.'}
                 </p>
-                <button
-                  onClick={handleSignIn}
-                  className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 transition-colors"
-                >
-                  Sign In / Register to Accept
-                </button>
+
+                <div className="space-y-2 max-h-72 overflow-auto">
+                  {linkOptions.candidates.map(candidate => {
+                    const isSelected = selected.includes(candidate.id);
+                    const disabled =
+                      !candidate.isLinkedToCurrentUser &&
+                      candidate.isLinked &&
+                      !isSelected;
+                    return (
+                      <button
+                        key={candidate.id}
+                        type="button"
+                        disabled={disabled}
+                        onClick={() => toggleSelection(candidate.id)}
+                        className={`w-full text-left p-3 rounded border ${
+                          isSelected
+                            ? 'border-primary-600 bg-primary-50'
+                            : 'border-gray-200 bg-white'
+                        } disabled:opacity-50`}
+                      >
+                        <div className="font-medium text-gray-900">{candidate.name}</div>
+                        <div className="text-xs text-gray-500">
+                          {candidate.isLinkedToCurrentUser
+                            ? 'Linked to your account'
+                            : candidate.isLinked
+                              ? 'Linked to another account'
+                              : 'Available'}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
-              <div className="text-center space-y-4">
-                <p className="text-gray-600 text-sm">
-                  You're signed in{user?.userDetails ? <> as <strong>{user.userDetails}</strong></> : ''}.
-                  Click below to accept this invite and join{' '}
-                  <strong>{invite?.clubName}</strong> as a {roleLabel}.
-                </p>
-                <button
-                  onClick={handleAccept}
-                  disabled={pageState === 'ACCEPTING'}
-                  className="w-full bg-red-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {pageState === 'ACCEPTING' ? (
-                    <span className="flex items-center justify-center gap-2">
-                      <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />
-                      Accepting...
-                    </span>
-                  ) : (
-                    'Accept Invite'
-                  )}
-                </button>
-              </div>
+              <p className="text-sm text-gray-600">This invite links directly to one account.</p>
             )}
-          </>
+
+            <button
+              type="button"
+              onClick={saveLinks}
+              disabled={pageState === 'SAVING'}
+              className="px-4 py-2 rounded-lg bg-primary-600 text-white disabled:opacity-50"
+            >
+              {pageState === 'SAVING' ? 'Saving...' : 'Save'}
+            </button>
+            {message && <p className="text-sm text-green-600">{message}</p>}
+          </div>
         )}
       </div>
     </div>

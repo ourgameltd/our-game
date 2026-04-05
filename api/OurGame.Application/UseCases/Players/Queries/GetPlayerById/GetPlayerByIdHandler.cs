@@ -87,10 +87,20 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
 
         // 4. Fetch emergency contacts
         var emergencyContactsSql = @"
-            SELECT Id, Name, Phone, Relationship, IsPrimary
-            FROM EmergencyContacts
-            WHERE PlayerId = {0}
-            ORDER BY IsPrimary DESC, Name";
+            SELECT ec.Id, ec.Name, ec.Phone, ec.Relationship, ec.IsPrimary,
+                   (
+                     SELECT TOP 1 COALESCE(u.Email, pp.Email)
+                     FROM PlayerParents pp
+                     LEFT JOIN Users u ON u.Id = pp.ParentUserId
+                     WHERE pp.PlayerId = ec.PlayerId
+                       AND (
+                            (pp.FirstName + ' ' + pp.LastName) = ec.Name
+                            OR pp.Email = ec.Name
+                           )
+                   ) AS Email
+            FROM EmergencyContacts ec
+            WHERE ec.PlayerId = {0}
+            ORDER BY ec.IsPrimary DESC, ec.Name";
 
         var emergencyContactsData = await _db.Database
             .SqlQueryRaw<EmergencyContactRawDto>(emergencyContactsSql, query.PlayerId)
@@ -103,7 +113,8 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
                 Name = ec.Name ?? string.Empty,
                 Phone = ec.Phone ?? string.Empty,
                 Relationship = ec.Relationship ?? string.Empty,
-                IsPrimary = ec.IsPrimary
+                IsPrimary = ec.IsPrimary,
+                Email = ec.Email
             })
             .ToArray();
 
@@ -234,4 +245,5 @@ public class EmergencyContactRawDto
     public string? Phone { get; set; }
     public string? Relationship { get; set; }
     public bool IsPrimary { get; set; }
+    public string? Email { get; set; }
 }

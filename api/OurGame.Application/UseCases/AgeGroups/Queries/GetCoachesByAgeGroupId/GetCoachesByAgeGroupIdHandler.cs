@@ -36,7 +36,7 @@ public class GetCoachesByAgeGroupIdHandler : IRequestHandler<GetCoachesByAgeGrou
                 c.LastName,
                 c.DateOfBirth,
                 c.Photo,
-                c.Email,
+                COALESCE(u.Email, c.Email) AS Email,
                 c.Phone,
                 c.AssociationId,
                 c.HasAccount,
@@ -45,6 +45,7 @@ public class GetCoachesByAgeGroupIdHandler : IRequestHandler<GetCoachesByAgeGrou
                 c.Specializations,
                 c.IsArchived
             FROM Coaches c
+            LEFT JOIN Users u ON u.Id = c.UserId
             INNER JOIN TeamCoaches tc ON c.Id = tc.CoachId
             INNER JOIN Teams t ON tc.TeamId = t.Id
             WHERE t.AgeGroupId = {0}

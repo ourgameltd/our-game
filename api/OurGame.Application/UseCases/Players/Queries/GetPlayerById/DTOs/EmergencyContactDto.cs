@@ -20,4 +20,7 @@ public record EmergencyContactDto
 
     /// <summary>Indicates if this is the primary emergency contact</summary>
     public bool IsPrimary { get; init; }
+
+    /// <summary>Email address for linked guardian account</summary>
+    public string? Email { get; init; }
 }

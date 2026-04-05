@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.UseCases.Invites;
 using OurGame.Application.UseCases.Invites.Queries.GetInviteByCode.DTOs;
 using OurGame.Persistence.Models;
 
@@ -32,11 +33,13 @@ public class GetInviteByCodeHandler : IRequestHandler<GetInviteByCodeQuery, Invi
         return new InviteDetailsDto
         {
             Code = invite.Code,
-            MaskedEmail = MaskEmail(invite.Email),
+            MaskedEmail = InviteConstants.IsOpenInviteEmail(invite.Email) ? string.Empty : MaskEmail(invite.Email),
             Type = invite.Type,
+            EntityId = invite.EntityId,
             ClubName = invite.Club?.Name ?? string.Empty,
             Status = invite.Status,
-            ExpiresAt = invite.ExpiresAt
+            ExpiresAt = invite.ExpiresAt,
+            IsOpenInvite = InviteConstants.IsOpenInviteEmail(invite.Email)
         };
     }
 
