@@ -196,7 +196,7 @@ public class UpdateInviteLinksHandler : IRequestHandler<UpdateInviteLinksCommand
 
         foreach (var link in existingLinks.Where(pp => !selected.Contains(pp.PlayerId)))
         {
-            link.ParentUserId = null;
+            _db.PlayerParents.Remove(link);
         }
 
         foreach (var playerId in selected.Where(id => existingLinks.All(pp => pp.PlayerId != id)))

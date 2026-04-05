@@ -5,8 +5,6 @@ import PageTitle from '@/components/common/PageTitle';
 import { apiClient, InviteType, type CreateInviteRequest } from '@/api/client';
 import { Routes } from '@/utils/routes';
 
-const OPEN_INVITE_EMAIL = 'open-invite@ourgame.local';
-
 type InviteRole = {
   type: InviteType;
   label: string;
@@ -84,7 +82,7 @@ export default function AgeGroupInvitesPage() {
       clubId,
       type,
       entityId: ageGroupId,
-      email: OPEN_INVITE_EMAIL,
+      email: '',
       isOpenInvite: true,
     };
 

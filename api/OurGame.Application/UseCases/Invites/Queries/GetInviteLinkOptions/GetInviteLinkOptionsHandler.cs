@@ -80,6 +80,12 @@ public class GetInviteLinkOptionsHandler : IRequestHandler<GetInviteLinkOptionsQ
                 break;
 
             case InviteType.Parent:
+                var linkedPlayerIds = await _db.PlayerParents
+                    .Where(pp => pp.ParentUserId == user.Id)
+                    .Select(pp => pp.PlayerId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+
                 result.Candidates = await _db.PlayerAgeGroups
                     .Where(pag => pag.AgeGroupId == invite.EntityId)
                     .Select(pag => pag.Player)
@@ -89,8 +95,8 @@ public class GetInviteLinkOptionsHandler : IRequestHandler<GetInviteLinkOptionsQ
                     {
                         Id = p.Id,
                         Name = (p.FirstName + " " + p.LastName).Trim(),
-                        IsLinked = _db.PlayerParents.Any(pp => pp.PlayerId == p.Id && pp.ParentUserId == user.Id),
-                        IsLinkedToCurrentUser = _db.PlayerParents.Any(pp => pp.PlayerId == p.Id && pp.ParentUserId == user.Id)
+                        IsLinked = linkedPlayerIds.Contains(p.Id),
+                        IsLinkedToCurrentUser = linkedPlayerIds.Contains(p.Id)
                     })
                     .ToListAsync(cancellationToken);
                 break;
