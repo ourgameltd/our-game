@@ -114,7 +114,7 @@ public static class UserSeedData
             new User
             {
                 Id = MichaelLaw_Id,
-                AuthId = "a65e474c-6215-423c-8227-d3a44c6961c0",
+                AuthId = "4b2476a-21f8-4b25-9a2f-a7914b0b9f08",
                 Email = "michael@michaellaw.me",
                 FirstName = "Michael",
                 LastName = "Law",

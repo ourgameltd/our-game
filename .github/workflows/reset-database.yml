@@ -1,0 +1,107 @@
+name: Reset & Reseed Database
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        default: 'live'
+        type: choice
+        options:
+          - live
+      clean:
+        description: 'Clean all data before seeding (--clean flag)'
+        required: true
+        default: true
+        type: boolean
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  AZURE_RESOURCE_GROUP: 'rgourgame'
+
+jobs:
+  reset-database:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+
+    - name: Azure Login
+      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Resolve SQL server details
+      id: sql
+      run: |
+        SQL_SERVER_NAME=$(az sql server list \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --query "[0].name" \
+          --output tsv)
+
+        SQL_SERVER_FQDN=$(az sql server list \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --query "[0].fullyQualifiedDomainName" \
+          --output tsv)
+
+        if [ -z "$SQL_SERVER_NAME" ] || [ -z "$SQL_SERVER_FQDN" ]; then
+          echo "Could not resolve SQL Server in resource group ${{ env.AZURE_RESOURCE_GROUP }}"
+          exit 1
+        fi
+
+        echo "serverName=$SQL_SERVER_NAME" >> $GITHUB_OUTPUT
+        echo "serverFqdn=$SQL_SERVER_FQDN" >> $GITHUB_OUTPUT
+
+    - name: Add runner IP to SQL Server firewall
+      id: firewall
+      run: |
+        RUNNER_IP=$(curl -s https://api.ipify.org)
+        echo "runnerIp=$RUNNER_IP" >> $GITHUB_OUTPUT
+        az sql server firewall-rule create \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --server ${{ steps.sql.outputs.serverName }} \
+          --name GitHubActionsResetRunner \
+          --start-ip-address "$RUNNER_IP" \
+          --end-ip-address "$RUNNER_IP"
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+      with:
+        dotnet-version: ${{ env.DOTNET_VERSION }}
+
+    - name: Restore dependencies
+      working-directory: ./api
+      run: dotnet restore
+
+    - name: Run database seeder
+      run: |
+        SQL_SERVER="${{ steps.sql.outputs.serverFqdn }}"
+
+        SQL_ADMIN_USERNAME="${{ vars.SQL_ADMIN_USERNAME }}"
+        if [ -z "$SQL_ADMIN_USERNAME" ]; then
+          SQL_ADMIN_USERNAME="ourgame_sql_admin"
+        fi
+
+        export ConnectionStrings__DefaultConnection="Server=tcp:${SQL_SERVER},1433;Database=OurGame;User ID=${SQL_ADMIN_USERNAME};Password=${{ secrets.SQL_ADMIN_PASSWORD }};Encrypt=True;TrustServerCertificate=False;"
+
+        SEEDER_ARGS=""
+        if [ "${{ inputs.clean }}" = "true" ]; then
+          SEEDER_ARGS="-- --clean"
+        fi
+
+        dotnet run --project api/OurGame.Seeder $SEEDER_ARGS
+
+    - name: Remove runner IP from SQL Server firewall
+      if: always()
+      run: |
+        az sql server firewall-rule delete \
+          --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
+          --server ${{ steps.sql.outputs.serverName }} \
+          --name GitHubActionsResetRunner \
+          --yes 2>/dev/null || true

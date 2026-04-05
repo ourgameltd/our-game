@@ -103,7 +103,7 @@ export interface UpdateSquadNumberRequest {
 // User Profile
 export interface UserProfile {
   id: string;
-  azureUserId: string;
+  authId: string;
   email: string;
   firstName: string;
   lastName: string;
