@@ -30,6 +30,11 @@ public class GetInviteByCodeHandler : IRequestHandler<GetInviteByCodeQuery, Invi
         if (invite == null)
             throw new NotFoundException("Invite", query.Code);
 
+        var ageGroupName = await _db.AgeGroups
+            .Where(ag => ag.Id == invite.EntityId)
+            .Select(ag => ag.Name)
+            .FirstOrDefaultAsync(cancellationToken);
+
         return new InviteDetailsDto
         {
             Code = invite.Code,
@@ -37,6 +42,7 @@ public class GetInviteByCodeHandler : IRequestHandler<GetInviteByCodeQuery, Invi
             Type = invite.Type,
             EntityId = invite.EntityId,
             ClubName = invite.Club?.Name ?? string.Empty,
+            AgeGroupName = ageGroupName,
             Status = invite.Status,
             ExpiresAt = invite.ExpiresAt,
             IsOpenInvite = InviteConstants.IsOpenInviteEmail(invite.Email)

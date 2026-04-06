@@ -1,5 +1,3 @@
-using System.Security.Cryptography;
-using System.Text;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -24,9 +22,6 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
         [InviteType.Player] = "Player",
         [InviteType.Parent] = "Guardian",
     };
-
-    private const string CodeChars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private const int InviteExpiryDays = 30;
 
     private readonly OurGameContext _db;
     private readonly IEmailService _emailService;
@@ -96,7 +91,7 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
         var invite = new Invite
         {
             Id = Guid.NewGuid(),
-            Code = GenerateCode(),
+            Code = InviteConstants.GenerateCode(),
             Email = normalizedEmail,
             Type = dto.Type,
             EntityId = dto.EntityId,
@@ -104,7 +99,7 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
             Status = InviteStatus.Pending,
             CreatedByUserId = creatingUser.Id,
             CreatedAt = DateTime.UtcNow,
-            ExpiresAt = DateTime.UtcNow.AddDays(InviteExpiryDays)
+            ExpiresAt = DateTime.UtcNow.AddDays(InviteConstants.InviteExpiryDays)
         };
 
         _db.Invites.Add(invite);
@@ -199,15 +194,4 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
         }
     }
 
-    private static string GenerateCode()
-    {
-        var bytes = new byte[8];
-        RandomNumberGenerator.Fill(bytes);
-        var sb = new StringBuilder(8);
-        foreach (var b in bytes)
-        {
-            sb.Append(CodeChars[b % CodeChars.Length]);
-        }
-        return sb.ToString();
-    }
 }

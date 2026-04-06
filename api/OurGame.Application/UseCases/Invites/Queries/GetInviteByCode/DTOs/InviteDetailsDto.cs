@@ -12,6 +12,7 @@ public class InviteDetailsDto
     public InviteType Type { get; set; }
     public Guid EntityId { get; set; }
     public string ClubName { get; set; } = string.Empty;
+    public string? AgeGroupName { get; set; }
     public InviteStatus Status { get; set; }
     public DateTime ExpiresAt { get; set; }
     public bool IsOpenInvite { get; set; }

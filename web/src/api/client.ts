@@ -3928,6 +3928,18 @@ export const apiClient = {
         return handleApiError(error);
       }
     },
+
+    /**
+     * Regenerate an invite link (revokes old, creates new with same parameters)
+     */
+    regenerate: async (inviteId: string): Promise<ApiResponse<InviteDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<InviteDto>>(`/v1/invites/${inviteId}/regenerate`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
   },
 
   notifications: {

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useRequiredParams } from '@/utils/routeParams';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import PageTitle from '@/components/common/PageTitle';
-import { apiClient, InviteType, type CreateInviteRequest } from '@/api/client';
+import { apiClient, InviteType, type CreateInviteRequest, type InviteDto } from '@/api/client';
 import { Routes } from '@/utils/routes';
 
 type InviteRole = {
@@ -24,9 +24,10 @@ export default function AgeGroupInvitesPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [ageGroupName, setAgeGroupName] = useState('Age Group');
-  const [codes, setCodes] = useState<Record<InviteType, string>>({ 0: '', 1: '', 2: '' });
+  const [invites, setInvites] = useState<Record<InviteType, InviteDto | null>>({ 0: null, 1: null, 2: null });
   const [errors, setErrors] = useState<Record<InviteType, string>>({ 0: '', 1: '', 2: '' });
   const [creating, setCreating] = useState<Record<InviteType, boolean>>({ 0: false, 1: false, 2: false });
+  const [regenerating, setRegenerating] = useState<Record<InviteType, boolean>>({ 0: false, 1: false, 2: false });
   const [copied, setCopied] = useState<Record<InviteType, boolean>>({ 0: false, 1: false, 2: false });
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function AgeGroupInvitesPage() {
 
     const load = async () => {
       setIsLoading(true);
-      const [ageGroup, invites] = await Promise.all([
+      const [ageGroup, invitesResp] = await Promise.all([
         apiClient.ageGroups.getById(ageGroupId),
         apiClient.invites.getForClub(clubId),
       ]);
@@ -43,18 +44,20 @@ export default function AgeGroupInvitesPage() {
         setAgeGroupName(ageGroup.data.name);
       }
 
-      if (invites.success && invites.data) {
-        const updated = { 0: '', 1: '', 2: '' } as Record<InviteType, string>;
+      if (invitesResp.success && invitesResp.data) {
+        const updated = { 0: null, 1: null, 2: null } as Record<InviteType, InviteDto | null>;
         for (const role of inviteRoles) {
-          const existing = invites.data.find(i =>
+          const existing = invitesResp.data.find(i =>
             i.type === role.type &&
             i.entityId === ageGroupId &&
             i.status === 0 &&
             i.isOpenInvite
           );
-          if (existing) updated[role.type] = existing.code;
+          if (existing) {
+            updated[role.type] = existing as unknown as InviteDto;
+          }
         }
-        setCodes(updated);
+        setInvites(updated);
       }
       setIsLoading(false);
     };
@@ -65,16 +68,25 @@ export default function AgeGroupInvitesPage() {
   const inviteLinks = useMemo(() => {
     const base = window.location.origin;
     return {
-      0: codes[0] ? `${base}${Routes.invite(codes[0])}` : '',
-      1: codes[1] ? `${base}${Routes.invite(codes[1])}` : '',
-      2: codes[2] ? `${base}${Routes.invite(codes[2])}` : '',
+      0: invites[0] ? `${base}${Routes.invite(invites[0].code)}` : '',
+      1: invites[1] ? `${base}${Routes.invite(invites[1].code)}` : '',
+      2: invites[2] ? `${base}${Routes.invite(invites[2].code)}` : '',
     } as Record<InviteType, string>;
-  }, [codes]);
+  }, [invites]);
+
+  const previewLinks = useMemo(() => {
+    const base = window.location.origin;
+    return {
+      0: invites[0] ? `${base}/api/v1/invites/${invites[0].code}/preview` : '',
+      1: invites[1] ? `${base}/api/v1/invites/${invites[1].code}/preview` : '',
+      2: invites[2] ? `${base}/api/v1/invites/${invites[2].code}/preview` : '',
+    } as Record<InviteType, string>;
+  }, [invites]);
 
   if (!clubId || !ageGroupId) return null;
 
   const createInvite = async (type: InviteType) => {
-    if (codes[type]) return;
+    if (invites[type]) return;
     setCreating(prev => ({ ...prev, [type]: true }));
     setErrors(prev => ({ ...prev, [type]: '' }));
 
@@ -88,15 +100,35 @@ export default function AgeGroupInvitesPage() {
 
     const response = await apiClient.invites.create(request);
     if (response.success && response.data) {
-      setCodes(prev => ({ ...prev, [type]: response.data!.code }));
+      setInvites(prev => ({ ...prev, [type]: response.data! }));
     } else {
       setErrors(prev => ({ ...prev, [type]: response.error?.message || 'Unable to create invite' }));
     }
     setCreating(prev => ({ ...prev, [type]: false }));
   };
 
+  const regenerateInvite = async (type: InviteType) => {
+    const invite = invites[type];
+    if (!invite) return;
+
+    if (!window.confirm('This will invalidate the current link. Anyone with the old link will no longer be able to use it. Continue?')) {
+      return;
+    }
+
+    setRegenerating(prev => ({ ...prev, [type]: true }));
+    setErrors(prev => ({ ...prev, [type]: '' }));
+
+    const response = await apiClient.invites.regenerate(invite.id);
+    if (response.success && response.data) {
+      setInvites(prev => ({ ...prev, [type]: response.data! }));
+    } else {
+      setErrors(prev => ({ ...prev, [type]: response.error?.message || 'Unable to regenerate invite' }));
+    }
+    setRegenerating(prev => ({ ...prev, [type]: false }));
+  };
+
   const copyLink = async (type: InviteType) => {
-    const link = inviteLinks[type];
+    const link = previewLinks[type];
     if (!link) return;
     await navigator.clipboard.writeText(link);
     setCopied(prev => ({ ...prev, [type]: true }));
@@ -126,7 +158,7 @@ export default function AgeGroupInvitesPage() {
                         : 'Users can link one account and switch if needed.'}
                     </p>
                   </div>
-                  {!codes[role.type] ? (
+                  {!invites[role.type] ? (
                     <button
                       type="button"
                       onClick={() => createInvite(role.type)}
@@ -136,17 +168,28 @@ export default function AgeGroupInvitesPage() {
                       {creating[role.type] ? 'Creating...' : 'Create Link'}
                     </button>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => copyLink(role.type)}
-                      className="px-4 py-2 bg-green-600 text-white rounded-lg"
-                    >
-                      {copied[role.type] ? 'Copied' : 'Copy Link'}
-                    </button>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => copyLink(role.type)}
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg"
+                      >
+                        {copied[role.type] ? 'Copied' : 'Copy Link'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => regenerateInvite(role.type)}
+                        disabled={regenerating[role.type]}
+                        className="px-4 py-2 bg-amber-600 text-white rounded-lg disabled:opacity-50"
+                        title="Regenerate this invite link (invalidates the current one)"
+                      >
+                        {regenerating[role.type] ? 'Regenerating...' : 'Regenerate'}
+                      </button>
+                    </div>
                   )}
                 </div>
 
-                {codes[role.type] && (
+                {invites[role.type] && (
                   <div className="mt-3 p-3 rounded border border-gray-200 dark:border-gray-700 text-sm break-all">
                     {inviteLinks[role.type]}
                   </div>

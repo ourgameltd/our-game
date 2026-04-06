@@ -6,6 +6,7 @@ using OurGame.Application.UseCases.Invites.Commands.AcceptInvite;
 using OurGame.Application.UseCases.Invites.Commands.AcceptInvite.DTOs;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite.DTOs;
+using OurGame.Application.UseCases.Invites.Commands.RegenerateInvite;
 using OurGame.Application.UseCases.Invites.Commands.RevokeInvite;
 using OurGame.Application.UseCases.Invites.Commands.UpdateInviteLinks;
 using OurGame.Application.UseCases.Invites.Commands.UpdateInviteLinks.DTOs;
@@ -483,6 +484,164 @@ public class InviteFunctionsTests
         Assert.NotNull(payload.Data);
         Assert.Single(payload.Data!);
         Assert.Equal("ABC12345", payload.Data[0].Code);
+    }
+
+    // ─── RegenerateInvite ──────────────────────────────────────────────────
+
+    [Fact]
+    public async Task RegenerateInvite_ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("POST", $"https://localhost/v1/invites/{Guid.NewGuid()}/regenerate");
+
+        var response = await sut.RegenerateInvite(req, Guid.NewGuid().ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RegenerateInvite_ReturnsBadRequest_WhenInvalidGuid()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var sut = BuildSut(new TestMediator());
+        var req = CreateAuthedRequest("POST", "https://localhost/v1/invites/not-a-guid/regenerate", authId);
+
+        var response = await sut.RegenerateInvite(req, "not-a-guid");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RegenerateInvite_ReturnsOk_WhenValid()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var inviteId = Guid.NewGuid();
+        var expected = new InviteDto
+        {
+            Id = Guid.NewGuid(),
+            Code = "NEWCODE1",
+            Email = "open-invite@ourgame.local",
+            Type = InviteType.Player,
+            EntityId = Guid.NewGuid(),
+            ClubId = Guid.NewGuid(),
+            ClubName = "Vale FC",
+            Status = InviteStatus.Pending,
+            CreatedAt = DateTime.UtcNow,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            IsOpenInvite = true
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<RegenerateInviteCommand, InviteDto>((_, _) => Task.FromResult(expected));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/invites/{inviteId}/regenerate", authId);
+
+        var response = await sut.RegenerateInvite(req, inviteId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<InviteDto>(response);
+        Assert.True(payload.Success);
+        Assert.NotNull(payload.Data);
+        Assert.Equal("NEWCODE1", payload.Data!.Code);
+    }
+
+    [Fact]
+    public async Task RegenerateInvite_ReturnsNotFound_WhenInviteDoesNotExist()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var inviteId = Guid.NewGuid();
+        var mediator = new TestMediator();
+        mediator.Register<RegenerateInviteCommand, InviteDto>((_, _) =>
+            throw new NotFoundException("Invite", inviteId));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/invites/{inviteId}/regenerate", authId);
+
+        var response = await sut.RegenerateInvite(req, inviteId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task RegenerateInvite_ReturnsBadRequest_WhenNotPending()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var inviteId = Guid.NewGuid();
+        var mediator = new TestMediator();
+        mediator.Register<RegenerateInviteCommand, InviteDto>((_, _) =>
+            throw new ValidationException(new Dictionary<string, string[]>
+            {
+                ["Status"] = new[] { "Only pending invites can be regenerated." }
+            }));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/invites/{inviteId}/regenerate", authId);
+
+        var response = await sut.RegenerateInvite(req, inviteId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<object>(response);
+        Assert.False(payload.Success);
+        Assert.Equal("VALIDATION_ERROR", payload.Error?.Code);
+    }
+
+    // ─── GetInvitePreview ─────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetInvitePreview_ReturnsHtmlWithOgTags_ForValidInvite()
+    {
+        var expected = new InviteDetailsDto
+        {
+            Code = "ABC12345",
+            MaskedEmail = string.Empty,
+            Type = InviteType.Coach,
+            EntityId = Guid.NewGuid(),
+            ClubName = "Vale FC",
+            AgeGroupName = "2015",
+            Status = InviteStatus.Pending,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            IsOpenInvite = true
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<GetInviteByCodeQuery, InviteDetailsDto>((_, _) => Task.FromResult(expected));
+
+        var sut = BuildSut(mediator);
+        var req = CreateRequest("GET", "https://localhost/v1/invites/ABC12345/preview");
+
+        var response = await sut.GetInvitePreview(req, "ABC12345");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+
+        response.Body.Position = 0;
+        var html = await new StreamReader(response.Body).ReadToEndAsync();
+        Assert.Contains("og:title", html);
+        Assert.Contains("Join Vale FC as Coach (2015)", html);
+        Assert.Contains("og:description", html);
+        Assert.Contains("twitter:card", html);
+        Assert.Contains("/invite/ABC12345", html);
+    }
+
+    [Fact]
+    public async Task GetInvitePreview_ReturnsFallbackHtml_WhenInviteNotFound()
+    {
+        var mediator = new TestMediator();
+        mediator.Register<GetInviteByCodeQuery, InviteDetailsDto>((_, _) =>
+            throw new NotFoundException("Invite", "NOTFOUND"));
+
+        var sut = BuildSut(mediator);
+        var req = CreateRequest("GET", "https://localhost/v1/invites/NOTFOUND/preview");
+
+        var response = await sut.GetInvitePreview(req, "NOTFOUND");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+
+        response.Body.Position = 0;
+        var html = await new StreamReader(response.Body).ReadToEndAsync();
+        Assert.Contains("og:title", html);
+        Assert.Contains("OurGame Invite", html);
+        Assert.Contains("/invite/NOTFOUND", html);
     }
 
     // ─── Helpers ──────────────────────────────────────────────────────────────

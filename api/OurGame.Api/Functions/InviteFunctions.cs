@@ -12,6 +12,7 @@ using OurGame.Application.UseCases.Invites.Commands.AcceptInvite;
 using OurGame.Application.UseCases.Invites.Commands.AcceptInvite.DTOs;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite.DTOs;
+using OurGame.Application.UseCases.Invites.Commands.RegenerateInvite;
 using OurGame.Application.UseCases.Invites.Commands.RevokeInvite;
 using OurGame.Application.UseCases.Invites.Commands.UpdateInviteLinks;
 using OurGame.Application.UseCases.Invites.Commands.UpdateInviteLinks.DTOs;
@@ -21,6 +22,7 @@ using OurGame.Application.UseCases.Invites.Queries.GetInviteByCode;
 using OurGame.Application.UseCases.Invites.Queries.GetInviteByCode.DTOs;
 using OurGame.Application.UseCases.Invites.Queries.GetInviteLinkOptions;
 using OurGame.Application.UseCases.Invites.Queries.GetInviteLinkOptions.DTOs;
+using OurGame.Persistence.Enums;
 using System.Net;
 
 namespace OurGame.Api.Functions;
@@ -396,5 +398,144 @@ public class InviteFunctions
             await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("An error occurred while retrieving club invites", 500), ct);
             return errorResponse;
         }
+    }
+
+    /// <summary>
+    /// Regenerate an invite link (revoke old, create new with same parameters)
+    /// </summary>
+    [Function("RegenerateInvite")]
+    [OpenApiOperation(operationId: "RegenerateInvite", tags: new[] { "Invites" }, Summary = "Regenerate invite", Description = "Revokes the existing invite and creates a replacement with a new code")]
+    [OpenApiParameter(name: "inviteId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The invite ID to regenerate")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<InviteDto>), Description = "Invite regenerated successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Validation error")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Invite not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Internal server error")]
+    public async Task<HttpResponseData> RegenerateInvite(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/invites/{inviteId}/regenerate")] HttpRequestData req,
+        string inviteId,
+        CancellationToken ct = default)
+    {
+        var authId = req.GetUserId();
+        if (string.IsNullOrEmpty(authId))
+        {
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("User not authenticated", 401), ct);
+            return unauthorizedResponse;
+        }
+
+        if (!Guid.TryParse(inviteId, out var inviteGuid))
+        {
+            var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid invite ID format", 400), ct);
+            return badRequestResponse;
+        }
+
+        try
+        {
+            var result = await _mediator.Send(new RegenerateInviteCommand(inviteGuid, authId), ct);
+            var response = req.CreateResponse(HttpStatusCode.OK);
+            await response.WriteAsJsonAsync(ApiResponse<InviteDto>.SuccessResponse(result), ct);
+            return response;
+        }
+        catch (ValidationException ex)
+        {
+            _logger.LogWarning(ex, "Validation error regenerating invite {InviteId}", inviteId);
+            var validationResponse = req.CreateResponse(HttpStatusCode.BadRequest);
+            await validationResponse.WriteAsJsonAsync(ApiResponse<object>.ValidationErrorResponse("Validation failed", ex.Errors), ct);
+            return validationResponse;
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "Invite not found: {InviteId}", inviteId);
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFoundResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error regenerating invite {InviteId}", inviteId);
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("An error occurred while regenerating the invite", 500), ct);
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Get HTML preview with OG meta tags for invite link sharing
+    /// </summary>
+    [Function("GetInvitePreview")]
+    [AllowAnonymousEndpoint]
+    [OpenApiOperation(operationId: "GetInvitePreview", tags: new[] { "Invites" }, Summary = "Get invite OG preview", Description = "Returns an HTML page with Open Graph meta tags for rich link previews, then redirects to the SPA invite page")]
+    [OpenApiParameter(name: "code", In = ParameterLocation.Path, Required = true, Type = typeof(string), Description = "The 8-character invite code")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "text/html", bodyType: typeof(string), Description = "HTML with OG meta tags")]
+    public async Task<HttpResponseData> GetInvitePreview(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/invites/{code}/preview")] HttpRequestData req,
+        string code,
+        CancellationToken ct = default)
+    {
+        var spaUrl = $"/invite/{Uri.EscapeDataString(code)}";
+        string title;
+        string description;
+
+        try
+        {
+            var result = await _mediator.Send(new GetInviteByCodeQuery(code), ct);
+            var roleLabel = result.Type switch
+            {
+                InviteType.Coach => "Coach",
+                InviteType.Player => "Player",
+                InviteType.Parent => "Player Parent",
+                _ => "Member"
+            };
+
+            if (result.Status == InviteStatus.Pending)
+            {
+                var ageGroupPart = string.IsNullOrEmpty(result.AgeGroupName) ? string.Empty : $" ({result.AgeGroupName})";
+                title = $"Join {result.ClubName} as {roleLabel}{ageGroupPart}";
+                description = $"You've been invited to join {result.ClubName} on OurGame.";
+            }
+            else
+            {
+                title = "OurGame Invite";
+                description = "This invite is no longer active.";
+            }
+        }
+        catch
+        {
+            title = "OurGame Invite";
+            description = "You've been invited to join a club on OurGame.";
+        }
+
+        var safeTitle = System.Net.WebUtility.HtmlEncode(title);
+        var safeDescription = System.Net.WebUtility.HtmlEncode(description);
+        var safeSpaUrl = System.Net.WebUtility.HtmlEncode(spaUrl);
+
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <title>{safeTitle}</title>
+                <meta property="og:title" content="{safeTitle}" />
+                <meta property="og:description" content="{safeDescription}" />
+                <meta property="og:type" content="website" />
+                <meta property="og:url" content="{safeSpaUrl}" />
+                <meta name="twitter:card" content="summary" />
+                <meta name="twitter:title" content="{safeTitle}" />
+                <meta name="twitter:description" content="{safeDescription}" />
+                <meta http-equiv="refresh" content="0;url={safeSpaUrl}" />
+            </head>
+            <body>
+                <p>Redirecting to <a href="{safeSpaUrl}">{safeTitle}</a>...</p>
+            </body>
+            </html>
+            """;
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        response.Headers.Add("Content-Type", "text/html; charset=utf-8");
+        await response.WriteStringAsync(html, ct);
+        return response;
     }
 }
