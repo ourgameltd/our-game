@@ -307,6 +307,8 @@ related:
 - Update `ARCHITECTURE.md` to include the new entry
 - Review directory READMEs during PRs that restructure or add folders
 
+**Important**: Upon completing any feature or implementation work, directory READMEs and `ARCHITECTURE.md` **must** be kept up to date. If new folders, files, or capabilities are added, the relevant `README.md` files should be created or updated to reflect the changes. If existing folders change purpose or gain new key files, update their README accordingly. This is imperative — accurate directory documentation drastically reduces the context needed for each subsequent implementation, enabling faster and more precise work by both developers and LLMs.
+
 ---
 
 **Repository**: Monorepo structure with `/web` (React + Vite), `/api` (.NET 8 with 4 projects), `/infrastructure` (Bicep), and `/docs`
