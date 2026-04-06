@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Services;
+using OurGame.Application.UseCases.Invites;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
@@ -52,20 +53,34 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
         }
 
         // Validate entity exists and is not already claimed
-        await ValidateEntityAsync(dto.Type, dto.EntityId, cancellationToken);
+        await ValidateEntityAsync(dto, cancellationToken);
 
-        // Validate no duplicate pending invite for same email+entity
-        var duplicateExists = await _db.Invites
-            .AnyAsync(i => i.Email.ToLower() == dto.Email.ToLower()
-                           && i.EntityId == dto.EntityId
-                           && i.Status == InviteStatus.Pending,
-                cancellationToken);
+        var normalizedEmail = dto.IsOpenInvite
+            ? InviteConstants.OpenInviteEmail
+            : dto.Email.Trim().ToLowerInvariant();
+
+        // Validate no duplicate pending invite for same target (open invite ignores email)
+        var duplicateExists = dto.IsOpenInvite
+            ? await _db.Invites
+                .AnyAsync(i => i.EntityId == dto.EntityId
+                               && i.Type == dto.Type
+                               && i.ClubId == dto.ClubId
+                               && i.Email == InviteConstants.OpenInviteEmail
+                               && i.Status == InviteStatus.Pending,
+                    cancellationToken)
+            : await _db.Invites
+                .AnyAsync(i => i.Email.ToLower() == normalizedEmail
+                               && i.EntityId == dto.EntityId
+                               && i.Status == InviteStatus.Pending,
+                    cancellationToken);
 
         if (duplicateExists)
         {
             throw new ValidationException(new Dictionary<string, string[]>
             {
-                ["Email"] = new[] { "A pending invite already exists for this email and entity." }
+                ["Email"] = new[] { dto.IsOpenInvite
+                    ? "A pending open invite already exists for this role and entity."
+                    : "A pending invite already exists for this email and entity." }
             });
         }
 
@@ -82,7 +97,7 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
         {
             Id = Guid.NewGuid(),
             Code = GenerateCode(),
-            Email = dto.Email.ToLowerInvariant(),
+            Email = normalizedEmail,
             Type = dto.Type,
             EntityId = dto.EntityId,
             ClubId = dto.ClubId,
@@ -123,19 +138,33 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
             ClubName = club.Name,
             Status = invite.Status,
             CreatedAt = invite.CreatedAt,
-            ExpiresAt = invite.ExpiresAt
+            ExpiresAt = invite.ExpiresAt,
+            IsOpenInvite = dto.IsOpenInvite
         };
     }
 
-    private async Task ValidateEntityAsync(InviteType type, Guid entityId, CancellationToken cancellationToken)
+    private async Task ValidateEntityAsync(CreateInviteRequestDto dto, CancellationToken cancellationToken)
     {
-        switch (type)
+        if (dto.IsOpenInvite)
+        {
+            var ageGroup = await _db.AgeGroups
+                .FirstOrDefaultAsync(ag => ag.Id == dto.EntityId && ag.ClubId == dto.ClubId, cancellationToken);
+
+            if (ageGroup == null)
+            {
+                throw new NotFoundException("AgeGroup", dto.EntityId);
+            }
+
+            return;
+        }
+
+        switch (dto.Type)
         {
             case InviteType.Coach:
                 var coach = await _db.Coaches
-                    .FirstOrDefaultAsync(c => c.Id == entityId, cancellationToken);
+                    .FirstOrDefaultAsync(c => c.Id == dto.EntityId, cancellationToken);
                 if (coach == null)
-                    throw new NotFoundException("Coach", entityId);
+                    throw new NotFoundException("Coach", dto.EntityId);
                 if (coach.UserId.HasValue)
                     throw new ValidationException(new Dictionary<string, string[]>
                     {
@@ -145,9 +174,9 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
 
             case InviteType.Player:
                 var player = await _db.Players
-                    .FirstOrDefaultAsync(p => p.Id == entityId, cancellationToken);
+                    .FirstOrDefaultAsync(p => p.Id == dto.EntityId, cancellationToken);
                 if (player == null)
-                    throw new NotFoundException("Player", entityId);
+                    throw new NotFoundException("Player", dto.EntityId);
                 if (player.UserId.HasValue)
                     throw new ValidationException(new Dictionary<string, string[]>
                     {
@@ -157,9 +186,9 @@ public class CreateInviteHandler : IRequestHandler<CreateInviteCommand, InviteDt
 
             case InviteType.Parent:
                 var parentPlayer = await _db.Players
-                    .FirstOrDefaultAsync(p => p.Id == entityId, cancellationToken);
+                    .FirstOrDefaultAsync(p => p.Id == dto.EntityId, cancellationToken);
                 if (parentPlayer == null)
-                    throw new NotFoundException("Player", entityId);
+                    throw new NotFoundException("Player", dto.EntityId);
                 break;
 
             default:

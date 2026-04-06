@@ -42,9 +42,11 @@ export interface InviteDetailsDto {
   code: string;
   maskedEmail: string;
   type: InviteType;
+  entityId: string;
   clubName: string;
   status: InviteStatus;
   expiresAt: string;
+  isOpenInvite?: boolean;
 }
 
 export interface InviteDto {
@@ -59,6 +61,7 @@ export interface InviteDto {
   createdAt: string;
   expiresAt: string;
   acceptedAt?: string;
+  isOpenInvite?: boolean;
 }
 
 export interface ClubInviteDto {
@@ -71,6 +74,7 @@ export interface ClubInviteDto {
   createdAt: string;
   expiresAt: string;
   acceptedAt?: string;
+  isOpenInvite?: boolean;
 }
 
 export interface CreateInviteRequest {
@@ -78,6 +82,7 @@ export interface CreateInviteRequest {
   type: InviteType;
   entityId: string;
   clubId: string;
+  isOpenInvite?: boolean;
 }
 
 export interface AcceptInviteRequest {
@@ -88,6 +93,25 @@ export interface AcceptInviteRequest {
 export interface AcceptInviteResult {
   inviteId: string;
   message: string;
+}
+
+export interface InviteLinkCandidateDto {
+  id: string;
+  name: string;
+  isLinked: boolean;
+  isLinkedToCurrentUser: boolean;
+}
+
+export interface InviteLinkOptionsDto {
+  code: string;
+  type: InviteType;
+  canSelectMultiple: boolean;
+  hasSingleLinkAssigned: boolean;
+  candidates: InviteLinkCandidateDto[];
+}
+
+export interface UpdateInviteLinksRequest {
+  selectedEntityIds: string[];
 }
 
 export interface AddPlayerToTeamResult {
@@ -1745,6 +1769,7 @@ export interface PlayerDto {
     phone: string;
     relationship: string;
     isPrimary: boolean;
+    email?: string;
   }[];
   allergies?: string;
   medicalConditions?: string;
@@ -3844,6 +3869,24 @@ export const apiClient = {
           `/v1/invites/${code}/accept`,
           request ?? {}
         );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    getLinkOptions: async (code: string): Promise<ApiResponse<InviteLinkOptionsDto>> => {
+      try {
+        const response = await axiosInstance.get<ApiResponse<InviteLinkOptionsDto>>(`/v1/invites/${code}/links`);
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    updateLinks: async (code: string, request: UpdateInviteLinksRequest): Promise<ApiResponse<AcceptInviteResult>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<AcceptInviteResult>>(`/v1/invites/${code}/links`, request);
         return response.data;
       } catch (error) {
         return handleApiError(error);

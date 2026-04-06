@@ -13,4 +13,5 @@ public class ClubInviteDto
     public DateTime CreatedAt { get; set; }
     public DateTime ExpiresAt { get; set; }
     public DateTime? AcceptedAt { get; set; }
+    public bool IsOpenInvite { get; set; }
 }

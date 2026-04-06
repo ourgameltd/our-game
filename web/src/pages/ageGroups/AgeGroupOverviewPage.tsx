@@ -231,17 +231,27 @@ const AgeGroupOverviewPage: React.FC = () => {
                 <div className="h-4 w-80 bg-gray-200 dark:bg-gray-700 rounded" />
               </div>
             ) : ageGroupModel ? (
-              <PageTitle
-                title={ageGroupModel.name}
-                subtitle={`${ageGroupModel.description ?? ''} • Season: ${ageGroupModel.season}${ageGroupModel.defaultSquadSize ? ` • Default: ${ageGroupModel.defaultSquadSize}-a-side` : ''}`.trim()}
-                action={{
-                  label: 'Settings',
-                  icon: 'settings',
-                  title: 'Settings',
-                  onClick: () => navigate(Routes.ageGroupSettings(clubId, ageGroupId)),
-                  variant: 'primary'
-                }}
-              />
+              <>
+                <PageTitle
+                  title={ageGroupModel.name}
+                  subtitle={`${ageGroupModel.description ?? ''} • Season: ${ageGroupModel.season}${ageGroupModel.defaultSquadSize ? ` • Default: ${ageGroupModel.defaultSquadSize}-a-side` : ''}`.trim()}
+                  action={{
+                    label: 'Settings',
+                    icon: 'settings',
+                    title: 'Settings',
+                    onClick: () => navigate(Routes.ageGroupSettings(clubId, ageGroupId)),
+                    variant: 'primary'
+                  }}
+                />
+                <div className="mt-2">
+                  <Link
+                    to={Routes.ageGroupInvites(clubId, ageGroupId)}
+                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition-colors"
+                  >
+                    Invite Links
+                  </Link>
+                </div>
+              </>
             ) : (
               <div className="text-red-600 dark:text-red-400">
                 {ageGroupError || 'Age group not found'}
@@ -425,4 +435,3 @@ const AgeGroupOverviewPage: React.FC = () => {
 };
 
 export default AgeGroupOverviewPage;
-
