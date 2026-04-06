@@ -1,4 +1,3 @@
-using System.ComponentModel.DataAnnotations;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
@@ -10,12 +9,10 @@ namespace OurGame.Application.UseCases.Users.Commands.UpdateMyProfile;
 
 /// <summary>
 /// Handler for updating the current user's profile information.
-/// Validates input, ensures email uniqueness, and updates the user entity.
+/// Validates input and updates the user entity. Email is read-only from the identity provider.
 /// </summary>
 public class UpdateMyProfileHandler : IRequestHandler<UpdateMyProfileCommand, UserProfileDto>
 {
-    private static readonly EmailAddressAttribute EmailValidator = new();
-    
     private readonly OurGameContext _db;
     private readonly IMediator _mediator;
 
@@ -45,7 +42,6 @@ public class UpdateMyProfileHandler : IRequestHandler<UpdateMyProfileCommand, Us
         // Trim input values
         var firstName = dto.FirstName?.Trim() ?? string.Empty;
         var lastName = dto.LastName?.Trim() ?? string.Empty;
-        var email = dto.Email?.Trim() ?? string.Empty;
 
         // Required field validation
         if (string.IsNullOrWhiteSpace(firstName))
@@ -56,11 +52,6 @@ public class UpdateMyProfileHandler : IRequestHandler<UpdateMyProfileCommand, Us
         if (string.IsNullOrWhiteSpace(lastName))
         {
             errors.Add("LastName", new[] { "Last name is required." });
-        }
-
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            errors.Add("Email", new[] { "Email is required." });
         }
 
         // Length validation
@@ -74,47 +65,20 @@ public class UpdateMyProfileHandler : IRequestHandler<UpdateMyProfileCommand, Us
             errors.Add("LastName", new[] { "Last name must not exceed 100 characters." });
         }
 
-        if (email.Length > 255)
-        {
-            errors.Add("Email", new[] { "Email must not exceed 255 characters." });
-        }
-
-        // Email format validation
-        if (!string.IsNullOrWhiteSpace(email) && !EmailValidator.IsValid(email))
-        {
-            errors.Add("Email", new[] { "Email must be a valid email address." });
-        }
-
-        // Email uniqueness validation (case-insensitive, excluding current user)
-        if (!string.IsNullOrWhiteSpace(email))
-        {
-            var emailLower = email.ToLowerInvariant();
-            var emailExists = await _db.Users
-                .Where(u => u.Id != user.Id)
-                .AnyAsync(u => u.Email.ToLower() == emailLower, cancellationToken);
-
-            if (emailExists)
-            {
-                errors.Add("Email", new[] { "This email address is already in use by another user." });
-            }
-        }
-
         // 3. If validation fails, throw exception
         if (errors.Count > 0)
         {
             throw new OurGame.Application.Abstractions.Exceptions.ValidationException(errors);
         }
 
-        // 4. Update user entity
+        // 4. Update user entity (email is read-only from identity provider)
         var now = DateTime.UtcNow;
-        var emailNormalized = email.ToLowerInvariant();
 
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
             UPDATE Users
             SET 
                 FirstName = {firstName},
                 LastName = {lastName},
-                Email = {emailNormalized},
                 UpdatedAt = {now}
             WHERE Id = {user.Id}
         ", cancellationToken);

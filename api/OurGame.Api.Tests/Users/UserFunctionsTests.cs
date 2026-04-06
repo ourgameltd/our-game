@@ -206,13 +206,13 @@ public class UserFunctionsTests
     public async Task UpdateMe_ReturnsBadRequest_WhenValidationFails()
     {
         var authId = Guid.NewGuid().ToString("N");
-        var body = "{\"firstName\":\"\",\"lastName\":\"\",\"email\":\"bad\"}";
+        var body = "{\"firstName\":\"\",\"lastName\":\"\"}";
 
         var mediator = new TestMediator();
         mediator.Register<UpdateMyProfileCommand, UserProfileDto>((_, _) =>
             throw new ValidationException(new Dictionary<string, string[]>
             {
-                ["Email"] = new[] { "Email must be a valid email address." }
+                ["FirstName"] = new[] { "First name is required." }
             }));
 
         var sut = BuildSut(mediator);
@@ -232,7 +232,7 @@ public class UserFunctionsTests
     public async Task UpdateMe_ReturnsNotFound_WhenUserMissing()
     {
         var authId = Guid.NewGuid().ToString("N");
-        var body = "{\"firstName\":\"Jamie\",\"lastName\":\"Coach\",\"email\":\"jamie@ourgame.local\"}";
+        var body = "{\"firstName\":\"Jamie\",\"lastName\":\"Coach\"}";
 
         var mediator = new TestMediator();
         mediator.Register<UpdateMyProfileCommand, UserProfileDto>((_, _) =>
@@ -254,7 +254,7 @@ public class UserFunctionsTests
     public async Task UpdateMe_ReturnsInternalServerError_WhenMediatorThrowsUnexpectedException()
     {
         var authId = Guid.NewGuid().ToString("N");
-        var body = "{\"firstName\":\"Jamie\",\"lastName\":\"Coach\",\"email\":\"jamie@ourgame.local\"}";
+        var body = "{\"firstName\":\"Jamie\",\"lastName\":\"Coach\"}";
 
         var mediator = new TestMediator();
         mediator.Register<UpdateMyProfileCommand, UserProfileDto>((_, _) =>
@@ -276,7 +276,7 @@ public class UserFunctionsTests
     public async Task UpdateMe_ReturnsOk_WhenRequestIsValid()
     {
         var authId = Guid.NewGuid().ToString("N");
-        var body = "{\"firstName\":\"Jamie\",\"lastName\":\"Coach\",\"email\":\"jamie@ourgame.local\"}";
+        var body = "{\"firstName\":\"Jamie\",\"lastName\":\"Coach\"}";
         var expected = new UserProfileDto
         {
             Id = Guid.NewGuid(),

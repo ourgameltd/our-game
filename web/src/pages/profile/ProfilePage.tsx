@@ -20,7 +20,6 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: '',
   });
   
   // Mutation hook for updating profile
@@ -38,7 +37,6 @@ export default function ProfilePage() {
           setFormData({
             firstName: profile.firstName,
             lastName: profile.lastName,
-            email: profile.email,
           });
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
@@ -70,7 +68,6 @@ export default function ProfilePage() {
     const request: UpdateCurrentUserRequest = {
       firstName: formData.firstName,
       lastName: formData.lastName,
-      email: formData.email,
     };
     
     await updateCurrentUser(request);
@@ -81,7 +78,6 @@ export default function ProfilePage() {
       setFormData({
         firstName: userProfile.firstName,
         lastName: userProfile.lastName,
-        email: userProfile.email,
       });
     }
     setIsEditing(false);
@@ -199,16 +195,7 @@ export default function ProfilePage() {
           <div className="space-y-2">
             <div className="flex items-center space-x-2">
               <Mail className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-              {isEditing ? (
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                />
-              ) : (
-                <span className="text-gray-900 dark:text-white">{userProfile.email}</span>
-              )}
+              <span className="text-gray-900 dark:text-white">{userProfile.email}</span>
             </div>
 
             <div className="flex items-center space-x-2">

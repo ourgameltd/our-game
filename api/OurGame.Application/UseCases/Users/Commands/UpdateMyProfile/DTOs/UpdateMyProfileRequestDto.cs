@@ -21,11 +21,4 @@ public record UpdateMyProfileRequestDto
     [StringLength(100)]
     public string LastName { get; init; } = string.Empty;
 
-    /// <summary>
-    /// User's email address.
-    /// </summary>
-    [Required]
-    [StringLength(255)]
-    [EmailAddress]
-    public string Email { get; init; } = string.Empty;
 }

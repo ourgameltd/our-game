@@ -144,7 +144,6 @@ export interface UserProfile {
 export interface UpdateCurrentUserRequest {
   firstName: string;
   lastName: string;
-  email: string;
 }
 
 // Team colors DTO
