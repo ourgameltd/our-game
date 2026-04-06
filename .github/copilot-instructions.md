@@ -7,22 +7,27 @@ OurGame is a comprehensive, responsive, mobile-first web portal for football clu
 ## Technology Stack
 
 ### Frontend (`/web`)
-- **Framework**: React 18 + Vite + TypeScript
+- **Framework**: React 18.3 + Vite 8 + TypeScript 5.9
 - **Routing**: React Router 6
-- **Styling**: Tailwind CSS 3.4+
-- **State Management**: Zustand 4.5+ with React Context
-- **UI Components**: React 18+ with Lucide icons, Recharts for visualizations
+- **Styling**: Tailwind CSS 4.2+
+- **State Management**: Zustand 5+ with React Context
+- **UI Components**: React 18+ with Lucide icons, MUI Material 7, Recharts for visualizations
+- **API Client**: Generated via `@hey-api/openapi-ts` from the Functions OpenAPI spec
 - **Build Configuration**: Vite build output for Azure Static Web Apps
 
 ### Backend (`/api`)
 - **Runtime**: Azure Functions v4 with .NET 8 Isolated Worker Model
-- **Architecture**: RESTful API with RPC-style endpoints for optimization
-- **API Documentation**: OpenAPI 3.0 specification via NSwag
+- **Architecture**: RESTful API with RPC-style endpoints for optimization, MediatR for CQRS command/query dispatching
+- **API Documentation**: OpenAPI 3.0 specification via Azure Functions Worker OpenAPI extension
 - **Versioning**: Header-based versioning using `api-version` header (e.g., `api-version: 1.0`)
 - **Resilience**: Polly for retry policies and circuit breakers
+- **Validation**: FluentValidation for request validation
+- **Notifications**: Azure Communication Services (email) + Web Push (VAPID)
 - **Projects**:
   - `OurGame.Api` - Azure Functions HTTP triggers
-  - `OurGame.Application` - Shared business logic, extensions, and services
+  - `OurGame.Application` - Business logic, use cases, services (MediatR handlers, FluentValidation, Polly)
+  - `OurGame.Persistence` - EF Core 9 DbContext, models, migrations, seed data
+  - `OurGame.Seeder` - Database migration and seeding console app
 
 ### Database
 - **Production**: Azure SQL Server Serverless (deployed via Bicep)
@@ -32,21 +37,24 @@ OurGame is a comprehensive, responsive, mobile-first web portal for football clu
 - **Seed Data**: Seeded via `OurGame.Seeder` using `OurGame.Persistence.Data.SeedData`
 
 ### Infrastructure (`/infrastructure`)
-- **IaC Tool**: Azure Bicep
+- **IaC Tool**: Azure Bicep (subscription-level deployment via `main-subscription.bicep`)
 - **Deployment**: Single production environment (future: multi-environment)
 - **Resources**:
-    - Azure Static Web App (Standard tier) hosting Vite build output
+  - Azure Static Web App (Standard tier) hosting Vite build output, with linked Function App backend
   - Azure Functions (Consumption Y1) as linked SWA backend
-  - Azure SQL Server Serverless with SQL Database
-  - Application Insights and Log Analytics
-  - Storage Account for function app diagnostics
+  - Azure SQL Server Serverless (GP_S_Gen5, auto-pause 60 min) with SQL Database
+  - Application Insights and Log Analytics (30-day retention)
+  - Storage Account (StorageV2, TLS 1.2)
+  - Azure Communication Services with managed email domain
+  - Custom domain support (optional, CNAME-based)
 
 ### Development Tools
-- **SWA CLI**: Links Vite dev server with local Azure Functions
+- **SWA CLI**: Links Vite dev server (`localhost:5173`) with local Azure Functions (`localhost:7071`) on `localhost:4280`
+- **Docker Compose**: Local SQL Server 2022 (port 14330) + Azurite (blob/queue/table storage emulator)
 - **EF Core CLI**: Database migrations and scaffolding
-- **Docker**: Local SQL Server container
 - **Storybook**: Component development
-- **.NET Test Projects**: Unit test coverage for backend and API endpoint behavior
+- **Stryker.NET**: Mutation testing for Application and API layers
+- **.NET Test Projects**: xUnit + Moq for unit test coverage of backend and API endpoint behavior
 
 ## Application Structure
 
@@ -126,10 +134,12 @@ Dashboard
 4. **Seed Data**: Populate database using transformed TypeScript files from seed data project
 
 ### Data Seeding Strategy
-- Source sample data from existing TypeScript files: `clubs.ts`, `teams.ts`, `players.ts`, `matches.ts`, `formations.ts`, `tactics.ts`, `training.ts`, etc.
-- Maintain UUID structure and referential integrity
-- Preserve EA FC attribute system (35 metrics per player)
-- Use realistic relationships: Vale FC → multiple age groups → multiple teams → 30+ players
+- Seed data is defined in 49 C# classes in `OurGame.Persistence/Data/SeedData/`
+- `OurGame.Seeder` applies EF Core migrations then seeds all tables in FK-dependency order
+- Supports `--clean` flag to truncate all data before reseeding (disables/re-enables FK constraints)
+- Maintains UUID structure and referential integrity
+- Preserves EA FC attribute system (35 metrics per player)
+- Uses realistic relationships: Vale FC → multiple age groups → multiple teams → 30+ players
 
 ## API Development Guidelines
 
@@ -141,8 +151,8 @@ Dashboard
 - **JSON Naming**: camelCase for all JSON properties
 
 ### OpenAPI Specification
-- **Documentation**: All endpoints must have OpenAPI/Swagger documentation
-- **NSwag Integration**: Generate TypeScript clients for the React frontend
+- **Documentation**: All endpoints must have OpenAPI/Swagger documentation via Azure Functions Worker OpenAPI extension
+- **Client Generation**: TypeScript clients generated via `@hey-api/openapi-ts` from `http://localhost:7071/openapi/v3.json` (run `npm run generate:api` in `/web`)
 - **Schema Validation**: Request/response models documented with examples
 - **Endpoint Grouping**: Tag endpoints by domain (Clubs, Players, Matches, Formations, etc.)
 
@@ -169,15 +179,15 @@ Dashboard
 - **Feature Folders**: Maintain existing structure (`components/ageGroup`, `components/coach`, `components/formation`, etc.)
 - **Reusable Components**: Keep common components in `components/common`
 - **Layout Components**: Use shared layout components for navigation/header/footer
-- **Contexts**: Preserve ThemeContext, NavigationContext, UserPreferencesContext
+- **Contexts**: Preserve AuthContext, ThemeContext, NavigationContext, PageTitleContext, UserPreferencesContext
 
 ### State Management
 - **Zustand Stores**: Keep existing stores for global state
-- **React Context**: Use for theme, user preferences, navigation state
-- **Server State**: Use React Query or SWR for API data fetching and caching
+- **React Context**: Use for auth, theme, user preferences, navigation state, page title
+- **Axios**: HTTP client for API calls via generated TypeScript client
 
 ### Styling
-- **Tailwind CSS**: Continue using Tailwind 3.4+ with mobile-first approach
+- **Tailwind CSS**: Continue using Tailwind 4.2+ with mobile-first approach
 - **Club Branding**: Dynamic color schemes based on club colors
 - **Accessibility**: WCAG 2.1 AA compliance, keyboard navigation, ARIA labels
 
@@ -185,15 +195,13 @@ Dashboard
 ## Infrastructure Development
 
 ### Local Development Setup
-1. **SQL Server**: Run Docker container with SQL Server
-   ```bash
-   docker run -e "ACCEPT_EULA=Y" -e "SA_PASSWORD=YourStrong@Passw0rd" -p 1433:1433 -d mcr.microsoft.com/mssql/server:2022-latest
-   ```
-2. **EF Core**: Run migrations from `OurGame.Persistence/Migrations` to local database
-3. **Seed Data**: Run `OurGame.Seeder` to populate data from `OurGame.Persistence.Data.SeedData`
-4. **Azure Functions**: Run with `func start` in `/api/OurGame.Api`
-5. **Vite**: Run with `npm run dev` in `/web`
-6. **SWA CLI**: Use `swa start` to link frontend and backend locally
+1. **Docker Compose**: Run `docker compose -f docker-compose.local.yml up -d` to start SQL Server 2022 (port 14330) + Azurite
+2. **Database Seed**: Run `docker compose -f docker-compose.local.yml --profile seed run --no-deps --rm seeder` to apply migrations and seed data
+3. **Azure Functions**: Run with `func start` in `/api/OurGame.Api`
+4. **Vite**: Run with `npm run dev` in `/web`
+5. **SWA CLI**: Use `npx swa start --config swa-cli.config.json` in `/web` to link frontend and backend on `localhost:4280`
+
+Alternatively, use the VS Code task `Dev: Start Backend Containers + SWA` to start everything in sequence.
 
 ### API Endpoint Test Expectations
 
@@ -208,17 +216,32 @@ When work changes backend behavior, API contracts, validation, authorization, se
 4. Update existing backend test projects where possible instead of introducing Playwright or other E2E test references.
 
 ### Bicep Infrastructure
-- **File**: `/infrastructure/main.bicep`
-- **Current Resources**: Static Web App, Azure Functions, Storage Account, App Insights
-- **Required Addition**: Azure SQL Server Serverless resource with database
-- **Connection Strings**: Configure in Function App app settings via Bicep
+- **Entry Point**: `/infrastructure/main-subscription.bicep` (subscription-level deployment)
+- **Resources**: `/infrastructure/main.bicep` (resource group-level)
+- **All Resources Deployed**: Static Web App, Azure Functions, Storage Account, App Insights, Log Analytics, Azure SQL Server Serverless + Database, Azure Communication Services (email), custom domain support
+- **Connection Strings**: Configured in Function App app settings via Bicep (SQL, ACS, VAPID keys)
 - **Environment**: Single production environment (future: dev, staging, prod)
 
-### Deployment Pipeline
-1. **Database**: Apply EF Core migrations from `OurGame.Persistence/Migrations` to Azure SQL Server
-2. **Backend**: Deploy Azure Functions via GitHub Actions or Azure CLI
-3. **Frontend**: Build Vite output, deploy to SWA
-4. **Seed Data**: Run `OurGame.Seeder` on first deployment
+### CI/CD Pipelines (GitHub Actions)
+
+| Workflow | File | Trigger | Purpose |
+|---|---|---|---|
+| **PR Build** | `pr-build.yml` | PRs to `main`/`develop` | Build, test with coverage, generate report |
+| **Tag Release** | `tag-release.yml` | Git tag `v*.*.*` or manual | Full deployment: infra → database → Functions → SWA |
+| **Deploy SWA** | `deploy-swa.yml` | Manual | Re-deploy frontend only |
+| **Reset Database** | `reset-database.yml` | Manual | Re-seed Azure SQL (with optional `--clean` flag) |
+| **Stryker** | `stryker.yml` | Manual | Mutation testing for Application and API layers |
+
+#### Tag Release Pipeline (Full Deployment)
+1. **Build**: Backend (.NET 8) and Frontend (Node 20.x) built in parallel
+2. **Infrastructure**: Subscription-level Bicep deployment (creates/updates all Azure resources)
+3. **Database**: Opens temporary firewall rule, runs `OurGame.Seeder` (migrations + seed data), removes firewall rule
+4. **Function App**: Deploys published API to Azure Function App
+5. **Static Web App**: Deploys built frontend, configures B2C auth settings
+
+#### Required GitHub Secrets & Variables
+- **Secrets**: `AZURE_CREDENTIALS`, `SQL_ADMIN_PASSWORD`, `B2C_CLIENT_SECRET`
+- **Variables**: `SQL_ADMIN_USERNAME` (defaults to `ourgame_sql_admin`), `B2C_CLIENT_ID`
 
 ## Design Principles
 
@@ -252,12 +275,14 @@ When work changes backend behavior, API contracts, validation, authorization, se
 - **Extension Methods**: Follow patterns in `OurGame.Application/Extensions`
 
 ### Testing
-- **Unit Tests**: Required for business logic
+- **Unit Tests**: Required for business logic (xUnit + Moq)
 - **API Endpoint Unit Tests**: Expected for Azure Functions endpoint behavior and contract changes
+- **Mutation Testing**: Stryker.NET available for Application and API layers (`stryker.yml` workflow)
+- **Code Coverage**: XPlat Code Coverage collected in PR builds, reported via ReportGenerator
 - **No Playwright Coverage**: Do not add Playwright tests or Playwright-specific guidance to this workspace instruction set
 
 ---
 
-**Repository**: Monorepo structure with `/web` (React + Vite), `/api` (.NET), and `/infrastructure` (Bicep)
+**Repository**: Monorepo structure with `/web` (React + Vite), `/api` (.NET 8 with 4 projects), `/infrastructure` (Bicep), and `/docs`
 
-**Development Focus**: Full-stack development with production-ready backend, database layer, and API integration replacing frontend-only demonstrations.
+**Development Focus**: Full-stack development with production-ready backend, database layer, CI/CD pipelines, and API integration.

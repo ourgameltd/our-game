@@ -1,41 +1,39 @@
 # Our Game
 
-Football managment at all level organised and done properly.
+Football management at all levels organised and done properly.
 
 ## Why?
+
 Cause just now Scottish football is an underfunded shambles.
 
-## Strategy report
+## Strategy Report
 
 - Market, competitor, and go-to-market analysis: [`docs/market-competitive-analysis.md`](docs/market-competitive-analysis.md)
 
 ## Technology Stack
 
-- **Frontend**: React 19 + TypeScript with Vite
-- **Backend**: Azure Functions v4 (.NET 8.0) with Isolated Worker Model
-- **Infrastructure**: Azure Static Web Apps + Azure Functions + Azure Table Storage
-- **Deployment**: GitHub Actions + Bicep IaC
-- **Storage**: Postgres and Azure storage
-- **Local Development**: Azure Static Web Apps CLI
+| Layer | Technology |
+|---|---|
+| **Frontend** | React 18 + TypeScript with Vite |
+| **Backend** | Azure Functions v4 (.NET 8 Isolated Worker) |
+| **Database** | Azure SQL Server Serverless (EF Core 9) |
+| **Infrastructure** | Azure Bicep (subscription-level) |
+| **Deployment** | GitHub Actions (tag-based releases) |
+| **Local Dev** | Docker Compose (SQL Server + Azurite) + SWA CLI |
+| **Messaging** | Azure Communication Services (email) + Web Push |
+| **Monitoring** | Application Insights + Log Analytics |
 
 ## Prerequisites
 
 - [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [.NET 6.0 SDK](https://dotnet.microsoft.com/download/dotnet/6.0) (for Azure Functions)
+- [Node.js 20.x+](https://nodejs.org/)
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Azure Functions Core Tools v4](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local) (for local development)
 - [Azure CLI](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli) (for deployment)
-- [Azure Functions Core Tools](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local) (for local development)
 
 ## Local Development
 
-### Prerequisites
-
-- [.NET 8.0 SDK](https://dotnet.microsoft.com/download/dotnet/8.0)
-- [Node.js 20.x+](https://nodejs.org/)
-- [Azure Functions Core Tools v4](https://docs.microsoft.com/en-us/azure/azure-functions/functions-run-local)
-- [Azure Static Web Apps CLI](https://azure.github.io/static-web-apps-cli/) (installed as dev dependency)
-- Azure Storage Emulator (Azurite) or Azure Storage connection string
-
-### Build the solution
+### Build the Solution
 
 ```bash
 cd api
@@ -43,173 +41,202 @@ dotnet restore
 dotnet build --configuration Release
 ```
 
-### VS Code Local Dev (Containers + SWA CLI)
+### Local Infrastructure (Docker Compose)
 
-This repository now includes VS Code tasks and launch configurations for running SQL Server, Azurite, and API in Docker containers while the frontend runs via SWA CLI on the host.
-
-### Local Infrastructure (Single Docker Compose)
-
-Start SQL Server + Azurite + API together:
+The `docker-compose.local.yml` file starts SQL Server 2022 and Azurite (Azure Storage emulator):
 
 ```bash
+# Start SQL Server + Azurite
 docker compose -f docker-compose.local.yml up -d
-```
 
-Stop them together:
-
-```bash
+# Stop
 docker compose -f docker-compose.local.yml down
 ```
 
-Note: on Apple Silicon, SQL Server runs under `linux/amd64` emulation in this compose file.
-Host access to SQL Server from this stack is on `localhost:14330`.
+> **Note:** On Apple Silicon, SQL Server runs under `linux/amd64` emulation. SQL Server is exposed on `localhost:14330`.
 
-#### 1. One-time setup
+### Database Seeding
 
-1. Install dependencies:
-   ```bash
-   cd web
-   npm install
-   ```
+Seed the database with sample data using the seeder profile:
 
-#### 2. Start services in separate terminals (VS Code Tasks)
+```bash
+docker compose -f docker-compose.local.yml --profile seed run --no-deps --rm seeder
+```
 
-From `Terminal` -> `Run Task`:
+The seeder applies EF Core migrations and populates all tables with realistic sample data (clubs, teams, players, formations, matches, etc.).
 
-- `Infra: Start Local Stack`
-- `Web: SWA CLI` (http://localhost:4280)
+### VS Code Tasks (Recommended)
 
-Or run `Dev: Start Backend Containers + SWA` to start both together.
+From `Terminal` → `Run Task`:
 
-#### 3. API endpoint when running in containers
+| Task | Description |
+|---|---|
+| `Infra: Start Local Stack` | Starts SQL Server + Azurite containers |
+| `DB: Seed` | Runs migrations and seeds the database |
+| `Web: SWA CLI` | Starts Vite + SWA CLI proxy on http://localhost:4280 |
+| `Dev: Start Backend Containers + SWA` | Runs all three above in sequence |
+| `Infra: Stop Local Stack` | Stops containers |
 
-The Functions API is exposed at `http://localhost:7071/api/...` from the `api` container.
+### One-Time Setup
 
-#### 4. Optional browser launch
+```bash
+cd web && npm install
+```
 
-Use `Web: Launch Browser (SWA)`.
+### Running Manually
 
-#### 5. Stop local stack
+**Option 1 — SWA CLI (recommended)**:
 
-Run task: `Infra: Stop Local Stack`.
+The SWA CLI proxies the Vite dev server (`localhost:5173`) and Azure Functions (`localhost:7071`) together on `http://localhost:4280`.
 
-### Run locally with Azure Static Web Apps CLI
+```bash
+# Terminal 1: Start Azure Functions
+cd api/OurGame.Api && func start
 
-The Azure Static Web Apps CLI provides local development with automatic API routing without CORS issues.
+# Terminal 2: Start SWA CLI
+cd web && npx swa start --config swa-cli.config.json
+```
 
-1. **Set up local.settings.json for Azure Functions**:
-   ```bash
-   cd api/OurGame.Api
-   cp local.settings.json.example local.settings.json
-   # Edit local.settings.json with your storage connection strings
-   ```
+**Option 2 — Separate servers (for debugging)**:
 
-2. **Option 1 - Use SWA CLI (Recommended)**:
-   
-   First, start the API in one terminal:
-   ```bash
-   cd api/OurGame.Api
-   func start
-   ```
-   
-   Then, in another terminal, start the SWA CLI:
-   ```bash
-   cd web
-   npm install
-   npm start
-   ```
-   
-   The app will be available at `http://localhost:4280` with API automatically routed through `/api/*`.
+```bash
+# Terminal 1: Azure Functions
+cd api/OurGame.Api && func start
 
-3. **Option 2 - Run separately (for debugging)**:
-   
-   **Terminal 1 - Start the API (Azure Functions)**:
-   ```bash
-   cd api/OurGame.Api
-   func start
-   ```
-   
-   **Terminal 2 - Start the React app**:
-   ```bash
-   cd web
-   npm install
-   npm run dev
-   ```
-   
-   The React app will be available at `http://localhost:5173` and will connect to the API at `http://localhost:7071/api`.
+# Terminal 2: Vite dev server
+cd web && npm run dev
+```
+
+The React app runs on `http://localhost:5173` and connects to the API at `http://localhost:7071/api`.
 
 ## Deployment
 
-### Infrastructure Deployment
+### Infrastructure
 
-The infrastructure is managed using Bicep templates in the `infrastructure/` directory.
+Infrastructure is managed with Azure Bicep at the subscription level. The `main-subscription.bicep` template creates the resource group and deploys all resources via `main.bicep`:
 
-1. **Login to Azure**:
-   ```bash
-   az login
-   ```
+- Azure Static Web App (Standard tier) with linked Function App backend
+- Azure Functions (Consumption Y1) on .NET 8 Isolated
+- Azure SQL Server Serverless (GP_S_Gen5, auto-pause 60 min)
+- Storage Account (StorageV2, TLS 1.2)
+- Application Insights + Log Analytics
+- Azure Communication Services (email)
+- Custom domain support (optional)
 
-2. **Create Resource Group**:
-   ```bash
-   az group create --name rgourgame --location westeurope
-   ```
+**Manual deployment:**
 
-3. **Deploy Infrastructure**:
-   ```bash
-   az deployment group create \
-     --resource-group rgourgame \
-     --template-file infrastructure/main.bicep \
-     --parameters infrastructure/parameters.json
-   ```
+```bash
+az login
 
-### GitHub Actions Deployment
+az deployment sub create \
+  --location westeurope \
+  --template-file infrastructure/main-subscription.bicep \
+  --parameters infrastructure/parameters-subscription.json \
+  --parameters sqlAdminUsername=<username> \
+  --parameters sqlAdminPassword=<password>
+```
 
-Deployment is automated via GitHub Actions:
+### GitHub Actions Pipelines
 
-- **PR Build** (`.github/workflows/pr-build.yml`): Builds and validates on pull requests
-- **Release** (`.github/workflows/release.yml`): Deploys infrastructure and applications to Azure
+| Workflow | Trigger | Purpose |
+|---|---|---|
+| **PR Build** (`pr-build.yml`) | Pull requests to `main` / `develop` | Build, test with coverage, publish artifacts |
+| **Tag Release** (`tag-release.yml`) | Git tag `v*.*.*` or manual | Full deployment: infra → database → Functions → SWA |
+| **Deploy SWA** (`deploy-swa.yml`) | Manual | Re-deploy frontend only |
+| **Reset Database** (`reset-database.yml`) | Manual | Re-seed Azure SQL (with optional `--clean` flag) |
+| **Stryker** (`stryker.yml`) | Manual | Mutation testing for Application and API layers |
 
-#### Setup GitHub Secrets
+#### PR Build Pipeline
 
-1. Create an Azure Service Principal:
-   ```bash
-   az ad sp create-for-rbac --name "github-ourgame" --role contributor \
-     --scopes /subscriptions/{subscription-id}/resourceGroups/rgourgame \
-     --sdk-auth
-   ```
+Runs on every pull request. Spins up a SQL Server 2022 service container, builds the full .NET solution, runs all unit tests with code coverage (XPlat Code Coverage), generates a coverage report (excluding `OurGame.Persistence`), builds the React frontend, and publishes the API. Coverage summaries are posted to the GitHub Actions step summary.
 
-2. Add the output as a secret named `AZURE_CREDENTIALS` in your GitHub repository.
+#### Tag Release Pipeline
+
+Triggered by pushing a semver tag (e.g. `v1.2.0`) or manually. Runs five jobs in sequence:
+
+1. **build-backend** — Restores, publishes the .NET API, uploads artifact
+2. **build-frontend** — `npm ci` + `npm run build`, uploads artifact
+3. **deploy-infrastructure** — Deploys subscription-level Bicep template to Azure (requires `AZURE_CREDENTIALS`, `SQL_ADMIN_PASSWORD` secrets)
+4. **provision-database** — Opens temporary firewall rule, runs the seeder (migrations + seed data), removes firewall rule
+5. **deploy-function-app** — Deploys published API to Azure Function App
+6. **deploy-static-web-app** — Deploys built frontend to Azure Static Web App, configures B2C auth settings
+
+#### Required GitHub Secrets & Variables
+
+| Name | Type | Purpose |
+|---|---|---|
+| `AZURE_CREDENTIALS` | Secret | Azure Service Principal credentials (JSON) |
+| `SQL_ADMIN_PASSWORD` | Secret | Azure SQL admin password |
+| `B2C_CLIENT_SECRET` | Secret | Azure AD B2C client secret |
+| `SQL_ADMIN_USERNAME` | Variable | SQL admin username (defaults to `ourgame_sql_admin`) |
+| `B2C_CLIENT_ID` | Variable | Azure AD B2C client ID |
+
+## Testing
+
+### Unit Tests
+
+Two xUnit test projects mirror the main API layers:
+
+- `OurGame.Api.Tests` — Tests Azure Functions endpoint behaviour (HTTP triggers, routing, validation)
+- `OurGame.Application.Tests` — Tests business logic, use cases, and validation
+
+```bash
+cd api
+dotnet test --configuration Release
+```
+
+### Mutation Testing
+
+[Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) is configured via `stryker-config.json`. Run locally or trigger the `Stryker` workflow manually:
+
+```bash
+cd api/OurGame.Application.Tests
+dotnet stryker --config-file ../stryker-config.json --project OurGame.Application.csproj
+```
+
+### Code Coverage
+
+Coverage reports are generated automatically in the PR Build pipeline using [ReportGenerator](https://github.com/danielpalme/ReportGenerator). The `OurGame.Persistence` assembly is excluded from coverage metrics.
 
 ## Project Structure
 
 ```
 .
-├── api/                               # .NET 8.0 Backend
-│   ├── OurGame.Api/      # Azure Functions backend
-│   ├── OurGame.Application/ # Shared business logic
-│   ├── OurGame.sln       # .NET solution file
-│   └── Directory.Build.props          # Build properties
-├── web/                               # React + TypeScript frontend
-│   ├── src/                           # React components and logic
-│   ├── public/
-│   │   └── staticwebapp.config.json   # Static Web App routing config
-│   └── swa-cli.config.json            # SWA CLI local development config
-├── infrastructure/                     # Bicep infrastructure templates
-│   ├── main.bicep                     # Main infrastructure template
-│   ├── parameters.json                # Environment parameters
-│   └── README.md                      # Infrastructure documentation
-└── .github/workflows/                 # GitHub Actions workflows
-    ├── pr-build.yml                   # PR validation workflow
-    ├── release.yml                    # Deployment workflow (dev/staging)
-    └── tag-release.yml                # Production deployment workflow
+├── api/                                # .NET 8 Backend
+│   ├── OurGame.Api/                    # Azure Functions HTTP triggers
+│   ├── OurGame.Application/            # Business logic, services, use cases (MediatR)
+│   ├── OurGame.Persistence/            # EF Core 9 models, migrations, seed data
+│   ├── OurGame.Seeder/                 # Database migration & seeding console app
+│   ├── OurGame.Api.Tests/              # API endpoint unit tests (xUnit + Moq)
+│   ├── OurGame.Application.Tests/      # Business logic unit tests (xUnit)
+│   ├── OurGame.Api.sln                 # Solution file
+│   └── stryker-config.json             # Mutation testing configuration
+├── web/                                # React 18 + TypeScript frontend
+│   ├── src/
+│   │   ├── api/                        # API client (generated via hey-api/openapi-ts)
+│   │   ├── components/                 # Feature-organised React components
+│   │   ├── pages/                      # Route page components
+│   │   ├── contexts/                   # React Context providers
+│   │   ├── hooks/                      # Custom React hooks
+│   │   ├── stores/                     # Zustand state stores
+│   │   ├── types/                      # TypeScript type definitions
+│   │   └── utils/                      # Utility functions
+│   ├── public/                         # Static assets & SWA config
+│   └── swa-cli.config.json             # SWA CLI local dev config
+├── infrastructure/                      # Azure Bicep IaC
+│   ├── main-subscription.bicep          # Subscription-level entry point
+│   ├── main.bicep                       # Resource group resources
+│   └── parameters-subscription.json     # Default parameters
+├── docs/                                # Documentation
+├── scripts/                             # Setup & utility scripts
+└── .github/workflows/                   # GitHub Actions pipelines
+    ├── pr-build.yml                     # PR validation + coverage
+    ├── tag-release.yml                  # Full deployment on version tag
+    ├── deploy-swa.yml                   # Manual frontend deployment
+    ├── reset-database.yml               # Manual database reseed
+    └── stryker.yml                      # Mutation testing
 ```
 
 ## Version Management
 
-Versions are now manually managed in project files (`.csproj`). Update the `<Version>`, `<AssemblyVersion>`, and `<FileVersion>` properties as needed.
-
-Current version: **1.0.0**
-
-## NuGet Package
-
-The `api/OurGame.Application` library contains shared business logic and is used by the API project.
+Versions are manually managed in `.csproj` project files. Update the `<Version>`, `<AssemblyVersion>`, and `<FileVersion>` properties as needed. Tag releases use semver format (`v1.0.0`).
