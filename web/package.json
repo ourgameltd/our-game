@@ -22,7 +22,7 @@
     "@mui/icons-material": "7.3.9",
     "@mui/material": "7.3.9",
     "@tailwindcss/typography": "0.5.19",
-    "axios": "1.13.6",
+    "axios": "1.14.0",
     "clsx": "2.1.1",
     "date-fns": "3.6.0",
     "lucide-react": "0.400.0",
