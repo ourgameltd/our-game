@@ -1771,6 +1771,14 @@ export interface PlayerDto {
     isPrimary: boolean;
     email?: string;
   }[];
+  linkedParents?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    isLinked: boolean;
+  }[];
   allergies?: string;
   medicalConditions?: string;
   // Backward-compatible single-value fields

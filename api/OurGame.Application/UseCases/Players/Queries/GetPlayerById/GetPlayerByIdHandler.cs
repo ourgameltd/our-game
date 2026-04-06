@@ -118,10 +118,37 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             })
             .ToArray();
 
-        // 5. Parse positions
+        // 5. Fetch linked parents from PlayerParent table
+        var linkedParentsSql = @"
+            SELECT pp.Id, pp.FirstName, pp.LastName,
+                   COALESCE(u.Email, pp.Email) AS Email,
+                   pp.Phone,
+                   CAST(CASE WHEN pp.ParentUserId IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS IsLinked
+            FROM PlayerParents pp
+            LEFT JOIN Users u ON u.Id = pp.ParentUserId
+            WHERE pp.PlayerId = {0}
+            ORDER BY pp.FirstName, pp.LastName";
+
+        var linkedParentsData = await _db.Database
+            .SqlQueryRaw<LinkedParentRawDto>(linkedParentsSql, query.PlayerId)
+            .ToListAsync(cancellationToken);
+
+        var linkedParents = linkedParentsData
+            .Select(lp => new LinkedParentDto
+            {
+                Id = lp.Id,
+                FirstName = lp.FirstName ?? string.Empty,
+                LastName = lp.LastName ?? string.Empty,
+                Email = lp.Email,
+                Phone = lp.Phone,
+                IsLinked = lp.IsLinked
+            })
+            .ToArray();
+
+        // 6. Parse positions
         var positions = ParsePositions(player.PreferredPositions);
 
-        // 6. Build team minimal DTOs
+        // 7. Build team minimal DTOs
         var teams = teamData
             .Select(t => new TeamMinimalDto
             {
@@ -136,7 +163,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
         var teamIds = teams.Select(t => t.Id).ToArray();
         var ageGroupIds = teams.Select(t => t.AgeGroupId).Distinct().ToArray();
 
-        // 7. Map to DTO, keeping backward-compatible single-value fields from first assignment
+        // 8. Map to DTO, keeping backward-compatible single-value fields from first assignment
         var firstTeam = teams.FirstOrDefault();
 
         return new PlayerDto
@@ -160,6 +187,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             OverallRating = player.OverallRating,
             AverageRating = avgRatingResult?.AverageRating,
             EmergencyContacts = emergencyContacts.Length > 0 ? emergencyContacts : null,
+            LinkedParents = linkedParents.Length > 0 ? linkedParents : null,
 
             // Backward-compatible single-value fields
             AgeGroupId = firstTeam?.AgeGroupId,
@@ -246,4 +274,17 @@ public class EmergencyContactRawDto
     public string? Relationship { get; set; }
     public bool IsPrimary { get; set; }
     public string? Email { get; set; }
+}
+
+/// <summary>
+/// Raw SQL result for linked parents
+/// </summary>
+public class LinkedParentRawDto
+{
+    public Guid Id { get; set; }
+    public string? FirstName { get; set; }
+    public string? LastName { get; set; }
+    public string? Email { get; set; }
+    public string? Phone { get; set; }
+    public bool IsLinked { get; set; }
 }

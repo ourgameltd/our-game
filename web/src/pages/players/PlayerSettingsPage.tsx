@@ -5,7 +5,7 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
-import { Plus } from 'lucide-react';
+import { Plus, ShieldCheck } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton for the page title area
@@ -57,8 +57,8 @@ function PositionsSkeleton() {
   );
 }
 
-// Skeleton for guardians
-function GuardiansSkeleton() {
+// Skeleton for emergency contacts
+function EmergencyContactsSkeleton() {
   return (
     <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4 animate-pulse">
       <div className="flex items-center justify-between mb-3">
@@ -408,7 +408,7 @@ export default function PlayerSettingsPage() {
               <div className="space-y-2">
                 <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
                 <div className="h-10 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-                <GuardiansSkeleton />
+                <EmergencyContactsSkeleton />
               </div>
             </div>
             <div className="flex justify-end gap-3 pt-4 animate-pulse">
@@ -717,18 +717,67 @@ export default function PlayerSettingsPage() {
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
+            </div>
+          </div>
 
-              <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+          {/* Parents & Emergency Contacts */}
+          <div className="card">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Parents & Emergency Contacts
+            </h3>
+
+              {/* Linked Parents Section (read-only, from invite system) */}
+              {player?.linkedParents && player.linkedParents.length > 0 && (
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <ShieldCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Linked Parents
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    Parents linked to this player via the invite system
+                  </p>
+                  <div className="space-y-2">
+                    {player.linkedParents.map((parent) => (
+                      <div key={parent.id} className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-sm font-bold">
+                          {parent.firstName?.[0]}{parent.lastName?.[0]}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {parent.firstName} {parent.lastName}
+                          </p>
+                          <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                            {parent.email && <span>{parent.email}</span>}
+                            {parent.phone && <span>{parent.phone}</span>}
+                          </div>
+                        </div>
+                        <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded ${
+                          parent.isLinked
+                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
+                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
+                        }`}>
+                          {parent.isLinked ? 'Verified' : 'Pending'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Emergency Contacts Section */}
+              <div className={player?.linkedParents && player.linkedParents.length > 0 ? 'border-t border-gray-200 dark:border-gray-700 pt-4' : ''}>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                    Guardians
+                    Emergency Contacts
                   </h4>
                   <button
                     type="button"
                     onClick={handleAddEmergencyContact}
                     disabled={isFormDisabled}
                     className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
-                    title="Add Guardian"
+                    title="Add Emergency Contact"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -736,97 +785,65 @@ export default function PlayerSettingsPage() {
                 
                 {emergencyContacts.length === 0 ? (
                   <p className="text-gray-500 dark:text-gray-400 text-sm italic">
-                    No guardians added yet.
+                    No emergency contacts added yet.
                   </p>
                 ) : (
                   <div className="space-y-2">
                     {emergencyContacts.map((contact, index) => (
-                      <div key={contact.id || `contact-${index}`} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                              Guardian {index + 1}
-                            </span>
-                            {contact.isPrimary && (
-                              <span className="px-2 py-0.5 text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded">
-                                Primary
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex gap-2">
-                            {!contact.isPrimary && (
-                              <button
-                                type="button"
-                                onClick={() => handleSetPrimaryContact(contact.id || `contact-${index}`)}
-                                disabled={isFormDisabled}
-                                className="text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
-                              >
-                                Set as Primary
-                              </button>
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveEmergencyContact(contact.id || `contact-${index}`)}
-                              disabled={isFormDisabled}
-                              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                              title="Remove guardian"
-                            >
-                              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        </div>
-                        
-                        <div className="grid md:grid-cols-3 gap-3">
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Name *
-                            </label>
-                            <input
-                              type="text"
-                              value={contact.name}
-                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'name', e.target.value)}
-                              disabled={isFormDisabled}
-                              placeholder="Enter name"
-                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Phone Number *
-                            </label>
-                            <input
-                              type="tel"
-                              value={contact.phone}
-                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'phone', e.target.value)}
-                              disabled={isFormDisabled}
-                              placeholder="+44 7XXX XXXXXX"
-                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                              Relationship *
-                            </label>
-                            <input
-                              type="text"
-                              value={contact.relationship}
-                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'relationship', e.target.value)}
-                              disabled={isFormDisabled}
-                              placeholder="e.g., Parent, Guardian"
-                              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                            />
-                          </div>
-                        </div>
+                      <div key={contact.id || `contact-${index}`} className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                        {/* Primary indicator */}
+                        <button
+                          type="button"
+                          onClick={() => handleSetPrimaryContact(contact.id || `contact-${index}`)}
+                          disabled={isFormDisabled}
+                          className={`flex-shrink-0 w-5 h-5 rounded-full border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                            contact.isPrimary
+                              ? 'bg-blue-600 border-blue-600'
+                              : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
+                          }`}
+                          title={contact.isPrimary ? 'Primary contact' : 'Set as primary'}
+                        />
+                        {/* Inline fields */}
+                        <input
+                          type="text"
+                          value={contact.name}
+                          onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'name', e.target.value)}
+                          disabled={isFormDisabled}
+                          placeholder="Name *"
+                          className="flex-1 min-w-0 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <input
+                          type="tel"
+                          value={contact.phone}
+                          onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'phone', e.target.value)}
+                          disabled={isFormDisabled}
+                          placeholder="Phone *"
+                          className="w-36 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <input
+                          type="text"
+                          value={contact.relationship}
+                          onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'relationship', e.target.value)}
+                          disabled={isFormDisabled}
+                          placeholder="Relationship *"
+                          className="w-32 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveEmergencyContact(contact.id || `contact-${index}`)}
+                          disabled={isFormDisabled}
+                          className="flex-shrink-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Remove contact"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
-            </div>
           </div>
 
           {/* Action Buttons */}
