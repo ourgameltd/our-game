@@ -19,9 +19,6 @@ public class PlayerParentConfiguration : IEntityTypeConfiguration<PlayerParent>
             .HasMaxLength(100)
             .IsRequired();
 
-        builder.Property(pp => pp.Email)
-            .HasMaxLength(255);
-
         builder.Property(pp => pp.Phone)
             .HasMaxLength(20);
 

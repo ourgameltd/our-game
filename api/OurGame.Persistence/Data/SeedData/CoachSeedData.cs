@@ -26,7 +26,7 @@ public static class CoachSeedData
                 LastName = "Robertson",
                 DateOfBirth = null,
                 Photo = null,
-                Email = "michael.robertson@valefc.com",
+
                 Phone = string.Empty,
                 AssociationId = UserSeedData.GetSafeCoachAssociationId("Michael Robertson"),
                 HasAccount = false,
@@ -59,7 +59,7 @@ public static class CoachSeedData
                 LastName = lastName,
                 DateOfBirth = null,
                 Photo = null,
-                Email = UserSeedData.GetSafeAdminEmail(admin.Name, admin.Email, admin.Phone),
+
                 Phone = UserSeedData.NormalizePhone(admin.Phone),
                 AssociationId = UserSeedData.GetSafeCoachAssociationId(admin.Name, admin.AssociationId),
                 HasAccount = isMichaelLaw,

@@ -157,19 +157,18 @@ public class AcceptInviteHandler : IRequestHandler<AcceptInviteCommand, AcceptIn
         if (alreadyLinked)
             return;
 
-        // Find the user's email so we can match against existing unlinked PlayerParent records
+        // Find the user so we can match against existing unlinked PlayerParent records
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == parentUserId, cancellationToken);
-        var userEmail = user?.Email;
 
-        // Try to find an existing unlinked PlayerParent for this player by email match
+        // Try to find an existing unlinked PlayerParent for this player by name match
         PlayerParent? existingParent = null;
-        if (!string.IsNullOrWhiteSpace(userEmail))
+        if (user != null && !string.IsNullOrWhiteSpace(user.FirstName))
         {
             existingParent = await _db.PlayerParents
                 .FirstOrDefaultAsync(pp => pp.PlayerId == playerId
                                            && pp.ParentUserId == null
-                                           && pp.Email != null
-                                           && pp.Email.ToLower() == userEmail.ToLower(),
+                                           && pp.FirstName.ToLower() == user.FirstName.ToLower()
+                                           && pp.LastName.ToLower() == user.LastName.ToLower(),
                     cancellationToken);
         }
 
@@ -187,8 +186,7 @@ public class AcceptInviteHandler : IRequestHandler<AcceptInviteCommand, AcceptIn
                 PlayerId = playerId,
                 ParentUserId = parentUserId,
                 FirstName = user?.FirstName ?? string.Empty,
-                LastName = user?.LastName ?? string.Empty,
-                Email = userEmail
+                LastName = user?.LastName ?? string.Empty
             });
         }
     }

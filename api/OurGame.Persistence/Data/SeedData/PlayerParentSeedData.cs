@@ -22,7 +22,6 @@ public static class PlayerParentSeedData
                 ParentUserId = null,
                 FirstName = firstName,
                 LastName = lastName,
-                Email = string.IsNullOrWhiteSpace(guardian.Email) ? null : UserSeedData.NormalizeEmail(guardian.Email),
                 Phone = string.IsNullOrWhiteSpace(guardian.Phone) ? null : UserSeedData.NormalizePhone(guardian.Phone)
             };
         }).ToList();

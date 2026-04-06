@@ -249,7 +249,7 @@ export interface Coach {
   lastName: string;
   dateOfBirth?: Date;
   photo?: string;
-  email: string;
+  email?: string; // Read-only, from the linked user account
   phone: string;
   associationId?: string; // FA, UEFA, or other football association registration ID
   hasAccount?: boolean; // Whether the coach has been associated with an account in the backend IDP

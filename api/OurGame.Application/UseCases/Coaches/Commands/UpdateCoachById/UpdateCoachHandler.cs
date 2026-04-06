@@ -102,7 +102,7 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
                     c.LastName,
                     c.DateOfBirth,
                     c.Photo,
-                    c.Email,
+                    u.Email,
                     c.Phone,
                     c.AssociationId,
                     c.HasAccount,
@@ -115,6 +115,7 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
                     c.CreatedAt,
                     c.UpdatedAt
                 FROM Coaches c
+                LEFT JOIN Users u ON u.Id = c.UserId
                 INNER JOIN Clubs cl ON cl.Id = c.ClubId
                 WHERE c.Id = {0}
             ", coachId)

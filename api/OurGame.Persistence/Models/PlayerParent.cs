@@ -17,8 +17,6 @@ public partial class PlayerParent
 
     public string LastName { get; set; }
 
-    public string Email { get; set; }
-
     public string Phone { get; set; }
 
     public virtual User ParentUser { get; set; }

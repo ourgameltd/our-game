@@ -89,14 +89,11 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
         var emergencyContactsSql = @"
             SELECT ec.Id, ec.Name, ec.Phone, ec.Relationship, ec.IsPrimary,
                    (
-                     SELECT TOP 1 COALESCE(u.Email, pp.Email)
+                     SELECT TOP 1 u.Email
                      FROM PlayerParents pp
                      LEFT JOIN Users u ON u.Id = pp.ParentUserId
                      WHERE pp.PlayerId = ec.PlayerId
-                       AND (
-                            (pp.FirstName + ' ' + pp.LastName) = ec.Name
-                            OR pp.Email = ec.Name
-                           )
+                       AND (pp.FirstName + ' ' + pp.LastName) = ec.Name
                    ) AS Email
             FROM EmergencyContacts ec
             WHERE ec.PlayerId = {0}
@@ -121,7 +118,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
         // 5. Fetch linked parents from PlayerParent table
         var linkedParentsSql = @"
             SELECT pp.Id, pp.FirstName, pp.LastName,
-                   COALESCE(u.Email, pp.Email) AS Email,
+                   u.Email,
                    pp.Phone,
                    CAST(CASE WHEN pp.ParentUserId IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS IsLinked
             FROM PlayerParents pp

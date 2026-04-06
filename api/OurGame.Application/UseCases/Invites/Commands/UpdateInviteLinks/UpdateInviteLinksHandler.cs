@@ -207,8 +207,7 @@ public class UpdateInviteLinksHandler : IRequestHandler<UpdateInviteLinksCommand
                 PlayerId = playerId,
                 ParentUserId = userId,
                 FirstName = user.FirstName ?? string.Empty,
-                LastName = user.LastName ?? string.Empty,
-                Email = user.Email
+                LastName = user.LastName ?? string.Empty
             });
         }
     }

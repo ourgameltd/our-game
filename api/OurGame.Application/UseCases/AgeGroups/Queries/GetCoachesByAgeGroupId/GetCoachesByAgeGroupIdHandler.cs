@@ -36,7 +36,7 @@ public class GetCoachesByAgeGroupIdHandler : IRequestHandler<GetCoachesByAgeGrou
                 c.LastName,
                 c.DateOfBirth,
                 c.Photo,
-                COALESCE(u.Email, c.Email) AS Email,
+                u.Email,
                 c.Phone,
                 c.AssociationId,
                 c.HasAccount,
