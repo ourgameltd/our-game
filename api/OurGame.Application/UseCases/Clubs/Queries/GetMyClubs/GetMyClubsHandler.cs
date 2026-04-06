@@ -45,11 +45,11 @@ public class GetMyClubsHandler : IRequestHandler<GetMyClubsQuery, List<MyClubLis
 
                 UNION
 
-                -- Parent access: Users -> PlayerParents -> Players.ClubId
+                -- Parent access: Users -> EmergencyContacts -> Players.ClubId
                 SELECT DISTINCT p.ClubId
                 FROM Users u
-                INNER JOIN PlayerParents pp ON pp.ParentUserId = u.Id
-                INNER JOIN Players p ON pp.PlayerId = p.Id
+                INNER JOIN EmergencyContacts ec ON ec.UserId = u.Id
+                INNER JOIN Players p ON ec.PlayerId = p.Id
                 WHERE u.AuthId = {0}
             )
             SELECT

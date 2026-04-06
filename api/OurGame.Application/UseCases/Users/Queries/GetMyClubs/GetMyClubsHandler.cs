@@ -51,8 +51,8 @@ public class GetMyClubsHandler : IRequestHandler<GetMyClubsQuery, List<MyClubLis
                 -- Clubs where user is a parent of a player
                 SELECT DISTINCT c.Id
                 FROM Users u
-                INNER JOIN PlayerParents pp ON u.Id = pp.ParentUserId
-                INNER JOIN Players p ON pp.PlayerId = p.Id
+                INNER JOIN EmergencyContacts ec ON u.Id = ec.UserId
+                INNER JOIN Players p ON ec.PlayerId = p.Id
                 INNER JOIN Clubs c ON p.ClubId = c.Id
                 WHERE u.AuthId = {0}
                   AND p.IsArchived = 0

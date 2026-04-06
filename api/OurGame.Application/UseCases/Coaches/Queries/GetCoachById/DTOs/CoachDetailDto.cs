@@ -1,3 +1,5 @@
+using OurGame.Application.UseCases.Players.Queries.GetPlayerById.DTOs;
+
 namespace OurGame.Application.UseCases.Coaches.Queries.GetCoachById.DTOs;
 
 /// <summary>
@@ -99,4 +101,14 @@ public class CoachDetailDto
     /// When the coach record was last updated
     /// </summary>
     public DateTime UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Emergency contacts for the coach
+    /// </summary>
+    public EmergencyContactDto[]? EmergencyContacts { get; set; }
+
+    /// <summary>
+    /// Linked user accounts from the invite system
+    /// </summary>
+    public LinkedAccountDto[]? LinkedAccounts { get; set; }
 }

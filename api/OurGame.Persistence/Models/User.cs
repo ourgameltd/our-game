@@ -31,5 +31,5 @@ public partial class User
 
     public virtual ICollection<PlayerImage> PlayerImages { get; set; } = new List<PlayerImage>();
 
-    public virtual ICollection<PlayerParent> PlayerParents { get; set; } = new List<PlayerParent>();
+    public virtual ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
 }

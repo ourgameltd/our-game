@@ -25,13 +25,14 @@ public class GetMyChildrenHandlerTests
         var parentUserId = await db.SeedUserAsync("parent-auth");
         var playerId = await db.SeedPlayerAsync(clubId: clubId);
 
-        db.Context.PlayerParents.Add(new PlayerParent
+        db.Context.EmergencyContacts.Add(new EmergencyContact
         {
             Id = Guid.NewGuid(),
             PlayerId = playerId,
-            ParentUserId = parentUserId,
-            FirstName = "Test",
-            LastName = "Parent"
+            UserId = parentUserId,
+            Name = "Test Parent",
+            Relationship = "Parent",
+            IsPrimary = true
         });
         await db.Context.SaveChangesAsync();
 
@@ -56,13 +57,14 @@ public class GetMyChildrenHandlerTests
         player!.IsArchived = true;
         await db.Context.SaveChangesAsync();
 
-        db.Context.PlayerParents.Add(new PlayerParent
+        db.Context.EmergencyContacts.Add(new EmergencyContact
         {
             Id = Guid.NewGuid(),
             PlayerId = playerId,
-            ParentUserId = parentUserId,
-            FirstName = "Test",
-            LastName = "Parent"
+            UserId = parentUserId,
+            Name = "Test Parent",
+            Relationship = "Parent",
+            IsPrimary = true
         });
         await db.Context.SaveChangesAsync();
 

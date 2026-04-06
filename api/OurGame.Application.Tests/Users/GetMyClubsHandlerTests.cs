@@ -55,14 +55,15 @@ public class GetMyClubsHandlerTests
         var parentUserId = await db.SeedUserAsync("parent-auth");
         var playerId = await db.SeedPlayerAsync(clubId: clubId);
 
-        // Create parent-player link
-        db.Context.PlayerParents.Add(new OurGame.Persistence.Models.PlayerParent
+        // Create parent-player link via emergency contact
+        db.Context.EmergencyContacts.Add(new OurGame.Persistence.Models.EmergencyContact
         {
             Id = Guid.NewGuid(),
             PlayerId = playerId,
-            ParentUserId = parentUserId,
-            FirstName = "Test",
-            LastName = "Parent"
+            UserId = parentUserId,
+            Name = "Test Parent",
+            Relationship = "Parent",
+            IsPrimary = true
         });
         await db.Context.SaveChangesAsync();
 

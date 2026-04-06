@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.UseCases.Coaches.Queries.GetCoachById.DTOs;
+using OurGame.Application.UseCases.Players.Queries.GetPlayerById.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
@@ -95,6 +96,44 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
             ? ((CoachRole)coach.Role).ToString()
             : "Unknown";
 
+        // 4. Fetch emergency contacts
+        var emergencyContactsSql = @"
+            SELECT ec.Id, ec.Name, ec.Phone, ec.Relationship, ec.IsPrimary,
+                   u.Email
+            FROM EmergencyContacts ec
+            LEFT JOIN Users u ON u.Id = ec.UserId
+            WHERE ec.CoachId = {0}
+            ORDER BY ec.IsPrimary DESC, ec.Name";
+
+        var emergencyContactsData = await _db.Database
+            .SqlQueryRaw<CoachEmergencyContactRaw>(emergencyContactsSql, query.CoachId)
+            .ToListAsync(cancellationToken);
+
+        var emergencyContacts = emergencyContactsData
+            .Select(ec => new EmergencyContactDto
+            {
+                Id = ec.Id,
+                Name = ec.Name ?? string.Empty,
+                Phone = ec.Phone ?? string.Empty,
+                Relationship = ec.Relationship ?? string.Empty,
+                IsPrimary = ec.IsPrimary,
+                Email = ec.Email
+            })
+            .ToArray();
+
+        // 5. Derive linked accounts from emergency contacts with linked user accounts
+        var linkedAccounts = emergencyContactsData
+            .Select(ec => new LinkedAccountDto
+            {
+                Id = ec.Id,
+                FirstName = ExtractFirstName(ec.Name),
+                LastName = ExtractLastName(ec.Name),
+                Email = ec.Email,
+                Phone = ec.Phone,
+                IsLinked = ec.Email != null
+            })
+            .ToArray();
+
         return new CoachDetailDto
         {
             Id = coach.Id,
@@ -126,7 +165,9 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
                 AgeGroupName = cr.AgeGroupName ?? string.Empty
             }).ToList(),
             CreatedAt = coach.CreatedAt,
-            UpdatedAt = coach.UpdatedAt
+            UpdatedAt = coach.UpdatedAt,
+            EmergencyContacts = emergencyContacts.Length > 0 ? emergencyContacts : null,
+            LinkedAccounts = linkedAccounts.Length > 0 ? linkedAccounts : null
         };
     }
 
@@ -161,6 +202,20 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .ToList();
+    }
+
+    private static string ExtractFirstName(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return string.Empty;
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 0 ? parts[0] : string.Empty;
+    }
+
+    private static string ExtractLastName(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return string.Empty;
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 1 ? string.Join(' ', parts.Skip(1)) : string.Empty;
     }
 }
 
@@ -199,6 +254,16 @@ public class CoordinatorRoleRaw
 {
     public Guid AgeGroupId { get; set; }
     public string? AgeGroupName { get; set; }
+}
+
+public class CoachEmergencyContactRaw
+{
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public string? Phone { get; set; }
+    public string? Relationship { get; set; }
+    public bool IsPrimary { get; set; }
+    public string? Email { get; set; }
 }
 
 #endregion

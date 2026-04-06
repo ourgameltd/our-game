@@ -9,7 +9,11 @@ public partial class EmergencyContact
 {
     public Guid Id { get; set; }
 
-    public Guid PlayerId { get; set; }
+    public Guid? PlayerId { get; set; }
+
+    public Guid? CoachId { get; set; }
+
+    public Guid? UserId { get; set; }
 
     public string Name { get; set; }
 
@@ -20,4 +24,8 @@ public partial class EmergencyContact
     public bool IsPrimary { get; set; }
 
     public virtual Player Player { get; set; }
+
+    public virtual Coach Coach { get; set; }
+
+    public virtual User User { get; set; }
 }

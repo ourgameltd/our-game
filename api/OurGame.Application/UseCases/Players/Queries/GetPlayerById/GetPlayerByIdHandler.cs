@@ -85,17 +85,12 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             .SqlQueryRaw<AverageRatingResult>(avgRatingSql, query.PlayerId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        // 4. Fetch emergency contacts
+        // 4. Fetch emergency contacts (includes linked account info)
         var emergencyContactsSql = @"
             SELECT ec.Id, ec.Name, ec.Phone, ec.Relationship, ec.IsPrimary,
-                   (
-                     SELECT TOP 1 u.Email
-                     FROM PlayerParents pp
-                     LEFT JOIN Users u ON u.Id = pp.ParentUserId
-                     WHERE pp.PlayerId = ec.PlayerId
-                       AND (pp.FirstName + ' ' + pp.LastName) = ec.Name
-                   ) AS Email
+                   u.Email
             FROM EmergencyContacts ec
+            LEFT JOIN Users u ON u.Id = ec.UserId
             WHERE ec.PlayerId = {0}
             ORDER BY ec.IsPrimary DESC, ec.Name";
 
@@ -115,30 +110,28 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             })
             .ToArray();
 
-        // 5. Fetch linked parents from PlayerParent table
-        var linkedParentsSql = @"
-            SELECT pp.Id, pp.FirstName, pp.LastName,
-                   u.Email,
-                   pp.Phone,
-                   CAST(CASE WHEN pp.ParentUserId IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS IsLinked
-            FROM PlayerParents pp
-            LEFT JOIN Users u ON u.Id = pp.ParentUserId
-            WHERE pp.PlayerId = {0}
-            ORDER BY pp.FirstName, pp.LastName";
+        // 5. Derive linked accounts from emergency contacts with linked user accounts
+        var linkedAccountsSql = @"
+            SELECT ec.Id, ec.Name, u.Email, ec.Phone,
+                   CAST(CASE WHEN ec.UserId IS NOT NULL THEN 1 ELSE 0 END AS BIT) AS IsLinked
+            FROM EmergencyContacts ec
+            LEFT JOIN Users u ON u.Id = ec.UserId
+            WHERE ec.PlayerId = {0}
+            ORDER BY ec.Name";
 
-        var linkedParentsData = await _db.Database
-            .SqlQueryRaw<LinkedParentRawDto>(linkedParentsSql, query.PlayerId)
+        var linkedAccountsData = await _db.Database
+            .SqlQueryRaw<LinkedAccountRawDto>(linkedAccountsSql, query.PlayerId)
             .ToListAsync(cancellationToken);
 
-        var linkedParents = linkedParentsData
-            .Select(lp => new LinkedParentDto
+        var linkedAccounts = linkedAccountsData
+            .Select(la => new LinkedAccountDto
             {
-                Id = lp.Id,
-                FirstName = lp.FirstName ?? string.Empty,
-                LastName = lp.LastName ?? string.Empty,
-                Email = lp.Email,
-                Phone = lp.Phone,
-                IsLinked = lp.IsLinked
+                Id = la.Id,
+                FirstName = ExtractFirstName(la.Name),
+                LastName = ExtractLastName(la.Name),
+                Email = la.Email,
+                Phone = la.Phone,
+                IsLinked = la.IsLinked
             })
             .ToArray();
 
@@ -184,7 +177,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             OverallRating = player.OverallRating,
             AverageRating = avgRatingResult?.AverageRating,
             EmergencyContacts = emergencyContacts.Length > 0 ? emergencyContacts : null,
-            LinkedParents = linkedParents.Length > 0 ? linkedParents : null,
+            LinkedAccounts = linkedAccounts.Length > 0 ? linkedAccounts : null,
 
             // Backward-compatible single-value fields
             AgeGroupId = firstTeam?.AgeGroupId,
@@ -216,6 +209,20 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
                 .Where(p => !string.IsNullOrWhiteSpace(p))
                 .ToArray();
         }
+    }
+
+    private static string ExtractFirstName(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return string.Empty;
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 0 ? parts[0] : string.Empty;
+    }
+
+    private static string ExtractLastName(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return string.Empty;
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 1 ? string.Join(' ', parts.Skip(1)) : string.Empty;
     }
 }
 
@@ -274,13 +281,12 @@ public class EmergencyContactRawDto
 }
 
 /// <summary>
-/// Raw SQL result for linked parents
+/// Raw SQL result for linked accounts
 /// </summary>
-public class LinkedParentRawDto
+public class LinkedAccountRawDto
 {
     public Guid Id { get; set; }
-    public string? FirstName { get; set; }
-    public string? LastName { get; set; }
+    public string? Name { get; set; }
     public string? Email { get; set; }
     public string? Phone { get; set; }
     public bool IsLinked { get; set; }

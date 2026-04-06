@@ -125,7 +125,7 @@ try
             "SessionCoaches", "Injuries", "EmergencyContacts",
             "PerformanceRatings", "Cards", "Goals", "MatchReports",
             "MatchSubstitutions", "LineupPlayers", "MatchCoaches", "MatchLineups",
-            "PlayerParents", "PlayerImages", "AgeGroupCoordinators",
+            "PlayerImages", "AgeGroupCoordinators",
             "AppliedTemplates", "SessionAttendances", "SessionDrills", "TemplateDrills",
             "Matches", "TrainingSessions", "DrillTemplates", "DrillLinks", "Drills",
             "TacticPrinciples", "FormationPositions", "Formations",
@@ -383,14 +383,6 @@ try
         Console.WriteLine("  📸 Seeding player images...");
         var images = OurGame.Persistence.Data.SeedData.PlayerImageSeedData.GetPlayerImages();
         await context.PlayerImages.AddRangeAsync(images);
-        await context.SaveChangesAsync();
-    }
-    
-    if (!await context.PlayerParents.AnyAsync())
-    {
-        Console.WriteLine("  👨‍👩‍👦 Seeding player parents...");
-        var parents = OurGame.Persistence.Data.SeedData.PlayerParentSeedData.GetPlayerParents();
-        await context.PlayerParents.AddRangeAsync(parents);
         await context.SaveChangesAsync();
     }
     

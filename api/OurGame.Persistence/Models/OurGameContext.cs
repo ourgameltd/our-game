@@ -89,8 +89,6 @@ public partial class OurGameContext : DbContext
 
     public virtual DbSet<PlayerImage> PlayerImages { get; set; }
 
-    public virtual DbSet<PlayerParent> PlayerParents { get; set; }
-
     public virtual DbSet<PlayerReport> PlayerReports { get; set; }
 
     public virtual DbSet<PlayerTeam> PlayerTeams { get; set; }

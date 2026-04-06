@@ -198,16 +198,16 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
             .SqlQueryRaw<PlayerTeamRawDto>(teamSql, parameters)
             .ToListAsync(cancellationToken);
 
-        // Get parents for players
-        var parentSql = $@"
+        // Get linked accounts for players (emergency contacts with linked user accounts)
+        var linkedAccountSql = $@"
             SELECT 
-                pp.PlayerId,
-                pp.Id AS PlayerParentId
-            FROM PlayerParents pp
-            WHERE pp.PlayerId IN ({parameterNames})";
+                ec.PlayerId,
+                ec.Id AS LinkedAccountId
+            FROM EmergencyContacts ec
+            WHERE ec.PlayerId IN ({parameterNames})";
 
-        var parentData = await _db.Database
-            .SqlQueryRaw<PlayerParentRawDto>(parentSql, parameters)
+        var linkedAccountData = await _db.Database
+            .SqlQueryRaw<LinkedAccountRawDto>(linkedAccountSql, parameters)
             .ToListAsync(cancellationToken);
 
         // Group related data by player
@@ -226,9 +226,9 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
             .GroupBy(t => t.PlayerId)
             .ToDictionary(g => g.Key, g => g.Select(t => t.TeamId).ToList());
 
-        var parentsByPlayer = parentData
+        var linkedAccountsByPlayer = linkedAccountData
             .GroupBy(p => p.PlayerId)
-            .ToDictionary(g => g.Key, g => g.Select(p => p.PlayerParentId).ToList());
+            .ToDictionary(g => g.Key, g => g.Select(p => p.LinkedAccountId).ToList());
 
         // Map to DTOs
         return playerData
@@ -274,8 +274,8 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
                 TeamIds = teamsByPlayer.TryGetValue(p.Id, out var teams)
                     ? teams
                     : new List<Guid>(),
-                ParentIds = parentsByPlayer.TryGetValue(p.Id, out var parents)
-                    ? parents
+                LinkedAccountIds = linkedAccountsByPlayer.TryGetValue(p.Id, out var linkedAccounts)
+                    ? linkedAccounts
                     : new List<Guid>(),
                 IsArchived = p.IsArchived
             })
@@ -453,10 +453,10 @@ class PlayerTeamRawDto
 }
 
 /// <summary>
-/// DTO for raw SQL parent query result
+/// DTO for raw SQL linked account query result
 /// </summary>
-class PlayerParentRawDto
+class LinkedAccountRawDto
 {
     public Guid PlayerId { get; set; }
-    public Guid PlayerParentId { get; set; }
+    public Guid LinkedAccountId { get; set; }
 }

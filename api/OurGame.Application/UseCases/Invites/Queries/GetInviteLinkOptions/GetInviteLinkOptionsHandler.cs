@@ -80,9 +80,9 @@ public class GetInviteLinkOptionsHandler : IRequestHandler<GetInviteLinkOptionsQ
                 break;
 
             case InviteType.Parent:
-                var linkedPlayerIds = await _db.PlayerParents
-                    .Where(pp => pp.ParentUserId == user.Id)
-                    .Select(pp => pp.PlayerId)
+                var linkedPlayerIds = await _db.EmergencyContacts
+                    .Where(ec => ec.UserId == user.Id && ec.PlayerId != null)
+                    .Select(ec => ec.PlayerId!.Value)
                     .Distinct()
                     .ToListAsync(cancellationToken);
 

@@ -190,24 +190,26 @@ public class UpdateInviteLinksHandler : IRequestHandler<UpdateInviteLinksCommand
             });
         }
 
-        var existingLinks = await _db.PlayerParents
-            .Where(pp => pp.ParentUserId == userId && availablePlayers.Contains(pp.PlayerId))
+        var existingLinks = await _db.EmergencyContacts
+            .Where(ec => ec.UserId == userId && ec.PlayerId != null && availablePlayers.Contains(ec.PlayerId.Value))
             .ToListAsync(ct);
 
-        foreach (var link in existingLinks.Where(pp => !selected.Contains(pp.PlayerId)))
+        foreach (var link in existingLinks.Where(ec => !selected.Contains(ec.PlayerId!.Value)))
         {
-            _db.PlayerParents.Remove(link);
+            _db.EmergencyContacts.Remove(link);
         }
 
-        foreach (var playerId in selected.Where(id => existingLinks.All(pp => pp.PlayerId != id)))
+        var fullName = $"{user.FirstName} {user.LastName}".Trim();
+        foreach (var playerId in selected.Where(id => existingLinks.All(ec => ec.PlayerId != id)))
         {
-            _db.PlayerParents.Add(new PlayerParent
+            _db.EmergencyContacts.Add(new EmergencyContact
             {
                 Id = Guid.NewGuid(),
                 PlayerId = playerId,
-                ParentUserId = userId,
-                FirstName = user.FirstName ?? string.Empty,
-                LastName = user.LastName ?? string.Empty
+                UserId = userId,
+                Name = fullName,
+                Relationship = "Parent",
+                IsPrimary = false
             });
         }
     }

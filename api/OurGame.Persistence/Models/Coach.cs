@@ -52,6 +52,8 @@ public partial class Coach
 
     public virtual ICollection<Drill> Drills { get; set; } = new List<Drill>();
 
+    public virtual ICollection<EmergencyContact> EmergencyContacts { get; set; } = new List<EmergencyContact>();
+
     public virtual ICollection<Formation> Formations { get; set; } = new List<Formation>();
 
     public virtual ICollection<MatchCoach> MatchCoaches { get; set; } = new List<MatchCoach>();

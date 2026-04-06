@@ -33,8 +33,8 @@ public class PlayerDto
     /// <summary>Emergency contacts for the player</summary>
     public EmergencyContactDto[]? EmergencyContacts { get; init; }
 
-    /// <summary>Linked parents/guardians from the invite system</summary>
-    public LinkedParentDto[]? LinkedParents { get; init; }
+    /// <summary>Linked user accounts from the invite system</summary>
+    public LinkedAccountDto[]? LinkedAccounts { get; init; }
 
     // --- Medical & Physical Information ---
 

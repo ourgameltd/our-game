@@ -46,8 +46,8 @@ public class GetMyChildrenHandler : IRequestHandler<GetMyChildrenQuery, List<Chi
                 c.SecondaryColor AS ClubSecondaryColor,
                 c.AccentColor AS ClubAccentColor
             FROM Users u
-            INNER JOIN PlayerParents pp ON pp.ParentUserId = u.Id
-            INNER JOIN Players p ON pp.PlayerId = p.Id
+            INNER JOIN EmergencyContacts ec ON ec.UserId = u.Id
+            INNER JOIN Players p ON ec.PlayerId = p.Id
             LEFT JOIN Clubs c ON p.ClubId = c.Id
             WHERE u.AuthId = {0}
               AND p.IsArchived = 0

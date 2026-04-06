@@ -150,43 +150,44 @@ public class AcceptInviteHandler : IRequestHandler<AcceptInviteCommand, AcceptIn
 
     private async Task LinkParentAsync(Guid playerId, Guid parentUserId, CancellationToken cancellationToken)
     {
-        // Check if this user is already linked to this player
-        var alreadyLinked = await _db.PlayerParents
-            .AnyAsync(pp => pp.PlayerId == playerId && pp.ParentUserId == parentUserId, cancellationToken);
+        // Check if this user is already linked to this player as an emergency contact
+        var alreadyLinked = await _db.EmergencyContacts
+            .AnyAsync(ec => ec.PlayerId == playerId && ec.UserId == parentUserId, cancellationToken);
 
         if (alreadyLinked)
             return;
 
-        // Find the user so we can match against existing unlinked PlayerParent records
+        // Find the user so we can match against existing unlinked emergency contact records
         var user = await _db.Users.FirstOrDefaultAsync(u => u.Id == parentUserId, cancellationToken);
 
-        // Try to find an existing unlinked PlayerParent for this player by name match
-        PlayerParent? existingParent = null;
+        // Try to find an existing unlinked emergency contact for this player by name match
+        EmergencyContact? existingContact = null;
+        var fullName = $"{user?.FirstName} {user?.LastName}".Trim();
         if (user != null && !string.IsNullOrWhiteSpace(user.FirstName))
         {
-            existingParent = await _db.PlayerParents
-                .FirstOrDefaultAsync(pp => pp.PlayerId == playerId
-                                           && pp.ParentUserId == null
-                                           && pp.FirstName.ToLower() == user.FirstName.ToLower()
-                                           && pp.LastName.ToLower() == user.LastName.ToLower(),
+            existingContact = await _db.EmergencyContacts
+                .FirstOrDefaultAsync(ec => ec.PlayerId == playerId
+                                           && ec.UserId == null
+                                           && ec.Name.ToLower() == fullName.ToLower(),
                     cancellationToken);
         }
 
-        if (existingParent != null)
+        if (existingContact != null)
         {
-            // Link the existing guardian record to the newly registered user
-            existingParent.ParentUserId = parentUserId;
+            // Link the existing emergency contact record to the newly registered user
+            existingContact.UserId = parentUserId;
         }
         else
         {
-            // No pre-existing guardian record — create a new one
-            _db.PlayerParents.Add(new PlayerParent
+            // No pre-existing emergency contact record — create a new one
+            _db.EmergencyContacts.Add(new EmergencyContact
             {
                 Id = Guid.NewGuid(),
                 PlayerId = playerId,
-                ParentUserId = parentUserId,
-                FirstName = user?.FirstName ?? string.Empty,
-                LastName = user?.LastName ?? string.Empty
+                UserId = parentUserId,
+                Name = fullName,
+                Relationship = "Parent",
+                IsPrimary = false
             });
         }
     }

@@ -19,7 +19,7 @@ public class AgeGroupPlayerDto
     public List<AgeGroupPlayerEvaluationDto> Evaluations { get; set; } = new();
     public List<Guid> AgeGroupIds { get; set; } = new();
     public List<Guid> TeamIds { get; set; } = new();
-    public List<Guid> ParentIds { get; set; } = new();
+    public List<Guid> LinkedAccountIds { get; set; } = new();
     public bool IsArchived { get; set; }
 }
 

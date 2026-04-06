@@ -9,7 +9,6 @@ public static class UserSeedData
 {
     // Stable seeded user - DO NOT REMOVE
     public static readonly Guid MichaelLaw_Id = Guid.Parse("00000001-0000-0000-0000-000000000102");
-    private const string TestUserNormalizedName = "michael law";
 
     private static readonly string DatasetPath = Path.Combine(
         AppContext.BaseDirectory,
@@ -44,11 +43,6 @@ public static class UserSeedData
             .ToLowerInvariant();
     }
 
-    public static string NormalizeEmail(string? value)
-    {
-        return (value ?? string.Empty).Trim().ToLowerInvariant();
-    }
-
     public static string NormalizePhone(string? value)
     {
         return (value ?? string.Empty).Trim().ToLowerInvariant();
@@ -63,45 +57,6 @@ public static class UserSeedData
         }
 
         return $"seed-assoc-{SlugifyName(name)}";
-    }
-
-    public static Guid GetUserIdByName(string name)
-    {
-        // Map "Michael Law" from JSON data to the hardcoded test user
-        if (NormalizeName(name) == TestUserNormalizedName)
-        {
-            return MichaelLaw_Id;
-        }
-
-        return CreateDeterministicGuid($"user|{NormalizeName(name)}");
-    }
-
-    public static Guid GetAdminUserId(string adminName)
-    {
-        return GetUserIdByName(adminName);
-    }
-
-    public static Guid GetGuardianUserId(string guardianName)
-    {
-        return GetUserIdByName(guardianName);
-    }
-
-    public static string GetSafeUserEmail(string name, string? email, string? phone, string scope)
-    {
-        var normalizedEmail = NormalizeEmail(email);
-        if (!string.IsNullOrWhiteSpace(normalizedEmail))
-        {
-            return normalizedEmail;
-        }
-
-        var slug = SlugifyName(name);
-        var hash = Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes($"{NormalizeName(name)}|{NormalizePhone(phone)}|{scope}"))).ToLowerInvariant();
-        return $"{scope}.{slug}.{hash[..12]}@seed.ourgame.local";
-    }
-
-    public static string GetSafeAdminEmail(string name, string? email, string? phone)
-    {
-        return GetSafeUserEmail(name, email, phone, "admin");
     }
 
     public static List<User> GetUsers()
@@ -125,62 +80,6 @@ public static class UserSeedData
                 UpdatedAt = now
             }
         };
-    }
-
-    private static Dictionary<string, ContactProfile> BuildMergedProfilesByName()
-    {
-        var profilesByName = new Dictionary<string, ContactProfile>(StringComparer.Ordinal);
-
-        foreach (var guardian in GetDataset().Guardians)
-        {
-            UpsertProfile(profilesByName, guardian.Name, guardian.Email, guardian.Phone, "guardian");
-        }
-
-        foreach (var admin in GetDataset().Admins)
-        {
-            UpsertProfile(profilesByName, admin.Name, admin.Email, admin.Phone, "admin");
-        }
-
-        return profilesByName;
-    }
-
-    private static void UpsertProfile(Dictionary<string, ContactProfile> profilesByName, string name, string? email, string? phone, string scope)
-    {
-        var key = NormalizeName(name);
-
-        if (!profilesByName.TryGetValue(key, out var existing))
-        {
-            profilesByName[key] = new ContactProfile(name, NormalizeEmail(email), NormalizePhone(phone), scope);
-            return;
-        }
-
-        var mergedEmail = string.IsNullOrWhiteSpace(existing.Email) ? NormalizeEmail(email) : existing.Email;
-        var mergedPhone = string.IsNullOrWhiteSpace(existing.Phone) ? NormalizePhone(phone) : existing.Phone;
-        var mergedScope = existing.Scope == "admin" || scope == "admin" ? "admin" : "guardian";
-
-        profilesByName[key] = existing with
-        {
-            Email = mergedEmail,
-            Phone = mergedPhone,
-            Scope = mergedScope
-        };
-    }
-
-    private static (string FirstName, string LastName) SplitName(string fullName)
-    {
-        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-        if (parts.Length == 0)
-        {
-            return ("Unknown", "User");
-        }
-
-        if (parts.Length == 1)
-        {
-            return (parts[0], "User");
-        }
-
-        return (parts[0], string.Join(' ', parts.Skip(1)));
     }
 
     private static string SlugifyName(string name)
@@ -272,8 +171,6 @@ public static class UserSeedData
 
         return NormalizeRawValue(value);
     }
-
-    private sealed record ContactProfile(string Name, string? Email, string? Phone, string Scope);
 
     private sealed class RawVolDataset
     {

@@ -75,8 +75,6 @@ public partial class Player
 
     public virtual ICollection<PlayerImage> PlayerImages { get; set; } = new List<PlayerImage>();
 
-    public virtual ICollection<PlayerParent> PlayerParents { get; set; } = new List<PlayerParent>();
-
     public virtual ICollection<PlayerReport> PlayerReports { get; set; } = new List<PlayerReport>();
 
     public virtual ICollection<PlayerTeam> PlayerTeams { get; set; } = new List<PlayerTeam>();
