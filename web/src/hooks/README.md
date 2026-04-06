@@ -15,7 +15,6 @@ Custom React hooks for reusable logic across components.
 
 | File | Purpose |
 |---|---|
-| `useInvite.ts` | Invite redemption and validation logic |
 | `usePageTitle.ts` | Dynamic page title management hook |
 | `usePushNotifications.ts` | Web Push notification subscription and permission handling |
 | `useSocialMetaTags.ts` | Dynamic Open Graph and social media meta tag management |

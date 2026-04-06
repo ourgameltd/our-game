@@ -8,7 +8,6 @@ import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { useInvite } from '@/hooks/useInvite';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -236,13 +235,6 @@ export default function CoachSettingsPage() {
     }
   };
 
-  const { sendInvite, isSending: isInviteSending, isSuccess: isInviteSuccess, error: inviteError } = useInvite({
-    email: coach?.email,
-    type: 0,
-    entityId: coachId,
-    clubId,
-  });
-
   const roleOptions = coachRoles;
   const teamGroups = groupTeamsByAgeGroup(allTeams || []);
 
@@ -425,38 +417,13 @@ export default function CoachSettingsPage() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
                       Email *
                     </label>
-                    {coach && (
-                      coach.hasAccount ? (
-                        <span className="flex items-center text-green-600 dark:text-green-400 text-xs font-medium">
-                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                          </svg>
-                          Account Active
-                        </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={sendInvite}
-                          disabled={isInviteSending || isInviteSuccess || !coach?.email}
-                          className={`inline-flex items-center px-3 py-1 text-xs font-medium rounded-md transition-colors ${
-                            isInviteSuccess
-                              ? 'text-green-700 dark:text-green-400 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
-                              : inviteError
-                                ? 'text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800'
-                                : 'text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/30'
-                          } disabled:opacity-50 disabled:cursor-not-allowed`}
-                        >
-                          {isInviteSending ? (
-                            <><svg className="w-4 h-4 mr-1 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg>Sending...</>
-                          ) : isInviteSuccess ? (
-                            <><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>Sent</>
-                          ) : inviteError ? (
-                            <><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>Failed</>
-                          ) : (
-                            <><svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>Send Invite</>
-                          )}
-                        </button>
-                      )
+                    {coach?.hasAccount && (
+                      <span className="flex items-center text-green-600 dark:text-green-400 text-xs font-medium">
+                        <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                        </svg>
+                        Account Active
+                      </span>
                     )}
                   </div>
                   <input
