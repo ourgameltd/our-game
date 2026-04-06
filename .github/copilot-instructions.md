@@ -281,6 +281,32 @@ When work changes backend behavior, API contracts, validation, authorization, se
 - **Code Coverage**: XPlat Code Coverage collected in PR builds, reported via ReportGenerator
 - **No Playwright Coverage**: Do not add Playwright tests or Playwright-specific guidance to this workspace instruction set
 
+## Directory README Documentation System
+
+Each meaningful directory in the repository contains a `README.md` with YAML frontmatter metadata. This system exists to give LLMs (GitHub Copilot, AI agents) rich context about the purpose, technology, and relationships of each folder — enabling more accurate code generation and navigation.
+
+### Frontmatter Schema
+
+```yaml
+---
+domain: <functional area, e.g. "API", "Frontend", "Data Access">
+technology: [<tech1>, <tech2>]
+categories: [<category1>, <category2>]
+related:
+  - path/to/related/file
+---
+```
+
+### Master Index
+
+`ARCHITECTURE.md` at the repository root is the table of contents listing all directory READMEs. This file should be updated whenever directories are added or removed.
+
+### Maintenance
+
+- When adding a new folder with meaningful content, add a `README.md` with frontmatter
+- Update `ARCHITECTURE.md` to include the new entry
+- Review directory READMEs during PRs that restructure or add folders
+
 ---
 
 **Repository**: Monorepo structure with `/web` (React + Vite), `/api` (.NET 8 with 4 projects), `/infrastructure` (Bicep), and `/docs`

@@ -1,3 +1,14 @@
+---
+domain: Testing
+technology: [.NET 8, xUnit, Moq, Azure Functions]
+categories: [Unit Tests, API Testing, Contract Testing]
+related:
+  - api/OurGame.Api/Functions/
+  - api/OurGame.Application/UseCases/
+  - .github/workflows/pr-build.yml
+  - api/stryker-config.json
+---
+
 # OurGame.Api.Tests
 
 Endpoint-focused unit/contract tests for Azure Functions handlers in OurGame.Api.
