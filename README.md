@@ -55,9 +55,27 @@ docker compose -f docker-compose.local.yml down
 
 > **Note:** On Apple Silicon, SQL Server runs under `linux/amd64` emulation. SQL Server is exposed on `localhost:14330`.
 
+### Database Migrations
+
+If you need to apply EF Core migrations without seeding (e.g. after pulling new migration files), run:
+
+```bash
+cd api
+dotnet ef database update --project OurGame.Persistence --startup-project OurGame.Api
+```
+
+To add a new migration after changing EF Core models:
+
+```bash
+cd api
+dotnet ef migrations add <MigrationName> --project OurGame.Persistence --startup-project OurGame.Api
+```
+
+> The connection string is read from `api/OurGame.Api/local.settings.json`. Ensure SQL Server is running on `localhost:14330` first.
+
 ### Database Seeding
 
-Seed the database with sample data using the seeder profile:
+Seed the database with sample data using the seeder profile. This also applies any pending migrations before seeding:
 
 ```bash
 docker compose -f docker-compose.local.yml --profile seed run --no-deps --rm seeder
