@@ -109,4 +109,37 @@ public class GetPlayerByIdHandlerTests
         Assert.Null(result.TeamId);
         Assert.Null(result.AgeGroupId);
     }
+
+    [Fact]
+    public async Task Handle_WhenPlayerHasLinkedUser_ReturnsLinkedUser()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var userId = await db.SeedUserAsync("player-auth");
+        var playerId = await db.SeedPlayerAsync(clubId, userId: userId);
+        var handler = new GetPlayerByIdHandler(db.Context);
+
+        var result = await handler.Handle(new GetPlayerByIdQuery(playerId), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.NotNull(result!.LinkedUser);
+        Assert.Equal(userId, result.LinkedUser!.Id);
+        Assert.Equal("Test", result.LinkedUser.FirstName);
+        Assert.Equal("User", result.LinkedUser.LastName);
+        Assert.Equal("player-auth@test.com", result.LinkedUser.Email);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPlayerHasNoLinkedUser_LinkedUserIsNull()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var playerId = await db.SeedPlayerAsync(clubId);
+        var handler = new GetPlayerByIdHandler(db.Context);
+
+        var result = await handler.Handle(new GetPlayerByIdQuery(playerId), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Null(result!.LinkedUser);
+    }
 }

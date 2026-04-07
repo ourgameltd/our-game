@@ -27,11 +27,10 @@ public class GetInviteLinkOptionsHandler : IRequestHandler<GetInviteLinkOptionsQ
             throw new NotFoundException("Invite", query.Code);
         }
 
+        // User may not exist yet (created on first link save) – return candidates
+        // with IsLinkedToCurrentUser = false when user is unknown.
         var user = await _db.Users.FirstOrDefaultAsync(u => u.AuthId == query.AuthId, cancellationToken);
-        if (user == null)
-        {
-            throw new NotFoundException("User", query.AuthId);
-        }
+        var userId = user?.Id;
 
         var result = new InviteLinkOptionsDto
         {
@@ -58,7 +57,7 @@ public class GetInviteLinkOptionsHandler : IRequestHandler<GetInviteLinkOptionsQ
                         Id = p.Id,
                         Name = (p.FirstName + " " + p.LastName).Trim(),
                         IsLinked = p.UserId != null,
-                        IsLinkedToCurrentUser = p.UserId == user.Id
+                        IsLinkedToCurrentUser = userId != null && p.UserId == userId
                     })
                     .ToListAsync(cancellationToken);
                 result.HasSingleLinkAssigned = result.Candidates.Any(c => c.IsLinkedToCurrentUser);
@@ -73,18 +72,20 @@ public class GetInviteLinkOptionsHandler : IRequestHandler<GetInviteLinkOptionsQ
                         Id = c.Id,
                         Name = (c.FirstName + " " + c.LastName).Trim(),
                         IsLinked = c.UserId != null,
-                        IsLinkedToCurrentUser = c.UserId == user.Id
+                        IsLinkedToCurrentUser = userId != null && c.UserId == userId
                     })
                     .ToListAsync(cancellationToken);
                 result.HasSingleLinkAssigned = result.Candidates.Any(c => c.IsLinkedToCurrentUser);
                 break;
 
             case InviteType.Parent:
-                var linkedPlayerIds = await _db.EmergencyContacts
-                    .Where(ec => ec.UserId == user.Id && ec.PlayerId != null)
-                    .Select(ec => ec.PlayerId!.Value)
-                    .Distinct()
-                    .ToListAsync(cancellationToken);
+                var linkedPlayerIds = userId != null
+                    ? await _db.EmergencyContacts
+                        .Where(ec => ec.UserId == userId && ec.PlayerId != null)
+                        .Select(ec => ec.PlayerId!.Value)
+                        .Distinct()
+                        .ToListAsync(cancellationToken)
+                    : new List<Guid>();
 
                 result.Candidates = await _db.PlayerAgeGroups
                     .Where(pag => pag.AgeGroupId == invite.EntityId)

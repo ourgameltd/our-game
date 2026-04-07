@@ -36,6 +36,9 @@ public class PlayerDto
     /// <summary>Linked user accounts from the invite system</summary>
     public LinkedAccountDto[]? LinkedAccounts { get; init; }
 
+    /// <summary>The player's own linked user account (set via player invite acceptance)</summary>
+    public LinkedUserDto? LinkedUser { get; init; }
+
     // --- Medical & Physical Information ---
 
     /// <summary>Player allergies</summary>

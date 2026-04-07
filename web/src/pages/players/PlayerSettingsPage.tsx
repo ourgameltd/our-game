@@ -5,7 +5,7 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
-import { Plus, ShieldCheck } from 'lucide-react';
+import { Plus, ShieldCheck, UserCheck } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton for the page title area
@@ -723,8 +723,39 @@ export default function PlayerSettingsPage() {
           {/* Parents & Emergency Contacts */}
           <div className="card">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-              Parents & Emergency Contacts
+              Linked Accounts & Emergency Contacts
             </h3>
+
+              {/* Linked Account Section (read-only, from invite system) */}
+              {player?.linkedUser && (
+                <div className="mb-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <UserCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                      Linked Account
+                    </h4>
+                  </div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                    User account linked to this player via the invite system
+                  </p>
+                  <div className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                      {player.linkedUser.firstName?.[0]}{player.linkedUser.lastName?.[0]}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                        {player.linkedUser.firstName} {player.linkedUser.lastName}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                        {player.linkedUser.email && <span>{player.linkedUser.email}</span>}
+                      </div>
+                    </div>
+                    <span className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                      Linked
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Linked Parents Section (read-only, from invite system) */}
               {player?.linkedParents && player.linkedParents.length > 0 && (
@@ -767,7 +798,7 @@ export default function PlayerSettingsPage() {
               )}
 
               {/* Emergency Contacts Section */}
-              <div className={player?.linkedParents && player.linkedParents.length > 0 ? 'border-t border-gray-200 dark:border-gray-700 pt-4' : ''}>
+              <div className={(player?.linkedUser || (player?.linkedParents && player.linkedParents.length > 0)) ? 'border-t border-gray-200 dark:border-gray-700 pt-4' : ''}>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Emergency Contacts

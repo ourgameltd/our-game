@@ -27,7 +27,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
 
     public async Task<PlayerDto?> Handle(GetPlayerByIdQuery query, CancellationToken cancellationToken)
     {
-        // 1. Fetch base player data with club
+        // 1. Fetch base player data with club and linked user
         var playerSql = @"
             SELECT 
                 p.Id,
@@ -43,9 +43,15 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
                 p.PreferredPositions,
                 p.Allergies,
                 p.MedicalConditions,
-                p.OverallRating
+                p.OverallRating,
+                lu.Id AS LinkedUserId,
+                lu.FirstName AS LinkedUserFirstName,
+                lu.LastName AS LinkedUserLastName,
+                lu.Email AS LinkedUserEmail,
+                lu.Photo AS LinkedUserPhotoUrl
             FROM Players p
             INNER JOIN Clubs c ON c.Id = p.ClubId
+            LEFT JOIN Users lu ON lu.Id = p.UserId
             WHERE p.Id = {0}";
 
         var player = await _db.Database
@@ -138,7 +144,19 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
         // 6. Parse positions
         var positions = ParsePositions(player.PreferredPositions);
 
-        // 7. Build team minimal DTOs
+        // 7. Build linked user DTO if player has a linked account
+        LinkedUserDto? linkedUser = player.LinkedUserId.HasValue
+            ? new LinkedUserDto
+            {
+                Id = player.LinkedUserId.Value,
+                FirstName = player.LinkedUserFirstName ?? string.Empty,
+                LastName = player.LinkedUserLastName ?? string.Empty,
+                Email = player.LinkedUserEmail,
+                PhotoUrl = player.LinkedUserPhotoUrl
+            }
+            : null;
+
+        // 8. Build team minimal DTOs
         var teams = teamData
             .Select(t => new TeamMinimalDto
             {
@@ -153,7 +171,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
         var teamIds = teams.Select(t => t.Id).ToArray();
         var ageGroupIds = teams.Select(t => t.AgeGroupId).Distinct().ToArray();
 
-        // 8. Map to DTO, keeping backward-compatible single-value fields from first assignment
+        // 9. Map to DTO, keeping backward-compatible single-value fields from first assignment
         var firstTeam = teams.FirstOrDefault();
 
         return new PlayerDto
@@ -178,6 +196,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
             AverageRating = avgRatingResult?.AverageRating,
             EmergencyContacts = emergencyContacts.Length > 0 ? emergencyContacts : null,
             LinkedAccounts = linkedAccounts.Length > 0 ? linkedAccounts : null,
+            LinkedUser = linkedUser,
 
             // Backward-compatible single-value fields
             AgeGroupId = firstTeam?.AgeGroupId,
@@ -245,6 +264,11 @@ public class PlayerBaseRawDto
     public string? Allergies { get; set; }
     public string? MedicalConditions { get; set; }
     public int? OverallRating { get; set; }
+    public Guid? LinkedUserId { get; set; }
+    public string? LinkedUserFirstName { get; set; }
+    public string? LinkedUserLastName { get; set; }
+    public string? LinkedUserEmail { get; set; }
+    public string? LinkedUserPhotoUrl { get; set; }
 }
 
 /// <summary>

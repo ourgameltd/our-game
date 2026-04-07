@@ -1778,6 +1778,13 @@ export interface PlayerDto {
     phone?: string;
     isLinked: boolean;
   }[];
+  linkedUser?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    photoUrl?: string;
+  };
   allergies?: string;
   medicalConditions?: string;
   // Backward-compatible single-value fields
