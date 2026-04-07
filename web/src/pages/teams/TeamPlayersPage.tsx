@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, AlertCircle } from 'lucide-react';
+import { Plus, AlertCircle, Search } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { 
@@ -22,6 +22,7 @@ export default function TeamPlayersPage() {
 
   const [showArchived, setShowArchived] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [modalSearchQuery, setModalSearchQuery] = useState('');
 
   // Extract and validate route parameters
   let clubId: string | undefined = undefined;
@@ -153,6 +154,7 @@ export default function TeamPlayersPage() {
     event.stopPropagation();
     if (team?.isArchived) return;
     await removePlayerMutation.removePlayer(playerId);
+    await Promise.all([teamPlayersData.refetch(), ageGroupPlayersData.refetch()]);
   };
 
   // Handle add player
@@ -161,6 +163,8 @@ export default function TeamPlayersPage() {
     event.stopPropagation();
     const squadNumber = getNextSquadNumber();
     await addPlayerMutation.addPlayer({ playerId, squadNumber });
+    // Refetch both data sources so the page lists update
+    await Promise.all([teamPlayersData.refetch(), ageGroupPlayersData.refetch()]);
   };
 
   // Parameter validation error
@@ -193,7 +197,12 @@ export default function TeamPlayersPage() {
   }
 
   // Loading state
-  if (teamOverview.isLoading || ageGroupPlayersData.isLoading || teamPlayersData.isLoading) {
+  // Only show skeleton on initial load, not during background refetches
+  const isInitialLoading = (teamOverview.isLoading && !teamOverview.data)
+    || (ageGroupPlayersData.isLoading && !ageGroupPlayersData.data)
+    || (teamPlayersData.isLoading && !teamPlayersData.data);
+
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -345,7 +354,14 @@ export default function TeamPlayersPage() {
         )}
 
         {/* Add Player Modal */}
-        {showAddModal && (
+        {showAddModal && (() => {
+          const filteredAvailablePlayers = availablePlayers.filter(player => {
+            if (!modalSearchQuery.trim()) return true;
+            const query = modalSearchQuery.toLowerCase();
+            const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
+            return fullName.includes(query);
+          });
+          return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
             <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -354,28 +370,77 @@ export default function TeamPlayersPage() {
                   <p className="text-gray-600 dark:text-gray-400 mt-1">Select players from the club ({availablePlayers.length} available)</p>
                 </div>
                 <button
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => { setShowAddModal(false); setModalSearchQuery(''); }}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
                 >
                   ✕
                 </button>
               </div>
+              {/* Search filter */}
+              <div className="px-6 pt-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search players by name..."
+                    value={modalSearchQuery}
+                    onChange={(e) => setModalSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                    autoFocus
+                  />
+                </div>
+              </div>
               <div className="p-6 overflow-y-auto max-h-[60vh]">
-                {availablePlayers.length > 0 ? (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {availablePlayers.map((player) => (
-                      <div key={player.id} className="relative">
-                        <PlayerCard player={player} />
-                        <button
-                          onClick={(e) => handleAddPlayer(player.id, e)}
-                          disabled={addPlayerMutation.isSubmitting}
-                          className="absolute top-2 right-2 bg-green-500 text-white px-3 py-1 rounded-full hover:bg-green-600 shadow-lg flex items-center gap-1 disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Add Player"
+                {filteredAvailablePlayers.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {filteredAvailablePlayers.map((player) => {
+                      const age = player.dateOfBirth ? new Date().getFullYear() - player.dateOfBirth.getFullYear() : null;
+                      return (
+                        <div
+                          key={player.id}
+                          className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                         >
-                          {addPlayerMutation.isSubmitting ? '...' : <Plus className="w-4 h-4" />}
-                        </button>
-                      </div>
-                    ))}
+                          {player.photo ? (
+                            <img 
+                              src={player.photo} 
+                              alt={`${player.firstName} ${player.lastName}`}
+                              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                              {player.firstName[0]}{player.lastName[0]}
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                              {player.firstName} {player.lastName}
+                            </p>
+                            <div className="flex items-center gap-2">
+                              {age !== null && <span className="text-xs text-gray-500 dark:text-gray-400">Age {age}</span>}
+                              {player.preferredPositions.length > 0 && (
+                                <div className="flex gap-1">
+                                  {player.preferredPositions.slice(0, 2).map(pos => (
+                                    <span key={pos} className="badge-primary text-[10px] px-1.5 py-0.5">{pos}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <button
+                            onClick={(e) => handleAddPlayer(player.id, e)}
+                            disabled={addPlayerMutation.isSubmitting}
+                            className="bg-green-500 text-white p-1.5 rounded-full hover:bg-green-600 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Add to team"
+                          >
+                            {addPlayerMutation.isSubmitting ? '...' : <Plus className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : modalSearchQuery.trim() ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 dark:text-gray-400">No players match "{modalSearchQuery}"</p>
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -391,7 +456,8 @@ export default function TeamPlayersPage() {
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
       </main>
     </div>
   );

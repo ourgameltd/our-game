@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { Plus, Loader2, AlertCircle } from 'lucide-react';
+import { Plus, Loader2, AlertCircle, Search } from 'lucide-react';
 import { useTeamOverview, useTeamCoaches, useClubCoaches, useAssignTeamCoach, useRemoveTeamCoach } from '@/api/hooks';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
@@ -46,9 +46,10 @@ export default function TeamCoachesPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [removingCoachId, setRemovingCoachId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [modalSearchQuery, setModalSearchQuery] = useState('');
 
-  // Loading state
-  const isLoading = teamLoading || coachesLoading;
+  // Only show skeleton on initial load, not during background refetches
+  const isInitialLoading = (teamLoading && !teamOverview) || (coachesLoading && teamCoaches.length === 0);
 
   // Parameter validation error
   if (paramError) {
@@ -102,7 +103,7 @@ export default function TeamCoachesPage() {
     );
   }
 
-  if (isLoading) {
+  if (isInitialLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
@@ -151,7 +152,6 @@ export default function TeamCoachesPage() {
       await refetchTeamCoaches();
       setSuccessMessage('Coach assigned successfully');
       setTimeout(() => setSuccessMessage(null), 4000);
-      setShowAddModal(false);
     } catch (err) {
       console.error('Failed to assign coach:', err);
     }
@@ -317,7 +317,14 @@ export default function TeamCoachesPage() {
         )}
 
         {/* Assign Coach Modal */}
-        {showAddModal && (
+        {showAddModal && (() => {
+          const filteredAvailableCoaches = availableCoaches.filter(coach => {
+            if (!modalSearchQuery.trim()) return true;
+            const query = modalSearchQuery.toLowerCase();
+            const fullName = `${coach.firstName} ${coach.lastName}`.toLowerCase();
+            return fullName.includes(query);
+          });
+          return (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
             <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
@@ -335,12 +342,26 @@ export default function TeamCoachesPage() {
                   </p>
                 </div>
                 <button
-                  onClick={() => setShowAddModal(false)}
+                  onClick={() => { setShowAddModal(false); setModalSearchQuery(''); }}
                   disabled={isAssigning}
                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl disabled:opacity-50"
                 >
                   ✕
                 </button>
+              </div>
+              {/* Search filter */}
+              <div className="px-6 pt-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Search coaches by name..."
+                    value={modalSearchQuery}
+                    onChange={(e) => setModalSearchQuery(e.target.value)}
+                    className="w-full pl-9 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                    autoFocus
+                  />
+                </div>
               </div>
               <div className="p-6 overflow-y-auto max-h-[60vh]">
                 {clubCoachesError && (
@@ -365,47 +386,57 @@ export default function TeamCoachesPage() {
                       </div>
                     ))}
                   </div>
-                ) : availableCoaches.length > 0 ? (
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {availableCoaches.map((coach) => (
-                      <div key={coach.id} className="relative">
-                        <CoachCard 
-                          coach={{
-                            id: coach.id,
-                            clubId: coach.clubId,
-                            firstName: coach.firstName || '',
-                            lastName: coach.lastName || '',
-                            dateOfBirth: coach.dateOfBirth ? new Date(coach.dateOfBirth) : undefined,
-                            photo: coach.photo,
-                            email: coach.email || '',
-                            phone: coach.phone || '',
-                            associationId: coach.associationId,
-                            teamIds: coach.teams?.map(t => t.id) || [],
-                            role: coach.role as any || 'assistant-coach',
-                            isArchived: coach.isArchived
-                          }}
-                          badges={
-                            coach.teams && coach.teams.length > 0 ? (
-                              <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
+                ) : filteredAvailableCoaches.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {filteredAvailableCoaches.map((coach) => (
+                      <div
+                        key={coach.id}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
+                      >
+                        {coach.photo ? (
+                          <img 
+                            src={coach.photo} 
+                            alt={`${coach.firstName} ${coach.lastName}`}
+                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                            {(coach.firstName || '')[0]}{(coach.lastName || '')[0]}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                            {coach.firstName} {coach.lastName}
+                          </p>
+                          <div className="flex items-center gap-2">
+                            {coach.role && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{coach.role}</span>
+                            )}
+                            {coach.teams && coach.teams.length > 0 && (
+                              <span className="badge-primary text-[10px] px-1.5 py-0.5">
                                 {coach.teams.length} team{coach.teams.length !== 1 ? 's' : ''}
                               </span>
-                            ) : undefined
-                          }
-                        />
+                            )}
+                          </div>
+                        </div>
                         <button
                           onClick={() => handleAssignCoach(coach.id, 'assistant-coach')}
                           disabled={isAssigning}
-                          className="absolute top-2 right-2 bg-green-500 text-white p-2 rounded-full hover:bg-green-600 shadow-lg flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Assign Coach"
+                          className="bg-green-500 text-white p-1.5 rounded-full hover:bg-green-600 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Assign to team"
                         >
                           {isAssigning ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <Plus className="w-5 h-5" />
+                            <Plus className="w-4 h-4" />
                           )}
                         </button>
                       </div>
                     ))}
+                  </div>
+                ) : modalSearchQuery.trim() ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600 dark:text-gray-400">No coaches match "{modalSearchQuery}"</p>
                   </div>
                 ) : (
                   <div className="text-center py-8">
@@ -421,7 +452,8 @@ export default function TeamCoachesPage() {
               </div>
             </div>
           </div>
-        )}
+          );
+        })()}
       </main>
     </div>
   );
