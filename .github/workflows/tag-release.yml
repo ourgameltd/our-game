@@ -120,6 +120,22 @@ jobs:
           echo "GitHub secret SQL_ADMIN_PASSWORD is required and must not be empty"
           exit 1
         fi
+
+    - name: Resolve VAPID and email deployment parameters
+      id: deploy_params
+      shell: bash
+      run: |
+        VAPID_SUBJECT="${{ vars.VAPID_SUBJECT }}"
+        VAPID_PUBLIC_KEY="${{ vars.VAPID_PUBLIC_KEY }}"
+        ACS_DATA_LOCATION="${{ vars.ACS_DATA_LOCATION }}"
+        EMAIL_SENDER_LOCAL_PART="${{ vars.EMAIL_SENDER_LOCAL_PART }}"
+        EMAIL_SENDER_CUSTOM_DOMAIN="${{ vars.EMAIL_SENDER_CUSTOM_DOMAIN }}"
+
+        echo "vapidSubject=$VAPID_SUBJECT" >> $GITHUB_OUTPUT
+        echo "vapidPublicKey=$VAPID_PUBLIC_KEY" >> $GITHUB_OUTPUT
+        echo "acsDataLocation=$ACS_DATA_LOCATION" >> $GITHUB_OUTPUT
+        echo "emailSenderLocalPart=$EMAIL_SENDER_LOCAL_PART" >> $GITHUB_OUTPUT
+        echo "emailSenderCustomDomain=$EMAIL_SENDER_CUSTOM_DOMAIN" >> $GITHUB_OUTPUT
         
     - name: Deploy Bicep template at subscription level
       id: deploy
@@ -137,6 +153,12 @@ jobs:
           --parameters storageAccountSku=Standard_LRS \
           --parameters sqlAdminUsername="${{ steps.sql_admin.outputs.sqlAdminUsername }}" \
           --parameters sqlAdminPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
+          --parameters vapidSubject="${{ steps.deploy_params.outputs.vapidSubject }}" \
+          --parameters vapidPublicKey="${{ steps.deploy_params.outputs.vapidPublicKey }}" \
+          --parameters vapidPrivateKey="${{ secrets.VAPID_PRIVATE_KEY }}" \
+          --parameters acsDataLocation="${{ steps.deploy_params.outputs.acsDataLocation }}" \
+          --parameters emailSenderLocalPart="${{ steps.deploy_params.outputs.emailSenderLocalPart }}" \
+          --parameters emailSenderCustomDomain="${{ steps.deploy_params.outputs.emailSenderCustomDomain }}" \
           --query 'properties.outputs' \
           --output json)
         

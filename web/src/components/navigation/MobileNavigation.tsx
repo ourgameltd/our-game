@@ -819,7 +819,7 @@ export default function MobileNavigation() {
           </ul>
 
           {/* Breadcrumb navigation to parent levels - only show if there are parent links */}
-          {(currentLevel === 'player' || currentLevel === 'coach' || currentLevel === 'team' || currentLevel === 'ageGroup') && (
+          {(currentLevel === 'team' || currentLevel === 'ageGroup') && (
             <>
               <div className="mobile-nav-divider"></div>
               <div className="px-6 py-2">

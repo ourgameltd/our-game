@@ -26,6 +26,10 @@ bld/
 [Oo]bj/
 [Ll]og/
 
+api/OurGame.Application.Tests/OurGame.Application.Tests.csproj.lscache
+*.csproj.lscache
+
+
 # Visual Studio 2015 cache/options directory
 .vs/
 # Uncomment if you have tasks that create the project's static files in wwwroot

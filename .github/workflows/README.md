@@ -49,6 +49,12 @@ Runs six sequential jobs:
 |---|---|---|
 | `AZURE_CREDENTIALS` | Secret | Azure Service Principal (JSON) |
 | `SQL_ADMIN_PASSWORD` | Secret | Azure SQL admin password |
+| `VAPID_PRIVATE_KEY` | Secret | Web Push VAPID private key used by the Function App |
 | `B2C_CLIENT_SECRET` | Secret | Azure AD B2C client secret |
 | `SQL_ADMIN_USERNAME` | Variable | SQL admin login (default: `ourgame_sql_admin`) |
 | `B2C_CLIENT_ID` | Variable | Azure AD B2C client ID |
+| `VAPID_PUBLIC_KEY` | Variable | Web Push VAPID public key exposed to clients |
+| `VAPID_SUBJECT` | Variable | VAPID subject (default: `mailto:admin@ourgame.app`) |
+| `ACS_DATA_LOCATION` | Variable | ACS data location (default: `Europe`) |
+| `EMAIL_SENDER_LOCAL_PART` | Variable | Sender local part (default: `DoNotReply`) |
+| `EMAIL_SENDER_CUSTOM_DOMAIN` | Variable | Sender domain override (default: empty for Azure-managed domain) |
