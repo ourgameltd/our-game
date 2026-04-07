@@ -243,14 +243,6 @@ const AgeGroupOverviewPage: React.FC = () => {
                     variant: 'primary'
                   }}
                 />
-                <div className="mt-2">
-                  <Link
-                    to={Routes.ageGroupInvites(clubId, ageGroupId)}
-                    className="inline-flex items-center px-3 py-1.5 rounded-lg bg-blue-600 text-white text-sm hover:bg-blue-700 transition-colors"
-                  >
-                    Invite Links
-                  </Link>
-                </div>
               </>
             ) : (
               <div className="text-red-600 dark:text-red-400">

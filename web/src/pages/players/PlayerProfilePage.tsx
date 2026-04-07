@@ -3,6 +3,7 @@ import { useEffect } from 'react';
 import { usePlayer, usePlayerRecentPerformances, usePlayerUpcomingMatches } from '@api/hooks';
 import { Routes } from '@utils/routes';
 import { useNavigation } from '@/contexts/NavigationContext';
+import PlayerSubNav from '@components/player/PlayerSubNav';
 import PageTitle from '@components/common/PageTitle';
 import RecentPerformanceCard from '@components/player/RecentPerformanceCard';
 import MatchesCard from '@components/matches/MatchesCard';
@@ -120,6 +121,9 @@ export default function PlayerProfilePage() {
             }}
           />
         ) : null}
+
+        {/* Player Sub Navigation */}
+        {!playerLoading && player && <PlayerSubNav />}
 
         {/* Player Stats */}
         {playerLoading ? (

@@ -1,3 +1,4 @@
+using Azure.Core.Serialization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,10 +13,18 @@ var host = new HostBuilder()
         services.AddApplicationInsightsTelemetryWorkerService();
         services.ConfigureFunctionsApplicationInsights();
 
-        // Configure JSON to use camelCase
+        // Configure JSON to use camelCase (for response serialization)
         services.Configure<JsonSerializerOptions>(options =>
         {
             options.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            options.PropertyNameCaseInsensitive = true;
+        });
+
+        // Configure worker serializer for request deserialization (ReadFromJsonAsync)
+        services.Configure<WorkerOptions>(options =>
+        {
+            options.Serializer = new JsonObjectSerializer(
+                new JsonSerializerOptions(JsonSerializerDefaults.Web));
         });
 
         // Add MediatR

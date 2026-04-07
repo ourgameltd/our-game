@@ -150,6 +150,47 @@ public class UpdatePlayerFunctionTests
         Assert.Equal(playerId, payload.Data!.Id);
     }
 
+    [Fact]
+    public async Task UpdatePlayer_DeserializesCamelCaseIsPrimary_WhenSentFromFrontend()
+    {
+        var playerId = Guid.NewGuid();
+        // Simulate the exact camelCase JSON the frontend sends
+        var body = """
+        {
+            "firstName": "Test",
+            "lastName": "Player",
+            "dateOfBirth": "2010-01-15",
+            "preferredPositions": ["GK"],
+            "isArchived": false,
+            "emergencyContacts": [
+                { "name": "Mom", "phone": "+1234", "relationship": "Mother", "isPrimary": false },
+                { "name": "Dad", "phone": "+5678", "relationship": "Father", "isPrimary": true }
+            ]
+        }
+        """;
+        var expected = new PlayerDto { Id = playerId };
+
+        UpdatePlayerRequestDto? capturedDto = null;
+        var mediator = new TestMediator();
+        mediator.Register<UpdatePlayerCommand, PlayerDto?>((cmd, _) =>
+        {
+            capturedDto = cmd.Dto;
+            return Task.FromResult<PlayerDto?>(expected);
+        });
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("PUT", $"https://localhost/v1/players/{playerId}", body);
+
+        var response = await sut.UpdatePlayer(req, playerId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(capturedDto);
+        Assert.NotNull(capturedDto!.EmergencyContacts);
+        Assert.Equal(2, capturedDto.EmergencyContacts!.Length);
+        Assert.False(capturedDto.EmergencyContacts[0].IsPrimary);
+        Assert.True(capturedDto.EmergencyContacts[1].IsPrimary);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────
 
     private static UpdatePlayerFunction BuildSut(TestMediator mediator)

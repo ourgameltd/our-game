@@ -45,20 +45,21 @@ import MatchesListPage from '@pages/matches/MatchesListPage';
 import AddEditMatchPage from '@pages/matches/AddEditMatchPage';
 import AddEditTrainingSessionPage from '@pages/teams/AddEditTrainingSessionPage';
 import TrainingSessionsListPage from '@pages/teams/TrainingSessionsListPage';
-import PlayerReportCardPage from '@pages/players/PlayerReportCardPage';
-import PlayerReportCardsPage from '@pages/players/PlayerReportCardsPage';
-import AddEditReportCardPage from '@pages/players/AddEditReportCardPage';
-import PlayerDevelopmentPlanPage from '@pages/players/PlayerDevelopmentPlanPage';
-import PlayerDevelopmentPlansPage from '@pages/players/PlayerDevelopmentPlansPage';
-import AddEditDevelopmentPlanPage from '@pages/players/AddEditDevelopmentPlanPage';
+// Hidden: Report Cards & Development Plans (not ready for release)
+// import PlayerReportCardPage from '@pages/players/PlayerReportCardPage';
+// import PlayerReportCardsPage from '@pages/players/PlayerReportCardsPage';
+// import AddEditReportCardPage from '@pages/players/AddEditReportCardPage';
+// import PlayerDevelopmentPlanPage from '@pages/players/PlayerDevelopmentPlanPage';
+// import PlayerDevelopmentPlansPage from '@pages/players/PlayerDevelopmentPlansPage';
+// import AddEditDevelopmentPlanPage from '@pages/players/AddEditDevelopmentPlanPage';
 import PlayerAlbumPage from '@pages/players/PlayerAlbumPage';
 import PlayerSettingsPage from '@pages/players/PlayerSettingsPage';
-import ClubReportCardsPage from '@pages/clubs/ClubReportCardsPage';
-import AgeGroupReportCardsPage from '@pages/ageGroups/AgeGroupReportCardsPage';
-import TeamReportCardsPage from '@pages/teams/TeamReportCardsPage';
-import ClubDevelopmentPlansPage from '@pages/clubs/ClubDevelopmentPlansPage';
-import AgeGroupDevelopmentPlansPage from '@pages/ageGroups/AgeGroupDevelopmentPlansPage';
-import TeamDevelopmentPlansPage from '@pages/teams/TeamDevelopmentPlansPage';
+// import ClubReportCardsPage from '@pages/clubs/ClubReportCardsPage';
+// import AgeGroupReportCardsPage from '@pages/ageGroups/AgeGroupReportCardsPage';
+// import TeamReportCardsPage from '@pages/teams/TeamReportCardsPage';
+// import ClubDevelopmentPlansPage from '@pages/clubs/ClubDevelopmentPlansPage';
+// import AgeGroupDevelopmentPlansPage from '@pages/ageGroups/AgeGroupDevelopmentPlansPage';
+// import TeamDevelopmentPlansPage from '@pages/teams/TeamDevelopmentPlansPage';
 import CoachProfilePage from '@pages/coaches/CoachProfilePage';
 import CoachSettingsPage from '@pages/coaches/CoachSettingsPage';
 import HelpSupportPage from '@pages/HelpSupportPage';
@@ -151,8 +152,9 @@ function AppContent() {
         <Route path="/dashboard/:clubId/training" element={<ClubTrainingSessionsPage />} />
         <Route path="/dashboard/:clubId/kits" element={<ClubKitsPage />} />
         <Route path="/dashboard/:clubId/settings" element={<ClubSettingsPage />} />
-        <Route path="/dashboard/:clubId/report-cards" element={<ClubReportCardsPage />} />
-        <Route path="/dashboard/:clubId/development-plans" element={<ClubDevelopmentPlansPage />} />
+        {/* Hidden: Report Cards & Development Plans (not ready for release) */}
+        {/* <Route path="/dashboard/:clubId/report-cards" element={<ClubReportCardsPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/development-plans" element={<ClubDevelopmentPlansPage />} /> */}
 
         {/* Age Groups */}
         <Route path="/dashboard/:clubId/age-groups" element={<AgeGroupsListPage />} />
@@ -165,8 +167,8 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/training" element={<AgeGroupTrainingSessionsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/settings" element={<AgeGroupSettingsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/invites" element={<AgeGroupInvitesPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/report-cards" element={<AgeGroupReportCardsPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/development-plans" element={<AgeGroupDevelopmentPlansPage />} />
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/report-cards" element={<AgeGroupReportCardsPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/development-plans" element={<AgeGroupDevelopmentPlansPage />} /> */}
 
         {/* Coaches - Age Group Context */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/coaches/:coachId" element={<CoachProfilePage />} />
@@ -175,15 +177,15 @@ function AppContent() {
         {/* Players - Age Group Level */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId" element={<PlayerProfilePage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards" element={<PlayerReportCardsPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/:reportId" element={<PlayerReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/:planId" element={<PlayerDevelopmentPlanPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/new" element={<AddEditDevelopmentPlanPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/:planId/edit" element={<AddEditDevelopmentPlanPage />} />
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards" element={<PlayerReportCardsPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/:reportId" element={<PlayerReportCardPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-card" element={<PlayerReportCardPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/:planId" element={<PlayerDevelopmentPlanPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/new" element={<AddEditDevelopmentPlanPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/:planId/edit" element={<AddEditDevelopmentPlanPage />} /> */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/album" element={<PlayerAlbumPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/settings" element={<PlayerSettingsPage />} />
 
@@ -196,8 +198,8 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches" element={<TeamCoachesPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/kits" element={<TeamKitsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/settings" element={<TeamSettingsPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/report-cards" element={<TeamReportCardsPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/development-plans" element={<TeamDevelopmentPlansPage />} />
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/report-cards" element={<TeamReportCardsPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/development-plans" element={<TeamDevelopmentPlansPage />} /> */}
 
         {/* Coaches - Team Context */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches/:coachId" element={<CoachProfilePage />} />
@@ -206,15 +208,15 @@ function AppContent() {
         {/* Players - Team Context */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId" element={<PlayerProfilePage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards" element={<PlayerReportCardsPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/:reportId" element={<PlayerReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-card" element={<PlayerReportCardPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/:planId" element={<PlayerDevelopmentPlanPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/new" element={<AddEditDevelopmentPlanPage />} />
-        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/:planId/edit" element={<AddEditDevelopmentPlanPage />} />
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards" element={<PlayerReportCardsPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/:reportId" element={<PlayerReportCardPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-card" element={<PlayerReportCardPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/:planId" element={<PlayerDevelopmentPlanPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/new" element={<AddEditDevelopmentPlanPage />} /> */}
+        {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/:planId/edit" element={<AddEditDevelopmentPlanPage />} /> */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/album" element={<PlayerAlbumPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/settings" element={<PlayerSettingsPage />} />
 

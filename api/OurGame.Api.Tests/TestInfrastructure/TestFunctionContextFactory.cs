@@ -2,6 +2,7 @@ using Azure.Core.Serialization;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using System.Text.Json;
 
 namespace OurGame.Api.Tests.TestInfrastructure;
 
@@ -13,7 +14,8 @@ internal static class TestFunctionContextFactory
         services.AddOptions<WorkerOptions>()
             .Configure(options =>
             {
-                options.Serializer = new JsonObjectSerializer();
+                options.Serializer = new JsonObjectSerializer(
+                    new JsonSerializerOptions(JsonSerializerDefaults.Web));
             });
 
         var serviceProvider = services.BuildServiceProvider();

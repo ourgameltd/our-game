@@ -1,414 +1,379 @@
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import PageTitle from '@components/common/PageTitle';
 import { Routes, areAllParamsValid } from '@utils/routes';
-import { useMyTeams, useMyChildren, useCurrentUser, useMyClubs, usePlayer } from '@/api/hooks';
+import { useMyTeams, useCurrentUser, useMyClubs } from '@/api/hooks';
+import { apiClient } from '@/api';
+import type { ClubMatchDto, ClubTrainingSessionDto } from '@/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
+// Unified upcoming event type
+type UpcomingEvent = {
+  type: 'match' | 'training';
+  id: string;
+  clubId: string;
+  clubName: string;
+  teamId: string;
+  ageGroupId: string;
+  teamName: string;
+  ageGroupName: string;
+  date: string;
+  location: string;
+} & (
+  | { type: 'match'; match: ClubMatchDto }
+  | { type: 'training'; session: ClubTrainingSessionDto }
+);
+
 export default function ClubsListPage() {
-  usePageTitle(['Clubs List']);
+  usePageTitle(['Dashboard']);
 
-  // Get authenticated user information
   const { isLoading: authLoading, isAdmin } = useAuth();
-
-  // Fetch current user profile
   const { data: currentUser, isLoading: currentUserLoading } = useCurrentUser();
-
-  // Fetch clubs the current user has access to
   const { data: myClubs, isLoading: myClubsLoading, error: myClubsError } = useMyClubs();
+  const { data: myTeams, isLoading: myTeamsLoading } = useMyTeams();
 
-  // Fetch the current user's own player profile (if they are a player)
-  const { data: myPlayer, isLoading: myPlayerLoading } = usePlayer(currentUser?.playerId);
+  const isCoach = !!currentUser?.coachId;
 
-  // Fetch teams the current user has access to
-  const { data: myTeams, isLoading: myTeamsLoading, error: myTeamsError } = useMyTeams();
-
-  // Fetch children for the current user (if they are a parent)
-  const { data: myChildren, isLoading: myChildrenLoading, error: myChildrenError } = useMyChildren();
-
-  const myTeamsList = myTeams ?? [];
-  const hasMyTeams = myTeamsList.length > 0;
-
-  const myChildrenList = myChildren ?? [];
-  const hasMyChildren = myChildrenList.length > 0;
+  // Fetch upcoming + past matches & upcoming training for each club
+  const [upcomingMatches, setUpcomingMatches] = useState<Map<string, ClubMatchDto[]>>(new Map());
+  const [pastMatches, setPastMatches] = useState<Map<string, ClubMatchDto[]>>(new Map());
+  const [upcomingTraining, setUpcomingTraining] = useState<Map<string, ClubTrainingSessionDto[]>>(new Map());
+  const [eventsLoading, setEventsLoading] = useState(false);
 
   const myClubsList = myClubs ?? [];
-  const hasClubs = myClubsList.length > 0;
+  const myTeamsList = myTeams ?? [];
 
-  // Build profile array from API player data
-  const myProfile = myPlayer && currentUser?.playerId ? [myPlayer] : [];
+  useEffect(() => {
+    if (myClubsList.length === 0) return;
+    setEventsLoading(true);
+
+    const fetchAll = async () => {
+      const upMatchMap = new Map<string, ClubMatchDto[]>();
+      const pastMatchMap = new Map<string, ClubMatchDto[]>();
+      const trainingMap = new Map<string, ClubTrainingSessionDto[]>();
+
+      await Promise.all(myClubsList.map(async (club) => {
+        try {
+          const [upMatchRes, pastMatchRes, trainingRes] = await Promise.all([
+            apiClient.clubs.getMatches(club.id, { status: 'upcoming' }),
+            apiClient.clubs.getMatches(club.id, { status: 'completed' }),
+            apiClient.clubs.getTrainingSessions(club.id, { status: 'upcoming' }),
+          ]);
+          if (upMatchRes.success && upMatchRes.data) {
+            upMatchMap.set(club.id, upMatchRes.data.matches);
+          }
+          if (pastMatchRes.success && pastMatchRes.data) {
+            pastMatchMap.set(club.id, pastMatchRes.data.matches);
+          }
+          if (trainingRes.success && trainingRes.data) {
+            trainingMap.set(club.id, trainingRes.data.sessions);
+          }
+        } catch {
+          // silently skip failed clubs
+        }
+      }));
+
+      setUpcomingMatches(upMatchMap);
+      setPastMatches(pastMatchMap);
+      setUpcomingTraining(trainingMap);
+      setEventsLoading(false);
+    };
+    fetchAll();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [myClubs]);
+
+  // Merge and sort all upcoming events (matches + training)
+  const upcomingEvents = useMemo<UpcomingEvent[]>(() => {
+    const events: UpcomingEvent[] = [];
+
+    for (const club of myClubsList) {
+      for (const m of upcomingMatches.get(club.id) ?? []) {
+        events.push({
+          type: 'match', id: m.id, clubId: club.id,
+          clubName: club.shortName || club.name,
+          teamId: m.teamId, ageGroupId: m.ageGroupId,
+          teamName: m.teamName, ageGroupName: m.ageGroupName,
+          date: m.kickOffTime || m.date, location: m.location, match: m,
+        });
+      }
+      for (const s of upcomingTraining.get(club.id) ?? []) {
+        events.push({
+          type: 'training', id: s.id, clubId: club.id,
+          clubName: club.shortName || club.name,
+          teamId: s.teamId, ageGroupId: s.ageGroupId,
+          teamName: s.teamName, ageGroupName: s.ageGroupName,
+          date: s.date, location: s.location, session: s,
+        });
+      }
+    }
+
+    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    return events;
+  }, [myClubsList, upcomingMatches, upcomingTraining]);
+
+  // Previous results (past matches only, most recent first)
+  const previousResults = useMemo(() => {
+    const results: { clubId: string; clubName: string; match: ClubMatchDto }[] = [];
+    for (const club of myClubsList) {
+      for (const m of pastMatches.get(club.id) ?? []) {
+        results.push({ clubId: club.id, clubName: club.shortName || club.name, match: m });
+      }
+    }
+    results.sort((a, b) => new Date(b.match.date).getTime() - new Date(a.match.date).getTime());
+    return results;
+  }, [myClubsList, pastMatches]);
+
+  const isLoading = authLoading || currentUserLoading || myClubsLoading || myTeamsLoading;
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  };
+  const formatTime = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  const getResultBadge = (match: ClubMatchDto) => {
+    if (match.homeScore == null || match.awayScore == null) return null;
+    const ourScore = match.isHome ? match.homeScore : match.awayScore;
+    const theirScore = match.isHome ? match.awayScore : match.homeScore;
+    if (ourScore > theirScore) return { label: 'W', cls: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' };
+    if (ourScore < theirScore) return { label: 'L', cls: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' };
+    return { label: 'D', cls: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' };
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
-
         <PageTitle
-          title={"Welcome!"}
-          subtitle="You can find things here quickly. Select a club or information relevant to you to get started."
+          title="Dashboard"
+          subtitle="Your upcoming events and results"
         />
 
-        {/* Quick Access Section */}
-        {(hasMyTeams || myProfile.length > 0 || myChildrenLoading || hasMyChildren || authLoading || currentUserLoading || myPlayerLoading) && (
-          <div className="mb-4 space-y-2">
-            {/* My Children */}
-            {(myChildrenLoading || myChildrenError || hasMyChildren) && (
-              <>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  My Children
-                </h2>
-                <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                  {myChildrenLoading && (
-                    <div className="animate-pulse space-y-3">
-                      {Array.from({ length: 3 }).map((_, index) => (
-                        <div key={index} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-                      ))}
-                    </div>
-                  )}
-
-                  {myChildrenError && (
-                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                      <p className="text-red-800 dark:text-red-200 font-medium">Failed to load your children</p>
-                      <p className="text-red-600 dark:text-red-300 text-sm mt-1">{myChildrenError.message}</p>
-                    </div>
-                  )}
-
-                  {hasMyChildren && (
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {myChildrenList.map((player) => {
-                        // Get the first age group for the route
-                        const firstAgeGroupId = player.ageGroups.length > 0 ? player.ageGroups[0].id : '';
-                        
-                        // Only render link if all required IDs are valid
-                        if (!areAllParamsValid(player.clubId, firstAgeGroupId, player.id)) {
-                          return (
-                            <div
-                              key={player.id}
-                              className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 opacity-60 cursor-not-allowed"
-                              title="Missing player information"
-                            >
-                              {player.photo ? (
-                                <img 
-                                  src={player.photo} 
-                                  alt={`${player.firstName} ${player.lastName}`}
-                                  className="w-12 h-12 rounded-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-12 h-12 rounded-full bg-gray-400 flex items-center justify-center text-white font-semibold">
-                                  {player.firstName[0]}{player.lastName[0]}
-                                </div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">
-                                  {player.firstName} {player.lastName}
-                                </p>
-                              </div>
-                            </div>
-                          );
-                        }
-                        
-                        return (
-                          <Link
-                            key={player.id}
-                            to={Routes.player(player.clubId as string, firstAgeGroupId as string, player.id)}
-                            className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
-                          >
-                            {player.photo ? (
-                              <img 
-                                src={player.photo} 
-                                alt={`${player.firstName} ${player.lastName}`}
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold">
-                                {player.firstName[0]}{player.lastName[0]}
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-gray-900 dark:text-white truncate">
-                                {player.firstName} {player.lastName}
-                              </p>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                                {player.club?.shortName}
-                              </p>
-                            </div>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* My Profile */}
-            {(myProfile.length > 0 || currentUserLoading || myPlayerLoading || authLoading) && (
-              <>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                  My Profile
-                </h2>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
-                {(currentUserLoading || myPlayerLoading || authLoading) ? (
-                  <div className="animate-pulse grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {Array.from({ length: 3 }).map((_, index) => (
-                      <div key={index} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {myProfile.map((player) => {
-                      const club = myClubsList.find(c => c.id === player.clubId);
-                      const firstAgeGroupId = player.ageGroupIds && player.ageGroupIds.length > 0 ? player.ageGroupIds[0] : '';
-                      
-                      // Only render link if all required IDs are valid
-                      if (!areAllParamsValid(player.clubId, firstAgeGroupId, player.id)) {
-                        return (
-                          <div
-                            key={player.id}
-                            className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 opacity-60 cursor-not-allowed"
-                            title="Missing player information"
-                          >
-                            {player.photoUrl ? (
-                              <img 
-                                src={player.photoUrl} 
-                                alt={`${player.firstName} ${player.lastName}`}
-                                className="w-12 h-12 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-12 h-12 rounded-full bg-gray-400 flex items-center justify-center text-white font-semibold">
-                                {player.firstName[0]}{player.lastName[0]}
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">
-                                {player.firstName} {player.lastName}
-                              </p>
-                              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                                {club?.shortName} • {player.preferredPositions.join(', ')}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      }
-                      
-                      return (
-                        <Link
-                          key={player.id}
-                          to={Routes.player(player.clubId as string, firstAgeGroupId as string, player.id)}
-                          className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
-                        >
-                          {player.photoUrl ? (
-                            <img 
-                              src={player.photoUrl} 
-                              alt={`${player.firstName} ${player.lastName}`}
-                              className="w-12 h-12 rounded-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 rounded-full bg-primary-500 flex items-center justify-center text-white font-semibold">
-                              {player.firstName[0]}{player.lastName[0]}
-                            </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-900 dark:text-white truncate">
-                              {player.firstName} {player.lastName}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                              {club?.shortName} • {player.preferredPositions.join(', ')}
-                            </p>
-                          </div>
-                        </Link>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-              </>
-            )}
+        {/* Error State */}
+        {myClubsError && (
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+            <p className="text-red-800 dark:text-red-200 font-medium">Failed to load clubs</p>
+            <p className="text-red-600 dark:text-red-300 text-sm mt-1">{myClubsError.message}</p>
           </div>
         )}
 
-        {/* My Teams */}
-        {(myTeamsLoading || myTeamsError || hasMyTeams) && (
-          <>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              My Teams
-            </h2>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-4">
-              {myTeamsLoading && (
-                <div className="animate-pulse grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {Array.from({ length: 3 }).map((_, index) => (
-                    <div key={index} className="h-16 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-                  ))}
-                </div>
-              )}
+        {/* Upcoming Matches & Sessions Table */}
+        {!isLoading && !eventsLoading && upcomingEvents.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+            Upcoming
+          </h2>
 
-              {myTeamsError && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                  <p className="text-red-800 dark:text-red-200 font-medium">Failed to load your teams</p>
-                  <p className="text-red-600 dark:text-red-300 text-sm mt-1">{myTeamsError.message}</p>
-                </div>
-              )}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                      <th className="px-3 py-3 font-semibold">Type</th>
+                      <th className="px-3 py-3 font-semibold">Date</th>
+                      <th className="px-3 py-3 font-semibold">Details</th>
+                      <th className="px-3 py-3 font-semibold hidden lg:table-cell">Team</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {upcomingEvents.slice(0, 15).map((event) => {
+                      const isMatch = event.type === 'match';
+                      const link = isMatch
+                        ? Routes.matchReport(event.clubId, event.ageGroupId, event.teamId, event.id)
+                        : Routes.teamTrainingSession(event.clubId, event.ageGroupId, event.teamId, event.id);
 
-              {hasMyTeams && (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {myTeamsList.map((team) => {
-                    // Only render link if all required IDs are valid
-                    if (!areAllParamsValid(team.id, team.clubId, team.ageGroupId)) {
                       return (
-                        <div
-                          key={team.id}
-                          className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 opacity-60 cursor-not-allowed"
-                          title="Missing team information"
-                        >
-                          {team.club?.logo ? (
-                            <img 
-                              src={team.club.logo} 
-                              alt={`${team.club.name} logo`}
-                              className="w-12 h-12 rounded object-cover"
-                            />
-                          ) : (
-                            <div 
-                              className="w-12 h-12 rounded flex items-center justify-center text-sm font-bold text-white"
-                              style={{ backgroundColor: team.colors?.primary || team.club?.primaryColor || '#9ca3af' }}
-                            >
-                              {(team.name || '').substring(0, 2)}
+                        <tr key={`${event.type}-${event.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                          <td className="px-3 py-3">
+                            <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${isMatch ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'}`}>
+                              {isMatch ? '⚽' : '🏋️'}
+                            </span>
+                          </td>
+                          <td className="px-3 py-3 whitespace-nowrap">
+                            <div className="font-medium text-gray-900 dark:text-white text-sm">{formatDate(event.date)}</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">{formatTime(event.date)}</div>
+                          </td>
+                          <td className="px-3 py-3">
+                            <Link to={link} className="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm">
+                              {isMatch && event.type === 'match'
+                                ? <>{event.match.isHome ? 'vs' : '@'} {event.match.opposition}</>
+                                : <>Training{event.type === 'training' && event.session.focusAreas.length > 0 ? ` — ${event.session.focusAreas.slice(0, 2).join(', ')}` : ''}</>
+                              }
+                            </Link>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {event.teamName}
+                              {isMatch && event.type === 'match' && event.match.competition && ` · ${event.match.competition}`}
                             </div>
-                          )}
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-700 dark:text-gray-300 truncate">
-                              {team.name}
-                            </p>
-                            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-                              {team.club?.shortName} • {team.season}
-                            </p>
-                          </div>
-                        </div>
+                          </td>
+                          <td className="px-3 py-3 text-gray-600 dark:text-gray-300 hidden lg:table-cell whitespace-nowrap text-sm">
+                            <div>{event.teamName}</div>
+                            <div className="text-xs text-gray-400 dark:text-gray-500">{event.ageGroupName}</div>
+                          </td>
+                        </tr>
                       );
-                    }
-                    
-                    return (
-                      <Link
-                        key={team.id}
-                        to={Routes.team(team.clubId as string, team.ageGroupId as string, team.id as string)}
-                        className="flex items-center gap-3 p-3 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:border-primary-500 dark:hover:border-primary-500 transition-colors"
-                      >
-                        {team.club?.logo ? (
-                          <img 
-                            src={team.club.logo} 
-                            alt={`${team.club.name} logo`}
-                            className="w-12 h-12 rounded object-cover"
-                          />
-                        ) : (
-                          <div 
-                            className="w-12 h-12 rounded flex items-center justify-center text-sm font-bold text-white"
-                            style={{ backgroundColor: team.colors?.primary || team.club?.primaryColor || '#3b82f6' }}
-                          >
-                            {(team.name || '').substring(0, 2)}
-                          </div>
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 dark:text-white truncate">
-                            {team.name}
-                          </p>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 truncate">
-                            {team.club?.shortName} • {team.season}
-                          </p>
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        </div>
+        )}
+
+        {/* Previous Results Table */}
+        {!isLoading && !eventsLoading && previousResults.length > 0 && (
+        <div className="mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+            Previous Results
+          </h2>
+
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
+                      <th className="px-3 py-3 font-semibold">Date</th>
+                      <th className="px-3 py-3 font-semibold">Match</th>
+                      <th className="px-3 py-3 font-semibold text-center">Score</th>
+                      <th className="px-3 py-3 font-semibold text-center">Result</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {previousResults.slice(0, 15).map(({ clubId, match: m }) => {
+                      const result = getResultBadge(m);
+                      const link = Routes.matchReport(clubId, m.ageGroupId, m.teamId, m.id);
+
+                      return (
+                        <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                          <td className="px-3 py-3 whitespace-nowrap">
+                            <div className="font-medium text-gray-900 dark:text-white text-sm">{formatDate(m.date)}</div>
+                          </td>
+                          <td className="px-3 py-3">
+                            <Link to={link} className="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm">
+                              {m.isHome ? 'vs' : '@'} {m.opposition}
+                            </Link>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              {m.teamName}{m.competition && ` · ${m.competition}`}
+                            </div>
+                          </td>
+                          <td className="px-3 py-3 text-center font-bold text-gray-900 dark:text-white whitespace-nowrap text-sm">
+                            {m.homeScore != null && m.awayScore != null
+                              ? `${m.isHome ? m.homeScore : m.awayScore} - ${m.isHome ? m.awayScore : m.homeScore}`
+                              : '—'
+                            }
+                          </td>
+                          <td className="px-3 py-3 text-center">
+                            {result ? (
+                              <span className={`inline-block text-xs font-bold px-2.5 py-1 rounded-full ${result.cls}`}>
+                                {result.label}
+                              </span>
+                            ) : (
+                              <span className="text-gray-400">—</span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+        </div>
+        )}
+
+        {/* Quick Access: Circle avatars for clubs & teams */}
+        {!isLoading && isCoach && (myClubsList.length > 0 || myTeamsList.length > 0) && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            {/* Clubs Row */}
+            {myClubsList.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">My Clubs</h2>
+                <div className="flex items-center gap-3 overflow-x-auto pb-1">
+                  {myClubsList.map((club) => (
+                    <Link
+                      key={club.id}
+                      to={Routes.club(club.id)}
+                      className="flex flex-col items-center gap-1 flex-shrink-0 group"
+                      title={club.name}
+                    >
+                      {club.logo ? (
+                        <img
+                          src={club.logo}
+                          alt={club.name}
+                          className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                        />
+                      ) : (
+                        <div
+                          className="w-20 h-20 rounded-full flex items-center justify-center text-xl font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                          style={{ backgroundColor: club.primaryColor || '#3b82f6' }}
+                        >
+                          {club.shortName?.substring(0, 2) || club.name.substring(0, 2)}
                         </div>
+                      )}
+                      <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[80px] text-center">
+                        {club.shortName || club.name}
+                      </span>
+                    </Link>
+                  ))}
+                  {isAdmin && (
+                    <Link
+                      to={Routes.newClub()}
+                      className="flex flex-col items-center gap-1 flex-shrink-0 group"
+                      title="Create Club"
+                    >
+                      <div className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 group-hover:border-primary-500 group-hover:text-primary-500 transition-colors">
+                        <span className="text-2xl leading-none">+</span>
+                      </div>
+                      <span className="text-xs text-gray-400 group-hover:text-primary-500">New</span>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Teams Row */}
+            {myTeamsList.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">My Teams</h2>
+                <div className="flex items-center gap-3 overflow-x-auto pb-1">
+                  {myTeamsList.map((team) => {
+                    const club = myClubsList.find(c => c.id === team.clubId);
+                    const hasValidRoute = areAllParamsValid(team.id, team.clubId, team.ageGroupId);
+
+                    const avatar = (
+                      <div className="flex flex-col items-center gap-1 flex-shrink-0 group">
+                        <div
+                          className="w-20 h-20 rounded-full flex items-center justify-center text-base font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                          style={{ backgroundColor: team.colors?.primary || club?.primaryColor || '#3b82f6' }}
+                        >
+                          {(team.name || '').substring(0, 2)}
+                        </div>
+                        <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[80px] text-center">
+                          {team.name}
+                        </span>
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[80px] text-center -mt-0.5">
+                          {team.ageGroupName}
+                        </span>
+                      </div>
+                    );
+
+                    return hasValidRoute ? (
+                      <Link key={team.id} to={Routes.team(team.clubId!, team.ageGroupId!, team.id!)} title={`${team.name} (${team.ageGroupName})`}>
+                        {avatar}
                       </Link>
+                    ) : (
+                      <div key={team.id} className="opacity-60 cursor-not-allowed" title={`${team.name} (${team.ageGroupName})`}>
+                        {avatar}
+                      </div>
                     );
                   })}
                 </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {/* Clubs Grid */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-              My Clubs
-            </h2>
-            {isAdmin && (
-              <Link
-                to={Routes.newClub()}
-                className="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors"
-              >
-                + Create Club
-              </Link>
+              </div>
             )}
           </div>
-          
-          {/* Loading State */}
-          {myClubsLoading && (
-            <div className="animate-pulse grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {Array.from({ length: 3 }).map((_, index) => (
-                <div key={index} className="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-              ))}
-            </div>
-          )}
-
-          {/* Error State */}
-          {myClubsError && (
-            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-              <p className="text-red-800 dark:text-red-200 font-medium">Failed to load clubs</p>
-              <p className="text-red-600 dark:text-red-300 text-sm mt-1">{myClubsError.message}</p>
-              <p className="text-red-600 dark:text-red-300 text-sm mt-2">
-                💡 Make sure Azure Functions is running: <code className="bg-red-100 dark:bg-red-900/40 px-2 py-1 rounded">cd api/OurGame.Api && func start</code>
-              </p>
-            </div>
-          )}
-
-          {/* Clubs Grid - From API */}
-          {!myClubsLoading && !myClubsError && hasClubs && (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {myClubsList.map((club) => {
-                // Only render link if club ID is valid
-                if (!club.id) {
-                  return null;
-                }
-                
-                return (
-                  <Link
-                    key={club.id}
-                    to={Routes.club(club.id)}
-                    className="card-hover group"
-                  >
-                    <div className="flex items-center gap-4 mb-4">
-                      {club.logo ? (
-                        <img 
-                          src={club.logo} 
-                          alt={`${club.name} logo`}
-                          className="w-20 h-20 rounded-lg object-cover border-2 border-gray-200 dark:border-gray-700"
-                        />
-                      ) : (
-                        <div 
-                          className="w-20 h-20 rounded-lg flex items-center justify-center text-3xl font-bold text-white"
-                          style={{ backgroundColor: club.primaryColor || '#3b82f6' }}
-                        >
-                          {club.shortName}
-                        </div>
-                      )}
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-900 dark:text-white group-hover:text-primary-600 dark:group-hover:text-primary-400">
-                          {club.name}
-                        </h3>
-                      </div>
-                    </div>
-                    
-                    {club.foundedYear && (
-                      <div className="pt-4 border-t border-gray-100 dark:border-gray-700">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">Founded</span>
-                          <span className="font-medium text-gray-900 dark:text-white">{club.foundedYear}</span>
-                        </div>
-                      </div>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-        </div>
+        )}
       </main>
     </div>
   );

@@ -8,6 +8,7 @@ import { PlayerAttributes } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import PlayerSubNav from '@components/player/PlayerSubNav';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PolarAngleAxis, PolarGrid, PolarRadiusAxis, RadarChart, Radar, Legend
@@ -267,6 +268,9 @@ export default function PlayerAbilitiesPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
+        {/* Player Sub Navigation */}
+        <PlayerSubNav />
+
         {/* Error State */}
         {error && (
           <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">

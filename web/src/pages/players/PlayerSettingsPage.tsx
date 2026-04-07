@@ -819,57 +819,70 @@ export default function PlayerSettingsPage() {
                     No emergency contacts added yet.
                   </p>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {emergencyContacts.map((contact, index) => (
-                      <div key={contact.id || `contact-${index}`} className="flex items-center gap-3 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                        {/* Primary indicator */}
-                        <button
-                          type="button"
-                          onClick={() => handleSetPrimaryContact(contact.id || `contact-${index}`)}
-                          disabled={isFormDisabled}
-                          className={`flex-shrink-0 w-5 h-5 rounded-full border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
-                            contact.isPrimary
-                              ? 'bg-blue-600 border-blue-600'
-                              : 'border-gray-300 dark:border-gray-600 hover:border-blue-400'
-                          }`}
-                          title={contact.isPrimary ? 'Primary contact' : 'Set as primary'}
-                        />
-                        {/* Inline fields */}
-                        <input
-                          type="text"
-                          value={contact.name}
-                          onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'name', e.target.value)}
-                          disabled={isFormDisabled}
-                          placeholder="Name *"
-                          className="flex-1 min-w-0 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                        <input
-                          type="tel"
-                          value={contact.phone}
-                          onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'phone', e.target.value)}
-                          disabled={isFormDisabled}
-                          placeholder="Phone *"
-                          className="w-36 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                        <input
-                          type="text"
-                          value={contact.relationship}
-                          onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'relationship', e.target.value)}
-                          disabled={isFormDisabled}
-                          placeholder="Relationship *"
-                          className="w-32 px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveEmergencyContact(contact.id || `contact-${index}`)}
-                          disabled={isFormDisabled}
-                          className="flex-shrink-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Remove contact"
-                        >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
-                        </button>
+                      <div key={contact.id || `contact-${index}`} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                        <div className="flex items-center justify-between mb-3">
+                          <button
+                            type="button"
+                            onClick={() => handleSetPrimaryContact(contact.id || `contact-${index}`)}
+                            disabled={isFormDisabled}
+                            className={`text-xs font-medium px-2.5 py-1 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                              contact.isPrimary
+                                ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                                : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400'
+                            }`}
+                            title={contact.isPrimary ? 'Primary contact' : 'Set as primary'}
+                          >
+                            {contact.isPrimary ? 'Primary' : 'Set as primary'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveEmergencyContact(contact.id || `contact-${index}`)}
+                            disabled={isFormDisabled}
+                            className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Remove contact"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Name *</label>
+                            <input
+                              type="text"
+                              value={contact.name}
+                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'name', e.target.value)}
+                              disabled={isFormDisabled}
+                              placeholder="e.g., Jane Smith"
+                              className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Relationship *</label>
+                            <input
+                              type="text"
+                              value={contact.relationship}
+                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'relationship', e.target.value)}
+                              disabled={isFormDisabled}
+                              placeholder="e.g., Mother, Father"
+                              className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Phone *</label>
+                            <input
+                              type="tel"
+                              value={contact.phone}
+                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'phone', e.target.value)}
+                              disabled={isFormDisabled}
+                              placeholder="e.g., 07700 900000"
+                              className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>

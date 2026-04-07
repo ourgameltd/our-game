@@ -72,7 +72,8 @@ export default function MobileNavigation() {
   const coach = coachData ?? undefined;
 
   // Determine which level we're currently at
-  const currentLevel = playerId ? 'player' : coachId ? 'coach' : teamId ? 'team' : ageGroupId ? 'ageGroup' : clubId ? 'club' : 'clubs';
+  // Player and coach pages keep the parent-level navigation visible
+  const currentLevel = teamId ? 'team' : ageGroupId ? 'ageGroup' : clubId ? 'club' : 'clubs';
 
   // Check if we're viewing a staff-related page (players or coaches)
   const isStaffPage = location.pathname.includes('/players') || location.pathname.includes('/coaches');
@@ -81,7 +82,7 @@ export default function MobileNavigation() {
   const isSchedulingPage = location.pathname.includes('/matches') || location.pathname.includes('/training');
 
   // Check if we're viewing a management-related page (ethos, kits, report-cards)
-  const isManagementPage = location.pathname.includes('/ethos') || location.pathname.includes('/kits') || location.pathname.includes('/report-cards');
+  const isManagementPage = location.pathname.includes('/ethos') || location.pathname.includes('/kits') || location.pathname.includes('/invites');
 
   // Check if we're viewing a tactics-related page (formations, drills, templates)
   const isTacticsPage = location.pathname.includes('/tactics') || location.pathname.includes('/drills') || location.pathname.includes('/drill-templates');
@@ -386,15 +387,6 @@ export default function MobileNavigation() {
                                 <span className="mobile-nav-text">Coaches</span>
                               </Link>
                             </li>
-                            <li className="mobile-nav-item">
-                              <Link
-                                to={Routes.ageGroupInvites(clubId as string, ageGroupId as string)}
-                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupInvites(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
-                              >
-                                <Shield className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Invites</span>
-                              </Link>
-                            </li>
                           </ul>
                         )}
                       </li>
@@ -465,13 +457,14 @@ export default function MobileNavigation() {
                                 <span className="mobile-nav-text">Teams</span>
                               </Link>
                             </li>
+                            {/* Hidden: Report Cards (not ready for release) */}
                             <li className="mobile-nav-item">
-                              <Link 
-                                to={Routes.ageGroupReportCards(clubId as string, ageGroupId as string)}
-                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupReportCards(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
+                              <Link
+                                to={Routes.ageGroupInvites(clubId as string, ageGroupId as string)}
+                                className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupInvites(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                               >
-                                <FileText className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Report Cards</span>
+                                <Shield className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Invites</span>
                               </Link>
                             </li>
                           </ul>
@@ -635,137 +628,12 @@ export default function MobileNavigation() {
                                 <span className="mobile-nav-text">Kits</span>
                               </Link>
                             </li>
-                            <li className="mobile-nav-item">
-                              <Link 
-                                to={Routes.clubReportCards(clubId as string)}
-                                className={`mobile-nav-link pl-8 ${isActive(Routes.clubReportCards(clubId as string)) ? 'active' : ''}`}
-                              >
-                                <FileText className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Report Cards</span>
-                              </Link>
-                            </li>
+                            {/* Hidden: Report Cards (not ready for release) */}
                           </ul>
                         )}
                       </li>
                     </ul>
                   )}
-                </div>
-              </li>
-            )}
-
-            {/* Player Level - Show full options only if we're at player level */}
-            {player && currentLevel === 'player' && areAllParamsValid(clubId, ageGroupId, playerId) && (
-              <li className="mobile-nav-item">
-                <div>
-                  <div className="flex items-center">
-                    <Link 
-                      to={isValidParam(teamId) 
-                        ? Routes.teamPlayer(clubId as string, ageGroupId as string, teamId as string, playerId as string)
-                        : Routes.player(clubId as string, ageGroupId as string, playerId as string)
-                      }
-                      className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                    >
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                        <UserCircle className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                        {player.firstName} {player.lastName}
-                      </h3>
-                    </Link>
-                    <button
-                      onClick={() => setIsNavExpanded(!isNavExpanded)}
-                      className="p-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500 dark:text-gray-400"
-                      aria-label={isNavExpanded ? "Collapse menu" : "Expand menu"}
-                    >
-                      {isNavExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                    </button>
-                  </div>
-                  {isNavExpanded && (
-                    <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                      <li className="mobile-nav-item">
-                        <Link 
-                          to={isValidParam(teamId) 
-                            ? Routes.teamPlayerAbilities(clubId as string, ageGroupId as string, teamId as string, playerId as string)
-                            : Routes.playerAbilities(clubId as string, ageGroupId as string, playerId as string)
-                          }
-                          className={`mobile-nav-link pl-8 ${
-                            isValidParam(teamId)
-                              ? isActive(Routes.teamPlayerAbilities(clubId as string, ageGroupId as string, teamId as string, playerId as string))
-                              : isActive(Routes.playerAbilities(clubId as string, ageGroupId as string, playerId as string))
-                          } ? 'active' : ''}`}
-                        >
-                          <Shield className="mobile-nav-icon" />
-                          <span className="mobile-nav-text">Abilities</span>
-                        </Link>
-                      </li>
-                      <li className="mobile-nav-item">
-                        <Link 
-                          to={isValidParam(teamId) 
-                            ? Routes.teamPlayerDevelopmentPlans(clubId as string, ageGroupId as string, teamId as string, playerId as string)
-                            : Routes.playerDevelopmentPlans(clubId as string, ageGroupId as string, playerId as string)
-                          }
-                          className={`mobile-nav-link pl-8 ${
-                            isValidParam(teamId)
-                              ? isActive(Routes.teamPlayerDevelopmentPlans(clubId as string, ageGroupId as string, teamId as string, playerId as string))
-                              : isActive(Routes.playerDevelopmentPlans(clubId as string, ageGroupId as string, playerId as string))
-                          } ? 'active' : ''}`}
-                        >
-                          <Shield className="mobile-nav-icon" />
-                          <span className="mobile-nav-text">Development</span>
-                        </Link>
-                      </li>
-                      <li className="mobile-nav-item">
-                        <Link 
-                          to={isValidParam(teamId) 
-                            ? Routes.teamPlayerReportCards(clubId as string, ageGroupId as string, teamId as string, playerId as string)
-                            : Routes.playerReportCards(clubId as string, ageGroupId as string, playerId as string)
-                          }
-                          className={`mobile-nav-link pl-8 ${
-                            isValidParam(teamId)
-                              ? isActive(Routes.teamPlayerReportCards(clubId as string, ageGroupId as string, teamId as string, playerId as string))
-                              : isActive(Routes.playerReportCards(clubId as string, ageGroupId as string, playerId as string))
-                          } ? 'active' : ''}`}
-                        >
-                          <FileText className="mobile-nav-icon" />
-                          <span className="mobile-nav-text">Report Cards</span>
-                        </Link>
-                      </li>
-                      <li className="mobile-nav-item">
-                        <Link 
-                          to={isValidParam(teamId) 
-                            ? Routes.teamPlayerAlbum(clubId as string, ageGroupId as string, teamId as string, playerId as string)
-                            : Routes.playerAlbum(clubId as string, ageGroupId as string, playerId as string)
-                          }
-                          className={`mobile-nav-link pl-8 ${
-                            isValidParam(teamId)
-                              ? isActive(Routes.teamPlayerAlbum(clubId as string, ageGroupId as string, teamId as string, playerId as string))
-                              : isActive(Routes.playerAlbum(clubId as string, ageGroupId as string, playerId as string))
-                          } ? 'active' : ''}`}
-                        >
-                          <FileText className="mobile-nav-icon" />
-                          <span className="mobile-nav-text">Album</span>
-                        </Link>
-                      </li>
-                    </ul>
-                  )}
-                </div>
-              </li>
-            )}
-
-            {/* Coach Level - Show full options only if we're at coach level */}
-            {coach && currentLevel === 'coach' && areAllParamsValid(clubId, ageGroupId, coachId) && (
-              <li className="mobile-nav-item">
-                <div>
-                  <Link 
-                    to={isValidParam(teamId) 
-                      ? Routes.teamCoach(clubId as string, ageGroupId as string, teamId as string, coachId as string)
-                      : Routes.ageGroupCoach(clubId as string, ageGroupId as string, coachId as string)
-                    }
-                    className="block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-                  >
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
-                      {coach.firstName} {coach.lastName}
-                    </h3>
-                  </Link>
                 </div>
               </li>
             )}
@@ -939,15 +807,7 @@ export default function MobileNavigation() {
                                 <span className="mobile-nav-text">Kits</span>
                               </Link>
                             </li>
-                            <li className="mobile-nav-item">
-                              <Link 
-                                to={Routes.teamReportCards(clubId as string, ageGroupId as string, teamId as string)}
-                                className={`mobile-nav-link pl-8 ${isActive(Routes.teamReportCards(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
-                              >
-                                <FileText className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Report Cards</span>
-                              </Link>
-                            </li>
+                            {/* Hidden: Report Cards (not ready for release) */}
                           </ul>
                         )}
                       </li>
