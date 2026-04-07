@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import PageTitle from '@components/common/PageTitle';
 import { Routes, areAllParamsValid } from '@utils/routes';
 import { useMyTeams, useCurrentUser, useMyClubs } from '@/api/hooks';
@@ -27,6 +27,7 @@ type UpcomingEvent = {
 
 export default function ClubsListPage() {
   usePageTitle(['Dashboard']);
+  const navigate = useNavigate();
 
   const { isLoading: authLoading, isAdmin } = useAuth();
   const { data: currentUser, isLoading: currentUserLoading } = useCurrentUser();
@@ -183,10 +184,10 @@ export default function ClubsListPage() {
                       const isMatch = event.type === 'match';
                       const link = isMatch
                         ? Routes.matchReport(event.clubId, event.ageGroupId, event.teamId, event.id)
-                        : Routes.teamTrainingSession(event.clubId, event.ageGroupId, event.teamId, event.id);
+                        : Routes.teamTrainingSessionEdit(event.clubId, event.ageGroupId, event.teamId, event.id);
 
                       return (
-                        <tr key={`${event.type}-${event.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                        <tr key={`${event.type}-${event.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer" onClick={() => navigate(link)}>
                           <td className="px-3 py-3">
                             <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${isMatch ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'}`}>
                               {isMatch ? '⚽' : '🏋️'}
@@ -246,7 +247,7 @@ export default function ClubsListPage() {
                       const link = Routes.matchReport(clubId, m.ageGroupId, m.teamId, m.id);
 
                       return (
-                        <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors">
+                        <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer" onClick={() => navigate(link)}>
                           <td className="px-3 py-3 whitespace-nowrap">
                             <div className="font-medium text-gray-900 dark:text-white text-sm">{formatDate(m.date)}</div>
                           </td>

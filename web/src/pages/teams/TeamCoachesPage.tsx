@@ -49,7 +49,7 @@ export default function TeamCoachesPage() {
   const [modalSearchQuery, setModalSearchQuery] = useState('');
 
   // Only show skeleton on initial load, not during background refetches
-  const isInitialLoading = (teamLoading && !teamOverview) || (coachesLoading && teamCoaches.length === 0);
+  const isInitialLoading = (teamLoading && !teamOverview) || (coachesLoading && !teamCoaches?.length);
 
   // Parameter validation error
   if (paramError) {

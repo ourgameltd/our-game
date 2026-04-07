@@ -37,6 +37,17 @@ export default function MatchReportPage() {
     }
   }, [match?.teamId, match?.teamName, match?.clubId, match?.clubName, match?.ageGroupId, match?.ageGroupName, setEntityName]);
 
+  const socialShareUrl = useMemo(
+    () => match ? `${window.location.origin}${Routes.socialMatchReport(match.id)}` : '',
+    [match?.id]
+  );
+
+  useEffect(() => {
+    if (match) {
+      setIsPublished(match.isPublished);
+    }
+  }, [match?.isPublished]);
+
   // Error state
   if (error) {
     return (
@@ -143,14 +154,6 @@ export default function MatchReportPage() {
   // Separate starting XI and substitutes from lineup players
   const startingEleven = match.lineup?.players.filter(p => p.isStarting) || [];
   const substitutes = match.lineup?.players.filter(p => !p.isStarting) || [];
-  const socialShareUrl = useMemo(
-    () => `${window.location.origin}${Routes.socialMatchReport(match.id)}`,
-    [match.id]
-  );
-
-  useEffect(() => {
-    setIsPublished(match.isPublished);
-  }, [match.isPublished]);
 
   const handlePublishToggle = async () => {
     if (!matchId || !clubId || !ageGroupId || !teamId) {

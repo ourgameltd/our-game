@@ -19,29 +19,14 @@ import PageTitle from '@components/common/PageTitle';
 function KitCardSkeleton() {
   return (
     <div className="card-hover animate-pulse">
-      <div className="flex items-center justify-between mb-3">
-        <div>
-          <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="flex items-center gap-4">
+        <div className="flex gap-1.5 shrink-0">
+          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
         </div>
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        <div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Shirt</div>
-          <div className="w-full aspect-square rounded-lg bg-gray-200 dark:bg-gray-700" />
-        </div>
-        <div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Shorts</div>
-          <div className="w-full aspect-square rounded-lg bg-gray-200 dark:bg-gray-700" />
-        </div>
-        <div>
-          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">Socks</div>
-          <div className="w-full aspect-square rounded-lg bg-gray-200 dark:bg-gray-700" />
-        </div>
-      </div>
-      <div className="flex gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-        <div className="flex-1 h-8 bg-gray-200 dark:bg-gray-700 rounded" />
-        <div className="flex-1 h-8 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
+        <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
     </div>
   );
@@ -203,7 +188,7 @@ export default function TeamKitsPage() {
 
               {/* Loading state for team kits */}
               {kitsLoading && (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-2">
                   {[1, 2, 3].map((i) => (
                     <KitCardSkeleton key={i} />
                   ))}
@@ -244,7 +229,7 @@ export default function TeamKitsPage() {
 
               {/* Team kits grid */}
               {!kitsLoading && !kitsError && teamKits.length > 0 && (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-2">
                   {teamKits.map((kit) => (
                     <KitCard
                       key={kit.id}
@@ -269,7 +254,7 @@ export default function TeamKitsPage() {
 
               {/* Loading state for club kits */}
               {clubKitsLoading && (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-2">
                   {[1, 2, 3].map((i) => (
                     <KitCardSkeleton key={i} />
                   ))}
@@ -294,7 +279,7 @@ export default function TeamKitsPage() {
 
               {/* Club kits grid */}
               {!clubKitsLoading && !clubKitsError && clubKits && clubKits.length > 0 && (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="flex flex-col gap-2">
                   {clubKits.map((kit) => (
                     <KitCard
                       key={kit.id}
