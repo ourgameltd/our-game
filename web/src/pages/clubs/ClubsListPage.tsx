@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PageTitle from '@components/common/PageTitle';
 import { Routes, areAllParamsValid } from '@utils/routes';
-import { useMyTeams, useCurrentUser, useMyClubs } from '@/api/hooks';
+import { useMyTeams, useCurrentUser, useMyClubs, useMyChildren, usePlayer } from '@/api/hooks';
 import { apiClient } from '@/api';
 import type { ClubMatchDto, ClubTrainingSessionDto } from '@/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,6 +31,8 @@ export default function ClubsListPage() {
 
   const { isLoading: authLoading, isAdmin } = useAuth();
   const { data: currentUser, isLoading: currentUserLoading } = useCurrentUser();
+  const { data: myChildren, isLoading: myChildrenLoading } = useMyChildren();
+  const { data: linkedPlayerProfile, isLoading: linkedPlayerLoading } = usePlayer(currentUser?.playerId);
   const { data: myClubs, isLoading: myClubsLoading, error: myClubsError } = useMyClubs();
   const { data: myTeams, isLoading: myTeamsLoading } = useMyTeams();
 
@@ -44,6 +46,39 @@ export default function ClubsListPage() {
 
   const myClubsList = myClubs ?? [];
   const myTeamsList = myTeams ?? [];
+  const myChildrenList = myChildren ?? [];
+
+  const linkedPlayers = useMemo(() => {
+    const linked = new Map<string, {
+      id: string;
+      displayName: string;
+      photo?: string;
+      clubId: string;
+      ageGroupId?: string;
+    }>();
+
+    if (linkedPlayerProfile?.id && linkedPlayerProfile.clubId) {
+      linked.set(linkedPlayerProfile.id, {
+        id: linkedPlayerProfile.id,
+        displayName: `${linkedPlayerProfile.firstName} ${linkedPlayerProfile.lastName}`,
+        photo: linkedPlayerProfile.photoUrl,
+        clubId: linkedPlayerProfile.clubId,
+        ageGroupId: linkedPlayerProfile.ageGroupIds?.[0],
+      });
+    }
+
+    for (const child of myChildrenList) {
+      linked.set(child.id, {
+        id: child.id,
+        displayName: `${child.firstName} ${child.lastName}`,
+        photo: child.photo,
+        clubId: child.clubId,
+        ageGroupId: child.ageGroups?.[0]?.id,
+      });
+    }
+
+    return Array.from(linked.values());
+  }, [linkedPlayerProfile, myChildrenList]);
 
   useEffect(() => {
     if (myClubsList.length === 0) return;
@@ -125,7 +160,7 @@ export default function ClubsListPage() {
     return results;
   }, [myClubsList, pastMatches]);
 
-  const isLoading = authLoading || currentUserLoading || myClubsLoading || myTeamsLoading;
+  const isLoading = authLoading || currentUserLoading || myChildrenLoading || linkedPlayerLoading || myClubsLoading || myTeamsLoading;
 
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr);
@@ -286,6 +321,50 @@ export default function ClubsListPage() {
               </div>
             </div>
         </div>
+        )}
+
+        {/* Linked player access for parent/player accounts */}
+        {!isLoading && linkedPlayers.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Linked Players</h2>
+            <div className="flex items-center gap-3 overflow-x-auto pb-1">
+              {linkedPlayers.map((player) => {
+                const hasValidRoute = areAllParamsValid(player.clubId, player.ageGroupId, player.id);
+                const to = hasValidRoute
+                  ? Routes.player(player.clubId, player.ageGroupId!, player.id)
+                  : '#';
+
+                const avatar = (
+                  <div className="flex flex-col items-center gap-1 flex-shrink-0 group">
+                    {player.photo ? (
+                      <img
+                        src={player.photo}
+                        alt={player.displayName}
+                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 rounded-full flex items-center justify-center text-base font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors bg-gradient-to-br from-primary-500 to-primary-700">
+                        {player.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </div>
+                    )}
+                    <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[90px] text-center">
+                      {player.displayName}
+                    </span>
+                  </div>
+                );
+
+                return hasValidRoute ? (
+                  <Link key={player.id} to={to} title={player.displayName}>
+                    {avatar}
+                  </Link>
+                ) : (
+                  <div key={player.id} className="opacity-60 cursor-not-allowed" title={`${player.displayName} (route unavailable)`}>
+                    {avatar}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
 
         {/* Quick Access: Circle avatars for clubs & teams */}

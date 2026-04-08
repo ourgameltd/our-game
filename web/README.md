@@ -17,6 +17,17 @@ This project provides a comprehensive management system for football clubs of al
 - **Formations & Tactics**: Store and share formations globally across teams
 - **Role-Based Access**: Secure invite-only registration with role assignments
 
+## Recent Updates
+
+- Linked player accounts now appear on the dashboard as circular quick-access cards for parent and player personas.
+- Linked parent and player personas now see scoped navigation only:
+   - Club level: Ethos and Age Groups
+   - Age group level: Teams
+   - Team level: Matches and Training
+- Restricted direct route access now returns an in-app Access Denied view.
+- Parent personas are blocked from player abilities pages.
+- Player settings now lock protected fields (Association ID and preferred positions) for non-coach personas.
+
 ## Project Structure
 
 ```

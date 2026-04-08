@@ -121,6 +121,46 @@ public class UpdatePlayerHandlerTests
     }
 
     [Fact]
+    public async Task Handle_RebuildsEditableContacts_ButPreservesLinkedAccountContacts()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var playerId = await db.SeedPlayerAsync(clubId);
+        var linkedUserId = await db.SeedUserAsync("linked-parent-auth");
+
+        db.Context.EmergencyContacts.Add(new EmergencyContact
+        {
+            Id = Guid.NewGuid(),
+            PlayerId = playerId,
+            UserId = linkedUserId,
+            Name = "Linked Parent",
+            Phone = "+447700900001",
+            Relationship = "Parent",
+            IsPrimary = true
+        });
+        await db.SeedEmergencyContactAsync(playerId, "Editable Contact");
+        await db.Context.SaveChangesAsync();
+
+        var handler = new UpdatePlayerHandler(db.Context);
+        var contacts = new[]
+        {
+            new EmergencyContactRequestDto { Name = "Updated Editable", Phone = "+447700900002", Relationship = "Guardian", IsPrimary = true }
+        };
+        var dto = MakeDto(emergencyContacts: contacts);
+
+        await handler.Handle(new UpdatePlayerCommand(playerId, dto), CancellationToken.None);
+
+        var dbContacts = await db.Context.EmergencyContacts
+            .AsNoTracking()
+            .Where(c => c.PlayerId == playerId)
+            .ToListAsync();
+
+        Assert.Equal(2, dbContacts.Count);
+        Assert.Contains(dbContacts, c => c.UserId == linkedUserId && c.Name == "Linked Parent");
+        Assert.Contains(dbContacts, c => c.UserId == null && c.Name == "Updated Editable");
+    }
+
+    [Fact]
     public async Task Handle_RebuildsTeamAndAgeGroupAssignments()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
@@ -169,19 +209,118 @@ public class UpdatePlayerHandlerTests
         Assert.Single(teamLinks); // Original assignment preserved
     }
 
+    [Fact]
+    public async Task Handle_WhenParentUpdatesRestrictedFields_ThrowsForbiddenException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var playerId = await db.SeedPlayerAsync(clubId, preferredPositions: "[\"CM\"]");
+        var parentUserId = await db.SeedUserAsync("parent-auth");
+
+        db.Context.EmergencyContacts.Add(new EmergencyContact
+        {
+            Id = Guid.NewGuid(),
+            PlayerId = playerId,
+            UserId = parentUserId,
+            Name = "Parent Contact",
+            Phone = "+447700900001",
+            Relationship = "Parent",
+            IsPrimary = true
+        });
+        await db.Context.SaveChangesAsync();
+
+        var handler = new UpdatePlayerHandler(db.Context);
+        var dto = MakeDto(associationId: "SFA-9999", preferredPositions: new[] { "ST" });
+
+        await Assert.ThrowsAsync<ForbiddenException>(() =>
+            handler.Handle(new UpdatePlayerCommand(playerId, dto, "parent-auth"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_WhenParentUpdatesAllowedFields_Succeeds()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var playerId = await db.SeedPlayerAsync(clubId, preferredPositions: "[\"CM\"]");
+        var parentUserId = await db.SeedUserAsync("parent-auth-allowed");
+
+        db.Context.EmergencyContacts.Add(new EmergencyContact
+        {
+            Id = Guid.NewGuid(),
+            PlayerId = playerId,
+            UserId = parentUserId,
+            Name = "Parent Contact",
+            Phone = "+447700900001",
+            Relationship = "Parent",
+            IsPrimary = true
+        });
+        await db.Context.SaveChangesAsync();
+
+        var handler = new UpdatePlayerHandler(db.Context);
+        var dto = MakeDto(
+            firstName: "ParentEdited",
+            lastName: "Player",
+            preferredPositions: new[] { "CM" },
+            allergies: "Peanuts",
+            medicalConditions: "Asthma");
+
+        var result = await handler.Handle(new UpdatePlayerCommand(playerId, dto, "parent-auth-allowed"), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal("ParentEdited", result!.FirstName);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPlayerSelfUpdatesRestrictedFields_ThrowsForbiddenException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var playerUserId = await db.SeedUserAsync("player-auth");
+        var playerId = await db.SeedPlayerAsync(clubId, preferredPositions: "[\"CM\"]", userId: playerUserId);
+        var handler = new UpdatePlayerHandler(db.Context);
+        var dto = MakeDto(associationId: "SFA-1000", preferredPositions: new[] { "ST" });
+
+        await Assert.ThrowsAsync<ForbiddenException>(() =>
+            handler.Handle(new UpdatePlayerCommand(playerId, dto, "player-auth"), CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Handle_WhenCoachUpdatesRestrictedFields_Succeeds()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var playerId = await db.SeedPlayerAsync(clubId, preferredPositions: "[\"CM\"]");
+        _ = await db.SeedCoachAsync(clubId, authId: "coach-auth");
+
+        var handler = new UpdatePlayerHandler(db.Context);
+        var dto = MakeDto(associationId: "SFA-1234", preferredPositions: new[] { "ST" });
+
+        var result = await handler.Handle(new UpdatePlayerCommand(playerId, dto, "coach-auth"), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(playerId, result!.Id);
+    }
+
     private static UpdatePlayerRequestDto MakeDto(
         string firstName = "Alex",
         string lastName = "Vale",
         DateOnly? dob = null,
         bool isArchived = false,
         Guid[]? teamIds = null,
-        EmergencyContactRequestDto[]? emergencyContacts = null) =>
+        EmergencyContactRequestDto[]? emergencyContacts = null,
+        string? associationId = null,
+        string[]? preferredPositions = null,
+        string? allergies = null,
+        string? medicalConditions = null) =>
         new()
         {
             FirstName = firstName,
             LastName = lastName,
             DateOfBirth = dob ?? new DateOnly(2012, 5, 20),
-            PreferredPositions = new[] { "CM" },
+            PreferredPositions = preferredPositions ?? new[] { "CM" },
+            AssociationId = associationId,
+            Allergies = allergies,
+            MedicalConditions = medicalConditions,
             IsArchived = isArchived,
             TeamIds = teamIds,
             EmergencyContacts = emergencyContacts

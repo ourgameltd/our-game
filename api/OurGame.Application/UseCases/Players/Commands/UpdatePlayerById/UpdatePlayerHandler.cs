@@ -29,7 +29,7 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
         // 1. Verify the player exists and check archive state
         var existing = await _db.Database
             .SqlQueryRaw<PlayerExistsResult>(
-                "SELECT Id, IsArchived FROM Players WHERE Id = {0}", playerId)
+                "SELECT Id, ClubId, UserId, AssociationId, PreferredPositions, IsArchived FROM Players WHERE Id = {0}", playerId)
             .FirstOrDefaultAsync(cancellationToken);
 
         if (existing == null)
@@ -42,6 +42,70 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
         {
             throw new ValidationException("IsArchived",
                 "Cannot update an archived player. Please unarchive the player first.");
+        }
+
+        // 1b. Authorize caller and enforce field-level restrictions for linked player/parent accounts.
+        if (!string.IsNullOrWhiteSpace(command.UserId))
+        {
+            var caller = await _db.Users
+                .AsNoTracking()
+                .Where(u => u.AuthId == command.UserId)
+                .Select(u => new { u.Id, u.IsAdmin })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            if (caller == null)
+            {
+                throw new ForbiddenException("User is not authorized to update this player.");
+            }
+
+            var isCoachForClub = existing.ClubId.HasValue && await _db.Coaches
+                .AsNoTracking()
+                .AnyAsync(c => c.UserId == caller.Id && c.ClubId == existing.ClubId && !c.IsArchived, cancellationToken);
+
+            var isPlayerSelf = existing.UserId.HasValue && existing.UserId == caller.Id;
+
+            var isLinkedParent = await _db.EmergencyContacts
+                .AsNoTracking()
+                .AnyAsync(ec => ec.PlayerId == playerId && ec.UserId == caller.Id, cancellationToken);
+
+            if (!caller.IsAdmin && !isCoachForClub && !isPlayerSelf && !isLinkedParent)
+            {
+                throw new ForbiddenException("You are not authorized to update this player.");
+            }
+
+            var canEditProtectedFields = caller.IsAdmin || isCoachForClub;
+            if (!canEditProtectedFields)
+            {
+                var requestedAssociationId = dto.AssociationId ?? string.Empty;
+                var existingAssociationId = existing.AssociationId ?? string.Empty;
+                if (!string.Equals(requestedAssociationId, existingAssociationId, StringComparison.Ordinal))
+                {
+                    throw new ForbiddenException("Only coaches can update a player's association ID.");
+                }
+
+                var requestedPreferredPositions = (dto.PreferredPositions ?? Array.Empty<string>())
+                    .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                var existingPreferredPositions = ParsePreferredPositions(existing.PreferredPositions)
+                    .OrderBy(p => p, StringComparer.OrdinalIgnoreCase)
+                    .ToArray();
+
+                if (!requestedPreferredPositions.SequenceEqual(existingPreferredPositions, StringComparer.OrdinalIgnoreCase))
+                {
+                    throw new ForbiddenException("Only coaches can update a player's preferred positions.");
+                }
+
+                if (dto.TeamIds != null)
+                {
+                    throw new ForbiddenException("Only coaches can update player team assignments.");
+                }
+
+                if (dto.IsArchived != existing.IsArchived)
+                {
+                    throw new ForbiddenException("Only coaches can archive or unarchive players.");
+                }
+            }
         }
 
         // 2. Serialize preferred positions to JSON for storage
@@ -80,7 +144,9 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
         if (dto.EmergencyContacts != null)
         {
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                DELETE FROM EmergencyContacts WHERE PlayerId = {playerId}
+                DELETE FROM EmergencyContacts
+                WHERE PlayerId = {playerId}
+                  AND UserId IS NULL
             ", cancellationToken);
 
             // Enforce exactly one primary contact
@@ -190,6 +256,26 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
             PreferredPosition = result.PreferredPosition
         };
     }
+    private static string[] ParsePreferredPositions(string? rawPreferredPositions)
+    {
+        if (string.IsNullOrWhiteSpace(rawPreferredPositions))
+        {
+            return Array.Empty<string>();
+        }
+
+        try
+        {
+            var parsed = JsonSerializer.Deserialize<string[]>(rawPreferredPositions);
+            return parsed?.Where(p => !string.IsNullOrWhiteSpace(p)).ToArray() ?? Array.Empty<string>();
+        }
+        catch (JsonException)
+        {
+            return rawPreferredPositions
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(p => !string.IsNullOrWhiteSpace(p))
+                .ToArray();
+        }
+    }
 }
 
 /// <summary>
@@ -198,6 +284,10 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
 internal class PlayerExistsResult
 {
     public Guid Id { get; set; }
+    public Guid? ClubId { get; set; }
+    public Guid? UserId { get; set; }
+    public string? AssociationId { get; set; }
+    public string? PreferredPositions { get; set; }
     public bool IsArchived { get; set; }
 }
 

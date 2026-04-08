@@ -27,3 +27,10 @@ Business logic layer implementing CQRS with MediatR. Contains use case handlers,
 |---|---|
 | `DependencyResolutionX.cs` | Service registration — registers MediatR, FluentValidation, Polly, and service implementations |
 | `OurGame.Application.csproj` | Project file with NuGet package references |
+
+## Recent Updates
+
+- Player update command handling now enforces field-level authorization for linked accounts:
+  - Coach/admin: full edit access
+  - Linked player/parent: cannot modify association ID, preferred positions, archive status, or team assignments
+  - Unauthorized callers receive a forbidden error from the application layer

@@ -4,11 +4,11 @@ using OurGame.Api.Tests.TestInfrastructure;
 using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.UseCases.Players.Queries.GetMyChildren;
 using OurGame.Application.UseCases.Players.Queries.GetMyChildren.DTOs;
+using OurGame.Application.UseCases.Users.Commands.EnsureUserByAuthId;
 using OurGame.Application.UseCases.Users.Commands.UpdateMyProfile;
 using OurGame.Application.UseCases.Users.Commands.UpdateMyProfile.DTOs;
 using OurGame.Application.UseCases.Users.Queries.GetMyClubs;
 using OurGame.Application.UseCases.Users.Queries.GetMyClubs.DTOs;
-using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
 
 namespace OurGame.Api.Tests.Users;
@@ -31,22 +31,33 @@ public class UserFunctionsTests
     }
 
     [Fact]
-    public async Task GetMe_ReturnsNotFound_WhenUserDoesNotExist()
+    public async Task GetMe_AutoProvisionsUser_WhenUserDoesNotExist()
     {
         var authId = Guid.NewGuid().ToString("N");
+        var ensured = new UserProfileDto
+        {
+            Id = Guid.NewGuid(),
+            AuthId = authId,
+            FirstName = "New",
+            LastName = "User",
+            Email = "new.user@ourgame.local"
+        };
+
         var mediator = new TestMediator();
-        mediator.Register<GetUserByAzureIdQuery, UserProfileDto?>((_, _) => Task.FromResult<UserProfileDto?>(null));
+        mediator.Register<EnsureUserByAuthIdCommand, UserProfileDto>((query, _) =>
+            Task.FromResult(query.AuthId == authId ? ensured : new UserProfileDto()));
 
         var sut = BuildSut(mediator);
         var req = CreateAuthedRequest("GET", "https://localhost/v1/users/me", authId);
 
         var response = await sut.GetMe(req);
 
-        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
         var payload = await HttpResponseAssertions.ReadApiResponseAsync<UserProfileDto>(response);
-        Assert.False(payload.Success);
-        Assert.Equal(404, payload.StatusCode);
-        Assert.Equal("User profile not found in database", payload.Error?.Message);
+        Assert.True(payload.Success);
+        Assert.Equal(200, payload.StatusCode);
+        Assert.NotNull(payload.Data);
+        Assert.Equal(ensured.Id, payload.Data!.Id);
     }
 
     [Fact]
@@ -63,8 +74,8 @@ public class UserFunctionsTests
         };
 
         var mediator = new TestMediator();
-        mediator.Register<GetUserByAzureIdQuery, UserProfileDto?>((query, _) =>
-            Task.FromResult<UserProfileDto?>(query.AuthId == authId ? expected : null));
+        mediator.Register<EnsureUserByAuthIdCommand, UserProfileDto>((query, _) =>
+            Task.FromResult(query.AuthId == authId ? expected : new UserProfileDto()));
 
         var sut = BuildSut(mediator);
         var req = CreateAuthedRequest("GET", "https://localhost/v1/users/me", authId);

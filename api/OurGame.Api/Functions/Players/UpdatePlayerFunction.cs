@@ -135,5 +135,14 @@ public class UpdatePlayerFunction
                 ex.Errors));
             return validationResponse;
         }
+        catch (ForbiddenException ex)
+        {
+            _logger.LogWarning(ex, "Forbidden access attempt during UpdatePlayer by user {UserId}", userId);
+            var forbiddenResponse = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbiddenResponse.WriteAsJsonAsync(ApiResponse<PlayerDto>.ErrorResponse(
+                ex.Message,
+                (int)HttpStatusCode.Forbidden));
+            return forbiddenResponse;
+        }
     }
 }

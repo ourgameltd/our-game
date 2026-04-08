@@ -5,8 +5,10 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
-import { Plus, ShieldCheck, UserCheck } from 'lucide-react';
+import { Plus, UserCheck } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAccessProfile } from '@/hooks/useAccessProfile';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -90,6 +92,8 @@ export default function PlayerSettingsPage() {
   const { clubId, ageGroupId, playerId } = useParams();
   const navigate = useNavigate();
   const isNewPlayer = playerId === 'new';
+  const { isAdmin } = useAuth();
+  const { profile } = useAccessProfile(isAdmin);
 
   // API hooks
   const { data: player, isLoading: isLoadingPlayer, error: playerError } = usePlayer(
@@ -142,6 +146,34 @@ export default function PlayerSettingsPage() {
 
   // Helper to determine if fields should be disabled (only for archived existing players)
   const isFormDisabled = !isNewPlayer && player?.isArchived;
+  const canEditProtectedFields = profile.isCoach || profile.isAdmin;
+  const protectedFieldsDisabled = isFormDisabled || !canEditProtectedFields;
+  const linkedParentAccounts = (player?.linkedAccounts ?? []).filter((account) => account.isLinked);
+  const linkedEmergencyContactIds = new Set(linkedParentAccounts.map((account) => account.id));
+  const linkedAccountsForDisplay = [
+    ...(player?.linkedUser
+      ? [{
+          id: player.linkedUser.id,
+          firstName: player.linkedUser.firstName,
+          lastName: player.linkedUser.lastName,
+          email: player.linkedUser.email,
+          phone: undefined as string | undefined,
+          source: 'player' as const,
+        }]
+      : []),
+    ...linkedParentAccounts.map((account) => ({
+      id: account.id,
+      firstName: account.firstName,
+      lastName: account.lastName,
+      email: account.email,
+      phone: account.phone,
+      source: 'parent' as const,
+    })),
+  ];
+  const visibleEmergencyContacts = emergencyContacts.filter(
+    (contact) => !contact.id || !linkedEmergencyContactIds.has(contact.id)
+  );
+  const hasLinkedSections = linkedAccountsForDisplay.length > 0;
 
   // Error state - not found
   if (!isNewPlayer && playerError) {
@@ -227,7 +259,7 @@ export default function PlayerSettingsPage() {
       name: '',
       phone: '',
       relationship: '',
-      isPrimary: emergencyContacts.length === 0, // First contact is primary by default
+      isPrimary: visibleEmergencyContacts.length === 0, // First editable contact is primary by default
     };
     setEmergencyContacts(prev => [...prev, newContact]);
   };
@@ -280,7 +312,7 @@ export default function PlayerSettingsPage() {
     }
 
     // Validate emergency contacts
-    for (const contact of emergencyContacts) {
+    for (const contact of visibleEmergencyContacts) {
       if (!contact.name.trim() || !contact.phone.trim() || !contact.relationship.trim()) {
         alert('Please fill in all emergency contact fields or remove incomplete contacts');
         return;
@@ -288,8 +320,8 @@ export default function PlayerSettingsPage() {
     }
 
     // Ensure exactly one primary contact if contacts exist
-    const primaryCount = emergencyContacts.filter(c => c.isPrimary).length;
-    if (emergencyContacts.length > 0 && primaryCount !== 1) {
+    const primaryCount = visibleEmergencyContacts.filter(c => c.isPrimary).length;
+    if (visibleEmergencyContacts.length > 0 && primaryCount !== 1) {
       alert('Please select exactly one primary emergency contact');
       return;
     }
@@ -304,7 +336,7 @@ export default function PlayerSettingsPage() {
       allergies: allergies || undefined,
       medicalConditions: medicalConditions || undefined,
       preferredPositions,
-      emergencyContacts: emergencyContacts.map(({ id, ...rest }) => rest),
+      emergencyContacts: visibleEmergencyContacts.map(({ id, ...rest }) => rest),
       isArchived: player?.isArchived || false,
     };
 
@@ -322,6 +354,7 @@ export default function PlayerSettingsPage() {
 
   const handleArchive = async () => {
     if (!player) return;
+    if (!canEditProtectedFields) return;
     
     const request: UpdatePlayerRequest = {
       firstName,
@@ -333,7 +366,7 @@ export default function PlayerSettingsPage() {
       allergies: allergies || undefined,
       medicalConditions: medicalConditions || undefined,
       preferredPositions,
-      emergencyContacts: emergencyContacts.map(({ id, ...rest }) => rest),
+      emergencyContacts: visibleEmergencyContacts.map(({ id, ...rest }) => rest),
       isArchived: !player.isArchived,
     };
 
@@ -504,13 +537,18 @@ export default function PlayerSettingsPage() {
                   name="associationId"
                   value={associationId}
                   onChange={handleInputChange}
-                  disabled={isFormDisabled}
+                  disabled={protectedFieldsDisabled}
                   placeholder="e.g., SFA-Y-40123"
                   className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   FA, UEFA, or other football association registration ID
                 </p>
+                {!canEditProtectedFields && (
+                  <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                    Only coaches can edit association IDs.
+                  </p>
+                )}
               </div>
 
               <div className="md:col-span-2">
@@ -586,6 +624,11 @@ export default function PlayerSettingsPage() {
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
               Select the positions this player can play (select at least one)
             </p>
+            {!canEditProtectedFields && (
+              <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                Preferred positions can only be changed by coaches.
+              </p>
+            )}
             
             <div className="space-y-2">
               {/* Goalkeepers */}
@@ -597,7 +640,7 @@ export default function PlayerSettingsPage() {
                       key={position}
                       type="button"
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
-                      disabled={isFormDisabled}
+                      disabled={protectedFieldsDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
@@ -619,7 +662,7 @@ export default function PlayerSettingsPage() {
                       key={position}
                       type="button"
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
-                      disabled={isFormDisabled}
+                      disabled={protectedFieldsDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
@@ -641,7 +684,7 @@ export default function PlayerSettingsPage() {
                       key={position}
                       type="button"
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
-                      disabled={isFormDisabled}
+                      disabled={protectedFieldsDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
@@ -663,7 +706,7 @@ export default function PlayerSettingsPage() {
                       key={position}
                       type="button"
                       onClick={() => handlePositionToggle(position as PlayerPosition)}
-                      disabled={isFormDisabled}
+                      disabled={protectedFieldsDisabled}
                       className={`px-4 py-2 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                         preferredPositions.includes(position as PlayerPosition)
                           ? 'bg-blue-600 text-white'
@@ -726,70 +769,35 @@ export default function PlayerSettingsPage() {
               Linked Accounts & Emergency Contacts
             </h3>
 
-              {/* Linked Account Section (read-only, from invite system) */}
-              {player?.linkedUser && (
+              {/* Linked Accounts Section (read-only, from invite system) */}
+              {linkedAccountsForDisplay.length > 0 && (
                 <div className="mb-4">
                   <div className="flex items-center gap-2 mb-3">
                     <UserCheck className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Linked Account
+                      Linked Accounts
                     </h4>
                   </div>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    User account linked to this player via the invite system
-                  </p>
-                  <div className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                    <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold">
-                      {player.linkedUser.firstName?.[0]}{player.linkedUser.lastName?.[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                        {player.linkedUser.firstName} {player.linkedUser.lastName}
-                      </p>
-                      <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-                        {player.linkedUser.email && <span>{player.linkedUser.email}</span>}
-                      </div>
-                    </div>
-                    <span className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
-                      Linked
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Linked Parents Section (read-only, from invite system) */}
-              {player?.linkedParents && player.linkedParents.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <ShieldCheck className="w-5 h-5 text-green-600 dark:text-green-400" />
-                    <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                      Linked Parents
-                    </h4>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
-                    Parents linked to this player via the invite system
+                    User accounts linked to this player via the invite system
                   </p>
                   <div className="space-y-2">
-                    {player.linkedParents.map((parent) => (
-                      <div key={parent.id} className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-                        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white text-sm font-bold">
-                          {parent.firstName?.[0]}{parent.lastName?.[0]}
+                    {linkedAccountsForDisplay.map((account) => (
+                      <div key={account.id} className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                        <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                          {account.firstName?.[0]}{account.lastName?.[0]}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                            {parent.firstName} {parent.lastName}
+                            {account.firstName} {account.lastName}
                           </p>
                           <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
-                            {parent.email && <span>{parent.email}</span>}
-                            {parent.phone && <span>{parent.phone}</span>}
+                            {account.email && <span>{account.email}</span>}
+                            {account.phone && <span>{account.phone}</span>}
                           </div>
                         </div>
-                        <span className={`flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded ${
-                          parent.isLinked
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300'
-                            : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300'
-                        }`}>
-                          {parent.isLinked ? 'Verified' : 'Pending'}
+                        <span className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
+                          {account.source === 'player' ? 'Player' : 'Parent'}
                         </span>
                       </div>
                     ))}
@@ -798,7 +806,7 @@ export default function PlayerSettingsPage() {
               )}
 
               {/* Emergency Contacts Section */}
-              <div className={(player?.linkedUser || (player?.linkedParents && player.linkedParents.length > 0)) ? 'border-t border-gray-200 dark:border-gray-700 pt-4' : ''}>
+              <div className={hasLinkedSections ? 'border-t border-gray-200 dark:border-gray-700 pt-4' : ''}>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
                     Emergency Contacts
@@ -814,13 +822,13 @@ export default function PlayerSettingsPage() {
                   </button>
                 </div>
                 
-                {emergencyContacts.length === 0 ? (
+                {visibleEmergencyContacts.length === 0 ? (
                   <p className="text-gray-500 dark:text-gray-400 text-sm italic">
                     No emergency contacts added yet.
                   </p>
                 ) : (
                   <div className="space-y-3">
-                    {emergencyContacts.map((contact, index) => (
+                    {visibleEmergencyContacts.map((contact, index) => (
                       <div key={contact.id || `contact-${index}`} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
                         <div className="flex items-center justify-between mb-3">
                           <button
@@ -893,11 +901,11 @@ export default function PlayerSettingsPage() {
           {/* Action Buttons */}
           <FormActions
             isArchived={!isNewPlayer && player?.isArchived}
-            onArchive={!isNewPlayer ? () => setShowArchiveConfirm(true) : undefined}
+            onArchive={!isNewPlayer && canEditProtectedFields ? () => setShowArchiveConfirm(true) : undefined}
             onCancel={handleCancel}
             saveLabel={isSubmitting ? 'Saving...' : 'Save Changes'}
             saveDisabled={isFormDisabled || isSubmitting}
-            showArchive={!isNewPlayer}
+            showArchive={!isNewPlayer && canEditProtectedFields}
           />
         </form>
         )}

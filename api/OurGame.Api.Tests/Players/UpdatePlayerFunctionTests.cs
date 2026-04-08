@@ -127,6 +127,27 @@ public class UpdatePlayerFunctionTests
     }
 
     [Fact]
+    public async Task UpdatePlayer_ReturnsForbidden_WhenMediatorThrowsForbiddenException()
+    {
+        var playerId = Guid.NewGuid();
+        var body = JsonSerializer.Serialize(new UpdatePlayerRequestDto());
+
+        var mediator = new TestMediator();
+        mediator.Register<UpdatePlayerCommand, PlayerDto?>((_, _) =>
+            throw new ForbiddenException("Only coaches can update protected player fields."));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("PUT", $"https://localhost/v1/players/{playerId}", body);
+
+        var response = await sut.UpdatePlayer(req, playerId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<PlayerDto>(response);
+        Assert.False(payload.Success);
+        Assert.Equal(403, payload.StatusCode);
+    }
+
+    [Fact]
     public async Task UpdatePlayer_ReturnsOk_WhenRequestIsValid()
     {
         var playerId = Guid.NewGuid();

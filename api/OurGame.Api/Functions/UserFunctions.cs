@@ -6,8 +6,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.OpenApi.Models;
 using OurGame.Api.Extensions;
 using OurGame.Application.Abstractions.Responses;
-using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
+using OurGame.Application.UseCases.Users.Commands.EnsureUserByAuthId;
 using OurGame.Application.UseCases.Players.Queries.GetMyChildren;
 using OurGame.Application.UseCases.Players.Queries.GetMyChildren.DTOs;
 using OurGame.Application.UseCases.Users.Queries.GetMyClubs;
@@ -42,7 +42,6 @@ public class UserFunctions
     [OpenApiOperation(operationId: "GetMe", tags: new[] { "Users" }, Summary = "Get current user", Description = "Retrieves profile information about the currently authenticated user")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<UserProfileDto>), Description = "User retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<UserProfileDto>), Description = "User not authenticated")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<UserProfileDto>), Description = "User profile not found in database")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<UserProfileDto>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetMe(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/users/me")] HttpRequestData req)
@@ -59,16 +58,12 @@ public class UserFunctions
             return unauthorizedResponse;
         }
 
-        var user = await _mediator.Send(new GetUserByAzureIdQuery(azureUserId));
-
-        if (user == null)
-        {
-            _logger.LogWarning("User not found for Id {AzureUserId}", azureUserId);
-            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFoundResponse.WriteAsJsonAsync(ApiResponse<UserProfileDto>.ErrorResponse(
-                "User profile not found in database", 404));
-            return notFoundResponse;
-        }
+        var user = await _mediator.Send(new EnsureUserByAuthIdCommand(
+            azureUserId,
+            req.GetUserEmail(),
+            req.GetUserDisplayName(),
+            req.GetUserGivenName(),
+            req.GetUserSurname()));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<UserProfileDto>.SuccessResponse(user));

@@ -33,3 +33,7 @@ Azure Functions v4 (.NET 8 Isolated Worker) project containing all HTTP trigger 
 | `local.settings.json` | Local development settings (connection strings, runtime config) |
 | `appsettings.json` | Application configuration (frontend base URL) |
 | `OurGame.Api.csproj` | Project file with NuGet dependencies |
+
+## Recent Updates
+
+- Player update endpoint now returns HTTP 403 when business-layer authorization rejects protected field changes (for example, parent/player attempts to update association ID, preferred positions, archive status, or team assignments).

@@ -1,9 +1,14 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { Routes } from '@utils/routes';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAccessProfile } from '@/hooks/useAccessProfile';
+import { canViewPlayerAbilities } from '@/utils/accessControl';
 
 export default function PlayerSubNav() {
   const { clubId, ageGroupId, teamId, playerId } = useParams();
   const location = useLocation();
+  const { isAdmin } = useAuth();
+  const { profile } = useAccessProfile(isAdmin);
 
   if (!clubId || !playerId) return null;
 
@@ -19,14 +24,16 @@ export default function PlayerSubNav() {
       ? Routes.playerAbilities(clubId, ageGroupId, playerId)
       : null;
 
-  if (!profileLink || !abilitiesLink) return null;
+  if (!profileLink) return null;
 
   const isAbilitiesPage = location.pathname.includes('/abilities');
   const isProfilePage = !isAbilitiesPage && !location.pathname.includes('/settings') && !location.pathname.includes('/album');
 
   const tabs = [
     { label: 'Overview', href: profileLink, active: isProfilePage },
-    { label: 'Abilities', href: abilitiesLink, active: isAbilitiesPage },
+    ...(abilitiesLink && canViewPlayerAbilities(profile)
+      ? [{ label: 'Abilities', href: abilitiesLink, active: isAbilitiesPage }]
+      : []),
   ];
 
   return (

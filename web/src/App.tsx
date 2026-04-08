@@ -76,10 +76,14 @@ import ClubMediaPage from '@pages/public/ClubMediaPage';
 import SocialMatchReportPage from '@pages/public/SocialMatchReportPage';
 import Header from '@components/layout/Header';
 import ScrollToTop from '@components/common/ScrollToTop';
+import AccessDeniedPage from '@components/common/AccessDeniedPage';
+import { useAccessProfile } from '@/hooks/useAccessProfile';
+import { canAccessPath } from '@/utils/accessControl';
 
 function AppContent() {
   const location = useLocation();
   const { isDesktopOpen } = useNavigation();
+  const { profile, isLoading: accessProfileLoading } = useAccessProfile();
   const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
 
   usePageTitleFallback(getRouteFallbackTitle(location.pathname));
@@ -107,6 +111,8 @@ function AppContent() {
     return isDesktopOpen ? '280px' : '4px';
   };
 
+  const isBlockedPath = !accessProfileLoading && !hideHeader && !canAccessPath(location.pathname, profile);
+
   return (
     <>
       <ScrollToTop />
@@ -118,6 +124,9 @@ function AppContent() {
             marginLeft: getMarginLeft()
           }}
         >
+          {isBlockedPath ? (
+            <AccessDeniedPage description="Your linked account can only access approved club, age group, team scheduling, and linked player pages." />
+          ) : (
           <Routes>
         {/* Public Routes */}
         <Route path="/" element={<HomePage />} />
@@ -280,6 +289,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/drill-templates/:templateId/edit" element={<DrillTemplateFormPage />} />
 
         </Routes>
+        )}
         </div>
       </div>
     </>

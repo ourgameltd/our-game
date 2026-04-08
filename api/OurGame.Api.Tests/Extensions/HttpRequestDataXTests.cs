@@ -297,6 +297,41 @@ public class HttpRequestDataXTests
 
     #endregion
 
+    #region GetUserGivenNameAndSurname
+
+    [Fact]
+    public void GetUserGivenName_ReturnsGivenName_FromClaim()
+    {
+        var req = CreateRequest();
+        var claims = new List<object>
+        {
+            new { typ = ClaimTypes.GivenName, val = "Nicola" },
+            new { typ = ClaimTypes.Surname, val = "Law" }
+        };
+        AddCustomPrincipalHeader(req, "user-names", claims: claims);
+
+        var givenName = req.GetUserGivenName();
+        var surname = req.GetUserSurname();
+
+        Assert.Equal("Nicola", givenName);
+        Assert.Equal("Law", surname);
+    }
+
+    [Fact]
+    public void GetUserGivenNameAndSurname_ReturnNull_WhenClaimsMissing()
+    {
+        var req = CreateRequest();
+        req.AddClientPrincipalHeader("user-no-names");
+
+        var givenName = req.GetUserGivenName();
+        var surname = req.GetUserSurname();
+
+        Assert.Null(givenName);
+        Assert.Null(surname);
+    }
+
+    #endregion
+
     #region IsInRole
 
     [Fact]

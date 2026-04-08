@@ -1770,7 +1770,7 @@ export interface PlayerDto {
     isPrimary: boolean;
     email?: string;
   }[];
-  linkedParents?: {
+  linkedAccounts?: {
     id: string;
     firstName: string;
     lastName: string;

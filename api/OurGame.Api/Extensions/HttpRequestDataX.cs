@@ -133,6 +133,30 @@ public static class HttpRequestDataX
     }
 
     /// <summary>
+    /// Gets the authenticated user's given/first name from claims.
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <returns>Given name if available, null otherwise</returns>
+    public static string? GetUserGivenName(this HttpRequestData req)
+    {
+        var principal = req.GetClientPrincipal();
+        return principal?.FindFirst(ClaimTypes.GivenName)?.Value ??
+               principal?.FindFirst("given_name")?.Value;
+    }
+
+    /// <summary>
+    /// Gets the authenticated user's surname/last name from claims.
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <returns>Surname if available, null otherwise</returns>
+    public static string? GetUserSurname(this HttpRequestData req)
+    {
+        var principal = req.GetClientPrincipal();
+        return principal?.FindFirst(ClaimTypes.Surname)?.Value ??
+               principal?.FindFirst("family_name")?.Value;
+    }
+
+    /// <summary>
     /// Checks if the user has a specific role
     /// </summary>
     /// <param name="req">The HTTP request</param>
