@@ -326,7 +326,7 @@ export default function ClubsListPage() {
         {/* Linked player access for parent/player accounts */}
         {!isLoading && linkedPlayers.length > 0 && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Linked Players</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Players</h2>
             <div className="flex items-center gap-3 overflow-x-auto pb-1">
               {linkedPlayers.map((player) => {
                 const hasValidRoute = areAllParamsValid(player.clubId, player.ageGroupId, player.id);
