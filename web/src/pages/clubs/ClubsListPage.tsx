@@ -175,6 +175,7 @@ export default function ClubsListPage() {
                     <tr className="border-b border-gray-200 dark:border-gray-700 text-xs uppercase text-gray-500 dark:text-gray-400">
                       <th className="px-3 py-3 font-semibold">Type</th>
                       <th className="px-3 py-3 font-semibold">Date</th>
+                      <th className="px-3 py-3 font-semibold hidden md:table-cell">Club</th>
                       <th className="px-3 py-3 font-semibold">Details</th>
                       <th className="px-3 py-3 font-semibold hidden lg:table-cell">Team</th>
                     </tr>
@@ -187,7 +188,7 @@ export default function ClubsListPage() {
                         : Routes.teamTrainingSessionEdit(event.clubId, event.ageGroupId, event.teamId, event.id);
 
                       return (
-                        <tr key={`${event.type}-${event.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer" onClick={() => navigate(link)}>
+                        <tr key={`${event.type}-${event.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" onClick={() => navigate(link)}>
                           <td className="px-3 py-3">
                             <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${isMatch ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'}`}>
                               {isMatch ? '⚽' : '🏋️'}
@@ -196,6 +197,9 @@ export default function ClubsListPage() {
                           <td className="px-3 py-3 whitespace-nowrap">
                             <div className="font-medium text-gray-900 dark:text-white text-sm">{formatDate(event.date)}</div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">{formatTime(event.date)}</div>
+                          </td>
+                          <td className="px-3 py-3 text-gray-600 dark:text-gray-300 hidden md:table-cell whitespace-nowrap text-sm">
+                            {event.clubName}
                           </td>
                           <td className="px-3 py-3">
                             <Link to={link} className="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm">
@@ -247,7 +251,7 @@ export default function ClubsListPage() {
                       const link = Routes.matchReport(clubId, m.ageGroupId, m.teamId, m.id);
 
                       return (
-                        <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-750 transition-colors cursor-pointer" onClick={() => navigate(link)}>
+                        <tr key={m.id} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" onClick={() => navigate(link)}>
                           <td className="px-3 py-3 whitespace-nowrap">
                             <div className="font-medium text-gray-900 dark:text-white text-sm">{formatDate(m.date)}</div>
                           </td>

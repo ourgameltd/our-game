@@ -442,7 +442,7 @@ export default function DrillTemplateFormPage() {
                             type="button"
                             onClick={() => removeDrill(drillId)}
                             disabled={isSubmitting}
-                            className="text-red-600 hover:text-red-700 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>

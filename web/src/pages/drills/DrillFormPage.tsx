@@ -604,7 +604,7 @@ export default function DrillFormPage() {
                         <button
                           type="button"
                           onClick={() => removeEquipment(index)}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400"
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -634,7 +634,7 @@ export default function DrillFormPage() {
                       <button
                         type="button"
                         onClick={() => removeInstruction(index)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 mt-2"
+                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 mt-2"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -672,7 +672,7 @@ export default function DrillFormPage() {
                       <button
                         type="button"
                         onClick={() => removeVariation(index)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 mt-2"
+                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 mt-2"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -721,7 +721,7 @@ export default function DrillFormPage() {
                         <button
                           type="button"
                           onClick={() => removeLink(index)}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400"
+                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
