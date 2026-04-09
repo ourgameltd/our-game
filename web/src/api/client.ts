@@ -1963,6 +1963,7 @@ export interface UpdatePlayerRequest {
   emergencyContacts?: {
     name: string;
     phone?: string;
+    email?: string;
     relationship?: string;
     isPrimary: boolean;
   }[];
@@ -1985,6 +1986,7 @@ export interface CreatePlayerRequest {
   emergencyContacts?: {
     name: string;
     phone: string;
+    email?: string;
     relationship: string;
     isPrimary: boolean;
   }[];

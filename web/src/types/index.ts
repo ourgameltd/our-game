@@ -213,6 +213,7 @@ export interface Player {
       id: string;
       name: string;
       phone: string;
+      email?: string;
       relationship: string;
       isPrimary?: boolean;
     }[];

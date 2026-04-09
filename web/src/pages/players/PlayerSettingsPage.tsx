@@ -70,8 +70,8 @@ function EmergencyContactsSkeleton() {
       <div className="space-y-2">
         {[1, 2].map(i => (
           <div key={i} className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
-            <div className="grid md:grid-cols-3 gap-3">
-              {[1, 2, 3].map(j => (
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[1, 2, 3, 4].map(j => (
                 <div key={j}>
                   <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-16 mb-2" />
                   <div className="h-9 bg-gray-200 dark:bg-gray-700 rounded-lg" />
@@ -120,6 +120,7 @@ export default function PlayerSettingsPage() {
     id?: string;
     name: string;
     phone: string;
+    email: string;
     relationship: string;
     isPrimary: boolean;
   }[]>([]);
@@ -140,7 +141,12 @@ export default function PlayerSettingsPage() {
       setPreferredPositions(player.preferredPositions as PlayerPosition[] || []);
       setAllergies(player.allergies || '');
       setMedicalConditions(player.medicalConditions || '');
-      setEmergencyContacts(player.emergencyContacts || []);
+      setEmergencyContacts(
+        (player.emergencyContacts || []).map((contact) => ({
+          ...contact,
+          email: contact.email || '',
+        }))
+      );
       setFormInitialized(true);
     }
   }, [player, formInitialized]);
@@ -276,6 +282,7 @@ export default function PlayerSettingsPage() {
       id: `ec-${Date.now()}`,
       name: '',
       phone: '',
+      email: '',
       relationship: '',
       isPrimary: visibleEmergencyContacts.length === 0, // First editable contact is primary by default
     };
@@ -293,7 +300,7 @@ export default function PlayerSettingsPage() {
     });
   };
 
-  const handleEmergencyContactChange = (contactId: string, field: 'name' | 'phone' | 'relationship', value: string) => {
+  const handleEmergencyContactChange = (contactId: string, field: 'name' | 'phone' | 'email' | 'relationship', value: string) => {
     setEmergencyContacts(prev =>
       prev.map(contact =>
         (contact.id || `ec-${Date.now()}`) === contactId
@@ -897,7 +904,7 @@ export default function PlayerSettingsPage() {
                             </svg>
                           </button>
                         </div>
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
                           <div>
                             <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Name *</label>
                             <input
@@ -928,6 +935,17 @@ export default function PlayerSettingsPage() {
                               onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'phone', e.target.value)}
                               disabled={isFormDisabled}
                               placeholder="e.g., 07700 900000"
+                              className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Email</label>
+                            <input
+                              type="email"
+                              value={contact.email}
+                              onChange={(e) => handleEmergencyContactChange(contact.id || `contact-${index}`, 'email', e.target.value)}
+                              disabled={isFormDisabled}
+                              placeholder="e.g., guardian@example.com"
                               className="w-full px-3 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                           </div>

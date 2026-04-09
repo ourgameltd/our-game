@@ -91,8 +91,8 @@ public class CreatePlayerHandler : IRequestHandler<CreatePlayerCommand, PlayerDt
                                 (hasPrimary && contact.IsPrimary && dto.EmergencyContacts.Take(i).All(c => !c.IsPrimary));
 
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO EmergencyContacts (Id, PlayerId, Name, Phone, Relationship, IsPrimary)
-                    VALUES ({ecId}, {playerId}, {contact.Name}, {contact.Phone}, {contact.Relationship}, {isPrimary})
+                    INSERT INTO EmergencyContacts (Id, PlayerId, Name, Phone, Email, Relationship, IsPrimary)
+                    VALUES ({ecId}, {playerId}, {contact.Name}, {contact.Phone}, {contact.Email}, {contact.Relationship}, {isPrimary})
                 ", cancellationToken);
             }
         }

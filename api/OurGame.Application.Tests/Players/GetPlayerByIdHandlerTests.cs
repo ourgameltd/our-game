@@ -82,7 +82,7 @@ public class GetPlayerByIdHandlerTests
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
         var playerId = await db.SeedPlayerAsync(clubId);
-        await db.SeedEmergencyContactAsync(playerId, "Parent One", isPrimary: true);
+        await db.SeedEmergencyContactAsync(playerId, "Parent One", isPrimary: true, email: "parent.one@test.com");
         await db.SeedEmergencyContactAsync(playerId, "Parent Two", isPrimary: false);
         var handler = new GetPlayerByIdHandler(db.Context);
 
@@ -92,6 +92,7 @@ public class GetPlayerByIdHandlerTests
         Assert.NotNull(result!.EmergencyContacts);
         Assert.Equal(2, result.EmergencyContacts!.Length);
         Assert.Contains(result.EmergencyContacts, c => c.Name == "Parent One" && c.IsPrimary);
+        Assert.Contains(result.EmergencyContacts, c => c.Name == "Parent One" && c.Email == "parent.one@test.com");
     }
 
     [Fact]

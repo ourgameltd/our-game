@@ -18,6 +18,9 @@ public class EmergencyContactConfiguration : IEntityTypeConfiguration<EmergencyC
         builder.Property(ec => ec.Phone)
             .HasMaxLength(20);
 
+        builder.Property(ec => ec.Email)
+            .HasMaxLength(255);
+
         builder.Property(ec => ec.Relationship)
             .HasMaxLength(100);
 

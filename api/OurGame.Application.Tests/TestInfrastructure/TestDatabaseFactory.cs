@@ -560,7 +560,8 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
     public async Task<Guid> SeedEmergencyContactAsync(
         Guid playerId,
         string name = "Parent One",
-        bool isPrimary = true)
+        bool isPrimary = true,
+        string? email = null)
     {
         var contactId = Guid.NewGuid();
 
@@ -570,6 +571,7 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
             PlayerId = playerId,
             Name = name,
             Phone = "+447700900001",
+            Email = email,
             Relationship = "Parent",
             IsPrimary = isPrimary
         });

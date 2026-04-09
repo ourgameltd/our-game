@@ -184,7 +184,7 @@ public class UpdatePlayerFunctionTests
             "preferredPositions": ["GK"],
             "isArchived": false,
             "emergencyContacts": [
-                { "name": "Mom", "phone": "+1234", "relationship": "Mother", "isPrimary": false },
+                { "name": "Mom", "phone": "+1234", "email": "mom@test.com", "relationship": "Mother", "isPrimary": false },
                 { "name": "Dad", "phone": "+5678", "relationship": "Father", "isPrimary": true }
             ]
         }
@@ -209,6 +209,7 @@ public class UpdatePlayerFunctionTests
         Assert.NotNull(capturedDto!.EmergencyContacts);
         Assert.Equal(2, capturedDto.EmergencyContacts!.Length);
         Assert.False(capturedDto.EmergencyContacts[0].IsPrimary);
+        Assert.Equal("mom@test.com", capturedDto.EmergencyContacts[0].Email);
         Assert.True(capturedDto.EmergencyContacts[1].IsPrimary);
     }
 

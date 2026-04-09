@@ -22,6 +22,13 @@ public record EmergencyContactRequestDto
     public string? Phone { get; init; }
 
     /// <summary>
+    /// Contact email address.
+    /// </summary>
+    [EmailAddress]
+    [StringLength(255)]
+    public string? Email { get; init; }
+
+    /// <summary>
     /// Relationship to the player (e.g., "Parent", "Guardian", "Spouse").
     /// </summary>
     [StringLength(100)]

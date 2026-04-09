@@ -19,6 +19,8 @@ public partial class EmergencyContact
 
     public string Phone { get; set; }
 
+    public string Email { get; set; }
+
     public string Relationship { get; set; }
 
     public bool IsPrimary { get; set; }

@@ -34,3 +34,4 @@ Business logic layer implementing CQRS with MediatR. Contains use case handlers,
   - Coach/admin: full edit access
   - Linked player/parent: cannot modify association ID, preferred positions, archive status, or team assignments
   - Unauthorized callers receive a forbidden error from the application layer
+- Player emergency contact command DTOs and handlers now support an optional contact email field.

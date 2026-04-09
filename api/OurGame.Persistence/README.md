@@ -30,3 +30,7 @@ Data access layer built with Entity Framework Core 9. Contains the `OurGameConte
 | `OurGameContextFactory.cs` | Design-time DbContext factory for EF Core CLI tooling |
 | `efpt.config.json` | EF Core Power Tools configuration |
 | `OurGame.Persistence.csproj` | Project file with EF Core and SQL Server NuGet references |
+
+## Recent Updates
+
+- Added optional `Email` column support for `EmergencyContacts` via EF model/configuration and migration `AddEmergencyContactEmail`.

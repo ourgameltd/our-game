@@ -78,7 +78,7 @@ public class UpdatePlayerHandlerTests
         var handler = new UpdatePlayerHandler(db.Context);
         var contacts = new[]
         {
-            new EmergencyContactRequestDto { Name = "New Contact", Phone = "+1234", Relationship = "Parent", IsPrimary = true },
+            new EmergencyContactRequestDto { Name = "New Contact", Phone = "+1234", Email = "new.contact@test.com", Relationship = "Parent", IsPrimary = true },
             new EmergencyContactRequestDto { Name = "Second Contact", Phone = "+5678", Relationship = "Guardian" }
         };
         var dto = MakeDto(emergencyContacts: contacts);
@@ -91,6 +91,7 @@ public class UpdatePlayerHandlerTests
             .ToListAsync();
         Assert.Equal(2, dbContacts.Count);
         Assert.Single(dbContacts.Where(c => c.IsPrimary));
+        Assert.Contains(dbContacts, c => c.Name == "New Contact" && c.Email == "new.contact@test.com");
         Assert.DoesNotContain(dbContacts, c => c.Name == "Original Contact");
     }
 
@@ -251,6 +252,7 @@ public class UpdatePlayerHandlerTests
 
         Assert.Equal(string.Empty, dbContact.Phone);
         Assert.Equal(string.Empty, dbContact.Relationship);
+        Assert.Equal(string.Empty, dbContact.Email);
     }
 
     [Fact]

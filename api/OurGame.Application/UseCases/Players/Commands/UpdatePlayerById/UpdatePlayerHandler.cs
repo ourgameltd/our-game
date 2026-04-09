@@ -193,8 +193,8 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
                 var isPrimary = !hasPrimary && i == 0 || hasPrimary && contact.IsPrimary && contacts.Take(i).All(c => !c.IsPrimary);
 
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO EmergencyContacts (Id, PlayerId, Name, Phone, Relationship, IsPrimary)
-                    VALUES ({ecId}, {playerId}, {contact.Name}, {contact.Phone ?? string.Empty}, {contact.Relationship ?? string.Empty}, {isPrimary})
+                    INSERT INTO EmergencyContacts (Id, PlayerId, Name, Phone, Email, Relationship, IsPrimary)
+                    VALUES ({ecId}, {playerId}, {contact.Name}, {contact.Phone ?? string.Empty}, {contact.Email ?? string.Empty}, {contact.Relationship ?? string.Empty}, {isPrimary})
                 ", cancellationToken);
             }
         }

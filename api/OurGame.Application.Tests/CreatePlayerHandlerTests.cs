@@ -34,6 +34,7 @@ public class CreatePlayerHandlerTests
                 {
                     Name = "Parent One",
                     Phone = "+447700900001",
+                    Email = "parent.one@test.com",
                     Relationship = "Parent",
                     IsPrimary = false,
                 }
@@ -58,6 +59,7 @@ public class CreatePlayerHandlerTests
 
         Assert.Single(dbContacts);
         Assert.True(dbContacts[0].IsPrimary);
+        Assert.Equal("parent.one@test.com", dbContacts[0].Email);
 
         var dbTeamLinks = await database.Context.PlayerTeams
             .Where(pt => pt.PlayerId == result.Id)

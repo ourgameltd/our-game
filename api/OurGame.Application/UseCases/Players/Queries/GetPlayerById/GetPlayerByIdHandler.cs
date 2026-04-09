@@ -94,7 +94,7 @@ public class GetPlayerByIdHandler : IRequestHandler<GetPlayerByIdQuery, PlayerDt
         // 4. Fetch emergency contacts (includes linked account info)
         var emergencyContactsSql = @"
             SELECT ec.Id, ec.Name, ec.Phone, ec.Relationship, ec.IsPrimary,
-                   u.Email
+                 COALESCE(NULLIF(ec.Email, ''), u.Email) AS Email
             FROM EmergencyContacts ec
             LEFT JOIN Users u ON u.Id = ec.UserId
             WHERE ec.PlayerId = {0}
