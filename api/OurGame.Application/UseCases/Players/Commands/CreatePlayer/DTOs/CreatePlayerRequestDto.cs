@@ -25,7 +25,6 @@ public record CreatePlayerRequestDto
     [Required]
     public DateOnly DateOfBirth { get; init; }
 
-    [StringLength(500)]
     public string? Photo { get; init; }
 
     [StringLength(1000)]

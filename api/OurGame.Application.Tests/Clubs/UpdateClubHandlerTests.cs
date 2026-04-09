@@ -11,7 +11,7 @@ public class UpdateClubHandlerTests
     public async Task Handle_WhenClubNotFound_ThrowsNotFoundException()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto();
         var command = new UpdateClubCommand(Guid.NewGuid(), dto);
 
@@ -24,7 +24,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { Name = "" };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -39,7 +39,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { Name = "", ShortName = "", City = "", Country = "", Venue = "" };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -59,7 +59,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { Founded = 1800 };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -74,7 +74,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { Founded = DateTime.UtcNow.Year + 1 };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -89,7 +89,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { PrimaryColor = "red" };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -104,7 +104,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { SecondaryColor = "nope" };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -119,7 +119,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { AccentColor = "#GGG" };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -134,7 +134,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with
         {
             Name = "New Name",
@@ -178,7 +178,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { Principles = null };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -192,7 +192,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { Principles = Array.Empty<string>() };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -206,7 +206,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with { Address = null };
         var command = new UpdateClubCommand(clubId, dto);
 
@@ -220,7 +220,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with
         {
             MediaLinks = new List<UpdateClubMediaLinkDto>
@@ -241,7 +241,7 @@ public class UpdateClubHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
-        var handler = new UpdateClubHandler(db.Context);
+        var handler = new UpdateClubHandler(db.Context, new StubBlobStorageService());
         var dto = CreateValidDto() with
         {
             MediaLinks = new List<UpdateClubMediaLinkDto>

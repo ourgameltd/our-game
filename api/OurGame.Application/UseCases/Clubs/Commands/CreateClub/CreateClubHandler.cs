@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Services;
 using OurGame.Application.UseCases.Clubs.Queries.GetClubById.DTOs;
 using OurGame.Persistence.Models;
 
@@ -12,10 +13,12 @@ public class CreateClubHandler : IRequestHandler<CreateClubCommand, ClubDetailDt
 {
     private static readonly Regex HexColorRegex = new(@"^#([0-9a-fA-F]{6})$", RegexOptions.Compiled);
     private readonly OurGameContext _db;
+    private readonly IBlobStorageService _blobStorage;
 
-    public CreateClubHandler(OurGameContext db)
+    public CreateClubHandler(OurGameContext db, IBlobStorageService blobStorage)
     {
         _db = db;
+        _blobStorage = blobStorage;
     }
 
     public async Task<ClubDetailDto> Handle(CreateClubCommand command, CancellationToken cancellationToken)
@@ -60,7 +63,7 @@ public class CreateClubHandler : IRequestHandler<CreateClubCommand, ClubDetailDt
         // 5. Insert via raw SQL
         var newId = Guid.NewGuid();
         var now = DateTime.UtcNow;
-        var logo = dto.Logo ?? string.Empty;
+        var logo = await _blobStorage.UploadImageAsync(dto.Logo, "club-logos", newId.ToString(), cancellationToken);
         var primaryColor = dto.PrimaryColor ?? "#000000";
         var secondaryColor = dto.SecondaryColor ?? "#FFFFFF";
         var accentColor = dto.AccentColor ?? "#CCCCCC";

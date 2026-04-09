@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Tests.TestInfrastructure;
 using OurGame.Application.UseCases.Players.Commands.CreatePlayer;
 using OurGame.Application.UseCases.Players.Commands.CreatePlayer.DTOs;
 using OurGame.Application.UseCases.Players.Commands.UpdatePlayerById.DTOs;
@@ -19,7 +20,7 @@ public class CreatePlayerHandlerTests
         await using var database = await TestDatabase.CreateAsync();
         var seed = await database.SeedSingleClubWithTeamAsync();
         var mediator = new TestMediator(database.Context);
-        var handler = new CreatePlayerHandler(database.Context, mediator);
+        var handler = new CreatePlayerHandler(database.Context, mediator, new StubBlobStorageService());
 
         var request = new CreatePlayerRequestDto
         {
@@ -73,7 +74,7 @@ public class CreatePlayerHandlerTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var mediator = new TestMediator(database.Context);
-        var handler = new CreatePlayerHandler(database.Context, mediator);
+        var handler = new CreatePlayerHandler(database.Context, mediator, new StubBlobStorageService());
 
         var request = new CreatePlayerRequestDto
         {
@@ -94,7 +95,7 @@ public class CreatePlayerHandlerTests
     {
         await using var database = await TestDatabase.CreateAsync();
         var mediator = new TestMediator(database.Context);
-        var handler = new CreatePlayerHandler(database.Context, mediator);
+        var handler = new CreatePlayerHandler(database.Context, mediator, new StubBlobStorageService());
 
         var request = new CreatePlayerRequestDto
         {
@@ -114,7 +115,7 @@ public class CreatePlayerHandlerTests
         await using var database = await TestDatabase.CreateAsync();
         var seed = await database.SeedTwoClubsWithForeignTeamAsync();
         var mediator = new TestMediator(database.Context);
-        var handler = new CreatePlayerHandler(database.Context, mediator);
+        var handler = new CreatePlayerHandler(database.Context, mediator, new StubBlobStorageService());
 
         var request = new CreatePlayerRequestDto
         {

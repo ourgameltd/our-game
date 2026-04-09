@@ -13,7 +13,7 @@ public class UpdatePlayerHandlerTests
     public async Task Handle_WhenPlayerNotFound_ThrowsNotFoundException()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto();
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
@@ -26,7 +26,7 @@ public class UpdatePlayerHandlerTests
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
         var playerId = await db.SeedPlayerAsync(clubId, isArchived: true);
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(isArchived: true);
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() =>
@@ -40,7 +40,7 @@ public class UpdatePlayerHandlerTests
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
         var playerId = await db.SeedPlayerAsync(clubId, isArchived: true);
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(isArchived: false);
 
         var result = await handler.Handle(new UpdatePlayerCommand(playerId, dto), CancellationToken.None);
@@ -55,7 +55,7 @@ public class UpdatePlayerHandlerTests
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
         var playerId = await db.SeedPlayerAsync(clubId);
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(
             firstName: "Updated",
             lastName: "Name",
@@ -75,7 +75,7 @@ public class UpdatePlayerHandlerTests
         var clubId = await db.SeedClubAsync();
         var playerId = await db.SeedPlayerAsync(clubId);
         await db.SeedEmergencyContactAsync(playerId, "Original Contact");
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var contacts = new[]
         {
             new EmergencyContactRequestDto { Name = "New Contact", Phone = "+1234", Email = "new.contact@test.com", Relationship = "Parent", IsPrimary = true },
@@ -101,7 +101,7 @@ public class UpdatePlayerHandlerTests
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
         var playerId = await db.SeedPlayerAsync(clubId);
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var contacts = new[]
         {
             new EmergencyContactRequestDto { Name = "First", Phone = "+1", Relationship = "Parent", IsPrimary = false },
@@ -142,7 +142,7 @@ public class UpdatePlayerHandlerTests
         await db.SeedEmergencyContactAsync(playerId, "Editable Contact");
         await db.Context.SaveChangesAsync();
 
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var contacts = new[]
         {
             new EmergencyContactRequestDto { Name = "Updated Editable", Phone = "+447700900002", Relationship = "Guardian", IsPrimary = true }
@@ -197,7 +197,7 @@ public class UpdatePlayerHandlerTests
         db.Context.EmergencyContacts.AddRange(linkedContactOne, linkedContactTwo);
         await db.Context.SaveChangesAsync();
 
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(
             emergencyContacts: Array.Empty<EmergencyContactRequestDto>(),
             removeLinkedEmergencyContactIds: new[] { linkedContactOne.Id });
@@ -222,7 +222,7 @@ public class UpdatePlayerHandlerTests
         var playerId = await db.SeedPlayerAsync(clubId, userId: linkedPlayerUserId);
         _ = await db.SeedCoachAsync(clubId, authId: "coach-unlink-player");
 
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(unlinkPlayerAccount: true);
 
         await handler.Handle(new UpdatePlayerCommand(playerId, dto, "coach-unlink-player"), CancellationToken.None);
@@ -237,7 +237,7 @@ public class UpdatePlayerHandlerTests
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
         var playerId = await db.SeedPlayerAsync(clubId);
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var contacts = new[]
         {
             new EmergencyContactRequestDto { Name = "Name Only", IsPrimary = true }
@@ -264,7 +264,7 @@ public class UpdatePlayerHandlerTests
         var team1 = await db.SeedTeamAsync(clubId, ageGroupId, "Blues");
         var team2 = await db.SeedTeamAsync(clubId, ageGroupId, "Reds");
         var playerId = await db.SeedPlayerWithTeamAsync(clubId, team1, ageGroupId);
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(teamIds: new[] { team2 });
 
         await handler.Handle(new UpdatePlayerCommand(playerId, dto), CancellationToken.None);
@@ -292,7 +292,7 @@ public class UpdatePlayerHandlerTests
         var ageGroupId = await db.SeedAgeGroupAsync(clubId);
         var teamId = await db.SeedTeamAsync(clubId, ageGroupId);
         var playerId = await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(teamIds: null);
 
         await handler.Handle(new UpdatePlayerCommand(playerId, dto), CancellationToken.None);
@@ -324,7 +324,7 @@ public class UpdatePlayerHandlerTests
         });
         await db.Context.SaveChangesAsync();
 
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(associationId: "SFA-9999", preferredPositions: new[] { "ST" });
 
         await Assert.ThrowsAsync<ForbiddenException>(() =>
@@ -351,7 +351,7 @@ public class UpdatePlayerHandlerTests
         });
         await db.Context.SaveChangesAsync();
 
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(
             firstName: "ParentEdited",
             lastName: "Player",
@@ -372,7 +372,7 @@ public class UpdatePlayerHandlerTests
         var clubId = await db.SeedClubAsync();
         var playerUserId = await db.SeedUserAsync("player-auth");
         var playerId = await db.SeedPlayerAsync(clubId, preferredPositions: "[\"CM\"]", userId: playerUserId);
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(associationId: "SFA-1000", preferredPositions: new[] { "ST" });
 
         await Assert.ThrowsAsync<ForbiddenException>(() =>
@@ -387,7 +387,7 @@ public class UpdatePlayerHandlerTests
         var playerId = await db.SeedPlayerAsync(clubId, preferredPositions: "[\"CM\"]");
         _ = await db.SeedCoachAsync(clubId, authId: "coach-auth");
 
-        var handler = new UpdatePlayerHandler(db.Context);
+        var handler = new UpdatePlayerHandler(db.Context, new StubBlobStorageService());
         var dto = MakeDto(associationId: "SFA-1234", preferredPositions: new[] { "ST" });
 
         var result = await handler.Handle(new UpdatePlayerCommand(playerId, dto, "coach-auth"), CancellationToken.None);

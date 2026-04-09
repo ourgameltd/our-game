@@ -103,6 +103,45 @@ resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-05-0
   name: 'default'
 }
 
+// Blob Service
+resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
+  parent: storageAccount
+  name: 'default'
+}
+
+// Blob Containers for image uploads
+resource playerPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'player-photos'
+  properties: {
+    publicAccess: 'Blob'
+  }
+}
+
+resource coachPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'coach-photos'
+  properties: {
+    publicAccess: 'Blob'
+  }
+}
+
+resource clubLogosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'club-logos'
+  properties: {
+    publicAccess: 'Blob'
+  }
+}
+
+resource playerAlbumContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'player-album'
+  properties: {
+    publicAccess: 'Blob'
+  }
+}
+
 // Log Analytics Workspace
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: logAnalyticsName
@@ -199,6 +238,10 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'App__FrontendBaseUrl'
           value: empty(frontendBaseUrl) ? 'https://${staticWebApp.properties.defaultHostname}' : frontendBaseUrl
+        }
+        {
+          name: 'BlobStorage__ConnectionString'
+          value: '${storageConnectionString}${storageAccount.listKeys().keys[0].value}'
         }
       ]
     }

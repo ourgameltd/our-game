@@ -26,7 +26,7 @@ public class UpdateCoachHandlerTests
     public async Task Handle_WhenCoachNotFound_ThrowsNotFoundException()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
-        var handler = new UpdateCoachHandler(db.Context);
+        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
 
         await Assert.ThrowsAsync<NotFoundException>(() =>
             handler.Handle(new UpdateCoachCommand(Guid.NewGuid(), ValidDto()), CancellationToken.None));
@@ -39,7 +39,7 @@ public class UpdateCoachHandlerTests
         var clubId = await db.SeedClubAsync();
         var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
 
-        var handler = new UpdateCoachHandler(db.Context);
+        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
         var dto = ValidDto() with { Role = "InvalidRole" };
 
         var ex = await Assert.ThrowsAsync<ValidationException>(() =>
@@ -54,7 +54,7 @@ public class UpdateCoachHandlerTests
         var clubId = await db.SeedClubAsync();
         var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
 
-        var handler = new UpdateCoachHandler(db.Context);
+        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
         var result = await handler.Handle(new UpdateCoachCommand(coachId, ValidDto()), CancellationToken.None);
 
         Assert.Equal(coachId, result.Id);
@@ -75,7 +75,7 @@ public class UpdateCoachHandlerTests
         var teamId = await db.SeedTeamAsync(ageGroupId: ageGroupId, clubId: clubId);
         var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
 
-        var handler = new UpdateCoachHandler(db.Context);
+        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
         var dto = ValidDto(teamId);
         var result = await handler.Handle(new UpdateCoachCommand(coachId, dto), CancellationToken.None);
 
@@ -95,7 +95,7 @@ public class UpdateCoachHandlerTests
         var clubId = await db.SeedClubAsync();
         var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
 
-        var handler = new UpdateCoachHandler(db.Context);
+        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
         var dto = ValidDto() with { Role = role };
         var result = await handler.Handle(new UpdateCoachCommand(coachId, dto), CancellationToken.None);
 
@@ -109,7 +109,7 @@ public class UpdateCoachHandlerTests
         var clubId = await db.SeedClubAsync();
         var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
 
-        var handler = new UpdateCoachHandler(db.Context);
+        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
         var dto = ValidDto() with { Specializations = Array.Empty<string>() };
         var result = await handler.Handle(new UpdateCoachCommand(coachId, dto), CancellationToken.None);
 

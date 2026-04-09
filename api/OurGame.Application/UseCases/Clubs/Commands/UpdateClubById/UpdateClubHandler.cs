@@ -3,6 +3,7 @@ using System.Text.RegularExpressions;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Services;
 using OurGame.Application.UseCases.Clubs.Commands.UpdateClubById.DTOs;
 using OurGame.Application.UseCases.Clubs.Queries.GetClubById;
 using OurGame.Application.UseCases.Clubs.Queries.GetClubById.DTOs;
@@ -19,10 +20,12 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
     private static readonly Regex HexColorRegex = new(@"^#([0-9a-fA-F]{6})$", RegexOptions.Compiled);
 
     private readonly OurGameContext _db;
+    private readonly IBlobStorageService _blobStorage;
 
-    public UpdateClubHandler(OurGameContext db)
+    public UpdateClubHandler(OurGameContext db, IBlobStorageService blobStorage)
     {
         _db = db;
+        _blobStorage = blobStorage;
     }
 
     public async Task<ClubDetailDto> Handle(UpdateClubCommand command, CancellationToken cancellationToken)
@@ -107,6 +110,7 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
 
         var now = DateTime.UtcNow;
         var address = dto.Address ?? string.Empty;
+        var logo = await _blobStorage.UploadImageAsync(dto.Logo, "club-logos", clubId.ToString(), cancellationToken);
 
         // 6. Execute the UPDATE
         var rowsAffected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
@@ -114,7 +118,7 @@ public class UpdateClubHandler : IRequestHandler<UpdateClubCommand, ClubDetailDt
             SET
                 Name           = {dto.Name},
                 ShortName      = {dto.ShortName},
-                Logo           = {dto.Logo},
+                Logo           = {logo},
                 PrimaryColor   = {dto.PrimaryColor},
                 SecondaryColor = {dto.SecondaryColor},
                 AccentColor    = {dto.AccentColor},

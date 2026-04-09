@@ -2,6 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Services;
 using OurGame.Application.UseCases.Players.Commands.CreatePlayer.DTOs;
 using OurGame.Application.UseCases.Players.Queries.GetPlayerById;
 using OurGame.Application.UseCases.Players.Queries.GetPlayerById.DTOs;
@@ -21,11 +22,13 @@ public class CreatePlayerHandler : IRequestHandler<CreatePlayerCommand, PlayerDt
 {
     private readonly OurGameContext _db;
     private readonly IMediator _mediator;
+    private readonly IBlobStorageService _blobStorage;
 
-    public CreatePlayerHandler(OurGameContext db, IMediator mediator)
+    public CreatePlayerHandler(OurGameContext db, IMediator mediator, IBlobStorageService blobStorage)
     {
         _db = db;
         _mediator = mediator;
+        _blobStorage = blobStorage;
     }
 
     public async Task<PlayerDto> Handle(CreatePlayerCommand command, CancellationToken cancellationToken)
@@ -62,7 +65,7 @@ public class CreatePlayerHandler : IRequestHandler<CreatePlayerCommand, PlayerDt
         var preferredPositionsJson = JsonSerializer.Serialize(dto.PreferredPositions);
         var nickname = dto.Nickname ?? string.Empty;
         var associationId = dto.AssociationId ?? string.Empty;
-        var photo = dto.Photo ?? string.Empty;
+        var photo = await _blobStorage.UploadImageAsync(dto.Photo, "player-photos", playerId.ToString(), cancellationToken);
         var allergies = dto.Allergies ?? string.Empty;
         var medicalConditions = dto.MedicalConditions ?? string.Empty;
 

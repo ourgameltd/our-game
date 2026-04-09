@@ -68,6 +68,5 @@ public record UpdateCoachRequestDto
     /// <summary>
     /// URL or base64 string for the coach's photo.
     /// </summary>
-    [StringLength(2000)]
     public string? Photo { get; init; }
 }

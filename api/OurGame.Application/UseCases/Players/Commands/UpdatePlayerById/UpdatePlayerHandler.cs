@@ -2,6 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Services;
 using OurGame.Application.UseCases.Players.Queries.GetPlayerById.DTOs;
 using OurGame.Persistence.Models;
 
@@ -15,10 +16,12 @@ namespace OurGame.Application.UseCases.Players.Commands.UpdatePlayerById;
 public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDto?>
 {
     private readonly OurGameContext _db;
+    private readonly IBlobStorageService _blobStorage;
 
-    public UpdatePlayerHandler(OurGameContext db)
+    public UpdatePlayerHandler(OurGameContext db, IBlobStorageService blobStorage)
     {
         _db = db;
+        _blobStorage = blobStorage;
     }
 
     public async Task<PlayerDto?> Handle(UpdatePlayerCommand command, CancellationToken cancellationToken)
@@ -121,7 +124,7 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
         var now = DateTime.UtcNow;
         var nickname = dto.Nickname ?? string.Empty;
         var associationId = dto.AssociationId ?? string.Empty;
-        var photo = dto.Photo ?? string.Empty;
+        var photo = await _blobStorage.UploadImageAsync(dto.Photo, "player-photos", playerId.ToString(), cancellationToken);
         var allergies = dto.Allergies ?? string.Empty;
         var medicalConditions = dto.MedicalConditions ?? string.Empty;
 

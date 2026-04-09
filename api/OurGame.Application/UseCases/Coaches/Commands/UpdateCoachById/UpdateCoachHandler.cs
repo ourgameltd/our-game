@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Services;
 using OurGame.Application.UseCases.Coaches.Queries.GetCoachById.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
@@ -15,10 +16,12 @@ namespace OurGame.Application.UseCases.Coaches.Commands.UpdateCoachById;
 public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetailDto>
 {
     private readonly OurGameContext _db;
+    private readonly IBlobStorageService _blobStorage;
 
-    public UpdateCoachHandler(OurGameContext db)
+    public UpdateCoachHandler(OurGameContext db, IBlobStorageService blobStorage)
     {
         _db = db;
+        _blobStorage = blobStorage;
     }
 
     public async Task<CoachDetailDto> Handle(UpdateCoachCommand command, CancellationToken cancellationToken)
@@ -55,6 +58,7 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
         var now = DateTime.UtcNow;
         var phone = dto.Phone ?? string.Empty;
         var associationId = dto.AssociationId ?? string.Empty;
+        var photo = await _blobStorage.UploadImageAsync(dto.Photo, "coach-photos", coachId.ToString(), cancellationToken);
 
         // 4. Update the Coaches row
         var rowsAffected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
@@ -68,7 +72,7 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
                 Role            = {roleInt},
                 Biography       = {dto.Biography},
                 Specializations = {specializations},
-                Photo           = {dto.Photo},
+                Photo           = {photo},
                 UpdatedAt       = {now}
             WHERE Id = {coachId}
         ", cancellationToken);
