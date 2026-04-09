@@ -13,7 +13,7 @@ import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, Tactic, TacticalPositionOverride, TacticPrinciple } from '@/types';
 import { Routes } from '@utils/routes';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch } from '@/api/hooks';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic } from '@/api/hooks';
 import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -225,6 +225,32 @@ function buildLineupSlots(resolvedPositions: ResolvedPosition[], squadSize: Squa
   return lineupSlots;
 }
 
+function resolvePositionsFromFormationAndOverrides(
+  formation: Formation,
+  overrides: Record<number, TacticalPositionOverride> | undefined,
+  tacticId: string,
+): ResolvedPosition[] {
+  if (!formation.positions || formation.positions.length === 0) {
+    return [];
+  }
+
+  return formation.positions.map((position, index) => {
+    const override = overrides?.[index];
+    const hasOverride = Boolean(override && (override.x !== undefined || override.y !== undefined || override.direction !== undefined));
+
+    return {
+      positionId: `${formation.id}:${index}`,
+      positionIndex: index,
+      position: position.position,
+      x: override?.x ?? position.x,
+      y: override?.y ?? position.y,
+      direction: override?.direction ?? position.direction,
+      sourceFormationId: formation.id,
+      overriddenBy: hasOverride ? [tacticId] : [],
+    };
+  });
+}
+
 export default function AddEditMatchPage() {
   usePageTitle(['Add Edit Match']);
 
@@ -327,6 +353,7 @@ export default function AddEditMatchPage() {
   const selectedGoalkeeperKit = availableKits.find(currentKit => currentKit.id === goalkeeperKit);
   const [formationId, setFormationId] = useState('');
   const [tacticId, setTacticId] = useState('');
+  const { data: selectedTacticDetail } = useTactic(tacticId || undefined);
   const [weather, setWeather] = useState('');
   const [temperature, setTemperature] = useState('');
   
@@ -408,6 +435,18 @@ export default function AddEditMatchPage() {
 
   const selectedResolvedPositions = useMemo(() => {
     if (selectedTactic) {
+      if (selectedTacticDetail?.resolvedPositions && selectedTacticDetail.resolvedPositions.length > 0) {
+        return mapResolvedPositionDtos(selectedTacticDetail.resolvedPositions);
+      }
+
+      if (selectedFormation) {
+        return resolvePositionsFromFormationAndOverrides(
+          selectedFormation,
+          selectedTactic.positionOverrides,
+          selectedTactic.id,
+        );
+      }
+
       return getResolvedPositions(selectedTactic);
     }
 
@@ -416,7 +455,7 @@ export default function AddEditMatchPage() {
     }
 
     return [] as ResolvedPosition[];
-  }, [selectedFormation, selectedTactic]);
+  }, [selectedFormation, selectedTactic, selectedTacticDetail]);
 
   const lineupSlots = useMemo(
     () => buildLineupSlots(selectedResolvedPositions, squadSize),
