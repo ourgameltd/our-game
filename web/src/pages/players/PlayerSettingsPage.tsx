@@ -125,6 +125,7 @@ export default function PlayerSettingsPage() {
   }[]>([]);
 
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [removedLinkedAccountKeys, setRemovedLinkedAccountKeys] = useState<Set<string>>(new Set());
 
   // Initialize form state from API data (only once)
   useEffect(() => {
@@ -149,9 +150,11 @@ export default function PlayerSettingsPage() {
   const canEditProtectedFields = profile.isCoach || profile.isAdmin;
   const protectedFieldsDisabled = isFormDisabled || !canEditProtectedFields;
   const linkedParentAccounts = (player?.linkedAccounts ?? []).filter((account) => account.isLinked);
-  const linkedEmergencyContactIds = new Set(linkedParentAccounts.map((account) => account.id));
-  const linkedAccountsForDisplay = [
-    ...(player?.linkedUser
+  const isLinkedAccountRemoved = (source: 'player' | 'parent', accountId: string) =>
+    removedLinkedAccountKeys.has(`${source}:${accountId}`);
+
+  const linkedPlayerAccountForDisplay =
+    player?.linkedUser && !isLinkedAccountRemoved('player', player.linkedUser.id)
       ? [{
           id: player.linkedUser.id,
           firstName: player.linkedUser.firstName,
@@ -160,8 +163,15 @@ export default function PlayerSettingsPage() {
           phone: undefined as string | undefined,
           source: 'player' as const,
         }]
-      : []),
-    ...linkedParentAccounts.map((account) => ({
+      : [];
+
+  const linkedParentAccountsForDisplay = linkedParentAccounts
+    .filter((account) => !isLinkedAccountRemoved('parent', account.id));
+
+  const linkedEmergencyContactIds = new Set(linkedParentAccounts.map((account) => account.id));
+  const linkedAccountsForDisplay = [
+    ...linkedPlayerAccountForDisplay,
+    ...linkedParentAccountsForDisplay.map((account) => ({
       id: account.id,
       firstName: account.firstName,
       lastName: account.lastName,
@@ -174,6 +184,14 @@ export default function PlayerSettingsPage() {
     (contact) => !contact.id || !linkedEmergencyContactIds.has(contact.id)
   );
   const hasLinkedSections = linkedAccountsForDisplay.length > 0;
+
+  const handleRemoveLinkedAccount = (source: 'player' | 'parent', accountId: string) => {
+    setRemovedLinkedAccountKeys((prev) => {
+      const next = new Set(prev);
+      next.add(`${source}:${accountId}`);
+      return next;
+    });
+  };
 
   // Error state - not found
   if (!isNewPlayer && playerError) {
@@ -313,11 +331,16 @@ export default function PlayerSettingsPage() {
 
     // Validate emergency contacts
     for (const contact of visibleEmergencyContacts) {
-      if (!contact.name.trim() || !contact.phone.trim() || !contact.relationship.trim()) {
-        alert('Please fill in all emergency contact fields or remove incomplete contacts');
+      if (!contact.name.trim()) {
+        alert('Please provide a name for each emergency contact or remove incomplete contacts');
         return;
       }
     }
+
+    const removeLinkedEmergencyContactIds = linkedParentAccounts
+      .filter((account) => isLinkedAccountRemoved('parent', account.id))
+      .map((account) => account.id);
+    const unlinkPlayerAccount = !!player?.linkedUser && isLinkedAccountRemoved('player', player.linkedUser.id);
 
     // Ensure exactly one primary contact if contacts exist
     const primaryCount = visibleEmergencyContacts.filter(c => c.isPrimary).length;
@@ -338,6 +361,8 @@ export default function PlayerSettingsPage() {
       preferredPositions,
       emergencyContacts: visibleEmergencyContacts.map(({ id, ...rest }) => rest),
       isArchived: player?.isArchived || false,
+      removeLinkedEmergencyContactIds: removeLinkedEmergencyContactIds.length > 0 ? removeLinkedEmergencyContactIds : undefined,
+      unlinkPlayerAccount,
     };
 
     await updatePlayer(request);
@@ -781,6 +806,11 @@ export default function PlayerSettingsPage() {
                   <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
                     User accounts linked to this player via the invite system
                   </p>
+                  {!canEditProtectedFields && (
+                    <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                      Only coaches can remove linked accounts.
+                    </p>
+                  )}
                   <div className="space-y-2">
                     {linkedAccountsForDisplay.map((account) => (
                       <div key={account.id} className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
@@ -799,6 +829,17 @@ export default function PlayerSettingsPage() {
                         <span className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                           {account.source === 'player' ? 'Player' : 'Parent'}
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveLinkedAccount(account.source, account.id)}
+                          disabled={protectedFieldsDisabled}
+                          className="flex-shrink-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          title="Remove linked account"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -869,7 +910,7 @@ export default function PlayerSettingsPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Relationship *</label>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Relationship</label>
                             <input
                               type="text"
                               value={contact.relationship}
@@ -880,7 +921,7 @@ export default function PlayerSettingsPage() {
                             />
                           </div>
                           <div>
-                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Phone *</label>
+                            <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Phone</label>
                             <input
                               type="tel"
                               value={contact.phone}

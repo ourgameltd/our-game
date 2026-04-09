@@ -161,6 +161,99 @@ public class UpdatePlayerHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenRemoveLinkedEmergencyContactIdsProvided_RemovesSelectedLinkedAccounts()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var playerId = await db.SeedPlayerAsync(clubId);
+        _ = await db.SeedCoachAsync(clubId, authId: "coach-remove-linked");
+
+        var linkedUserOne = await db.SeedUserAsync("linked-parent-1");
+        var linkedUserTwo = await db.SeedUserAsync("linked-parent-2");
+
+        var linkedContactOne = new EmergencyContact
+        {
+            Id = Guid.NewGuid(),
+            PlayerId = playerId,
+            UserId = linkedUserOne,
+            Name = "Linked Parent One",
+            Phone = "+447700900010",
+            Relationship = "Parent",
+            IsPrimary = false
+        };
+
+        var linkedContactTwo = new EmergencyContact
+        {
+            Id = Guid.NewGuid(),
+            PlayerId = playerId,
+            UserId = linkedUserTwo,
+            Name = "Linked Parent Two",
+            Phone = "+447700900011",
+            Relationship = "Parent",
+            IsPrimary = false
+        };
+
+        db.Context.EmergencyContacts.AddRange(linkedContactOne, linkedContactTwo);
+        await db.Context.SaveChangesAsync();
+
+        var handler = new UpdatePlayerHandler(db.Context);
+        var dto = MakeDto(
+            emergencyContacts: Array.Empty<EmergencyContactRequestDto>(),
+            removeLinkedEmergencyContactIds: new[] { linkedContactOne.Id });
+
+        await handler.Handle(new UpdatePlayerCommand(playerId, dto, "coach-remove-linked"), CancellationToken.None);
+
+        var dbContacts = await db.Context.EmergencyContacts
+            .AsNoTracking()
+            .Where(c => c.PlayerId == playerId)
+            .ToListAsync();
+
+        Assert.DoesNotContain(dbContacts, c => c.Id == linkedContactOne.Id);
+        Assert.Contains(dbContacts, c => c.Id == linkedContactTwo.Id);
+    }
+
+    [Fact]
+    public async Task Handle_WhenUnlinkPlayerAccountRequested_ClearsPlayerUserId()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var linkedPlayerUserId = await db.SeedUserAsync("linked-player-auth");
+        var playerId = await db.SeedPlayerAsync(clubId, userId: linkedPlayerUserId);
+        _ = await db.SeedCoachAsync(clubId, authId: "coach-unlink-player");
+
+        var handler = new UpdatePlayerHandler(db.Context);
+        var dto = MakeDto(unlinkPlayerAccount: true);
+
+        await handler.Handle(new UpdatePlayerCommand(playerId, dto, "coach-unlink-player"), CancellationToken.None);
+
+        var refreshed = await db.Context.Players.AsNoTracking().SingleAsync(p => p.Id == playerId);
+        Assert.Null(refreshed.UserId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenEmergencyContactHasOnlyName_AllowsOptionalFieldsToBeEmpty()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var playerId = await db.SeedPlayerAsync(clubId);
+        var handler = new UpdatePlayerHandler(db.Context);
+        var contacts = new[]
+        {
+            new EmergencyContactRequestDto { Name = "Name Only", IsPrimary = true }
+        };
+        var dto = MakeDto(emergencyContacts: contacts);
+
+        await handler.Handle(new UpdatePlayerCommand(playerId, dto), CancellationToken.None);
+
+        var dbContact = await db.Context.EmergencyContacts
+            .AsNoTracking()
+            .SingleAsync(c => c.PlayerId == playerId && c.Name == "Name Only");
+
+        Assert.Equal(string.Empty, dbContact.Phone);
+        Assert.Equal(string.Empty, dbContact.Relationship);
+    }
+
+    [Fact]
     public async Task Handle_RebuildsTeamAndAgeGroupAssignments()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
@@ -311,7 +404,9 @@ public class UpdatePlayerHandlerTests
         string? associationId = null,
         string[]? preferredPositions = null,
         string? allergies = null,
-        string? medicalConditions = null) =>
+        string? medicalConditions = null,
+        Guid[]? removeLinkedEmergencyContactIds = null,
+        bool unlinkPlayerAccount = false) =>
         new()
         {
             FirstName = firstName,
@@ -323,6 +418,8 @@ public class UpdatePlayerHandlerTests
             MedicalConditions = medicalConditions,
             IsArchived = isArchived,
             TeamIds = teamIds,
-            EmergencyContacts = emergencyContacts
+            EmergencyContacts = emergencyContacts,
+            RemoveLinkedEmergencyContactIds = removeLinkedEmergencyContactIds,
+            UnlinkPlayerAccount = unlinkPlayerAccount
         };
 }

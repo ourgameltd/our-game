@@ -1962,8 +1962,8 @@ export interface UpdatePlayerRequest {
   phoneNumber?: string;
   emergencyContacts?: {
     name: string;
-    phone: string;
-    relationship: string;
+    phone?: string;
+    relationship?: string;
     isPrimary: boolean;
   }[];
   photo?: string;
@@ -1972,6 +1972,8 @@ export interface UpdatePlayerRequest {
   preferredPositions: string[];
   teamIds?: string[];
   isArchived: boolean;
+  removeLinkedEmergencyContactIds?: string[];
+  unlinkPlayerAccount?: boolean;
 }
 
 export interface CreatePlayerRequest {

@@ -340,14 +340,14 @@ export default function ClubsListPage() {
                       <img
                         src={player.photo}
                         alt={player.displayName}
-                        className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                        className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
                       />
                     ) : (
-                      <div className="w-20 h-20 rounded-full flex items-center justify-center text-base font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors bg-gradient-to-br from-primary-500 to-primary-700">
+                      <div className="w-24 h-24 rounded-full flex items-center justify-center text-base font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors bg-gradient-to-br from-primary-500 to-primary-700">
                         {player.displayName.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
                       </div>
                     )}
-                    <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[90px] text-center">
+                    <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[108px] text-center">
                       {player.displayName}
                     </span>
                   </div>
@@ -386,17 +386,17 @@ export default function ClubsListPage() {
                         <img
                           src={club.logo}
                           alt={club.name}
-                          className="w-20 h-20 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                          className="w-24 h-24 rounded-full object-cover border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
                         />
                       ) : (
                         <div
-                          className="w-20 h-20 rounded-full flex items-center justify-center text-xl font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                          className="w-24 h-24 rounded-full flex items-center justify-center text-xl font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
                           style={{ backgroundColor: club.primaryColor || '#3b82f6' }}
                         >
                           {club.shortName?.substring(0, 2) || club.name.substring(0, 2)}
                         </div>
                       )}
-                      <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[80px] text-center">
+                      <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[108px] text-center">
                         {club.shortName || club.name}
                       </span>
                     </Link>
@@ -407,7 +407,7 @@ export default function ClubsListPage() {
                       className="flex flex-col items-center gap-1 flex-shrink-0 group"
                       title="Create Club"
                     >
-                      <div className="w-20 h-20 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 group-hover:border-primary-500 group-hover:text-primary-500 transition-colors">
+                      <div className="w-24 h-24 rounded-full border-2 border-dashed border-gray-300 dark:border-gray-600 flex items-center justify-center text-gray-400 group-hover:border-primary-500 group-hover:text-primary-500 transition-colors">
                         <span className="text-2xl leading-none">+</span>
                       </div>
                       <span className="text-xs text-gray-400 group-hover:text-primary-500">New</span>
@@ -429,15 +429,15 @@ export default function ClubsListPage() {
                     const avatar = (
                       <div className="flex flex-col items-center gap-1 flex-shrink-0 group">
                         <div
-                          className="w-20 h-20 rounded-full flex items-center justify-center text-base font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                          className="w-24 h-24 rounded-full flex items-center justify-center text-base font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
                           style={{ backgroundColor: team.colors?.primary || club?.primaryColor || '#3b82f6' }}
                         >
                           {(team.name || '').substring(0, 2)}
                         </div>
-                        <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[80px] text-center">
+                        <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[108px] text-center">
                           {team.name}
                         </span>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[80px] text-center -mt-0.5">
+                        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[108px] text-center -mt-0.5">
                           {team.ageGroupName}
                         </span>
                       </div>

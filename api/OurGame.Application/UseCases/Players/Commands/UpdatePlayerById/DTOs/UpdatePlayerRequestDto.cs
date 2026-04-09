@@ -82,4 +82,15 @@ public record UpdatePlayerRequestDto
     /// Whether the player record is archived (soft-deleted).
     /// </summary>
     public bool IsArchived { get; init; }
+
+    /// <summary>
+    /// Linked emergency-contact IDs to remove from this player.
+    /// These are linked parent accounts stored in EmergencyContacts with a non-null UserId.
+    /// </summary>
+    public Guid[]? RemoveLinkedEmergencyContactIds { get; init; }
+
+    /// <summary>
+    /// If true, unlinks the player's own user account (Players.UserId).
+    /// </summary>
+    public bool UnlinkPlayerAccount { get; init; }
 }

@@ -25,6 +25,7 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
     {
         var dto = command.Dto;
         var playerId = command.PlayerId;
+        var canEditProtectedFields = false;
 
         // 1. Verify the player exists and check archive state
         var existing = await _db.Database
@@ -73,7 +74,7 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
                 throw new ForbiddenException("You are not authorized to update this player.");
             }
 
-            var canEditProtectedFields = caller.IsAdmin || isCoachForClub;
+            canEditProtectedFields = caller.IsAdmin || isCoachForClub;
             if (!canEditProtectedFields)
             {
                 var requestedAssociationId = dto.AssociationId ?? string.Empty;
@@ -108,6 +109,13 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
             }
         }
 
+        var hasLinkedAccountRemovalRequest = dto.UnlinkPlayerAccount ||
+            (dto.RemoveLinkedEmergencyContactIds?.Length ?? 0) > 0;
+        if (hasLinkedAccountRemovalRequest && !canEditProtectedFields)
+        {
+            throw new ForbiddenException("Only coaches can remove linked accounts.");
+        }
+
         // 2. Serialize preferred positions to JSON for storage
         var preferredPositionsJson = JsonSerializer.Serialize(dto.PreferredPositions);
         var now = DateTime.UtcNow;
@@ -140,6 +148,29 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
             throw new NotFoundException("Player", playerId.ToString());
         }
 
+        // 3b. Remove requested linked accounts.
+        if (dto.UnlinkPlayerAccount)
+        {
+            await _db.Players
+                .Where(p => p.Id == playerId)
+                .ExecuteUpdateAsync(
+                    updates => updates.SetProperty(p => p.UserId, _ => (Guid?)null),
+                    cancellationToken);
+        }
+
+        if ((dto.RemoveLinkedEmergencyContactIds?.Length ?? 0) > 0)
+        {
+            var linkedIdsToRemove = dto.RemoveLinkedEmergencyContactIds!
+                .Distinct()
+                .ToArray();
+
+            await _db.EmergencyContacts
+                .Where(ec => ec.PlayerId == playerId
+                             && ec.UserId != null
+                             && linkedIdsToRemove.Contains(ec.Id))
+                .ExecuteDeleteAsync(cancellationToken);
+        }
+
         // 4. Rebuild emergency contacts (delete existing, insert new)
         if (dto.EmergencyContacts != null)
         {
@@ -163,7 +194,7 @@ public class UpdatePlayerHandler : IRequestHandler<UpdatePlayerCommand, PlayerDt
 
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO EmergencyContacts (Id, PlayerId, Name, Phone, Relationship, IsPrimary)
-                    VALUES ({ecId}, {playerId}, {contact.Name}, {contact.Phone}, {contact.Relationship}, {isPrimary})
+                    VALUES ({ecId}, {playerId}, {contact.Name}, {contact.Phone ?? string.Empty}, {contact.Relationship ?? string.Empty}, {isPrimary})
                 ", cancellationToken);
             }
         }

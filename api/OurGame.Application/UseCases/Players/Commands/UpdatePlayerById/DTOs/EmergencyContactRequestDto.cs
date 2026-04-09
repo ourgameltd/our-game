@@ -18,16 +18,14 @@ public record EmergencyContactRequestDto
     /// <summary>
     /// Contact phone number.
     /// </summary>
-    [Required]
     [StringLength(20)]
-    public string Phone { get; init; } = string.Empty;
+    public string? Phone { get; init; }
 
     /// <summary>
     /// Relationship to the player (e.g., "Parent", "Guardian", "Spouse").
     /// </summary>
-    [Required]
     [StringLength(100)]
-    public string Relationship { get; init; } = string.Empty;
+    public string? Relationship { get; init; }
 
     /// <summary>
     /// Whether this is the primary emergency contact.
