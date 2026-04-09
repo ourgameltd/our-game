@@ -89,11 +89,18 @@ function EmergencyContactsSkeleton() {
 export default function PlayerSettingsPage() {
   usePageTitle(['Player Settings']);
 
-  const { clubId, ageGroupId, playerId } = useParams();
+  const { clubId, ageGroupId, teamId, playerId } = useParams();
   const navigate = useNavigate();
   const isNewPlayer = playerId === 'new';
   const { isAdmin } = useAuth();
   const { profile } = useAccessProfile(isAdmin);
+
+  // Determine back link to the player profile
+  const backLink = isNewPlayer
+    ? undefined
+    : teamId
+      ? Routes.teamPlayer(clubId!, ageGroupId!, teamId, playerId!)
+      : Routes.player(clubId!, ageGroupId!, playerId!);
 
   // API hooks
   const { data: player, isLoading: isLoadingPlayer, error: playerError } = usePlayer(
@@ -434,6 +441,7 @@ export default function PlayerSettingsPage() {
               title={isNewPlayer ? "Add New Player" : "Player Settings"}
               subtitle={isNewPlayer ? "Create a new player profile" : `Manage ${player!.firstName} ${player!.lastName}'s profile and information`}
               badge={!isNewPlayer && player!.isArchived ? "🗄️ Archived" : undefined}
+              backLink={backLink}
             />
             {!isNewPlayer && player!.isArchived && (
               <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">

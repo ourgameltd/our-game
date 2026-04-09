@@ -1,7 +1,7 @@
 import { useParams } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
-import { usePlayerAbilities, useCreatePlayerAbilityEvaluation } from '@api/hooks';
+import { usePlayerAbilities, useCreatePlayerAbilityEvaluation, usePlayer } from '@api/hooks';
 import { CreatePlayerAbilityEvaluationRequest } from '@api/client';
 import { groupAttributes, getQualityColor } from '@utils/attributeHelpers';
 import { PlayerAttributes } from '@/types';
@@ -11,7 +11,9 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
 import { canViewPlayerAbilities } from '@/utils/accessControl';
+import { Routes } from '@utils/routes';
 import PlayerSubNav from '@components/player/PlayerSubNav';
+import PageTitle from '@components/common/PageTitle';
 import AccessDeniedPage from '@components/common/AccessDeniedPage';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -19,9 +21,19 @@ import {
 } from 'recharts';
 
 export default function PlayerAbilitiesPage() {
-  usePageTitle(['Player Abilities']);
+  const { clubId, playerId, ageGroupId, teamId } = useParams();
+  const { data: player, isLoading: playerLoading } = usePlayer(playerId);
 
-  const { playerId } = useParams();
+  usePageTitle(
+    [
+      player?.clubName ?? 'Club',
+      ageGroupId ? (player?.ageGroupName ?? 'Age Group') : undefined,
+      teamId ? (player?.teamName ?? 'Team') : undefined,
+      player ? `${player.firstName} ${player.lastName}` : 'Player',
+      'Abilities',
+    ],
+    !!player,
+  );
   const { isAdmin } = useAuth();
   const { profile } = useAccessProfile(isAdmin);
   const { data: abilities, isLoading: loading, error, refetch } = usePlayerAbilities(playerId);
@@ -30,13 +42,46 @@ export default function PlayerAbilitiesPage() {
   const { setEntityName } = useNavigation();
   const isDark = actualTheme === 'dark';
   
-  // Update navigation context with player name
+  // Update navigation context with entity names
   useEffect(() => {
-    if (abilities) {
-      setEntityName('player', abilities.playerId, `${abilities.firstName} ${abilities.lastName}`);
+    if (player) {
+      setEntityName('player', player.id, `${player.firstName} ${player.lastName}`);
+      if (player.clubId && player.clubName) {
+        setEntityName('club', player.clubId, player.clubName);
+      }
+      if (player.teamId && player.teamName) {
+        setEntityName('team', player.teamId, player.teamName);
+      }
+      if (player.ageGroupId && player.ageGroupName) {
+        setEntityName('ageGroup', player.ageGroupId, player.ageGroupName);
+      }
     }
-  }, [abilities?.playerId, abilities?.firstName, abilities?.lastName, setEntityName]);
-  
+  }, [player?.id, player?.firstName, player?.lastName, player?.clubId, player?.clubName, player?.teamId, player?.teamName, player?.ageGroupId, player?.ageGroupName, setEntityName]);
+
+  // Determine back link based on context (team, age group, or club)
+  let backLink: string;
+  let subtitle: string;
+  if (teamId && ageGroupId) {
+    backLink = Routes.teamSquad(clubId!, ageGroupId, teamId);
+    subtitle = player ? `${player.ageGroupName || 'Age Group'} • ${player.teamName || 'Team'}` : 'Loading...';
+  } else if (ageGroupId) {
+    backLink = Routes.ageGroupPlayers(clubId!, ageGroupId);
+    subtitle = player?.ageGroupName || 'Age Group';
+  } else {
+    backLink = Routes.clubPlayers(clubId!);
+    subtitle = 'Club Players';
+  }
+
+  // Determine settings link based on context
+  let settingsLink: string;
+  if (teamId && ageGroupId) {
+    settingsLink = Routes.teamPlayerSettings(clubId!, ageGroupId, teamId, playerId!);
+  } else if (ageGroupId) {
+    settingsLink = Routes.playerSettings(clubId!, ageGroupId, playerId!);
+  } else {
+    settingsLink = Routes.clubPlayerSettings(clubId!, playerId!);
+  }
+
   // Theme-aware chart colors
   const chartColors = {
     grid: isDark ? '#4B5563' : '#D1D5DB',
@@ -58,7 +103,6 @@ export default function PlayerAbilitiesPage() {
   const [selectedCategory, setSelectedCategory] = useState<'skills' | 'physical' | 'mental'>('skills');
   const [attributeRatings, setAttributeRatings] = useState<Record<string, number>>({});
   const [coachNotes, setCoachNotes] = useState('');
-  const [showAllAbilities, setShowAllAbilities] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   if (!playerId) {
@@ -280,8 +324,34 @@ export default function PlayerAbilitiesPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
+        {/* Page Title with Back Button */}
+        {playerLoading ? (
+          <div className="mb-4 animate-pulse">
+            <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+            <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        ) : player ? (
+          <PageTitle
+            title={`${player.firstName} ${player.lastName}`}
+            subtitle={subtitle}
+            backLink={backLink}
+            image={{
+              src: player.photoUrl,
+              alt: `${player.firstName} ${player.lastName}`,
+              initials: `${player.firstName[0]}${player.lastName[0]}`,
+              colorClass: 'from-primary-500 to-primary-600'
+            }}
+            action={{
+              label: 'Settings',
+              href: settingsLink,
+              icon: 'settings',
+              title: 'Player Settings'
+            }}
+          />
+        ) : null}
+
         {/* Player Sub Navigation */}
-        <PlayerSubNav />
+        {!playerLoading && player && <PlayerSubNav />}
 
         {/* Error State */}
         {error && (
@@ -304,10 +374,7 @@ export default function PlayerAbilitiesPage() {
             </div>
           ) : abilities ? (
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                {abilities.firstName} {abilities.lastName} - Abilities
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-gray-600 dark:text-gray-400">
                 Overall Rating: {abilities.overallRating}/99
                 {abilities.evaluations.length > 0 && (
                   <span className="ml-2 text-sm">
@@ -882,124 +949,6 @@ export default function PlayerAbilitiesPage() {
               </ResponsiveContainer>
             </div>
           </div>
-        </div>
-        ) : null}
-
-        {/* All Abilities by Category */}
-        {loading ? (
-          <div className="card">
-            <div className="h-6 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-64 mb-4" />
-            <div className="space-y-2">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="h-16 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-              ))}
-            </div>
-          </div>
-        ) : abilities ? (
-          <div className="card">
-            <div 
-              className="flex justify-between items-center cursor-pointer"
-              onClick={() => setShowAllAbilities(!showAllAbilities)}
-            >
-              <h3 className="text-xl font-semibold">
-                All Abilities {abilities.evaluations.length > 0 && `(Based on ${abilities.evaluations.length} evaluations)`}
-              </h3>
-            <button className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-transform">
-              <svg 
-                className={`w-6 h-6 transform transition-transform ${showAllAbilities ? 'rotate-180' : ''}`}
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
-          </div>
-          
-          {showAllAbilities && (
-            <div className="mt-4">
-              {/* Skills */}
-              <div className="mb-4">
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                  <span className="bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 px-3 py-1 rounded-full text-sm mr-3">
-                    Skills
-                  </span>
-                </h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                  {groupedAttributes.skills.map((ability) => (
-                    <div key={ability.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{ability.name}</span>
-                        <span className={`text-sm font-bold ${getQualityColor(ability.quality)}`}>
-                          {ability.rating}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                        <div 
-                          className="bg-blue-600 h-1.5 rounded-full transition-all"
-                          style={{ width: `${(ability.rating / 99) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Physical */}
-              <div className="mb-4">
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                  <span className="bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 px-3 py-1 rounded-full text-sm mr-3">
-                    Physical
-                  </span>
-                </h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                  {groupedAttributes.physical.map((ability) => (
-                    <div key={ability.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{ability.name}</span>
-                        <span className={`text-sm font-bold ${getQualityColor(ability.quality)}`}>
-                          {ability.rating}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                        <div 
-                          className="bg-green-600 h-1.5 rounded-full transition-all"
-                          style={{ width: `${(ability.rating / 99) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Mental */}
-              <div>
-                <h4 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
-                  <span className="bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 px-3 py-1 rounded-full text-sm mr-3">
-                    Mental
-                  </span>
-                </h4>
-                <div className="grid md:grid-cols-3 gap-4">
-                  {groupedAttributes.mental.map((ability) => (
-                    <div key={ability.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                      <div className="flex justify-between items-center mb-2">
-                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">{ability.name}</span>
-                        <span className={`text-sm font-bold ${getQualityColor(ability.quality)}`}>
-                          {ability.rating}
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
-                        <div 
-                          className="bg-purple-600 h-1.5 rounded-full transition-all"
-                          style={{ width: `${(ability.rating / 99) * 100}%` }}
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         ) : null}
 
