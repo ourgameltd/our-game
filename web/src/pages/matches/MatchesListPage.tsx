@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useMemo } from 'react';
 import { useTeamMatches, TeamMatchDto } from '@/api';
 import type { Match } from '@/types';
@@ -68,6 +68,7 @@ function MatchesListSkeleton() {
 
 export default function MatchesListPage() {
   const { clubId, ageGroupId, teamId } = useParams();
+  const navigate = useNavigate();
   
   // Fetch matches from API
   const { data: matchesData, isLoading, error } = useTeamMatches(teamId);
@@ -133,7 +134,7 @@ export default function MatchesListPage() {
                       label: 'Add Match',
                       icon: 'plus',
                       title: 'Add Match',
-                      onClick: () => window.location.href = Routes.matchNew(clubId!, ageGroupId!, teamId!),
+                      onClick: () => navigate(Routes.matchNew(clubId!, ageGroupId!, teamId!)),
                       variant: 'success'
                     } : undefined}
                   />

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { useClubById, useAgeGroupsByClubId, AgeGroupListDto } from '@/api';
 import PageTitle from '../../components/common/PageTitle';
 import AgeGroupListCard from '../../components/ageGroup/AgeGroupListCard';
@@ -90,6 +90,7 @@ function PageTitleSkeleton() {
 
 const AgeGroupsListPage: React.FC = () => {
   const { clubId } = useParams<{ clubId: string }>();
+  const navigate = useNavigate();
   
   usePageTitle(['Club', 'Age Groups']);
   
@@ -154,7 +155,7 @@ const AgeGroupsListPage: React.FC = () => {
               label: 'Add Age Group',
               icon: 'plus',
               title: 'Add Age Group',
-              onClick: () => window.location.href = Routes.ageGroupNew(clubId!),
+              onClick: () => navigate(Routes.ageGroupNew(clubId!)),
               variant: 'success'
             }}
           />

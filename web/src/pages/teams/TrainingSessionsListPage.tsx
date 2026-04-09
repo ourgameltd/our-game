@@ -1,4 +1,4 @@
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import TrainingSessionsListContent from '@/components/training/TrainingSessionsListContent';
@@ -30,6 +30,7 @@ export default function TrainingSessionsListPage() {
   usePageTitle(['Training Sessions List']);
 
   const { clubId, ageGroupId, teamId } = useParams();
+  const navigate = useNavigate();
   
   const { data, isLoading, error } = useTeamTrainingSessions(teamId);
 
@@ -102,7 +103,7 @@ export default function TrainingSessionsListPage() {
                   label: 'Add Session',
                   icon: 'plus',
                   title: 'Add Training Session',
-                  onClick: () => window.location.href = Routes.teamTrainingSessionNew(clubId!, ageGroupId!, teamId!),
+                  onClick: () => navigate(Routes.teamTrainingSessionNew(clubId!, ageGroupId!, teamId!)),
                   variant: 'success'
                 } : undefined}
               />

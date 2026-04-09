@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users } from 'lucide-react';
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
@@ -63,6 +63,7 @@ export default function DrillTemplatesListPage() {
   usePageTitle(['Drill Templates List']);
 
   const { clubId, ageGroupId, teamId } = useParams();
+  const navigate = useNavigate();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -157,7 +158,7 @@ export default function DrillTemplatesListPage() {
               label: 'Create Template',
               icon: 'plus',
               title: 'Create New Session Template',
-              onClick: () => window.location.href = getNewTemplateRoute(),
+              onClick: () => navigate(getNewTemplateRoute()),
               variant: 'success'
             }}
           />

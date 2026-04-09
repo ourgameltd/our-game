@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
@@ -57,6 +57,7 @@ export default function DrillsListPage() {
   usePageTitle(['Drills List']);
 
   const { clubId, ageGroupId, teamId } = useParams();
+  const navigate = useNavigate();
   
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
@@ -187,7 +188,7 @@ export default function DrillsListPage() {
               label: 'Create Drill',
               icon: 'plus',
               title: 'Create New Drill',
-              onClick: () => window.location.href = getNewDrillRoute(),
+              onClick: () => navigate(getNewDrillRoute()),
               variant: 'success'
             }}
           />
