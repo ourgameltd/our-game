@@ -62,9 +62,9 @@ export default function PrinciplePanel({
   const handleAddPrinciple = () => {
     if (!onPrinciplesChange) return;
     
-    // Start with selected position if available, otherwise empty (not global)
-    const initialPositions = selectedPositionIndex !== null && selectedPositionIndex !== undefined 
-      ? [selectedPositionIndex]
+    // Start with selected position if available, otherwise empty (team-wide)
+    const initialPositions = selectedResolvedPositionIndex !== null && selectedResolvedPositionIndex !== undefined
+      ? [selectedResolvedPositionIndex]
       : [];
     
     const newPrinciple: TacticPrinciple = {
@@ -291,7 +291,7 @@ export default function PrinciplePanel({
                           if (onResolvedPositionClick) {
                             onResolvedPositionClick(pos.positionId || null);
                           } else {
-                            onPositionClick?.(index);
+                            onPositionClick?.(positionIndex);
                           }
                         }
                       }}

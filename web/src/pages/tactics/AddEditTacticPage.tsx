@@ -6,7 +6,6 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import TacticPitchEditor from '@/components/tactics/TacticPitchEditor';
 import PrinciplePanel from '@/components/tactics/PrinciplePanel';
-import { getResolvedPositions } from '@/data/tactics';
 import { Tactic, TacticalPositionOverride, TacticPrinciple, Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
@@ -358,8 +357,13 @@ export default function AddEditTacticPage() {
   );
 
   const resolvedPositions = useMemo(
-    () => getResolvedPositions(tactic),
-    [tactic],
+    () =>
+      (formation?.positions || []).map((position, index) => ({
+        positionId: `${formation?.id || 'formation'}:${index}`,
+        positionIndex: index,
+        position: position.position,
+      })),
+    [formation],
   );
 
   const hasSystemFormationCatalog = systemFormations.length > 0;
