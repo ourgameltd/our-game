@@ -1,5 +1,6 @@
 import { Player } from '@/types';
 import { Link } from 'react-router-dom';
+import { calculateAge } from '@/utils/dateOfBirth';
 
 interface PlayerDetailsHeaderProps {
   player: Player;
@@ -12,17 +13,7 @@ export default function PlayerDetailsHeader({
   customColorClass = 'from-primary-500 to-primary-600',
   settingsLink
 }: PlayerDetailsHeaderProps) {
-  const calculateAge = (birthDate: Date) => {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const age = player.dateOfBirth ? calculateAge(player.dateOfBirth) : null;
+  const age = calculateAge(player.dateOfBirth);
 
   return (
     <div className="flex items-start gap-4">

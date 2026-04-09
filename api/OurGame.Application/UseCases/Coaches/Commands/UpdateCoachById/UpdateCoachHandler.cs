@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Services;
 using OurGame.Application.UseCases.Coaches.Queries.GetCoachById.DTOs;
+using OurGame.Application.UseCases.Players.Queries.GetPlayerById.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
@@ -80,6 +81,29 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
         if (rowsAffected == 0)
         {
             throw new NotFoundException("Coach", coachId.ToString());
+        }
+
+        // 4b. Remove requested linked accounts.
+        if (dto.UnlinkCoachAccount)
+        {
+            await _db.Coaches
+                .Where(c => c.Id == coachId)
+                .ExecuteUpdateAsync(
+                    updates => updates.SetProperty(c => c.UserId, _ => (Guid?)null),
+                    cancellationToken);
+        }
+
+        if ((dto.RemoveLinkedEmergencyContactIds?.Length ?? 0) > 0)
+        {
+            var linkedIdsToRemove = dto.RemoveLinkedEmergencyContactIds!
+                .Distinct()
+                .ToArray();
+
+            await _db.EmergencyContacts
+                .Where(ec => ec.CoachId == coachId
+                             && ec.UserId != null
+                             && linkedIdsToRemove.Contains(ec.Id))
+                .ExecuteDeleteAsync(cancellationToken);
         }
 
         // 5. Rebuild TeamCoaches join table (delete existing, insert new)
@@ -164,6 +188,35 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
             ? ((CoachRole)coach.Role).ToString()
             : "Unknown";
 
+        // 9. Fetch linked emergency-contact accounts
+        var linkedAccountsData = await _db.Database
+            .SqlQueryRaw<UpdatedCoachLinkedAccountRaw>(@"
+                SELECT
+                    ec.Id,
+                    ec.Name,
+                    ec.Phone,
+                    u.Email,
+                    CASE WHEN ec.UserId IS NULL THEN CAST(0 AS bit) ELSE CAST(1 AS bit) END AS IsLinked
+                FROM EmergencyContacts ec
+                LEFT JOIN Users u ON u.Id = ec.UserId
+                WHERE ec.CoachId = {0}
+                  AND ec.UserId IS NOT NULL
+                ORDER BY ec.Name
+            ", coachId)
+            .ToListAsync(cancellationToken);
+
+        var linkedAccounts = linkedAccountsData
+            .Select(ec => new LinkedAccountDto
+            {
+                Id = ec.Id,
+                FirstName = ExtractFirstName(ec.Name),
+                LastName = ExtractLastName(ec.Name),
+                Email = ec.Email,
+                Phone = ec.Phone,
+                IsLinked = ec.IsLinked
+            })
+            .ToArray();
+
         return new CoachDetailDto
         {
             Id = coach.Id,
@@ -195,7 +248,8 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
                 AgeGroupName = cr.AgeGroupName ?? string.Empty
             }).ToList(),
             CreatedAt = coach.CreatedAt,
-            UpdatedAt = coach.UpdatedAt
+            UpdatedAt = coach.UpdatedAt,
+            LinkedAccounts = linkedAccounts.Length > 0 ? linkedAccounts : null
         };
     }
 
@@ -212,6 +266,20 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
         return specializations
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .ToList();
+    }
+
+    private static string ExtractFirstName(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return string.Empty;
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 0 ? parts[0] : string.Empty;
+    }
+
+    private static string ExtractLastName(string? fullName)
+    {
+        if (string.IsNullOrWhiteSpace(fullName)) return string.Empty;
+        var parts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        return parts.Length > 1 ? string.Join(' ', parts.Skip(1)) : string.Empty;
     }
 }
 
@@ -268,6 +336,18 @@ internal class UpdatedCoordinatorRoleRaw
 {
     public Guid AgeGroupId { get; set; }
     public string? AgeGroupName { get; set; }
+}
+
+/// <summary>
+/// Raw SQL projection for linked account rows after coach update.
+/// </summary>
+internal class UpdatedCoachLinkedAccountRaw
+{
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
+    public bool IsLinked { get; set; }
 }
 
 #endregion

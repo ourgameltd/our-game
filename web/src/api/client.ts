@@ -834,6 +834,14 @@ export interface CoachDetailDto {
   isArchived: boolean;
   teams: CoachTeamAssignmentDto[];
   ageGroupCoordinatorRoles: CoachAgeGroupCoordinatorDto[];
+  linkedAccounts?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    email?: string;
+    phone?: string;
+    isLinked: boolean;
+  }[];
 }
 
 // Age Group Coach DTOs
@@ -2088,6 +2096,8 @@ export interface UpdateCoachRequest {
   specializations: string[];
   teamIds: string[];
   photo?: string;
+  removeLinkedEmergencyContactIds?: string[];
+  unlinkCoachAccount?: boolean;
 }
 
 export interface AssignTeamCoachRequest {

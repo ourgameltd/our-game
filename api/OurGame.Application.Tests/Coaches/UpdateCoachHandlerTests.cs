@@ -3,6 +3,8 @@ using OurGame.Application.Tests.TestInfrastructure;
 using OurGame.Application.UseCases.Coaches.Commands.UpdateCoachById;
 using OurGame.Application.UseCases.Coaches.Commands.UpdateCoachById.DTOs;
 using OurGame.Persistence.Enums;
+using OurGame.Persistence.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace OurGame.Application.Tests.Coaches;
 
@@ -114,5 +116,75 @@ public class UpdateCoachHandlerTests
         var result = await handler.Handle(new UpdateCoachCommand(coachId, dto), CancellationToken.None);
 
         Assert.Empty(result.Specializations);
+    }
+
+    [Fact]
+    public async Task Handle_WhenUnlinkCoachAccountTrue_RemovesCoachUserLink()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
+
+        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
+        var dto = ValidDto() with { UnlinkCoachAccount = true };
+
+        await handler.Handle(new UpdateCoachCommand(coachId, dto), CancellationToken.None);
+
+        db.Context.ChangeTracker.Clear();
+
+        var updatedCoach = await db.Context.Coaches.AsNoTracking().SingleAsync(c => c.Id == coachId);
+        Assert.NotNull(updatedCoach);
+        Assert.Null(updatedCoach!.UserId);
+    }
+
+    [Fact]
+    public async Task Handle_WhenRemoveLinkedEmergencyContactIdsProvided_DeletesOnlyRequestedLinkedContacts()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
+
+        var linkedUserOneId = await db.SeedUserAsync("linked-emergency-1");
+        var linkedUserTwoId = await db.SeedUserAsync("linked-emergency-2");
+
+        var contactToRemove = new EmergencyContact
+        {
+            Id = Guid.NewGuid(),
+            CoachId = coachId,
+            UserId = linkedUserOneId,
+            Name = "Linked Contact One",
+            Phone = "+447700900001",
+            Relationship = "Parent",
+            IsPrimary = true
+        };
+
+        var contactToKeep = new EmergencyContact
+        {
+            Id = Guid.NewGuid(),
+            CoachId = coachId,
+            UserId = linkedUserTwoId,
+            Name = "Linked Contact Two",
+            Phone = "+447700900002",
+            Relationship = "Parent",
+            IsPrimary = false
+        };
+
+        db.Context.EmergencyContacts.AddRange(contactToRemove, contactToKeep);
+        await db.Context.SaveChangesAsync();
+
+        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
+        var dto = ValidDto() with { RemoveLinkedEmergencyContactIds = new[] { contactToRemove.Id } };
+
+        var result = await handler.Handle(new UpdateCoachCommand(coachId, dto), CancellationToken.None);
+
+        db.Context.ChangeTracker.Clear();
+
+        var removed = await db.Context.EmergencyContacts.AsNoTracking().SingleOrDefaultAsync(ec => ec.Id == contactToRemove.Id);
+        var kept = await db.Context.EmergencyContacts.AsNoTracking().SingleOrDefaultAsync(ec => ec.Id == contactToKeep.Id);
+
+        Assert.Null(removed);
+        Assert.NotNull(kept);
+        Assert.Contains(result.LinkedAccounts ?? Array.Empty<OurGame.Application.UseCases.Players.Queries.GetPlayerById.DTOs.LinkedAccountDto>(), a => a.Id == contactToKeep.Id);
+        Assert.DoesNotContain(result.LinkedAccounts ?? Array.Empty<OurGame.Application.UseCases.Players.Queries.GetPlayerById.DTOs.LinkedAccountDto>(), a => a.Id == contactToRemove.Id);
     }
 }

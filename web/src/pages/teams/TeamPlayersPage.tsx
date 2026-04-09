@@ -16,6 +16,7 @@ import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { Player, PlayerAttributes } from '@/types';
 import { useRequiredParams } from '@utils/routeParams';
+import { calculateAge, parseDateOfBirth } from '@/utils/dateOfBirth';
 
 export default function TeamPlayersPage() {
   usePageTitle(['Team Players']);
@@ -60,7 +61,7 @@ export default function TeamPlayersPage() {
       firstName: player.firstName,
       lastName: player.lastName,
       nickname: player.nickname,
-      dateOfBirth: player.dateOfBirth ? new Date(player.dateOfBirth) : undefined,
+      dateOfBirth: parseDateOfBirth(player.dateOfBirth),
       photo: player.photo,
       associationId: player.associationId,
       preferredPositions: player.preferredPositions as any[],
@@ -394,7 +395,7 @@ export default function TeamPlayersPage() {
                 {filteredAvailablePlayers.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {filteredAvailablePlayers.map((player) => {
-                      const age = player.dateOfBirth ? new Date().getFullYear() - player.dateOfBirth.getFullYear() : null;
+                      const age = calculateAge(player.dateOfBirth);
                       return (
                         <div
                           key={player.id}

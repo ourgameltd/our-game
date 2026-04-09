@@ -35,3 +35,6 @@ Business logic layer implementing CQRS with MediatR. Contains use case handlers,
   - Linked player/parent: cannot modify association ID, preferred positions, archive status, or team assignments
   - Unauthorized callers receive a forbidden error from the application layer
 - Player emergency contact command DTOs and handlers now support an optional contact email field.
+- Coach update command DTOs and handlers now support unlinking linked accounts:
+  - `UnlinkCoachAccount` to remove the coach's own user link
+  - `RemoveLinkedEmergencyContactIds` to remove linked emergency-contact accounts

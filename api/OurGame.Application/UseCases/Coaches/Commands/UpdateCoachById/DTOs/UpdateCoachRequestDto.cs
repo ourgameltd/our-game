@@ -69,4 +69,15 @@ public record UpdateCoachRequestDto
     /// URL or base64 string for the coach's photo.
     /// </summary>
     public string? Photo { get; init; }
+
+    /// <summary>
+    /// Linked emergency-contact IDs to remove from this coach.
+    /// These are linked accounts stored in EmergencyContacts with a non-null UserId.
+    /// </summary>
+    public Guid[]? RemoveLinkedEmergencyContactIds { get; init; }
+
+    /// <summary>
+    /// If true, unlinks the coach's own user account (Coaches.UserId).
+    /// </summary>
+    public bool UnlinkCoachAccount { get; init; }
 }

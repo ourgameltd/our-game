@@ -61,7 +61,7 @@ export default function DrillsListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
-  const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [filtersExpanded, setFiltersExpanded] = useState(true);
 
   // Fetch club details from API
   const { data: club, isLoading: clubLoading, error: clubError } = useClubById(clubId);

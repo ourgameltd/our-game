@@ -8,6 +8,9 @@ import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { UserCheck } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useAccessProfile } from '@/hooks/useAccessProfile';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -81,6 +84,8 @@ export default function CoachSettingsPage() {
   const { clubId, coachId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
   const isNewCoach = coachId === 'new';
+  const { isAdmin } = useAuth();
+  const { profile } = useAccessProfile(isAdmin);
 
   // API hooks
   const { data: coach, isLoading: isLoadingCoach, error: coachError } = useCoach(
@@ -107,6 +112,7 @@ export default function CoachSettingsPage() {
   const [photo, setPhoto] = useState('');
   const [photoPreview, setPhotoPreview] = useState('');
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
+  const [removedLinkedAccountKeys, setRemovedLinkedAccountKeys] = useState<Set<string>>(new Set());
 
   // Initialize form state from API data (only once)
   useEffect(() => {
@@ -138,6 +144,47 @@ export default function CoachSettingsPage() {
       return Routes.ageGroupCoaches(clubId!, ageGroupId);
     }
     return Routes.clubCoaches(clubId!);
+  };
+
+  const canEditLinkedAccounts = profile.isCoach || profile.isAdmin;
+  const isLinkedAccountRemoved = (source: 'coach' | 'emergency', accountId: string) =>
+    removedLinkedAccountKeys.has(`${source}:${accountId}`);
+
+  const linkedCoachAccountForDisplay =
+    coach?.hasAccount && coach?.email && !isLinkedAccountRemoved('coach', coach.id)
+      ? [{
+          id: coach.id,
+          firstName: coach.firstName,
+          lastName: coach.lastName,
+          email: coach.email,
+          phone: coach.phone,
+          source: 'coach' as const,
+        }]
+      : [];
+
+  const linkedEmergencyAccountsForDisplay = (coach?.linkedAccounts ?? [])
+    .filter((account) => account.isLinked)
+    .filter((account) => !isLinkedAccountRemoved('emergency', account.id))
+    .map((account) => ({
+      id: account.id,
+      firstName: account.firstName,
+      lastName: account.lastName,
+      email: account.email,
+      phone: account.phone,
+      source: 'emergency' as const,
+    }));
+
+  const linkedAccountsForDisplay = [
+    ...linkedCoachAccountForDisplay,
+    ...linkedEmergencyAccountsForDisplay,
+  ];
+
+  const handleRemoveLinkedAccount = (source: 'coach' | 'emergency', accountId: string) => {
+    setRemovedLinkedAccountKeys((prev) => {
+      const next = new Set(prev);
+      next.add(`${source}:${accountId}`);
+      return next;
+    });
   };
 
   // Error state
@@ -173,6 +220,12 @@ export default function CoachSettingsPage() {
   }
 
   const handleSave = async () => {
+    const removeLinkedEmergencyContactIds = (coach?.linkedAccounts ?? [])
+      .filter((account) => account.isLinked && isLinkedAccountRemoved('emergency', account.id))
+      .map((account) => account.id);
+
+    const unlinkCoachAccount = !!coach?.hasAccount && isLinkedAccountRemoved('coach', coach.id);
+
     const request: UpdateCoachRequest = {
       firstName,
       lastName,
@@ -184,6 +237,8 @@ export default function CoachSettingsPage() {
       specializations,
       teamIds: selectedTeams,
       photo: photo || undefined,
+      removeLinkedEmergencyContactIds: removeLinkedEmergencyContactIds.length > 0 ? removeLinkedEmergencyContactIds : undefined,
+      unlinkCoachAccount,
     };
 
     await updateCoach(request);
@@ -265,6 +320,7 @@ export default function CoachSettingsPage() {
           <PageTitle
             title="Coach Settings"
             subtitle={coach ? `Manage details for ${coach.firstName} ${coach.lastName}` : 'Coach Settings'}
+            backLink={getBackRoute()}
           />
         )}
 
@@ -454,6 +510,61 @@ export default function CoachSettingsPage() {
                   />
                 </div>
               </div>
+            </div>
+
+            {/* Linked Accounts */}
+            <div className="card">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                Linked Accounts
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">
+                User accounts linked to this coach via the invite system.
+              </p>
+              {!canEditLinkedAccounts && (
+                <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
+                  Only coaches can remove linked accounts.
+                </p>
+              )}
+
+              {linkedAccountsForDisplay.length === 0 ? (
+                <p className="text-gray-500 dark:text-gray-400 text-sm italic">
+                  No linked accounts found.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {linkedAccountsForDisplay.map((account) => (
+                    <div key={`${account.source}-${account.id}`} className="flex items-center gap-4 p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-800/50">
+                      <div className="flex-shrink-0 w-9 h-9 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-bold">
+                        {account.firstName?.[0]}{account.lastName?.[0]}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                          {account.firstName} {account.lastName}
+                        </p>
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-xs text-gray-500 dark:text-gray-400">
+                          {account.email && <span>{account.email}</span>}
+                          {account.phone && <span>{account.phone}</span>}
+                        </div>
+                      </div>
+                      <span className="flex-shrink-0 px-2 py-0.5 text-xs font-medium rounded bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 inline-flex items-center gap-1">
+                        <UserCheck className="w-3 h-3" />
+                        {account.source === 'coach' ? 'Coach' : 'Emergency Contact'}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveLinkedAccount(account.source, account.id)}
+                        disabled={!canEditLinkedAccounts}
+                        className="flex-shrink-0 text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        title="Remove linked account"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Coaching Details */}

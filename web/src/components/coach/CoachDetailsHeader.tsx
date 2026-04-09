@@ -1,6 +1,7 @@
 import { Coach } from '@/types';
 import { Link } from 'react-router-dom';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
+import { calculateAge } from '@/utils/dateOfBirth';
 
 interface CoachDetailsHeaderProps {
   coach: Coach;
@@ -13,17 +14,7 @@ export default function CoachDetailsHeader({
   customColorClass = 'from-secondary-500 to-secondary-600',
   settingsLink
 }: CoachDetailsHeaderProps) {
-  const calculateAge = (birthDate: Date) => {
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
-  const age = coach.dateOfBirth ? calculateAge(coach.dateOfBirth) : undefined;
+  const age = calculateAge(coach.dateOfBirth);
 
   return (
     <div className="flex items-start gap-4">
@@ -44,7 +35,7 @@ export default function CoachDetailsHeader({
         </h1>
         <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
           <span className="font-medium text-secondary-600 dark:text-secondary-400">{coachRoleDisplay[coach.role]}</span>
-          {age !== undefined && (
+          {age !== null && (
             <>
               <span>•</span>
               <span>Age: {age} years old</span>

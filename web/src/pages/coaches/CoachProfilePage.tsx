@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useCoach } from '@/api/hooks';
 import { Routes } from '@utils/routes';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
+import { mapApiRoleToUi } from '@/api/mappers';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -186,6 +187,15 @@ export default function CoachProfilePage() {
     return [];
   };
 
+  const getRoleLabel = (role?: string, roleDisplay?: string): string => {
+    if (!role) {
+      return roleDisplay || 'Coach';
+    }
+
+    const kebabRole = role.includes('-') ? role : mapApiRoleToUi(role);
+    return coachRoleDisplay[kebabRole] || roleDisplay || role;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -195,7 +205,7 @@ export default function CoachProfilePage() {
         ) : (
           <PageTitle
             title={`${coach.firstName} ${coach.lastName}`}
-            subtitle={`${coachRoleDisplay[coach.role] || coach.roleDisplay} • ${subtitle}`}
+            subtitle={`${getRoleLabel(coach.role, coach.roleDisplay)} • ${subtitle}`}
             backLink={backLink}
             image={{
               src: coach.photo,
@@ -266,7 +276,7 @@ export default function CoachProfilePage() {
                         {team.ageGroupName} - {team.teamName}
                       </p>
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        {coachRoleDisplay[team.role] || team.roleDisplay}
+                        {getRoleLabel(team.role, team.roleDisplay)}
                       </p>
                     </div>
                   ))}

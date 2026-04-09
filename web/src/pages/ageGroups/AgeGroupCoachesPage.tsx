@@ -8,6 +8,7 @@ import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { useRequiredParams } from '@utils/routeParams';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { parseDateOfBirth } from '@/utils/dateOfBirth';
 
 export default function AgeGroupCoachesPage() {
   usePageTitle(['Age Group Coaches']);
@@ -65,10 +66,7 @@ export default function AgeGroupCoachesPage() {
   }, [clubId, ageGroupId]);
 
   const mapCoachDtoToCoach = (dto: AgeGroupCoachDto): Coach => {
-    // Convert DateOnly string to Date when the API provides one
-    const dateOfBirth = dto.dateOfBirth
-      ? new Date(dto.dateOfBirth)
-      : undefined;
+    const dateOfBirth = parseDateOfBirth(dto.dateOfBirth);
 
     // Extract team IDs from teams array
     const teamIds = dto.teams.map(team => team.id);

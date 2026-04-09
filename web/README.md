@@ -28,6 +28,7 @@ This project provides a comprehensive management system for football clubs of al
 - Parent personas are blocked from player abilities pages.
 - Player settings now lock protected fields (Association ID and preferred positions) for non-coach personas.
 - Player settings emergency contacts now include an optional email field.
+- Coach settings now show linked accounts and support disconnecting them without exposing emergency-contact editing.
 
 ## Project Structure
 

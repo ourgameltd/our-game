@@ -74,7 +74,7 @@ export default function ClubTrainingSessionsPage() {
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [filterStatus, setFilterStatus] = useState<'upcoming' | 'past' | 'all'>('all');
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
   // API hooks
   const { data: club, isLoading: isLoadingClub, error: clubError } = useClubById(clubId);

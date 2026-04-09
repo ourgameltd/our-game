@@ -1,6 +1,7 @@
 import { Player } from '@/types';
 import { groupAttributes } from '@/utils/attributeHelpers';
 import { ReactNode } from 'react';
+import { calculateAge } from '@/utils/dateOfBirth';
 
 interface PlayerCardProps {
   player: Player;
@@ -13,7 +14,7 @@ interface PlayerCardProps {
 }
 
 export default function PlayerCard({ player, squadNumber, isCaptain = false, onClick, isSelected = false, badges, actions }: PlayerCardProps) {
-  const age = player.dateOfBirth ? new Date().getFullYear() - player.dateOfBirth.getFullYear() : null;
+  const age = calculateAge(player.dateOfBirth);
   
   // Convert player attributes to grouped format and get top 4 attributes
   const groupedAttributes = groupAttributes(player.attributes);

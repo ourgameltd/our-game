@@ -10,6 +10,7 @@ import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
 import type { Coach } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { parseDateOfBirth } from '@/utils/dateOfBirth';
 
 // Skeleton component for coach card loading state
 function CoachCardSkeleton() {
@@ -50,7 +51,7 @@ function mapApiCoachToCoach(apiCoach: ClubCoachDto): Coach {
     clubId: apiCoach.clubId,
     firstName: apiCoach.firstName,
     lastName: apiCoach.lastName,
-    dateOfBirth: apiCoach.dateOfBirth ? new Date(apiCoach.dateOfBirth) : undefined,
+    dateOfBirth: parseDateOfBirth(apiCoach.dateOfBirth),
     photo: apiCoach.photo,
     email: apiCoach.email || '',
     phone: apiCoach.phone || '',
@@ -86,7 +87,7 @@ export default function ClubCoachesPage() {
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [showArchived, setShowArchived] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
   // Fetch data from API
   useEffect(() => {

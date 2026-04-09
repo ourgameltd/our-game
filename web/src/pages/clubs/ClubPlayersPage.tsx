@@ -103,7 +103,7 @@ export default function ClubPlayersPage() {
   const [filterPosition, setFilterPosition] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [showArchived, setShowArchived] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(true);
 
   // Fetch data from API
   useEffect(() => {

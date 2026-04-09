@@ -1,6 +1,7 @@
 import { Coach } from '@/types';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { ReactNode } from 'react';
+import { calculateAge } from '@/utils/dateOfBirth';
 
 interface CoachCardProps {
   coach: Coach;
@@ -10,10 +11,7 @@ interface CoachCardProps {
 }
 
 export default function CoachCard({ coach, onClick, badges, actions }: CoachCardProps) {
-  const birthDate = coach.dateOfBirth ? new Date(coach.dateOfBirth) : null;
-  const age = birthDate && !Number.isNaN(birthDate.getTime())
-    ? new Date().getFullYear() - birthDate.getFullYear()
-    : null;
+  const age = calculateAge(coach.dateOfBirth);
 
   return (
     <div 

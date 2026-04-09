@@ -9,6 +9,7 @@ import { Plus, UserCheck } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
+import { calculateAge } from '@/utils/dateOfBirth';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -417,18 +418,6 @@ export default function PlayerSettingsPage() {
     }
   };
 
-  // Calculate age
-  const calculateAge = (dateOfBirth: Date) => {
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -563,7 +552,7 @@ export default function PlayerSettingsPage() {
                 />
                 {dateOfBirth && (
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Age: {calculateAge(new Date(dateOfBirth))} years
+                    Age: {calculateAge(dateOfBirth)} years
                   </p>
                 )}
               </div>
