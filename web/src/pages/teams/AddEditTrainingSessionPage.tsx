@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, Youtube, Instagram, Globe, BookOpen, FileText } from 'lucide-react';
+import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, CirclePlay, Camera, Globe, BookOpen, FileText } from 'lucide-react';
 import { sampleDrills, sampleDrillTemplates } from '@/data/training';
 import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById } from '@/api/hooks';
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest } from '@/api/client';
@@ -369,8 +369,8 @@ export default function AddEditTrainingSessionPage() {
 
   const getLinkIcon = (type: string) => {
     switch (type) {
-      case 'youtube': return <Youtube className="w-4 h-4" />;
-      case 'instagram': return <Instagram className="w-4 h-4" />;
+      case 'youtube': return <CirclePlay className="w-4 h-4" />;
+      case 'instagram': return <Camera className="w-4 h-4" />;
       case 'tiktok': return <span className="text-sm font-bold">TT</span>;
       case 'website': return <Globe className="w-4 h-4" />;
       default: return <ExternalLink className="w-4 h-4" />;
