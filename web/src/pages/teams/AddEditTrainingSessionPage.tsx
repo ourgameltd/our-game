@@ -747,7 +747,7 @@ export default function AddEditTrainingSessionPage() {
                     <span>📝</span> Session Plan & Notes
                   </h3>
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Add your session plan, objectives, equipment needed, or any other details for this training session.
+                    Add your session plan, objectives, or any other details for this training session.
                   </p>
                 </div>
                 <textarea
@@ -760,8 +760,6 @@ export default function AddEditTrainingSessionPage() {
 - Warm up (10 mins): Light jog, dynamic stretches
 - Main session (40 mins): Passing drills, small-sided games
 - Cool down (10 mins): Static stretches, team talk
-
-Equipment needed: Cones, bibs, balls, goals
 
 Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                 />
@@ -1375,18 +1373,6 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                       </div>
                     </div>
 
-                    {/* Equipment */}
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Equipment Needed</h4>
-                      <div className="flex flex-wrap gap-1">
-                        {previewDrill.equipment.map((item, i) => (
-                          <span key={i} className="px-2 py-1 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700">
-                            {item}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* Instructions */}
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Instructions</h4>
@@ -1396,18 +1382,6 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                         ))}
                       </ol>
                     </div>
-
-                    {/* Variations */}
-                    {previewDrill.variations && previewDrill.variations.length > 0 && (
-                      <div>
-                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Variations</h4>
-                        <ul className="list-disc list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
-                          {previewDrill.variations.map((variation, i) => (
-                            <li key={i}>{variation}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
 
                     {/* Reference Links */}
                     {previewDrill.links && previewDrill.links.length > 0 && (

@@ -122,10 +122,7 @@ export default function DrillFormPage() {
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState(10);
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
-  const [equipment, setEquipment] = useState<string[]>([]);
-  const [newEquipment, setNewEquipment] = useState('');
   const [instructions, setInstructions] = useState<string[]>(['']);
-  const [variations, setVariations] = useState<string[]>([]);
   const [links, setLinks] = useState<Array<{url: string; title: string; type: string}>>([]);
   const [drillDiagramConfig, setDrillDiagramConfig] = useState<DrillDiagramConfigDto | undefined>(undefined);
   const [isPublic, setIsPublic] = useState(true);
@@ -145,9 +142,7 @@ export default function DrillFormPage() {
       setDescription(drillData.description || '');
       setDuration(drillData.durationMinutes || 10);
       setSelectedAttributes(drillData.attributes);
-      setEquipment(drillData.equipment);
       setInstructions(drillData.instructions.length > 0 ? drillData.instructions : ['']);
-      setVariations(drillData.variations);
       setLinks(drillData.links.map(l => ({
         url: l.url,
         title: l.title || '',
@@ -215,17 +210,6 @@ export default function DrillFormPage() {
     );
   };
 
-  const addEquipment = () => {
-    if (newEquipment.trim()) {
-      setEquipment([...equipment, newEquipment.trim()]);
-      setNewEquipment('');
-    }
-  };
-
-  const removeEquipment = (index: number) => {
-    setEquipment(equipment.filter((_, i) => i !== index));
-  };
-
   const updateInstruction = (index: number, value: string) => {
     const updated = [...instructions];
     updated[index] = value;
@@ -238,20 +222,6 @@ export default function DrillFormPage() {
 
   const removeInstruction = (index: number) => {
     setInstructions(instructions.filter((_, i) => i !== index));
-  };
-
-  const updateVariation = (index: number, value: string) => {
-    const updated = [...variations];
-    updated[index] = value;
-    setVariations(updated);
-  };
-
-  const addVariation = () => {
-    setVariations([...variations, '']);
-  };
-
-  const removeVariation = (index: number) => {
-    setVariations(variations.filter((_, i) => i !== index));
   };
 
   const updateLink = (index: number, field: 'url' | 'title' | 'type', value: string) => {
@@ -291,7 +261,6 @@ export default function DrillFormPage() {
 
     // Clean up data
     const cleanedInstructions = instructions.filter(i => i.trim());
-    const cleanedVariations = variations.filter(v => v.trim());
     const cleanedLinks = links.filter(l => l.url.trim() && l.title.trim());
 
     if (drillDiagramConfig?.frames && drillDiagramConfig.frames.length > 1) {
@@ -307,9 +276,9 @@ export default function DrillFormPage() {
         durationMinutes: duration,
         category: getCategory(),
         attributes: selectedAttributes,
-        equipment,
+        equipment: [],
         instructions: cleanedInstructions,
-        variations: cleanedVariations,
+        variations: [],
         links: cleanedLinks.map(l => ({
           url: l.url,
           title: l.title || undefined,
@@ -327,9 +296,9 @@ export default function DrillFormPage() {
         durationMinutes: duration,
         category: getCategory(),
         attributes: selectedAttributes,
-        equipment,
+        equipment: [],
         instructions: cleanedInstructions,
-        variations: cleanedVariations,
+        variations: [],
         links: cleanedLinks.map(l => ({
           url: l.url,
           title: l.title || undefined,
@@ -581,51 +550,6 @@ export default function DrillFormPage() {
               )}
             </div>
 
-            {/* Equipment */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Equipment</h3>
-              <div className="space-y-2">
-                {!isInherited && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={newEquipment}
-                      onChange={(e) => setNewEquipment(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addEquipment())}
-                      placeholder="e.g., Cones, Balls, Bibs"
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={addEquipment}
-                      className="btn btn-secondary"
-                    >
-                      <Plus className="w-4 h-4" />
-                    </button>
-                  </div>
-                )}
-                <div className="flex flex-wrap gap-2">
-                  {equipment.map((item, index) => (
-                    <span
-                      key={index}
-                      className="inline-flex items-center gap-2 px-3 py-1 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full"
-                    >
-                      {item}
-                      {!isInherited && (
-                        <button
-                          type="button"
-                          onClick={() => removeEquipment(index)}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      )}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            </div>
-
             {/* Instructions */}
             <div className="card">
               <h3 className="text-lg font-semibold mb-4">Instructions *</h3>
@@ -660,44 +584,6 @@ export default function DrillFormPage() {
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Add Instruction
-                  </button>
-                )}
-              </div>
-            </div>
-
-            {/* Variations (Optional) */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Variations (Optional)</h3>
-              <div className="space-y-2">
-                {variations.map((variation, index) => (
-                  <div key={index} className="flex gap-2">
-                    <textarea
-                      value={variation}
-                      onChange={(e) => updateVariation(index, e.target.value)}
-                      placeholder="Variation or progression..."
-                      rows={2}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      disabled={isInherited}
-                    />
-                    {!isInherited && (
-                      <button
-                        type="button"
-                        onClick={() => removeVariation(index)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 mt-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {!isInherited && (
-                  <button
-                    type="button"
-                    onClick={addVariation}
-                    className="btn btn-secondary"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Variation
                   </button>
                 )}
               </div>

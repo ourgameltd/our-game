@@ -2,8 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Circle,
   Copy,
-  Download,
-  Eraser,
   Goal,
   Minus,
   MousePointer2,
@@ -12,7 +10,6 @@ import {
   RectangleHorizontal,
   MoveRight,
   Trash2,
-  Undo2,
   UserRound,
   X,
 } from 'lucide-react';
@@ -50,7 +47,7 @@ type DrillDiagramEditorProps = {
   disabled?: boolean;
 };
 
-const ADD_TOOLS: Tool[] = ['player', 'cone', 'ball', 'goal', 'line', 'arrow'];
+const ADD_TOOLS = ['player', 'cone', 'ball', 'goal', 'line', 'arrow'] as const;
 
 const TOOL_CONFIG: Record<Tool, { label: string; icon: typeof MousePointer2 }> = {
   select: { label: 'Select', icon: MousePointer2 },
@@ -200,48 +197,6 @@ const toConfig = (objects: DiagramObject[], pitchMode: PitchMode, base?: DrillDi
     ],
   };
 };
-
-const downloadCanvasAsPng = (canvas: HTMLCanvasElement, fileName: string): void => {
-  const link = document.createElement('a');
-  link.href = canvas.toDataURL('image/png');
-  link.download = fileName;
-  link.click();
-};
-
-async function renderSvgToCanvas(svg: SVGSVGElement): Promise<HTMLCanvasElement> {
-  const xml = new XMLSerializer().serializeToString(svg);
-  const blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
-  const url = URL.createObjectURL(blob);
-
-  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
-    const img = new Image();
-    img.onload = () => resolve(img);
-    img.onerror = () => reject(new Error('Unable to render SVG image'));
-    img.src = url;
-  });
-
-  URL.revokeObjectURL(url);
-
-  const viewBox = svg.viewBox.baseVal;
-  const sourceWidth = viewBox?.width && Number.isFinite(viewBox.width) && viewBox.width > 0 ? viewBox.width : WORKSPACE_WIDTH;
-  const sourceHeight = viewBox?.height && Number.isFinite(viewBox.height) && viewBox.height > 0 ? viewBox.height : FULL_WORKSPACE_HEIGHT;
-  const aspectRatio = sourceHeight / sourceWidth;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = 1200;
-  canvas.height = Math.max(1, Math.round(canvas.width * aspectRatio));
-  const ctx = canvas.getContext('2d');
-
-  if (!ctx) {
-    throw new Error('Unable to create canvas context');
-  }
-
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-
-  return canvas;
-}
 
 export default function DrillDiagramEditor({ value, onChange, disabled = false }: DrillDiagramEditorProps) {
   const [tool, setTool] = useState<Tool>('select');
@@ -782,37 +737,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     setSelectedId(newId);
   };
 
-  const clearFrame = () => {
-    if (disabled) return;
-    updateObjects([]);
-    setAddedObjectHistory([]);
-    setLineStart(null);
-    setSelectedId(null);
-  };
-
-  const undoLastAddition = () => {
-    if (disabled || addedObjectHistory.length === 0) return;
-
-    const nextHistory = [...addedObjectHistory];
-    let idToRemove: string | undefined;
-
-    while (nextHistory.length > 0 && !idToRemove) {
-      const candidate = nextHistory.pop();
-      if (candidate && objects.some((obj) => obj.id === candidate)) {
-        idToRemove = candidate;
-      }
-    }
-
-    if (!idToRemove) {
-      setAddedObjectHistory([]);
-      return;
-    }
-
-    updateObjects(objects.filter((obj) => obj.id !== idToRemove));
-    setAddedObjectHistory(nextHistory);
-    setSelectedId((current) => (current === idToRemove ? null : current));
-  };
-
   const canSetSelectedLineStyle = selectedObject?.type === 'line' || selectedObject?.type === 'arrow';
 
   const setSelectedLineStyle = (nextStyle: 'solid' | 'dashed') => {
@@ -825,14 +749,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         return { ...obj, lineStyle: nextStyle };
       })
     );
-  };
-
-  const exportPng = async () => {
-    const svg = previewRef.current?.querySelector('svg');
-    if (!(svg instanceof SVGSVGElement)) return;
-
-    const canvas = await renderSvgToCanvas(svg);
-    downloadCanvasAsPng(canvas, 'drill-diagram.png');
   };
 
   return (
@@ -896,10 +812,72 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
                   tooltipPlacement="right"
                   tooltipOpen
                   onClick={() => {
-                    setTool(toolName);
-                    if (toolName !== 'line' && toolName !== 'arrow') {
-                      setLineStart(null);
+                    const OFFSET_STEP = 6;
+                    const DEFAULT_X = WORKSPACE_WIDTH / 2;
+                    const DEFAULT_Y = workspaceHeight / 2;
+
+                    const count = addedObjectHistory.filter((id) => objects.some((o) => o.id === id)).length;
+
+                    let baseX = DEFAULT_X;
+                    let baseY = DEFAULT_Y;
+
+                    const lastAddedId = [...addedObjectHistory].reverse().find((id) => objects.some((o) => o.id === id));
+                    const lastAdded = lastAddedId ? objects.find((o) => o.id === lastAddedId) : undefined;
+                    if (lastAdded) {
+                      baseX = lastAdded.x ?? DEFAULT_X;
+                      baseY = lastAdded.y ?? DEFAULT_Y;
                     }
+
+                    const offsetX = OFFSET_STEP * ((count % 5) + 1);
+                    const offsetY = OFFSET_STEP * (Math.floor(count / 5) + 1);
+                    let placeX = baseX + offsetX;
+                    let placeY = baseY + offsetY;
+
+                    if (placeX > WORKSPACE_WIDTH - 5) {
+                      placeX = baseX - offsetX;
+                    }
+                    if (placeY > workspaceHeight - 5) {
+                      placeY = baseY - offsetY;
+                    }
+
+                    placeX = clamp(placeX, 0, WORKSPACE_WIDTH);
+                    placeY = clamp(placeY, 0, workspaceHeight);
+
+                    const newId = createId();
+
+                    if (toolName === 'line' || toolName === 'arrow') {
+                      const lineLength = 15;
+                      const newObject: DiagramObject = {
+                        id: newId,
+                        type: toolName,
+                        x: placeX,
+                        y: placeY,
+                        x2: clamp(placeX + lineLength, 0, WORKSPACE_WIDTH),
+                        y2: placeY,
+                        color: '#4b5563',
+                        strokeWidth: 0.1,
+                        lineStyle,
+                      };
+                      updateObjects([...objects, newObject]);
+                    } else {
+                      const newObject: DiagramObject = {
+                        id: newId,
+                        type: toolName,
+                        x: placeX,
+                        y: placeY,
+                        color: toolName === 'player' ? '#1d4ed8' : toolName === 'cone' ? '#f59e0b' : toolName === 'ball' ? '#111827' : '#ffffff',
+                        size: toolName === 'player' ? 1.5 : toolName === 'ball' ? 1.0 : undefined,
+                        width: toolName === 'cone' ? 2.0 : toolName === 'goal' ? 14 : undefined,
+                        height: toolName === 'cone' ? 2.0 : toolName === 'goal' ? 5 : undefined,
+                        rotation: 0,
+                      };
+                      updateObjects([...objects, newObject]);
+                    }
+
+                    setAddedObjectHistory((prev) => [...prev, newId]);
+                    setSelectedId(newId);
+                    setTool('select');
+                    setLineStart(null);
                   }}
                 />
               );
@@ -907,54 +885,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           </SpeedDial>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            if (disabled) return;
-            setTool('select');
-            setLineStart(null);
-          }}
-          className={`inline-flex items-center gap-1.5 rounded-md border px-3 py-1.5 text-sm transition-colors ${
-            tool === 'select'
-              ? 'bg-primary-600 text-white border-primary-600'
-              : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-          } ${disabled ? 'opacity-60 cursor-not-allowed' : ''}`}
-          disabled={disabled}
-          title="Select and move"
-        >
-          <MousePointer2 className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
-          <span>Select</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={undoLastAddition}
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-60"
-          disabled={disabled || addedObjectHistory.length === 0}
-          title="Undo last add"
-        >
-          <Undo2 className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
-          <span>Undo</span>
-        </button>
-        <button
-          type="button"
-          onClick={clearFrame}
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-60"
-          disabled={disabled}
-          title="Clear frame"
-        >
-          <Eraser className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
-          <span>Clear</span>
-        </button>
-        <button
-          type="button"
-          onClick={exportPng}
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
-          title="Export as PNG"
-        >
-          <Download className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
-          <span>Export PNG</span>
-        </button>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
