@@ -68,14 +68,14 @@ const GOAL_MIN_HEIGHT = 3;
 const GOAL_MAX_HEIGHT = 20;
 const OBJECT_HANDLE_HIT_RADIUS = 1.6;
 const OBJECT_ROTATE_HIT_RADIUS = 1.7;
-const PLAYER_MIN_RADIUS = 1.2;
-const PLAYER_MAX_RADIUS = 6;
-const BALL_MIN_RADIUS = 0.8;
-const BALL_MAX_RADIUS = 4;
-const CONE_MIN_WIDTH = 2.4;
-const CONE_MAX_WIDTH = 12;
-const CONE_MIN_HEIGHT = 2.2;
-const CONE_MAX_HEIGHT = 12;
+const PLAYER_MIN_RADIUS = 0.8;
+const PLAYER_MAX_RADIUS = 4;
+const BALL_MIN_RADIUS = 0.5;
+const BALL_MAX_RADIUS = 3;
+const CONE_MIN_WIDTH = 1.2;
+const CONE_MAX_WIDTH = 8;
+const CONE_MIN_HEIGHT = 1.2;
+const CONE_MAX_HEIGHT = 8;
 const SELECTION_PADDING = 1.2;
 const HANDLE_RADIUS = 0.8;
 const ROTATE_HANDLE_OFFSET = 5;
@@ -286,6 +286,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const selectedObject = selectedId ? objects.find((obj) => obj.id === selectedId) : undefined;
   const selectedCaptionTarget =
     selectedObject && selectedObject.type !== 'line' && selectedObject.type !== 'arrow' ? selectedObject : undefined;
+  const selectedPlayer = selectedObject?.type === 'player' ? selectedObject : undefined;
 
   const updateObjects = (next: DiagramObject[]) => {
     const clamped = clampObjectsToWorkspace(next, pitchMode);
@@ -317,7 +318,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     const centerY = object.y ?? 0;
 
     if (object.type === 'player') {
-      const radius = clamp(object.size ?? 2.1, PLAYER_MIN_RADIUS, PLAYER_MAX_RADIUS);
+      const radius = clamp(object.size ?? 1.5, PLAYER_MIN_RADIUS, PLAYER_MAX_RADIUS);
       return {
         x: centerX - radius,
         y: centerY - radius,
@@ -328,7 +329,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     }
 
     if (object.type === 'ball') {
-      const radius = clamp(object.size ?? 1.4, BALL_MIN_RADIUS, BALL_MAX_RADIUS);
+      const radius = clamp(object.size ?? 1.0, BALL_MIN_RADIUS, BALL_MAX_RADIUS);
       return {
         x: centerX - radius,
         y: centerY - radius,
@@ -339,8 +340,8 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     }
 
     if (object.type === 'cone') {
-      const width = clamp(object.width ?? 4.4, CONE_MIN_WIDTH, CONE_MAX_WIDTH);
-      const height = clamp(object.height ?? 4.2, CONE_MIN_HEIGHT, CONE_MAX_HEIGHT);
+      const width = clamp(object.width ?? 2.0, CONE_MIN_WIDTH, CONE_MAX_WIDTH);
+      const height = clamp(object.height ?? 2.0, CONE_MIN_HEIGHT, CONE_MAX_HEIGHT);
       return {
         x: centerX - width / 2,
         y: centerY - height / 2,
@@ -559,10 +560,10 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       x: point.x,
       y: point.y,
       color: tool === 'player' ? '#1d4ed8' : tool === 'cone' ? '#f59e0b' : tool === 'ball' ? '#111827' : '#ffffff',
-      label: tool === 'player' ? 'P' : undefined,
-      size: tool === 'player' ? 2.1 : tool === 'ball' ? 1.4 : undefined,
-      width: tool === 'cone' ? 4.4 : tool === 'goal' ? 14 : undefined,
-      height: tool === 'cone' ? 4.2 : tool === 'goal' ? 5 : undefined,
+      label: undefined,
+      size: tool === 'player' ? 1.5 : tool === 'ball' ? 1.0 : undefined,
+      width: tool === 'cone' ? 2.0 : tool === 'goal' ? 14 : undefined,
+      height: tool === 'cone' ? 2.0 : tool === 'goal' ? 5 : undefined,
       rotation: 0,
     };
 
@@ -1004,6 +1005,42 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           />
         </div>
       </div>
+
+      {selectedPlayer && (
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Player colour:</span>
+          {[
+            { value: '#1d4ed8', label: 'Blue' },
+            { value: '#dc2626', label: 'Red' },
+            { value: '#16a34a', label: 'Green' },
+            { value: '#f59e0b', label: 'Amber' },
+            { value: '#7c3aed', label: 'Purple' },
+            { value: '#ec4899', label: 'Pink' },
+            { value: '#111827', label: 'Black' },
+            { value: '#ffffff', label: 'White' },
+          ].map((swatch) => (
+            <button
+              key={swatch.value}
+              type="button"
+              title={swatch.label}
+              onClick={() => {
+                updateObjects(
+                  objects.map((obj) =>
+                    obj.id === selectedPlayer.id ? { ...obj, color: swatch.value } : obj
+                  )
+                );
+              }}
+              className={`h-6 w-6 rounded-full border-2 transition-transform ${
+                selectedPlayer.color === swatch.value
+                  ? 'border-primary-500 scale-110'
+                  : 'border-gray-300 dark:border-gray-500 hover:scale-105'
+              }`}
+              style={{ backgroundColor: swatch.value }}
+              disabled={disabled}
+            />
+          ))}
+        </div>
+      )}
 
       <div ref={previewRef} className="relative mt-2">
         <DrillDiagramRenderer drillDiagramConfig={currentConfig} className="border border-gray-300 dark:border-gray-600" />

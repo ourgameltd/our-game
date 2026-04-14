@@ -82,7 +82,7 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   if (type === 'line' || type === 'arrow') {
     const x2 = clamp(pickNumber(obj, ['x2', 'toX', 'endX'], x), 0, WORKSPACE_WIDTH);
     const y2 = clamp(pickNumber(obj, ['y2', 'toY', 'endY'], y), 0, workspaceHeight);
-    const strokeWidth = clamp(pickNumber(obj, ['strokeWidth', 'width'], 0.5), 0.2, 1.6);
+    const strokeWidth = clamp(pickNumber(obj, ['strokeWidth', 'width'], 0.15), 0.06, 0.5);
     const lineStyle = pickString(obj, ['lineStyle', 'strokeStyle'], 'solid').toLowerCase();
 
     return (
@@ -122,12 +122,10 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
           y={y - height / 2}
           width={width}
           height={height}
-          fill="none"
+          fill="url(#goal-net)"
           stroke={postColor}
-          strokeWidth={0.45}
+          strokeWidth={0.5}
         />
-        <line x1={x - width / 2} y1={y} x2={x + width / 2} y2={y} stroke={postColor} strokeOpacity={0.65} strokeWidth={0.22} />
-        <line x1={x} y1={y - height / 2} x2={x} y2={y + height / 2} stroke={postColor} strokeOpacity={0.65} strokeWidth={0.22} />
         {caption ? (
           <text x={x} y={y + height / 2 + 3.2} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
             {caption.slice(0, 24)}
@@ -138,8 +136,8 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   }
 
   if (type === 'cone') {
-    const coneWidth = clamp(pickNumber(obj, ['width', 'w', 'size'], 4.4), 2.4, 12);
-    const coneHeight = clamp(pickNumber(obj, ['height', 'h', 'size'], 4.2), 2.2, 12);
+    const coneWidth = clamp(pickNumber(obj, ['width', 'w', 'size'], 2.0), 1.2, 8);
+    const coneHeight = clamp(pickNumber(obj, ['height', 'h', 'size'], 2.0), 1.2, 8);
     const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
 
     return (
@@ -162,12 +160,26 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   }
 
   if (type === 'ball') {
-    const radius = clamp(pickNumber(obj, ['size', 'radius', 'r'], 1.4), 0.8, 4);
+    const radius = clamp(pickNumber(obj, ['size', 'radius', 'r'], 1.0), 0.5, 3);
     const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
+    const s = radius;
 
     return (
       <g key={key} transform={`rotate(${rotation} ${x} ${y})`}>
-        <circle cx={x} cy={y} r={radius} fill="#111827" stroke="#ffffff" strokeWidth={0.28} />
+        <circle cx={x} cy={y} r={radius} fill="#ffffff" stroke="#374151" strokeWidth={radius * 0.12} />
+        <polygon
+          points={[
+            `${x},${y - s * 0.42}`,
+            `${x + s * 0.4},${y - s * 0.14}`,
+            `${x + s * 0.24},${y + s * 0.34}`,
+            `${x - s * 0.24},${y + s * 0.34}`,
+            `${x - s * 0.4},${y - s * 0.14}`,
+          ].join(' ')}
+          fill="#1f2937"
+          stroke="#374151"
+          strokeWidth={radius * 0.06}
+          strokeLinejoin="round"
+        />
         {caption ? (
           <text x={x} y={y + radius + 3.4} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
             {caption.slice(0, 24)}
@@ -177,12 +189,12 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
     );
   }
 
-  const r = clamp(pickNumber(obj, ['radius', 'r', 'size'], 2.1), 1.2, 4.5);
+  const r = clamp(pickNumber(obj, ['radius', 'r', 'size'], 1.5), 0.8, 4);
   const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
   return (
     <g key={key} transform={`rotate(${rotation} ${x} ${y})`}>
       <circle cx={x} cy={y} r={r} fill={color} stroke="#0f172a" strokeWidth={0.28} />
-      {label ? (
+      {label && label !== 'P' ? (
         <text x={x} y={y + 0.1} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
           {label.slice(0, 3)}
         </text>
@@ -226,6 +238,9 @@ export default function DrillDiagramRenderer({
           <marker id="drill-arrow-head" viewBox="0 0 10 10" refX="7.6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff" />
           </marker>
+          <pattern id="goal-net" width="1.8" height="1.8" patternUnits="userSpaceOnUse">
+            <path d="M 0 0 L 1.8 1.8 M 1.8 0 L 0 1.8" stroke="#ffffff" strokeWidth="0.12" strokeOpacity="0.45" />
+          </pattern>
         </defs>
 
         <rect x={pitchX} y={pitchY} width={PITCH_WIDTH} height={pitchHeight} fill="none" stroke="#ffffff" strokeWidth="0.35" opacity="0.85" />
