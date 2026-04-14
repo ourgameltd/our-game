@@ -323,7 +323,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         y: centerY - radius,
         width: radius * 2,
         height: radius * 2,
-        rotation: 0,
+        rotation: object.rotation ?? 0,
       };
     }
 
@@ -334,7 +334,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         y: centerY - radius,
         width: radius * 2,
         height: radius * 2,
-        rotation: 0,
+        rotation: object.rotation ?? 0,
       };
     }
 
@@ -563,7 +563,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       size: tool === 'player' ? 2.1 : tool === 'ball' ? 1.4 : undefined,
       width: tool === 'cone' ? 4.4 : tool === 'goal' ? 14 : undefined,
       height: tool === 'cone' ? 4.2 : tool === 'goal' ? 5 : undefined,
-      rotation: tool === 'goal' || tool === 'cone' ? 0 : undefined,
+      rotation: 0,
     };
 
     updateObjects([...objects, newObject]);

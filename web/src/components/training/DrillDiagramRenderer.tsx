@@ -163,9 +163,10 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
 
   if (type === 'ball') {
     const radius = clamp(pickNumber(obj, ['size', 'radius', 'r'], 1.4), 0.8, 4);
+    const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
 
     return (
-      <g key={key}>
+      <g key={key} transform={`rotate(${rotation} ${x} ${y})`}>
         <circle cx={x} cy={y} r={radius} fill="#111827" stroke="#ffffff" strokeWidth={0.28} />
         {caption ? (
           <text x={x} y={y + radius + 3.4} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
@@ -177,8 +178,9 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   }
 
   const r = clamp(pickNumber(obj, ['radius', 'r', 'size'], 2.1), 1.2, 4.5);
+  const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
   return (
-    <g key={key}>
+    <g key={key} transform={`rotate(${rotation} ${x} ${y})`}>
       <circle cx={x} cy={y} r={r} fill={color} stroke="#0f172a" strokeWidth={0.28} />
       {label ? (
         <text x={x} y={y + 0.1} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
