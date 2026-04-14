@@ -3,6 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
+import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
 import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
@@ -19,7 +20,7 @@ function DrillsListSkeleton() {
         >
           <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
             {/* Name and Category Skeleton */}
-            <div className="flex items-center justify-between md:w-64 md:flex-shrink-0">
+            <div className="flex items-center justify-between md:w-64 md:shrink-0">
               <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
               <div className="h-6 w-16 bg-gray-200 dark:bg-gray-700 rounded-full ml-2" />
             </div>
@@ -30,7 +31,7 @@ function DrillsListSkeleton() {
             </div>
 
             {/* Stats Skeleton */}
-            <div className="flex items-center gap-3 md:flex-shrink-0">
+            <div className="flex items-center gap-3 md:shrink-0">
               <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
               <div className="h-4 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
               <div className="h-4 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -306,9 +307,10 @@ export default function DrillsListPage() {
                 to={getDrillRoute(drill.id)}
                 className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
               >
-                <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                   {/* Name and Category */}
-                  <div className="flex items-center justify-between md:w-64 md:flex-shrink-0">
+                  <div className="flex items-center justify-between md:w-64 md:shrink-0">
                     <h3 className="text-base font-semibold text-gray-900 dark:text-white flex-1 truncate">
                       {drill.name}
                     </h3>
@@ -323,13 +325,20 @@ export default function DrillsListPage() {
                   </p>
 
                   {/* Stats */}
-                  <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:flex-shrink-0">
+                  <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:shrink-0">
                     <span>⏱️ {drill.duration}m</span>
                     <span>🎯 {drill.attributes.length}</span>
                     {drill.links && drill.links.length > 0 && (
                       <span>🔗 {drill.links.length}</span>
                     )}
                   </div>
+                </div>
+
+                  {drill.drillDiagramConfig ? (
+                    <div className="w-full max-w-55 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
+                      <DrillDiagramRenderer drillDiagramConfig={drill.drillDiagramConfig} />
+                    </div>
+                  ) : null}
                 </div>
               </Link>
             ))}

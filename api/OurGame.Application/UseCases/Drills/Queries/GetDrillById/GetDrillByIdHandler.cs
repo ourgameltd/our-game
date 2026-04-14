@@ -1,6 +1,7 @@
 using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.Drills.Queries.GetDrillById.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
@@ -31,6 +32,7 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
                 d.Category,
                 d.Attributes,
                 d.Equipment,
+                d.DrillDiagramConfig,
                 d.Instructions,
                 d.Variations,
                 d.IsPublic,
@@ -90,6 +92,7 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
             Category = ((DrillCategory)drill.Category).ToString(),
             Attributes = ParseJsonArray(drill.Attributes),
             Equipment = ParseJsonArray(drill.Equipment),
+            DrillDiagramConfig = ParseDiagramConfig(drill.DrillDiagramConfig),
             Instructions = ParseJsonArray(drill.Instructions),
             Variations = ParseJsonArray(drill.Variations),
             IsPublic = drill.IsPublic,
@@ -131,6 +134,23 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
             return new List<string>();
         }
     }
+
+    private static DrillDiagramConfigDto? ParseDiagramConfig(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+        {
+            return null;
+        }
+
+        try
+        {
+            return JsonSerializer.Deserialize<DrillDiagramConfigDto>(json);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
 
 #region Raw SQL DTOs
@@ -144,6 +164,7 @@ public class DrillRaw
     public int Category { get; set; }
     public string? Attributes { get; set; }
     public string? Equipment { get; set; }
+    public string? DrillDiagramConfig { get; set; }
     public string? Instructions { get; set; }
     public string? Variations { get; set; }
     public bool IsPublic { get; set; }

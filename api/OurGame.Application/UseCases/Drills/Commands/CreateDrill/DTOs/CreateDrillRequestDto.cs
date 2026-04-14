@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using OurGame.Application.UseCases.Drills.DTOs;
 
 namespace OurGame.Application.UseCases.Drills.Commands.CreateDrill.DTOs;
 
@@ -62,6 +63,11 @@ public record CreateDrillRequestDto
     /// Whether the drill is publicly accessible
     /// </summary>
     public bool IsPublic { get; init; }
+
+    /// <summary>
+    /// Optional structured diagram configuration (JSON-backed)
+    /// </summary>
+    public DrillDiagramConfigDto? DrillDiagramConfig { get; init; }
 
     /// <summary>
     /// Scope assignment for this drill (club, ageGroup, or team)

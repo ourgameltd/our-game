@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.Drills.Queries.GetDrillById;
 using OurGame.Application.UseCases.Drills.Queries.GetDrillById.DTOs;
 using OurGame.Persistence.Enums;
@@ -93,6 +94,10 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
         var equipmentJson = JsonSerializer.Serialize(dto.Equipment ?? new List<string>());
         var instructionsJson = JsonSerializer.Serialize(dto.Instructions ?? new List<string>());
         var variationsJson = JsonSerializer.Serialize(dto.Variations ?? new List<string>());
+        ValidateFrameLimit(dto.DrillDiagramConfig);
+        var drillDiagramConfigJson = dto.DrillDiagramConfig is null
+            ? null
+            : JsonSerializer.Serialize(dto.DrillDiagramConfig);
 
         // Begin transaction
         IDbContextTransaction? transaction = null;
@@ -103,9 +108,9 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
             // Insert into Drills table
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
                 INSERT INTO Drills (Id, Name, Description, DurationMinutes, Category, Attributes, Equipment,
-                    Diagram, Instructions, Variations, CreatedBy, IsPublic, CreatedAt, UpdatedAt)
+                    Diagram, DrillDiagramConfig, Instructions, Variations, CreatedBy, IsPublic, CreatedAt, UpdatedAt)
                 VALUES ({drillId}, {dto.Name}, {dto.Description}, {dto.DurationMinutes}, {(int)category},
-                    {attributesJson}, {equipmentJson}, {(string?)null}, {instructionsJson}, {variationsJson},
+                    {attributesJson}, {equipmentJson}, {(string?)null}, {drillDiagramConfigJson}, {instructionsJson}, {variationsJson},
                     {coachId}, {dto.IsPublic}, {now}, {now})
             ", cancellationToken);
 
@@ -200,5 +205,13 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
             "other" => LinkType.Other,
             _ => throw new ValidationException("LinkType", $"Invalid link type: {linkType}. Must be one of: youtube, instagram, tiktok, website, other.")
         };
+    }
+
+    private static void ValidateFrameLimit(DrillDiagramConfigDto? config)
+    {
+        if (config?.Frames is not null && config.Frames.Count > 1)
+        {
+            throw new ValidationException("DrillDiagramConfig", "Only one frame is currently supported.");
+        }
     }
 }

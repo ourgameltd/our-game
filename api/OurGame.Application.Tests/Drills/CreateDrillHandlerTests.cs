@@ -2,6 +2,7 @@ using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Tests.TestInfrastructure;
 using OurGame.Application.UseCases.Drills.Commands.CreateDrill;
 using OurGame.Application.UseCases.Drills.Commands.CreateDrill.DTOs;
+using OurGame.Application.UseCases.Drills.DTOs;
 
 namespace OurGame.Application.Tests.Drills;
 
@@ -121,5 +122,35 @@ public class CreateDrillHandlerTests
         Assert.Equal(coachId, result.CreatedBy);
         Assert.Single(result.Links);
         Assert.Contains(clubId, result.Scope.ClubIds);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDiagramConfigHasMultipleFrames_ThrowsValidationException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+
+        var handler = new CreateDrillHandler(db.Context);
+
+        var dto = new CreateDrillRequestDto
+        {
+            Name = "Rondo 4v2",
+            Category = "technical",
+            Scope = new CreateDrillScopeDto { ClubId = clubId },
+            DrillDiagramConfig = new DrillDiagramConfigDto
+            {
+                SchemaVersion = 1,
+                Frames = new List<DrillDiagramFrameDto>
+                {
+                    new() { Id = "frame-1" },
+                    new() { Id = "frame-2" }
+                }
+            }
+        };
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(new CreateDrillCommand(dto, "user1"), CancellationToken.None));
+
+        Assert.Contains("DrillDiagramConfig", ex.Errors.Keys);
     }
 }

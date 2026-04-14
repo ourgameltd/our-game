@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using OurGame.Application.UseCases.Drills.DTOs;
 
 namespace OurGame.Application.UseCases.Drills.Commands.UpdateDrill.DTOs;
 
@@ -63,6 +64,11 @@ public record UpdateDrillRequestDto
     /// Whether the drill is public/shared
     /// </summary>
     public bool IsPublic { get; init; }
+
+    /// <summary>
+    /// Optional structured diagram configuration (JSON-backed)
+    /// </summary>
+    public DrillDiagramConfigDto? DrillDiagramConfig { get; init; }
 }
 
 /// <summary>

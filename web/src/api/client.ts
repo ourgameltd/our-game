@@ -1399,6 +1399,19 @@ export interface DrillLinkDto {
   type: string;
 }
 
+export interface DrillDiagramFrameDto {
+  id: string;
+  name?: string;
+  pitch?: Record<string, unknown>;
+  objects: Record<string, unknown>[];
+}
+
+export interface DrillDiagramConfigDto {
+  schemaVersion: number;
+  frames: DrillDiagramFrameDto[];
+  meta?: Record<string, unknown>;
+}
+
 export interface DrillListDto {
   id: string;
   name: string;
@@ -1408,6 +1421,7 @@ export interface DrillListDto {
   attributes: string[];
   equipment: string[];
   diagram?: string;
+  drillDiagramConfig?: DrillDiagramConfigDto;
   instructions: string[];
   variations: string[];
   links: DrillLinkDto[];
@@ -1437,6 +1451,7 @@ export interface DrillDetailDto {
   category: string;
   attributes: string[];
   equipment: string[];
+  drillDiagramConfig?: DrillDiagramConfigDto;
   instructions: string[];
   variations: string[];
   links: DrillDetailLinkDto[];
@@ -1465,6 +1480,7 @@ export interface CreateDrillRequest {
   variations: string[];
   links: CreateDrillLinkRequest[];
   isPublic: boolean;
+  drillDiagramConfig?: DrillDiagramConfigDto;
   scope: CreateDrillScopeRequest;
 }
 
@@ -1491,6 +1507,7 @@ export interface UpdateDrillRequest {
   variations: string[];
   links: UpdateDrillLinkRequest[];
   isPublic: boolean;
+  drillDiagramConfig?: DrillDiagramConfigDto;
 }
 
 export interface UpdateDrillLinkRequest {

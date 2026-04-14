@@ -1,4 +1,5 @@
 namespace OurGame.Application.UseCases.Drills.Queries.GetDrillsByScope.DTOs;
+using OurGame.Application.UseCases.Drills.DTOs;
 
 /// <summary>
 /// Response DTO for drills by scope
@@ -65,6 +66,11 @@ public class DrillListDto
     /// Optional diagram/image URL for the drill
     /// </summary>
     public string? Diagram { get; set; }
+
+    /// <summary>
+    /// Optional structured diagram configuration (JSON-backed)
+    /// </summary>
+    public DrillDiagramConfigDto? DrillDiagramConfig { get; set; }
 
     /// <summary>
     /// Instructions for the drill

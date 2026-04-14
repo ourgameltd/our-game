@@ -5,6 +5,7 @@ import { getAttributeCategory, playerAttributes, linkTypes } from '@/constants/r
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
+import DrillDiagramEditor from '@components/training/DrillDiagramEditor';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   useDrill,
@@ -18,6 +19,7 @@ import type {
   CreateDrillRequest,
   UpdateDrillRequest,
 } from '@/api';
+import type { DrillDiagramConfigDto } from '@/api/client';
 
 // ---------------------------------------------------------------------------
 // Skeleton Components
@@ -125,6 +127,7 @@ export default function DrillFormPage() {
   const [instructions, setInstructions] = useState<string[]>(['']);
   const [variations, setVariations] = useState<string[]>([]);
   const [links, setLinks] = useState<Array<{url: string; title: string; type: string}>>([]);
+  const [drillDiagramConfig, setDrillDiagramConfig] = useState<DrillDiagramConfigDto | undefined>(undefined);
   const [isPublic, setIsPublic] = useState(true);
 
   // Check if drill is inherited (can only view, not edit)
@@ -150,6 +153,7 @@ export default function DrillFormPage() {
         title: l.title || '',
         type: l.linkType
       })));
+      setDrillDiagramConfig(drillData.drillDiagramConfig);
       setIsPublic(drillData.isPublic);
       formInitialized.current = true;
     }
@@ -290,6 +294,11 @@ export default function DrillFormPage() {
     const cleanedVariations = variations.filter(v => v.trim());
     const cleanedLinks = links.filter(l => l.url.trim() && l.title.trim());
 
+    if (drillDiagramConfig?.frames && drillDiagramConfig.frames.length > 1) {
+      alert('Only one frame is currently supported.');
+      return;
+    }
+
     if (isEditMode && drillId) {
       // Update existing drill
       const request: UpdateDrillRequest = {
@@ -306,6 +315,7 @@ export default function DrillFormPage() {
           title: l.title || undefined,
           type: l.type
         })),
+        drillDiagramConfig,
         isPublic
       };
       updateDrill(request);
@@ -325,6 +335,7 @@ export default function DrillFormPage() {
           title: l.title || undefined,
           linkType: l.type
         })),
+        drillDiagramConfig,
         isPublic,
         scope: {
           clubId: clubId,
@@ -401,7 +412,7 @@ export default function DrillFormPage() {
           </div>
 
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
             <p className="text-red-700 dark:text-red-300">
               Failed to load drill: {fetchError.message}
             </p>
@@ -437,7 +448,7 @@ export default function DrillFormPage() {
         {/* Mutation error panel */}
         {mutationError && (
           <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
             <div>
               <p className="text-red-700 dark:text-red-300">
                 {mutationError.message}
@@ -748,6 +759,19 @@ export default function DrillFormPage() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Drill Diagram Editor */}
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-2">Drill Diagram</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Draw your setup directly on the pitch. Frame support is enabled but currently limited to one frame.
+              </p>
+              <DrillDiagramEditor
+                value={drillDiagramConfig}
+                onChange={setDrillDiagramConfig}
+                disabled={isInherited}
+              />
             </div>
 
             {/* Sharing */}

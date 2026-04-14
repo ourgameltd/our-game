@@ -2,6 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.Drills.Commands.UpdateDrill.DTOs;
 using OurGame.Application.UseCases.Drills.Queries.GetDrillById;
 using OurGame.Application.UseCases.Drills.Queries.GetDrillById.DTOs;
@@ -76,6 +77,11 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
             ? JsonSerializer.Serialize(dto.Variations)
             : null;
 
+        ValidateFrameLimit(dto.DrillDiagramConfig);
+        var drillDiagramConfigJson = dto.DrillDiagramConfig is null
+            ? null
+            : JsonSerializer.Serialize(dto.DrillDiagramConfig);
+
         var now = DateTime.UtcNow;
         var name = dto.Name;
         var description = dto.Description ?? string.Empty;
@@ -96,6 +102,7 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
                     Category = {category},
                     Attributes = {attributesJson},
                     Equipment = {equipmentJson},
+                    DrillDiagramConfig = {drillDiagramConfigJson},
                     Instructions = {instructionsJson},
                     Variations = {variationsJson},
                     IsPublic = {isPublic},
@@ -171,6 +178,14 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
             "other" => LinkType.Other,
             _ => LinkType.Other
         };
+    }
+
+    private static void ValidateFrameLimit(DrillDiagramConfigDto? config)
+    {
+        if (config?.Frames is not null && config.Frames.Count > 1)
+        {
+            throw new ValidationException("DrillDiagramConfig", "Only one frame is currently supported.");
+        }
     }
 }
 

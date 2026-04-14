@@ -24,6 +24,8 @@ public partial class Drill
 
     public string Diagram { get; set; }
 
+    public string DrillDiagramConfig { get; set; }
+
     public string Instructions { get; set; }
 
     public string Variations { get; set; }

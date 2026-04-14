@@ -377,6 +377,16 @@ export interface Drill {
   attributes: string[]; // Player attribute keys that this drill improves (e.g., ['ballControl', 'dribbling', 'pace'])
   equipment: string[];
   diagram?: string;
+  drillDiagramConfig?: {
+    schemaVersion: number;
+    frames: Array<{
+      id: string;
+      name?: string;
+      pitch?: Record<string, unknown>;
+      objects: Array<Record<string, unknown>>;
+    }>;
+    meta?: Record<string, unknown>;
+  };
   instructions: string[];
   variations?: string[];
   links?: {

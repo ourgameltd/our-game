@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
+using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.Drills.Queries.GetDrillsByScope.DTOs;
 using OurGame.Persistence.Models;
 
@@ -50,6 +51,7 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
                 d.Attributes,
                 d.Equipment,
                 d.Diagram,
+                d.DrillDiagramConfig,
                 d.Instructions,
                 d.Variations,
                 d.CreatedBy,
@@ -193,6 +195,7 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
             Attributes = ParseJsonArray(raw.Attributes),
             Equipment = ParseJsonArray(raw.Equipment),
             Diagram = raw.Diagram,
+            DrillDiagramConfig = ParseDiagramConfig(raw.DrillDiagramConfig),
             Instructions = ParseJsonArray(raw.Instructions),
             Variations = ParseJsonArray(raw.Variations),
             Links = links,
@@ -238,6 +241,21 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
             .Select(s => s.Trim())
             .ToList();
     }
+
+    private static DrillDiagramConfigDto? ParseDiagramConfig(string? json)
+    {
+        if (string.IsNullOrWhiteSpace(json))
+            return null;
+
+        try
+        {
+            return System.Text.Json.JsonSerializer.Deserialize<DrillDiagramConfigDto>(json);
+        }
+        catch
+        {
+            return null;
+        }
+    }
 }
 
 /// <summary>
@@ -253,6 +271,7 @@ public class DrillRawDto
     public string? Attributes { get; set; }
     public string? Equipment { get; set; }
     public string? Diagram { get; set; }
+    public string? DrillDiagramConfig { get; set; }
     public string? Instructions { get; set; }
     public string? Variations { get; set; }
     public Guid? CreatedBy { get; set; }

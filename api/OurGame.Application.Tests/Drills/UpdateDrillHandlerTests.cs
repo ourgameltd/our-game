@@ -1,5 +1,6 @@
 using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Tests.TestInfrastructure;
+using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.Drills.Commands.UpdateDrill;
 using OurGame.Application.UseCases.Drills.Commands.UpdateDrill.DTOs;
 using OurGame.Persistence.Models;
@@ -147,5 +148,31 @@ public class UpdateDrillHandlerTests
         var result = await handler.Handle(new UpdateDrillCommand(drillId, "user1", dto), CancellationToken.None);
 
         Assert.Equal(expected, result.Category);
+    }
+
+    [Fact]
+    public async Task Handle_WhenDiagramConfigHasMultipleFrames_ThrowsValidationException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var drillId = await db.SeedDrillAsync();
+
+        var handler = new UpdateDrillHandler(db.Context);
+        var dto = ValidDto() with
+        {
+            DrillDiagramConfig = new DrillDiagramConfigDto
+            {
+                SchemaVersion = 1,
+                Frames = new List<DrillDiagramFrameDto>
+                {
+                    new() { Id = "frame-1" },
+                    new() { Id = "frame-2" }
+                }
+            }
+        };
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(new UpdateDrillCommand(drillId, "user1", dto), CancellationToken.None));
+
+        Assert.Contains("DrillDiagramConfig", ex.Errors.Keys);
     }
 }

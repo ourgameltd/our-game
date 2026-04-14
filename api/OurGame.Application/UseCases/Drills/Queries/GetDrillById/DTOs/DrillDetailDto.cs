@@ -1,4 +1,5 @@
 namespace OurGame.Application.UseCases.Drills.Queries.GetDrillById.DTOs;
+using OurGame.Application.UseCases.Drills.DTOs;
 
 /// <summary>
 /// Full detail DTO for a single drill
@@ -49,6 +50,11 @@ public class DrillDetailDto
     /// Variations of the drill to increase/decrease difficulty
     /// </summary>
     public List<string> Variations { get; set; } = new();
+
+    /// <summary>
+    /// Optional structured diagram configuration (JSON-backed)
+    /// </summary>
+    public DrillDiagramConfigDto? DrillDiagramConfig { get; set; }
 
     /// <summary>
     /// External links (videos, articles, etc.) related to the drill
