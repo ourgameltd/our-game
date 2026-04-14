@@ -59,8 +59,8 @@ const TOOL_CONFIG: Record<Tool, { label: string; icon: typeof MousePointer2 }> =
 };
 
 const WORKSPACE_WIDTH = 120;
-const FULL_WORKSPACE_HEIGHT = 160;
-const HALF_WORKSPACE_HEIGHT = 83;
+const FULL_WORKSPACE_HEIGHT = 176;
+const HALF_WORKSPACE_HEIGHT = 99;
 const GOAL_MIN_WIDTH = 6;
 const GOAL_MAX_WIDTH = 30;
 const GOAL_MIN_HEIGHT = 3;
@@ -805,7 +805,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
-        <div className="flex flex-col">
+        <div className="flex flex-col pt-1">
           <span className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Pitch size</span>
           <div className="flex h-12 items-center gap-4 rounded-md border border-gray-300 bg-white px-3 dark:border-gray-600 dark:bg-gray-700">
             <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
@@ -864,13 +864,13 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
       </div>
 
-      <div ref={previewRef} className="relative">
+      <div ref={previewRef} className="relative mt-2">
         <DrillDiagramRenderer drillDiagramConfig={currentConfig} className="border border-gray-300 dark:border-gray-600" />
         <svg
           ref={overlayRef}
           className={`absolute inset-0 h-full w-full ${disabled ? 'pointer-events-none' : 'cursor-crosshair'}`}
           viewBox={`0 0 ${WORKSPACE_WIDTH} ${workspaceHeight}`}
-          preserveAspectRatio="none"
+          preserveAspectRatio="xMidYMid meet"
           onPointerDown={onCanvasPointerDown}
           onPointerMove={onCanvasPointerMove}
           onPointerUp={onCanvasPointerUp}

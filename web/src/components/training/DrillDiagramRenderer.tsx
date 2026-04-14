@@ -8,8 +8,8 @@ type DrillDiagramRendererProps = {
 type DiagramObject = Record<string, unknown>;
 
 const WORKSPACE_WIDTH = 120;
-const FULL_WORKSPACE_HEIGHT = 160;
-const HALF_WORKSPACE_HEIGHT = 83;
+const FULL_WORKSPACE_HEIGHT = 176;
+const HALF_WORKSPACE_HEIGHT = 99;
 const PITCH_WIDTH = 100;
 const REAL_PITCH_WIDTH_METERS = 68;
 const REAL_PITCH_LENGTH_METERS = 105;
@@ -210,7 +210,7 @@ export default function DrillDiagramRenderer({
 
   return (
     <div className={`relative w-full overflow-hidden rounded-md bg-linear-to-b from-green-500 to-green-600 ${className}`} style={{ paddingBottom: `${(workspaceHeight / WORKSPACE_WIDTH) * 100}%` }}>
-      <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${WORKSPACE_WIDTH} ${workspaceHeight}`} preserveAspectRatio="none">
+      <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${WORKSPACE_WIDTH} ${workspaceHeight}`} preserveAspectRatio="xMidYMid meet">
         <defs>
           <marker id="drill-arrow-head" viewBox="0 0 10 10" refX="7.6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
             <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff" />
