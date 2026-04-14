@@ -82,7 +82,7 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   if (type === 'line' || type === 'arrow') {
     const x2 = clamp(pickNumber(obj, ['x2', 'toX', 'endX'], x), 0, WORKSPACE_WIDTH);
     const y2 = clamp(pickNumber(obj, ['y2', 'toY', 'endY'], y), 0, workspaceHeight);
-    const strokeWidth = clamp(pickNumber(obj, ['strokeWidth', 'width'], 0.8), 0.3, 2.5);
+    const strokeWidth = clamp(pickNumber(obj, ['strokeWidth', 'width'], 0.5), 0.2, 1.6);
     const lineStyle = pickString(obj, ['lineStyle', 'strokeStyle'], 'solid').toLowerCase();
 
     return (
@@ -124,10 +124,10 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
           height={height}
           fill="none"
           stroke={postColor}
-          strokeWidth={0.7}
+          strokeWidth={0.45}
         />
-        <line x1={x - width / 2} y1={y} x2={x + width / 2} y2={y} stroke={postColor} strokeOpacity={0.65} strokeWidth={0.35} />
-        <line x1={x} y1={y - height / 2} x2={x} y2={y + height / 2} stroke={postColor} strokeOpacity={0.65} strokeWidth={0.35} />
+        <line x1={x - width / 2} y1={y} x2={x + width / 2} y2={y} stroke={postColor} strokeOpacity={0.65} strokeWidth={0.22} />
+        <line x1={x} y1={y - height / 2} x2={x} y2={y + height / 2} stroke={postColor} strokeOpacity={0.65} strokeWidth={0.22} />
         {caption ? (
           <text x={x} y={y + height / 2 + 3.2} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
             {caption.slice(0, 24)}
@@ -138,12 +138,19 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   }
 
   if (type === 'cone') {
+    const coneWidth = clamp(pickNumber(obj, ['width', 'w', 'size'], 4.4), 2.4, 12);
+    const coneHeight = clamp(pickNumber(obj, ['height', 'h', 'size'], 4.2), 2.2, 12);
+    const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
+
     return (
-      <g key={key}>
+      <g key={key} transform={`rotate(${rotation} ${x} ${y})`}>
         <polygon
-          points={`${x},${y - 2.4} ${x - 2.2},${y + 1.8} ${x + 2.2},${y + 1.8}`}
+          points={`${x},${y - coneHeight / 2} ${x - coneWidth / 2},${y + coneHeight / 2} ${x + coneWidth / 2},${y + coneHeight / 2}`}
           fill={color}
           opacity={0.95}
+          stroke="#0f172a"
+          strokeWidth={0.28}
+          strokeLinejoin="round"
         />
         {caption ? (
           <text x={x} y={y + 5.2} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
@@ -155,11 +162,13 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   }
 
   if (type === 'ball') {
+    const radius = clamp(pickNumber(obj, ['size', 'radius', 'r'], 1.4), 0.8, 4);
+
     return (
       <g key={key}>
-        <circle cx={x} cy={y} r={1.4} fill="#111827" stroke="#ffffff" strokeWidth={0.45} />
+        <circle cx={x} cy={y} r={radius} fill="#111827" stroke="#ffffff" strokeWidth={0.28} />
         {caption ? (
-          <text x={x} y={y + 4.8} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
+          <text x={x} y={y + radius + 3.4} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
             {caption.slice(0, 24)}
           </text>
         ) : null}
@@ -170,7 +179,7 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   const r = clamp(pickNumber(obj, ['radius', 'r', 'size'], 2.1), 1.2, 4.5);
   return (
     <g key={key}>
-      <circle cx={x} cy={y} r={r} fill={color} stroke="#0f172a" strokeWidth={0.45} />
+      <circle cx={x} cy={y} r={r} fill={color} stroke="#0f172a" strokeWidth={0.28} />
       {label ? (
         <text x={x} y={y + 0.1} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
           {label.slice(0, 3)}

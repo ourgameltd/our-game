@@ -20,7 +20,7 @@ import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
 
 type Tool = 'select' | 'player' | 'cone' | 'ball' | 'goal' | 'line' | 'arrow';
 type Point = { x: number; y: number };
-type GoalResizeCorner = 'nw' | 'ne' | 'se' | 'sw';
+type ObjectResizeCorner = 'nw' | 'ne' | 'se' | 'sw';
 type PitchMode = 'half' | 'full';
 
 type DiagramObject = {
@@ -32,6 +32,7 @@ type DiagramObject = {
   y2?: number;
   width?: number;
   height?: number;
+  size?: number;
   rotation?: number;
   text?: string;
   label?: string;
@@ -65,8 +66,19 @@ const GOAL_MIN_WIDTH = 6;
 const GOAL_MAX_WIDTH = 30;
 const GOAL_MIN_HEIGHT = 3;
 const GOAL_MAX_HEIGHT = 20;
-const GOAL_ROTATE_HANDLE_OFFSET = 4.5;
-const GOAL_HANDLE_HIT_RADIUS = 1.7;
+const OBJECT_HANDLE_HIT_RADIUS = 1.6;
+const OBJECT_ROTATE_HIT_RADIUS = 1.7;
+const PLAYER_MIN_RADIUS = 1.2;
+const PLAYER_MAX_RADIUS = 6;
+const BALL_MIN_RADIUS = 0.8;
+const BALL_MAX_RADIUS = 4;
+const CONE_MIN_WIDTH = 2.4;
+const CONE_MAX_WIDTH = 12;
+const CONE_MIN_HEIGHT = 2.2;
+const CONE_MAX_HEIGHT = 12;
+const SELECTION_PADDING = 1.2;
+const HANDLE_RADIUS = 0.8;
+const ROTATE_HANDLE_OFFSET = 5;
 
 const clamp = (value: number, min: number, max: number): number => Math.min(max, Math.max(min, value));
 
@@ -153,6 +165,7 @@ const parseObjects = (value?: DrillDiagramConfigDto): DiagramObject[] => {
         y2: toNumber(obj.y2, 70),
         width: toNumber(obj.width, 14),
         height: toNumber(obj.height, 5),
+        size: toNumber(obj.size, 2.1),
         rotation: toNumber(obj.rotation, 0),
         text: typeof obj.text === 'string' ? obj.text : undefined,
         label: typeof obj.label === 'string' ? obj.label : undefined,
@@ -241,20 +254,21 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const overlayRef = useRef<SVGSVGElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{ id: string; pointer: Point } | null>(null);
-  const goalTransformRef = useRef<
+  const objectResizeRef = useRef<
+    | {
+        mode: 'resize';
+        id: string;
+        type: 'player' | 'cone' | 'ball' | 'goal';
+        center: Point;
+        rotation: number;
+        oppositeLocal: Point;
+      }
     | {
         mode: 'rotate';
         id: string;
         center: Point;
         startPointerAngle: number;
         startRotation: number;
-      }
-    | {
-        mode: 'resize';
-        id: string;
-        center: Point;
-        rotation: number;
-        oppositeLocal: Point;
       }
     | null
   >(null);
@@ -272,7 +286,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const selectedObject = selectedId ? objects.find((obj) => obj.id === selectedId) : undefined;
   const selectedCaptionTarget =
     selectedObject && selectedObject.type !== 'line' && selectedObject.type !== 'arrow' ? selectedObject : undefined;
-  const selectedGoal = selectedObject?.type === 'goal' ? selectedObject : undefined;
 
   const updateObjects = (next: DiagramObject[]) => {
     const clamped = clampObjectsToWorkspace(next, pitchMode);
@@ -299,13 +312,88 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     };
   };
 
-  const getGoalTransformAnchors = (goal: DiagramObject) => {
-    const center = { x: goal.x ?? 0, y: goal.y ?? 0 };
-    const width = clamp(goal.width ?? 14, GOAL_MIN_WIDTH, GOAL_MAX_WIDTH);
-    const height = clamp(goal.height ?? 5, GOAL_MIN_HEIGHT, GOAL_MAX_HEIGHT);
-    const rotation = goal.rotation ?? 0;
+  const getObjectBounds = (object: DiagramObject): { x: number; y: number; width: number; height: number; rotation: number } | null => {
+    const centerX = object.x ?? 0;
+    const centerY = object.y ?? 0;
 
-    const cornersLocal: Record<GoalResizeCorner, Point> = {
+    if (object.type === 'player') {
+      const radius = clamp(object.size ?? 2.1, PLAYER_MIN_RADIUS, PLAYER_MAX_RADIUS);
+      return {
+        x: centerX - radius,
+        y: centerY - radius,
+        width: radius * 2,
+        height: radius * 2,
+        rotation: 0,
+      };
+    }
+
+    if (object.type === 'ball') {
+      const radius = clamp(object.size ?? 1.4, BALL_MIN_RADIUS, BALL_MAX_RADIUS);
+      return {
+        x: centerX - radius,
+        y: centerY - radius,
+        width: radius * 2,
+        height: radius * 2,
+        rotation: 0,
+      };
+    }
+
+    if (object.type === 'cone') {
+      const width = clamp(object.width ?? 4.4, CONE_MIN_WIDTH, CONE_MAX_WIDTH);
+      const height = clamp(object.height ?? 4.2, CONE_MIN_HEIGHT, CONE_MAX_HEIGHT);
+      return {
+        x: centerX - width / 2,
+        y: centerY - height / 2,
+        width,
+        height,
+        rotation: object.rotation ?? 0,
+      };
+    }
+
+    if (object.type === 'goal') {
+      const width = clamp(object.width ?? 14, GOAL_MIN_WIDTH, GOAL_MAX_WIDTH);
+      const height = clamp(object.height ?? 5, GOAL_MIN_HEIGHT, GOAL_MAX_HEIGHT);
+      return {
+        x: centerX - width / 2,
+        y: centerY - height / 2,
+        width,
+        height,
+        rotation: object.rotation ?? 0,
+      };
+    }
+
+    return null;
+  };
+
+  const getSelectionBounds = (object: DiagramObject): { x: number; y: number; width: number; height: number; rotation: number; center: Point } | null => {
+    const bounds = getObjectBounds(object);
+    if (!bounds) return null;
+
+    const center = {
+      x: bounds.x + bounds.width / 2,
+      y: bounds.y + bounds.height / 2,
+    };
+
+    return {
+      x: bounds.x - SELECTION_PADDING,
+      y: bounds.y - SELECTION_PADDING,
+      width: bounds.width + SELECTION_PADDING * 2,
+      height: bounds.height + SELECTION_PADDING * 2,
+      rotation: bounds.rotation,
+      center,
+    };
+  };
+
+  const getObjectTransformAnchors = (object: DiagramObject) => {
+    const selection = getSelectionBounds(object);
+    if (!selection) return null;
+
+    const center = selection.center;
+    const rotation = selection.rotation;
+    const width = selection.width;
+    const height = selection.height;
+
+    const cornersLocal: Record<ObjectResizeCorner, Point> = {
       nw: { x: -width / 2, y: -height / 2 },
       ne: { x: width / 2, y: -height / 2 },
       se: { x: width / 2, y: height / 2 },
@@ -319,17 +407,16 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       sw: localToWorld(cornersLocal.sw, center, rotation),
     };
 
-    const rotateHandleLocal = { x: 0, y: -height / 2 - GOAL_ROTATE_HANDLE_OFFSET };
-    const rotateHandleWorld = localToWorld(rotateHandleLocal, center, rotation);
+    const rotateHandleWorld = localToWorld({ x: 0, y: -height / 2 - ROTATE_HANDLE_OFFSET }, center, rotation);
+    const topMiddleWorld = localToWorld({ x: 0, y: -height / 2 }, center, rotation);
 
     return {
       center,
-      width,
-      height,
       rotation,
       cornersLocal,
       cornersWorld,
       rotateHandleWorld,
+      topMiddleWorld,
     };
   };
 
@@ -382,43 +469,44 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
     const point = pointFromPointer(event);
 
-    if (selectedGoal) {
-      const anchors = getGoalTransformAnchors(selectedGoal);
-      const rotateDistance = Math.hypot(point.x - anchors.rotateHandleWorld.x, point.y - anchors.rotateHandleWorld.y);
-
-      if (rotateDistance <= GOAL_HANDLE_HIT_RADIUS) {
-        goalTransformRef.current = {
-          mode: 'rotate',
-          id: selectedGoal.id,
-          center: anchors.center,
-          startPointerAngle: Math.atan2(point.y - anchors.center.y, point.x - anchors.center.x),
-          startRotation: anchors.rotation,
-        };
-        event.currentTarget.setPointerCapture(event.pointerId);
-        return;
-      }
-
-      const corners: GoalResizeCorner[] = ['nw', 'ne', 'se', 'sw'];
-      for (const corner of corners) {
-        const cornerPoint = anchors.cornersWorld[corner];
-        const cornerDistance = Math.hypot(point.x - cornerPoint.x, point.y - cornerPoint.y);
-        if (cornerDistance <= GOAL_HANDLE_HIT_RADIUS) {
-          const opposite: Record<GoalResizeCorner, GoalResizeCorner> = {
-            nw: 'se',
-            ne: 'sw',
-            se: 'nw',
-            sw: 'ne',
-          };
-
-          goalTransformRef.current = {
-            mode: 'resize',
-            id: selectedGoal.id,
+    if (selectedObject && (selectedObject.type === 'player' || selectedObject.type === 'cone' || selectedObject.type === 'ball' || selectedObject.type === 'goal')) {
+      const anchors = getObjectTransformAnchors(selectedObject);
+      if (anchors) {
+        const rotateDistance = Math.hypot(point.x - anchors.rotateHandleWorld.x, point.y - anchors.rotateHandleWorld.y);
+        if (rotateDistance <= OBJECT_ROTATE_HIT_RADIUS) {
+          objectResizeRef.current = {
+            mode: 'rotate',
+            id: selectedObject.id,
             center: anchors.center,
-            rotation: anchors.rotation,
-            oppositeLocal: anchors.cornersLocal[opposite[corner]],
+            startPointerAngle: Math.atan2(point.y - anchors.center.y, point.x - anchors.center.x),
+            startRotation: anchors.rotation,
           };
           event.currentTarget.setPointerCapture(event.pointerId);
           return;
+        }
+
+        const opposite: Record<ObjectResizeCorner, ObjectResizeCorner> = {
+          nw: 'se',
+          ne: 'sw',
+          se: 'nw',
+          sw: 'ne',
+        };
+        const corners: ObjectResizeCorner[] = ['nw', 'ne', 'se', 'sw'];
+        for (const corner of corners) {
+          const handle = anchors.cornersWorld[corner];
+          const distance = Math.hypot(point.x - handle.x, point.y - handle.y);
+          if (distance <= OBJECT_HANDLE_HIT_RADIUS) {
+            objectResizeRef.current = {
+              mode: 'resize',
+              id: selectedObject.id,
+              type: selectedObject.type,
+              center: anchors.center,
+              rotation: anchors.rotation,
+              oppositeLocal: anchors.cornersLocal[opposite[corner]],
+            };
+            event.currentTarget.setPointerCapture(event.pointerId);
+            return;
+          }
         }
       }
     }
@@ -472,9 +560,10 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       y: point.y,
       color: tool === 'player' ? '#1d4ed8' : tool === 'cone' ? '#f59e0b' : tool === 'ball' ? '#111827' : '#ffffff',
       label: tool === 'player' ? 'P' : undefined,
-      width: tool === 'goal' ? 14 : undefined,
-      height: tool === 'goal' ? 5 : undefined,
-      rotation: tool === 'goal' ? 0 : undefined,
+      size: tool === 'player' ? 2.1 : tool === 'ball' ? 1.4 : undefined,
+      width: tool === 'cone' ? 4.4 : tool === 'goal' ? 14 : undefined,
+      height: tool === 'cone' ? 4.2 : tool === 'goal' ? 5 : undefined,
+      rotation: tool === 'goal' || tool === 'cone' ? 0 : undefined,
     };
 
     updateObjects([...objects, newObject]);
@@ -487,8 +576,8 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
     const point = pointFromPointer(event);
 
-    if (goalTransformRef.current) {
-      const transform = goalTransformRef.current;
+    if (objectResizeRef.current) {
+      const transform = objectResizeRef.current;
 
       if (transform.mode === 'rotate') {
         const currentAngle = Math.atan2(point.y - transform.center.y, point.x - transform.center.x);
@@ -509,29 +598,81 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       }
 
       const draggedLocal = worldToLocal(point, transform.center, transform.rotation);
-      const width = clamp(Math.abs(draggedLocal.x - transform.oppositeLocal.x), GOAL_MIN_WIDTH, GOAL_MAX_WIDTH);
-      const height = clamp(Math.abs(draggedLocal.y - transform.oppositeLocal.y), GOAL_MIN_HEIGHT, GOAL_MAX_HEIGHT);
+
+      if (transform.type === 'cone' || transform.type === 'goal') {
+        const minWidth = transform.type === 'goal' ? GOAL_MIN_WIDTH : CONE_MIN_WIDTH;
+        const maxWidth = transform.type === 'goal' ? GOAL_MAX_WIDTH : CONE_MAX_WIDTH;
+        const minHeight = transform.type === 'goal' ? GOAL_MIN_HEIGHT : CONE_MIN_HEIGHT;
+        const maxHeight = transform.type === 'goal' ? GOAL_MAX_HEIGHT : CONE_MAX_HEIGHT;
+
+        const frameWidth = clamp(Math.abs(draggedLocal.x - transform.oppositeLocal.x), minWidth + SELECTION_PADDING * 2, maxWidth + SELECTION_PADDING * 2);
+        const frameHeight = clamp(Math.abs(draggedLocal.y - transform.oppositeLocal.y), minHeight + SELECTION_PADDING * 2, maxHeight + SELECTION_PADDING * 2);
+        const width = clamp(frameWidth - SELECTION_PADDING * 2, minWidth, maxWidth);
+        const height = clamp(frameHeight - SELECTION_PADDING * 2, minHeight, maxHeight);
+
+        const signedDraggedLocal = {
+          x: transform.oppositeLocal.x + (draggedLocal.x >= transform.oppositeLocal.x ? frameWidth : -frameWidth),
+          y: transform.oppositeLocal.y + (draggedLocal.y >= transform.oppositeLocal.y ? frameHeight : -frameHeight),
+        };
+        const centerLocal = {
+          x: (transform.oppositeLocal.x + signedDraggedLocal.x) / 2,
+          y: (transform.oppositeLocal.y + signedDraggedLocal.y) / 2,
+        };
+        const centerWorld = localToWorld(centerLocal, transform.center, transform.rotation);
+
+        const center = {
+          x: clamp(centerWorld.x, 0, WORKSPACE_WIDTH),
+          y: clamp(centerWorld.y, 0, workspaceHeight),
+        };
+
+        updateObjects(
+          objects.map((obj) =>
+            obj.id === transform.id
+              ? {
+                  ...obj,
+                  x: center.x,
+                  y: center.y,
+                  width,
+                  height,
+                }
+              : obj
+          )
+        );
+        return;
+      }
+
+      const minDiameter = transform.type === 'player' ? PLAYER_MIN_RADIUS * 2 : BALL_MIN_RADIUS * 2;
+      const maxDiameter = transform.type === 'player' ? PLAYER_MAX_RADIUS * 2 : BALL_MAX_RADIUS * 2;
+      const frameDiameter = clamp(
+        Math.max(Math.abs(draggedLocal.x - transform.oppositeLocal.x), Math.abs(draggedLocal.y - transform.oppositeLocal.y)),
+        minDiameter + SELECTION_PADDING * 2,
+        maxDiameter + SELECTION_PADDING * 2
+      );
+      const diameter = clamp(frameDiameter - SELECTION_PADDING * 2, minDiameter, maxDiameter);
 
       const signedDraggedLocal = {
-        x: transform.oppositeLocal.x + (draggedLocal.x >= transform.oppositeLocal.x ? width : -width),
-        y: transform.oppositeLocal.y + (draggedLocal.y >= transform.oppositeLocal.y ? height : -height),
+        x: transform.oppositeLocal.x + (draggedLocal.x >= transform.oppositeLocal.x ? frameDiameter : -frameDiameter),
+        y: transform.oppositeLocal.y + (draggedLocal.y >= transform.oppositeLocal.y ? frameDiameter : -frameDiameter),
       };
-
       const centerLocal = {
         x: (transform.oppositeLocal.x + signedDraggedLocal.x) / 2,
         y: (transform.oppositeLocal.y + signedDraggedLocal.y) / 2,
       };
       const centerWorld = localToWorld(centerLocal, transform.center, transform.rotation);
 
+      const center = {
+        x: clamp(centerWorld.x, 0, WORKSPACE_WIDTH),
+        y: clamp(centerWorld.y, 0, workspaceHeight),
+      };
+
       updateObjects(
         objects.map((obj) =>
           obj.id === transform.id
             ? {
                 ...obj,
-                x: clamp(centerWorld.x, 0, WORKSPACE_WIDTH),
-                y: clamp(centerWorld.y, 0, workspaceHeight),
-                width,
-                height,
+                x: center.x,
+                y: center.y,
+                size: diameter / 2,
               }
             : obj
         )
@@ -572,11 +713,11 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   };
 
   const onCanvasPointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
-    if ((dragRef.current || goalTransformRef.current) && event.currentTarget.hasPointerCapture(event.pointerId)) {
+    if ((dragRef.current || objectResizeRef.current) && event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     dragRef.current = null;
-    goalTransformRef.current = null;
+    objectResizeRef.current = null;
   };
 
   const deleteSelected = () => {
@@ -645,7 +786,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           <SpeedDial
             ariaLabel="Add drill item"
             direction="down"
-            icon={<SpeedDialIcon icon={<Plus className="h-4 w-4" />} openIcon={<X className="h-4 w-4" />} />}
+            icon={<SpeedDialIcon icon={<Plus className="h-4 w-4" strokeWidth={1.6} />} openIcon={<X className="h-4 w-4" strokeWidth={1.6} />} />}
             FabProps={{
               size: 'small',
               color: 'primary',
@@ -694,7 +835,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
               return (
                 <SpeedDialAction
                   key={toolName}
-                  icon={<Icon className="h-4 w-4" />}
+                  icon={<Icon className="h-4 w-4" strokeWidth={1.6} />}
                   tooltipTitle={`Add ${TOOL_CONFIG[toolName].label}`}
                   tooltipPlacement="right"
                   tooltipOpen
@@ -725,7 +866,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           disabled={disabled}
           title="Select and move"
         >
-          <MousePointer2 className="h-4 w-4" aria-hidden="true" />
+          <MousePointer2 className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
           <span>Select</span>
         </button>
 
@@ -736,7 +877,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           disabled={disabled || !selectedId}
           title="Delete selected"
         >
-          <Trash2 className="h-4 w-4" aria-hidden="true" />
+          <Trash2 className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
           <span>Delete</span>
         </button>
         <button
@@ -746,7 +887,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           disabled={disabled || addedObjectHistory.length === 0}
           title="Undo last add"
         >
-          <Undo2 className="h-4 w-4" aria-hidden="true" />
+          <Undo2 className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
           <span>Undo</span>
         </button>
         <button
@@ -756,7 +897,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           disabled={disabled}
           title="Clear frame"
         >
-          <Eraser className="h-4 w-4" aria-hidden="true" />
+          <Eraser className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
           <span>Clear</span>
         </button>
         <button
@@ -765,7 +906,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
           title="Export as PNG"
         >
-          <Download className="h-4 w-4" aria-hidden="true" />
+          <Download className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
           <span>Export PNG</span>
         </button>
       </div>
@@ -890,36 +1031,45 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
               );
             }
 
-            if (object.type === 'goal') {
-              const width = clamp(object.width ?? 14, 6, 30);
-              const height = clamp(object.height ?? 5, 3, 20);
-              const x = object.x ?? 0;
-              const y = object.y ?? 0;
-              const rotation = object.rotation ?? 0;
-              const rotateHandleY = y - height / 2 - GOAL_ROTATE_HANDLE_OFFSET;
+            if (object.type === 'player' || object.type === 'cone' || object.type === 'ball' || object.type === 'goal') {
+              const selectionBounds = getSelectionBounds(object);
 
-              return (
-                <g key={`selected-${object.id}`} transform={`rotate(${rotation} ${x} ${y})`}>
-                  <rect
-                    x={x - width / 2 - 0.8}
-                    y={y - height / 2 - 0.8}
-                    width={width + 1.6}
-                    height={height + 1.6}
-                    fill="none"
-                    stroke="#ef4444"
-                    strokeWidth={0.6}
-                  />
-                  <line x1={x} y1={y - height / 2 - 0.8} x2={x} y2={rotateHandleY} stroke="#ef4444" strokeWidth={0.5} />
-                  <circle cx={x - width / 2} cy={y - height / 2} r={0.9} fill="#ffffff" stroke="#ef4444" strokeWidth={0.4} />
-                  <circle cx={x + width / 2} cy={y - height / 2} r={0.9} fill="#ffffff" stroke="#ef4444" strokeWidth={0.4} />
-                  <circle cx={x + width / 2} cy={y + height / 2} r={0.9} fill="#ffffff" stroke="#ef4444" strokeWidth={0.4} />
-                  <circle cx={x - width / 2} cy={y + height / 2} r={0.9} fill="#ffffff" stroke="#ef4444" strokeWidth={0.4} />
-                  <circle cx={x} cy={rotateHandleY} r={1.3} fill="#ffffff" stroke="#ef4444" strokeWidth={0.5} />
-                  <text x={x} y={rotateHandleY + 0.05} fill="#ef4444" fontSize={1.5} textAnchor="middle" dominantBaseline="middle">
-                    ↻
-                  </text>
-                </g>
-              );
+              if (selectionBounds) {
+                return (
+                  <g key={`selected-${object.id}`} transform={`rotate(${selectionBounds.rotation} ${selectionBounds.center.x} ${selectionBounds.center.y})`}>
+                    <rect
+                      x={selectionBounds.center.x - selectionBounds.width / 2}
+                      y={selectionBounds.center.y - selectionBounds.height / 2}
+                      width={selectionBounds.width}
+                      height={selectionBounds.height}
+                      fill="none"
+                      stroke="#2563eb"
+                      strokeWidth={0.32}
+                      strokeOpacity={0.9}
+                    />
+                    <line
+                      x1={selectionBounds.center.x}
+                      y1={selectionBounds.center.y - selectionBounds.height / 2}
+                      x2={selectionBounds.center.x}
+                      y2={selectionBounds.center.y - selectionBounds.height / 2 - ROTATE_HANDLE_OFFSET}
+                      stroke="#2563eb"
+                      strokeWidth={0.3}
+                    />
+                    <circle
+                      cx={selectionBounds.center.x}
+                      cy={selectionBounds.center.y - selectionBounds.height / 2 - ROTATE_HANDLE_OFFSET}
+                      r={HANDLE_RADIUS}
+                      fill="#ffffff"
+                      stroke="#2563eb"
+                      strokeWidth={0.32}
+                    />
+                    <circle cx={selectionBounds.center.x - selectionBounds.width / 2} cy={selectionBounds.center.y - selectionBounds.height / 2} r={HANDLE_RADIUS} fill="#ffffff" stroke="#2563eb" strokeWidth={0.32} />
+                    <circle cx={selectionBounds.center.x + selectionBounds.width / 2} cy={selectionBounds.center.y - selectionBounds.height / 2} r={HANDLE_RADIUS} fill="#ffffff" stroke="#2563eb" strokeWidth={0.32} />
+                    <circle cx={selectionBounds.center.x + selectionBounds.width / 2} cy={selectionBounds.center.y + selectionBounds.height / 2} r={HANDLE_RADIUS} fill="#ffffff" stroke="#2563eb" strokeWidth={0.32} />
+                    <circle cx={selectionBounds.center.x - selectionBounds.width / 2} cy={selectionBounds.center.y + selectionBounds.height / 2} r={HANDLE_RADIUS} fill="#ffffff" stroke="#2563eb" strokeWidth={0.32} />
+                  </g>
+                );
+              }
             }
 
             return <circle key={`selected-${object.id}`} cx={object.x ?? 0} cy={object.y ?? 0} r={2.1} fill="none" stroke="#ef4444" strokeWidth={0.6} />;
