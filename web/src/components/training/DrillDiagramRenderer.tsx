@@ -303,7 +303,7 @@ export default function DrillDiagramRenderer({
 
       {objects.length === 0 ? (
         <div className="absolute inset-0 flex items-center justify-center text-xs font-medium text-white/85">
-          No diagram objects
+          
         </div>
       ) : null}
     </div>

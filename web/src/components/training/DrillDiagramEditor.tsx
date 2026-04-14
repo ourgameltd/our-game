@@ -248,6 +248,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const [isAddToolDialOpen, setIsAddToolDialOpen] = useState(false);
   const [frames, setFrames] = useState<DiagramFrame[]>(parseFrames(value));
   const [activeFrameId, setActiveFrameId] = useState<string>(parseFrames(value)[0]?.id ?? 'frame-1');
+  const [isEditingFrameInstructions, setIsEditingFrameInstructions] = useState(false);
   const [lineStyle, setLineStyle] = useState<'solid' | 'dashed'>('solid');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -309,6 +310,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     setLineStart(null);
     setSelectedId(null);
     setAddedObjectHistory([]);
+    setIsEditingFrameInstructions(false);
   }, [activeFrameId]);
 
   const workspaceHeight = useMemo(() => getWorkspaceHeightForPitchMode(pitchMode), [pitchMode]);
@@ -334,6 +336,10 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   }, [activeFrame, currentConfig]);
 
   const selectedObject = selectedId ? objects.find((obj) => obj.id === selectedId) : undefined;
+  const activeFrameInstructions = useMemo(() => {
+    const raw = activeFrame?.pitch?.instructionsText;
+    return typeof raw === 'string' ? raw : '';
+  }, [activeFrame]);
   const selectedCaptionTarget =
     selectedObject && selectedObject.type !== 'line' && selectedObject.type !== 'arrow' ? selectedObject : undefined;
   const selectedPlayer = selectedObject?.type === 'player' ? selectedObject : undefined;
@@ -370,6 +376,16 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         mode: nextMode,
       },
       objects: clamped,
+    }));
+  };
+
+  const updateActiveFrameInstructions = (nextText: string) => {
+    updateActiveFrame((frame) => ({
+      ...frame,
+      pitch: {
+        ...(frame.pitch ?? {}),
+        instructionsText: nextText,
+      },
     }));
   };
 
@@ -930,7 +946,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   });
 
   const renderFrameRail = () => (
-    <div className="mx-auto w-full max-w-34 space-y-2">
+    <div className="w-full space-y-2">
       {frames.map((frame, index) => {
         const isActive = frame.id === activeFrame?.id;
         return (
@@ -1135,9 +1151,9 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
-        <div>
-          <div ref={previewRef} className="relative mt-2">
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,12fr)_minmax(0,5fr)_minmax(0,3fr)]">
+        <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
+          <div ref={previewRef} className="relative">
         <DrillDiagramRenderer drillDiagramConfig={activeFrameConfig} className="border border-gray-300 dark:border-gray-600" />
         <div className="absolute left-2 top-2 z-20 h-9 w-9 overflow-visible">
           <SpeedDial
@@ -1398,17 +1414,38 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
 
         <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
-          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Diagram Instructions</h4>
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Diagram Instructions</h4>
+            <button
+              type="button"
+              onClick={() => setIsEditingFrameInstructions((prev) => !prev)}
+              disabled={disabled}
+              className="flex h-7 w-7 items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-60 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              title={isEditingFrameInstructions ? 'Done editing instructions' : 'Edit frame instructions'}
+            >
+              <Pencil className="h-3.5 w-3.5" />
+            </button>
+          </div>
           <div className="mt-3 space-y-3 text-xs text-gray-600 dark:text-gray-300">
-            <p>Select a tool from the plus menu, then click the pitch to place it.</p>
-            <p>Tap a placed object to move, resize, rotate, duplicate, or delete it.</p>
-            <p>Use the Slides panel to add, duplicate, delete, or switch frames.</p>
+            {isEditingFrameInstructions ? (
+              <textarea
+                value={activeFrameInstructions}
+                onChange={(event) => updateActiveFrameInstructions(event.target.value)}
+                placeholder="Add instructions for this frame..."
+                rows={9}
+                disabled={disabled}
+                className="w-full rounded-md border border-gray-300 bg-white p-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+            ) : activeFrameInstructions.trim() ? (
+              <p className="whitespace-pre-wrap">{activeFrameInstructions}</p>
+            ) : (
+              <p className="italic text-gray-500 dark:text-gray-400">No description added.</p>
+            )}
             <p>Current frame: <span className="font-semibold">{frames.findIndex((frame) => frame.id === activeFrame?.id) + 1}</span> of <span className="font-semibold">{frames.length}</span>.</p>
           </div>
         </div>
 
-        <div className="rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800/60">
-          <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Slides</h4>
+        <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
           {renderFrameRail()}
         </div>
       </div>
