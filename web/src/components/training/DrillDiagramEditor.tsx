@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Circle,
+  Copy,
   Download,
   Eraser,
   Goal,
   Minus,
   MousePointer2,
+  Pencil,
   Plus,
   RectangleHorizontal,
   MoveRight,
@@ -248,6 +250,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const [pitchMode, setPitchMode] = useState<PitchMode>(initialPitchMode);
   const [lineStyle, setLineStyle] = useState<'solid' | 'dashed'>('solid');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [lineStart, setLineStart] = useState<Point | null>(null);
   const [objects, setObjects] = useState<DiagramObject[]>(clampObjectsToWorkspace(parseObjects(value), initialPitchMode));
   const [addedObjectHistory, setAddedObjectHistory] = useState<string[]>([]);
@@ -762,6 +765,23 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     setSelectedId(null);
   };
 
+  const duplicateSelected = () => {
+    if (disabled || !selectedObject) return;
+    const newId = createId();
+    const offset = 3;
+    const clone: DiagramObject = {
+      ...selectedObject,
+      id: newId,
+      x: (selectedObject.x ?? 0) + offset,
+      y: (selectedObject.y ?? 0) + offset,
+      x2: selectedObject.x2 !== undefined ? selectedObject.x2 + offset : undefined,
+      y2: selectedObject.y2 !== undefined ? selectedObject.y2 + offset : undefined,
+    };
+    updateObjects([...objects, clone]);
+    setAddedObjectHistory((prev) => [...prev, newId]);
+    setSelectedId(newId);
+  };
+
   const clearFrame = () => {
     if (disabled) return;
     updateObjects([]);
@@ -908,16 +928,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
         <button
           type="button"
-          onClick={deleteSelected}
-          className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-60"
-          disabled={disabled || !selectedId}
-          title="Delete selected"
-        >
-          <Trash2 className="h-4 w-4" strokeWidth={1.6} aria-hidden="true" />
-          <span>Delete</span>
-        </button>
-        <button
-          type="button"
           onClick={undoLastAddition}
           className="inline-flex items-center gap-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-3 py-1.5 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-60"
           disabled={disabled || addedObjectHistory.length === 0}
@@ -947,133 +957,140 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </button>
       </div>
 
-      {(tool === 'line' || tool === 'arrow' || canSetSelectedLineStyle) && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Line style:</span>
-          <button
-            type="button"
-            onClick={() => {
-              setLineStyle('solid');
-              if (canSetSelectedLineStyle) setSelectedLineStyle('solid');
-            }}
-            className={`px-3 py-1 text-xs rounded-md border transition-colors ${
-              lineStyle === 'solid'
-                ? 'bg-primary-600 text-white border-primary-600'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            Solid
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setLineStyle('dashed');
-              if (canSetSelectedLineStyle) setSelectedLineStyle('dashed');
-            }}
-            className={`px-3 py-1 text-xs rounded-md border transition-colors ${
-              lineStyle === 'dashed'
-                ? 'bg-primary-600 text-white border-primary-600'
-                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
-            }`}
-          >
-            Dashed
-          </button>
-        </div>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch">
-        <div className="flex flex-col pt-1">
-          <span className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Pitch size</span>
-          <div className="flex h-12 items-center gap-4 rounded-md border border-gray-300 bg-white px-3 dark:border-gray-600 dark:bg-gray-700">
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-              <input
-                type="radio"
-                name="pitch-size"
-                value="half"
-                checked={pitchMode === 'half'}
-                onChange={() => updatePitchMode('half')}
-                disabled={disabled}
-                className="h-4 w-4"
-              />
-              Half
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm text-gray-700 dark:text-gray-200">
-              <input
-                type="radio"
-                name="pitch-size"
-                value="full"
-                checked={pitchMode === 'full'}
-                onChange={() => updatePitchMode('full')}
-                disabled={disabled}
-                className="h-4 w-4"
-              />
-              Full
-            </label>
-          </div>
-        </div>
-
-        <div className="flex flex-col">
-          <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Text underneath item</label>
-          <input
-            type="text"
-            value={selectedCaptionTarget?.caption ?? ''}
-            onChange={(event) => {
-              if (!selectedCaptionTarget) {
-                return;
-              }
-
-              const nextCaption = event.target.value;
-              updateObjects(
-                objects.map((obj) =>
-                  obj.id === selectedCaptionTarget.id
-                    ? {
-                        ...obj,
-                        caption: nextCaption,
-                      }
-                    : obj
-                )
-              );
-            }}
-            className="h-12 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-            placeholder={selectedCaptionTarget ? 'e.g. Player 1' : 'Select a player, cone, ball, or goal'}
-            disabled={disabled || !selectedCaptionTarget}
-          />
-        </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Pitch size:</span>
+        <button
+          type="button"
+          onClick={() => updatePitchMode('half')}
+          disabled={disabled}
+          className={`px-3 py-1 text-xs rounded-md border transition-colors ${
+            pitchMode === 'half'
+              ? 'bg-primary-600 text-white border-primary-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+          }`}
+        >
+          Half
+        </button>
+        <button
+          type="button"
+          onClick={() => updatePitchMode('full')}
+          disabled={disabled}
+          className={`px-3 py-1 text-xs rounded-md border transition-colors ${
+            pitchMode === 'full'
+              ? 'bg-primary-600 text-white border-primary-600'
+              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+          }`}
+        >
+          Full
+        </button>
       </div>
 
-      {selectedPlayer && (
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Player colour:</span>
-          {[
-            { value: '#1d4ed8', label: 'Blue' },
-            { value: '#dc2626', label: 'Red' },
-            { value: '#16a34a', label: 'Green' },
-            { value: '#f59e0b', label: 'Amber' },
-            { value: '#7c3aed', label: 'Purple' },
-            { value: '#ec4899', label: 'Pink' },
-            { value: '#111827', label: 'Black' },
-            { value: '#ffffff', label: 'White' },
-          ].map((swatch) => (
-            <button
-              key={swatch.value}
-              type="button"
-              title={swatch.label}
-              onClick={() => {
-                updateObjects(
-                  objects.map((obj) =>
-                    obj.id === selectedPlayer.id ? { ...obj, color: swatch.value } : obj
-                  )
-                );
-              }}
-              className={`h-6 w-6 rounded-full border-2 transition-transform ${
-                selectedPlayer.color === swatch.value
-                  ? 'border-primary-500 scale-110'
-                  : 'border-gray-300 dark:border-gray-500 hover:scale-105'
-              }`}
-              style={{ backgroundColor: swatch.value }}
-              disabled={disabled}
-            />
-          ))}
+      {editModalOpen && selectedObject && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setEditModalOpen(false)}>
+          <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl dark:bg-gray-800" onClick={(e) => e.stopPropagation()}>
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
+                Edit {selectedObject.type.charAt(0).toUpperCase() + selectedObject.type.slice(1)}
+              </h3>
+              <button type="button" onClick={() => setEditModalOpen(false)} className="rounded p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-700 dark:hover:text-gray-300">
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {selectedCaptionTarget && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Text underneath</label>
+                  <input
+                    type="text"
+                    value={selectedCaptionTarget.caption ?? ''}
+                    onChange={(event) => {
+                      updateObjects(
+                        objects.map((obj) =>
+                          obj.id === selectedCaptionTarget.id ? { ...obj, caption: event.target.value } : obj
+                        )
+                      );
+                    }}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    placeholder="e.g. Player 1"
+                  />
+                </div>
+              )}
+
+              {selectedPlayer && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Colour</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { value: '#1d4ed8', label: 'Blue' },
+                      { value: '#dc2626', label: 'Red' },
+                      { value: '#16a34a', label: 'Green' },
+                      { value: '#f59e0b', label: 'Amber' },
+                      { value: '#7c3aed', label: 'Purple' },
+                      { value: '#ec4899', label: 'Pink' },
+                      { value: '#111827', label: 'Black' },
+                      { value: '#ffffff', label: 'White' },
+                    ].map((swatch) => (
+                      <button
+                        key={swatch.value}
+                        type="button"
+                        title={swatch.label}
+                        onClick={() => {
+                          updateObjects(
+                            objects.map((obj) =>
+                              obj.id === selectedPlayer.id ? { ...obj, color: swatch.value } : obj
+                            )
+                          );
+                        }}
+                        className={`h-7 w-7 rounded-full border-2 transition-transform ${
+                          selectedPlayer.color === swatch.value
+                            ? 'border-primary-500 scale-110'
+                            : 'border-gray-300 dark:border-gray-500 hover:scale-105'
+                        }`}
+                        style={{ backgroundColor: swatch.value }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {canSetSelectedLineStyle && (
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Line style</label>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLineStyle('solid');
+                        setSelectedLineStyle('solid');
+                      }}
+                      className={`px-3 py-1 text-xs rounded-md border transition-colors ${
+                        (selectedObject as DiagramObject).lineStyle === 'solid'
+                          ? 'bg-primary-600 text-white border-primary-600'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      Solid
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setLineStyle('dashed');
+                        setSelectedLineStyle('dashed');
+                      }}
+                      className={`px-3 py-1 text-xs rounded-md border transition-colors ${
+                        (selectedObject as DiagramObject).lineStyle === 'dashed'
+                          ? 'bg-primary-600 text-white border-primary-600'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      }`}
+                    >
+                      Dashed
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -1150,6 +1167,54 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
           {lineStart && (tool === 'line' || tool === 'arrow') && <circle cx={lineStart.x} cy={lineStart.y} r={0.9} fill="#ffffff" />}
         </svg>
+
+        {selectedObject && !disabled && (() => {
+          const bounds = getSelectionBounds(selectedObject);
+          const objX = selectedObject.x ?? 0;
+          const bottomY = bounds ? bounds.center.y + bounds.height / 2 : (selectedObject.y ?? 0);
+          const pctX = (objX / WORKSPACE_WIDTH) * 100;
+          const pctY = (bottomY / workspaceHeight) * 100;
+          const hasEditOptions = selectedCaptionTarget || selectedPlayer || canSetSelectedLineStyle;
+
+          return (
+            <div
+              className="absolute flex gap-1 pointer-events-auto"
+              style={{
+                left: `${pctX}%`,
+                top: `${pctY}%`,
+                transform: 'translate(-50%, 25%)',
+                zIndex: 10,
+              }}
+            >
+              {hasEditOptions && (
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(true)}
+                  className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 shadow hover:bg-white dark:bg-gray-700/95 dark:hover:bg-gray-700"
+                  title="Edit"
+                >
+                  <Pencil className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={duplicateSelected}
+                className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 shadow hover:bg-white dark:bg-gray-700/95 dark:hover:bg-gray-700"
+                title="Duplicate"
+              >
+                <Copy className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+              </button>
+              <button
+                type="button"
+                onClick={deleteSelected}
+                className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 shadow hover:bg-red-50 dark:bg-gray-700/95 dark:hover:bg-red-900/40"
+                title="Delete"
+              >
+                <Trash2 className="h-4 w-4 text-red-500" />
+              </button>
+            </div>
+          );
+        })()}
       </div>
 
       <p className="text-xs text-gray-500 dark:text-gray-400">

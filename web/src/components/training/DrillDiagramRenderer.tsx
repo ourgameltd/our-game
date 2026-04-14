@@ -84,20 +84,29 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
     const y2 = clamp(pickNumber(obj, ['y2', 'toY', 'endY'], y), 0, workspaceHeight);
     const strokeWidth = clamp(pickNumber(obj, ['strokeWidth', 'width'], 0.1), 0.04, 0.25);
     const lineStyle = pickString(obj, ['lineStyle', 'strokeStyle'], 'solid').toLowerCase();
+    const markerId = type === 'arrow' ? `arrow-head-${key}` : undefined;
 
     return (
-      <line
-        key={key}
-        x1={x}
-        y1={y}
-        x2={x2}
-        y2={y2}
-        stroke={color}
-        strokeWidth={strokeWidth}
-        strokeLinecap="round"
-        strokeDasharray={lineStyle === 'dashed' ? '2.5 2' : undefined}
-        markerEnd={type === 'arrow' ? 'url(#drill-arrow-head)' : undefined}
-      />
+      <g key={key}>
+        {markerId && (
+          <defs>
+            <marker id={markerId} viewBox="0 0 10 10" refX="7.6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill={color} />
+            </marker>
+          </defs>
+        )}
+        <line
+          x1={x}
+          y1={y}
+          x2={x2}
+          y2={y2}
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={lineStyle === 'dashed' ? '2.5 2' : undefined}
+          markerEnd={markerId ? `url(#${markerId})` : undefined}
+        />
+      </g>
     );
   }
 
@@ -235,9 +244,6 @@ export default function DrillDiagramRenderer({
     <div className={`relative w-full overflow-hidden rounded-md bg-linear-to-b from-green-500 to-green-600 ${className}`} style={{ paddingBottom: `${(workspaceHeight / WORKSPACE_WIDTH) * 100}%` }}>
       <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${WORKSPACE_WIDTH} ${workspaceHeight}`} preserveAspectRatio="xMidYMid meet">
         <defs>
-          <marker id="drill-arrow-head" viewBox="0 0 10 10" refX="7.6" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
-            <path d="M 0 0 L 10 5 L 0 10 z" fill="#ffffff" />
-          </marker>
           <pattern id="goal-net" width="1.8" height="1.8" patternUnits="userSpaceOnUse">
             <path d="M 0 0 L 1.8 1.8 M 1.8 0 L 0 1.8" stroke="#ffffff" strokeWidth="0.12" strokeOpacity="0.45" />
           </pattern>
