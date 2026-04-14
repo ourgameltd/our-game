@@ -753,140 +753,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
   return (
     <div className="space-y-3">
-      <div className="relative flex flex-wrap items-center gap-1.5 overflow-visible">
-        <div className="relative h-9 w-9 shrink-0 overflow-visible mr-1">
-          <SpeedDial
-            ariaLabel="Add drill item"
-            direction="down"
-            icon={<SpeedDialIcon icon={<Plus className="h-4 w-4" strokeWidth={1.6} />} openIcon={<X className="h-4 w-4" strokeWidth={1.6} />} />}
-            FabProps={{
-              size: 'small',
-              color: 'primary',
-              disabled,
-            }}
-            open={isAddToolDialOpen}
-            onOpen={(_, reason) => {
-              if (!disabled && reason === 'toggle') {
-                setIsAddToolDialOpen(true);
-              }
-            }}
-            onClose={(_, reason) => {
-              if (reason === 'toggle') {
-                setIsAddToolDialOpen(false);
-              }
-            }}
-            sx={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              zIndex: 2147483647,
-              transform: 'none',
-              '& .MuiSpeedDial-actions': {
-                gap: 0.5,
-              },
-              '& .MuiFab-root': {
-                width: '34px',
-                height: '34px',
-                minHeight: '34px',
-              },
-              '& .MuiSpeedDialAction-staticTooltipLabel': {
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                color: '#ffffff',
-                backgroundColor: '#111827',
-                borderRadius: '0.375rem',
-                padding: '0.2rem 0.45rem',
-                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.25)',
-                whiteSpace: 'nowrap',
-              },
-            }}
-          >
-            {ADD_TOOLS.map((toolName) => {
-              const Icon = TOOL_CONFIG[toolName].icon;
-
-              return (
-                <SpeedDialAction
-                  key={toolName}
-                  icon={<Icon className="h-4 w-4" strokeWidth={1.6} />}
-                  tooltipTitle={`Add ${TOOL_CONFIG[toolName].label}`}
-                  tooltipPlacement="right"
-                  tooltipOpen
-                  onClick={() => {
-                    const OFFSET_STEP = 6;
-                    const DEFAULT_X = WORKSPACE_WIDTH / 2;
-                    const DEFAULT_Y = workspaceHeight / 2;
-
-                    const count = addedObjectHistory.filter((id) => objects.some((o) => o.id === id)).length;
-
-                    let baseX = DEFAULT_X;
-                    let baseY = DEFAULT_Y;
-
-                    const lastAddedId = [...addedObjectHistory].reverse().find((id) => objects.some((o) => o.id === id));
-                    const lastAdded = lastAddedId ? objects.find((o) => o.id === lastAddedId) : undefined;
-                    if (lastAdded) {
-                      baseX = lastAdded.x ?? DEFAULT_X;
-                      baseY = lastAdded.y ?? DEFAULT_Y;
-                    }
-
-                    const offsetX = OFFSET_STEP * ((count % 5) + 1);
-                    const offsetY = OFFSET_STEP * (Math.floor(count / 5) + 1);
-                    let placeX = baseX + offsetX;
-                    let placeY = baseY + offsetY;
-
-                    if (placeX > WORKSPACE_WIDTH - 5) {
-                      placeX = baseX - offsetX;
-                    }
-                    if (placeY > workspaceHeight - 5) {
-                      placeY = baseY - offsetY;
-                    }
-
-                    placeX = clamp(placeX, 0, WORKSPACE_WIDTH);
-                    placeY = clamp(placeY, 0, workspaceHeight);
-
-                    const newId = createId();
-
-                    if (toolName === 'line' || toolName === 'arrow') {
-                      const lineLength = 15;
-                      const newObject: DiagramObject = {
-                        id: newId,
-                        type: toolName,
-                        x: placeX,
-                        y: placeY,
-                        x2: clamp(placeX + lineLength, 0, WORKSPACE_WIDTH),
-                        y2: placeY,
-                        color: '#4b5563',
-                        strokeWidth: 0.1,
-                        lineStyle,
-                      };
-                      updateObjects([...objects, newObject]);
-                    } else {
-                      const newObject: DiagramObject = {
-                        id: newId,
-                        type: toolName,
-                        x: placeX,
-                        y: placeY,
-                        color: toolName === 'player' ? '#1d4ed8' : toolName === 'cone' ? '#f59e0b' : toolName === 'ball' ? '#111827' : '#ffffff',
-                        size: toolName === 'player' ? 1.5 : toolName === 'ball' ? 1.0 : undefined,
-                        width: toolName === 'cone' ? 2.0 : toolName === 'goal' ? 14 : undefined,
-                        height: toolName === 'cone' ? 2.0 : toolName === 'goal' ? 5 : undefined,
-                        rotation: 0,
-                      };
-                      updateObjects([...objects, newObject]);
-                    }
-
-                    setAddedObjectHistory((prev) => [...prev, newId]);
-                    setSelectedId(newId);
-                    setTool('select');
-                    setLineStart(null);
-                  }}
-                />
-              );
-            })}
-          </SpeedDial>
-        </div>
-
-      </div>
-
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-xs font-medium text-gray-600 dark:text-gray-400">Pitch size:</span>
         <button
@@ -1026,6 +892,136 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
       <div ref={previewRef} className="relative mt-2">
         <DrillDiagramRenderer drillDiagramConfig={currentConfig} className="border border-gray-300 dark:border-gray-600" />
+        <div className="absolute left-2 top-2 z-20 h-9 w-9 overflow-visible">
+          <SpeedDial
+            ariaLabel="Add drill item"
+            direction="down"
+            icon={<SpeedDialIcon icon={<Plus className="h-4 w-4" strokeWidth={1.6} />} openIcon={<X className="h-4 w-4" strokeWidth={1.6} />} />}
+            FabProps={{
+              size: 'small',
+              color: 'primary',
+              disabled,
+            }}
+            open={isAddToolDialOpen}
+            onOpen={(_, reason) => {
+              if (!disabled && reason === 'toggle') {
+                setIsAddToolDialOpen(true);
+              }
+            }}
+            onClose={(_, reason) => {
+              if (reason === 'toggle') {
+                setIsAddToolDialOpen(false);
+              }
+            }}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              zIndex: 20,
+              transform: 'none',
+              '& .MuiSpeedDial-actions': {
+                gap: 0.5,
+              },
+              '& .MuiFab-root': {
+                width: '34px',
+                height: '34px',
+                minHeight: '34px',
+              },
+              '& .MuiSpeedDialAction-staticTooltipLabel': {
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                color: '#ffffff',
+                backgroundColor: '#111827',
+                borderRadius: '0.375rem',
+                padding: '0.2rem 0.45rem',
+                boxShadow: '0 4px 10px rgba(0, 0, 0, 0.25)',
+                whiteSpace: 'nowrap',
+              },
+            }}
+          >
+            {ADD_TOOLS.map((toolName) => {
+              const Icon = TOOL_CONFIG[toolName].icon;
+
+              return (
+                <SpeedDialAction
+                  key={toolName}
+                  icon={<Icon className="h-4 w-4" strokeWidth={1.6} />}
+                  tooltipTitle={`Add ${TOOL_CONFIG[toolName].label}`}
+                  tooltipPlacement="right"
+                  tooltipOpen
+                  onClick={() => {
+                    const OFFSET_STEP = 6;
+                    const DEFAULT_X = WORKSPACE_WIDTH / 2;
+                    const DEFAULT_Y = workspaceHeight / 2;
+
+                    const count = addedObjectHistory.filter((id) => objects.some((o) => o.id === id)).length;
+
+                    let baseX = DEFAULT_X;
+                    let baseY = DEFAULT_Y;
+
+                    const lastAddedId = [...addedObjectHistory].reverse().find((id) => objects.some((o) => o.id === id));
+                    const lastAdded = lastAddedId ? objects.find((o) => o.id === lastAddedId) : undefined;
+                    if (lastAdded) {
+                      baseX = lastAdded.x ?? DEFAULT_X;
+                      baseY = lastAdded.y ?? DEFAULT_Y;
+                    }
+
+                    const offsetX = OFFSET_STEP * ((count % 5) + 1);
+                    const offsetY = OFFSET_STEP * (Math.floor(count / 5) + 1);
+                    let placeX = baseX + offsetX;
+                    let placeY = baseY + offsetY;
+
+                    if (placeX > WORKSPACE_WIDTH - 5) {
+                      placeX = baseX - offsetX;
+                    }
+                    if (placeY > workspaceHeight - 5) {
+                      placeY = baseY - offsetY;
+                    }
+
+                    placeX = clamp(placeX, 0, WORKSPACE_WIDTH);
+                    placeY = clamp(placeY, 0, workspaceHeight);
+
+                    const newId = createId();
+
+                    if (toolName === 'line' || toolName === 'arrow') {
+                      const lineLength = 15;
+                      const newObject: DiagramObject = {
+                        id: newId,
+                        type: toolName,
+                        x: placeX,
+                        y: placeY,
+                        x2: clamp(placeX + lineLength, 0, WORKSPACE_WIDTH),
+                        y2: placeY,
+                        color: '#4b5563',
+                        strokeWidth: 0.1,
+                        lineStyle,
+                      };
+                      updateObjects([...objects, newObject]);
+                    } else {
+                      const newObject: DiagramObject = {
+                        id: newId,
+                        type: toolName,
+                        x: placeX,
+                        y: placeY,
+                        color: toolName === 'player' ? '#1d4ed8' : toolName === 'cone' ? '#f59e0b' : toolName === 'ball' ? '#111827' : '#ffffff',
+                        size: toolName === 'player' ? 1.5 : toolName === 'ball' ? 1.0 : undefined,
+                        width: toolName === 'cone' ? 2.0 : toolName === 'goal' ? 14 : undefined,
+                        height: toolName === 'cone' ? 2.0 : toolName === 'goal' ? 5 : undefined,
+                        rotation: 0,
+                      };
+                      updateObjects([...objects, newObject]);
+                    }
+
+                    setAddedObjectHistory((prev) => [...prev, newId]);
+                    setSelectedId(newId);
+                    setTool('select');
+                    setLineStart(null);
+                  }}
+                />
+              );
+            })}
+          </SpeedDial>
+        </div>
         <svg
           ref={overlayRef}
           className={`absolute inset-0 h-full w-full ${disabled ? 'pointer-events-none' : 'cursor-crosshair'}`}
