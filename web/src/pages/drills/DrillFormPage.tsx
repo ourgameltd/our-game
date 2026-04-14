@@ -263,11 +263,6 @@ export default function DrillFormPage() {
     const cleanedInstructions = instructions.filter(i => i.trim());
     const cleanedLinks = links.filter(l => l.url.trim() && l.title.trim());
 
-    if (drillDiagramConfig?.frames && drillDiagramConfig.frames.length > 1) {
-      alert('Only one frame is currently supported.');
-      return;
-    }
-
     if (isEditMode && drillId) {
       // Update existing drill
       const request: UpdateDrillRequest = {
@@ -651,7 +646,7 @@ export default function DrillFormPage() {
             <div className="card">
               <h3 className="text-lg font-semibold mb-2">Drill Diagram</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Draw your setup directly on the pitch. Frame support is enabled but currently limited to one frame.
+                Draw your setup directly on the pitch. Add multiple frames and edit each frame from the slide list.
               </p>
               <DrillDiagramEditor
                 value={drillDiagramConfig}

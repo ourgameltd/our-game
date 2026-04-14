@@ -14,7 +14,7 @@ import {
   X,
 } from 'lucide-react';
 import { SpeedDial, SpeedDialAction, SpeedDialIcon } from '@mui/material';
-import type { DrillDiagramConfigDto } from '@/api/client';
+import type { DrillDiagramConfigDto, DrillDiagramFrameDto } from '@/api/client';
 import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
 
 type Tool = 'select' | 'player' | 'cone' | 'ball' | 'goal' | 'line' | 'arrow';
@@ -45,6 +45,13 @@ type DrillDiagramEditorProps = {
   value?: DrillDiagramConfigDto;
   onChange: (config?: DrillDiagramConfigDto) => void;
   disabled?: boolean;
+};
+
+type DiagramFrame = {
+  id: string;
+  name?: string;
+  pitch?: Record<string, unknown>;
+  objects: DiagramObject[];
 };
 
 const ADD_TOOLS = ['player', 'cone', 'ball', 'goal', 'line', 'arrow'] as const;
@@ -111,8 +118,8 @@ const normalizeRotation = (value: number): number => {
   return normalized === -180 ? 180 : normalized;
 };
 
-const getPitchModeFromConfig = (value?: DrillDiagramConfigDto): PitchMode => {
-  const rawMode = (value?.frames?.[0]?.pitch as Record<string, unknown> | undefined)?.mode;
+const getPitchModeFromFrame = (frame?: DiagramFrame): PitchMode => {
+  const rawMode = frame?.pitch?.mode;
   return rawMode === 'full' ? 'full' : 'half';
 };
 
@@ -147,8 +154,7 @@ const toNumber = (value: unknown, fallback: number): number =>
 const toLineStyle = (value: unknown): 'solid' | 'dashed' =>
   typeof value === 'string' && value.toLowerCase() === 'dashed' ? 'dashed' : 'solid';
 
-const parseObjects = (value?: DrillDiagramConfigDto): DiagramObject[] => {
-  const source = value?.frames?.[0]?.objects ?? [];
+const parseFrameObjects = (source: Record<string, unknown>[]): DiagramObject[] => {
   return source.reduce<DiagramObject[]>((acc, item, index) => {
       const obj = item as Record<string, unknown>;
       const type = typeof obj.type === 'string' ? obj.type.toLowerCase() : 'player';
@@ -178,36 +184,74 @@ const parseObjects = (value?: DrillDiagramConfigDto): DiagramObject[] => {
     }, []);
 };
 
-const toConfig = (objects: DiagramObject[], pitchMode: PitchMode, base?: DrillDiagramConfigDto): DrillDiagramConfigDto => {
-  const basePitch = (base?.frames?.[0]?.pitch as Record<string, unknown> | undefined) ?? {};
+const parseFrames = (value?: DrillDiagramConfigDto): DiagramFrame[] => {
+  const sourceFrames = value?.frames ?? [];
+  if (sourceFrames.length === 0) {
+    return [
+      {
+        id: 'frame-1',
+        pitch: { mode: 'half' },
+        objects: [],
+      },
+    ];
+  }
+
+  return sourceFrames.map((frame, index) => {
+    const typedFrame = frame as DrillDiagramFrameDto;
+    const framePitch = (typedFrame.pitch as Record<string, unknown> | undefined) ?? {};
+    const pitchMode = framePitch.mode === 'full' ? 'full' : 'half';
+    return {
+      id: typedFrame.id || `frame-${index + 1}`,
+      name: typedFrame.name,
+      pitch: {
+        ...framePitch,
+        mode: pitchMode,
+      },
+      objects: clampObjectsToWorkspace(parseFrameObjects((typedFrame.objects ?? []) as Record<string, unknown>[]), pitchMode),
+    };
+  });
+};
+
+const toConfig = (frames: DiagramFrame[], base?: DrillDiagramConfigDto): DrillDiagramConfigDto => {
+  const nextFrames = frames.length > 0
+    ? frames
+    : [
+        {
+          id: 'frame-1',
+          pitch: { mode: 'half' },
+          objects: [],
+        },
+      ];
 
   return {
     schemaVersion: base?.schemaVersion ?? 1,
     meta: base?.meta,
-    frames: [
-      {
-        id: base?.frames?.[0]?.id ?? 'frame-1',
-        name: base?.frames?.[0]?.name,
+    frames: nextFrames.map((frame, index) => {
+      const baseFrame = base?.frames?.[index];
+      const basePitch = (baseFrame?.pitch as Record<string, unknown> | undefined) ?? {};
+      return {
+        id: frame.id,
+        name: frame.name,
         pitch: {
           ...basePitch,
-          mode: pitchMode,
+          ...(frame.pitch ?? {}),
+          mode: getPitchModeFromFrame(frame),
         },
-        objects: objects.map((obj) => ({ ...obj })),
-      },
-    ],
+        objects: frame.objects.map((obj) => ({ ...obj })),
+      };
+    }),
   };
 };
 
 export default function DrillDiagramEditor({ value, onChange, disabled = false }: DrillDiagramEditorProps) {
   const [tool, setTool] = useState<Tool>('select');
   const [isAddToolDialOpen, setIsAddToolDialOpen] = useState(false);
-  const initialPitchMode = getPitchModeFromConfig(value);
-  const [pitchMode, setPitchMode] = useState<PitchMode>(initialPitchMode);
+  const [frames, setFrames] = useState<DiagramFrame[]>(parseFrames(value));
+  const [activeFrameId, setActiveFrameId] = useState<string>(parseFrames(value)[0]?.id ?? 'frame-1');
   const [lineStyle, setLineStyle] = useState<'solid' | 'dashed'>('solid');
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [lineStart, setLineStart] = useState<Point | null>(null);
-  const [objects, setObjects] = useState<DiagramObject[]>(clampObjectsToWorkspace(parseObjects(value), initialPitchMode));
   const [addedObjectHistory, setAddedObjectHistory] = useState<string[]>([]);
 
   const overlayRef = useRef<SVGSVGElement | null>(null);
@@ -234,31 +278,99 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   >(null);
 
   useEffect(() => {
-    const nextPitchMode = getPitchModeFromConfig(value);
-    setPitchMode(nextPitchMode);
-    setObjects(clampObjectsToWorkspace(parseObjects(value), nextPitchMode));
+    const parsedFrames = parseFrames(value);
+    setFrames(parsedFrames);
+    setActiveFrameId((current) => {
+      if (parsedFrames.some((frame) => frame.id === current)) {
+        return current;
+      }
+      return parsedFrames[0]?.id ?? 'frame-1';
+    });
     setAddedObjectHistory([]);
   }, [value]);
 
+  const activeFrame = useMemo(
+    () => frames.find((frame) => frame.id === activeFrameId) ?? frames[0],
+    [activeFrameId, frames]
+  );
+  const pitchMode = getPitchModeFromFrame(activeFrame);
+  const objects = activeFrame?.objects ?? [];
+
+  useEffect(() => {
+    if (!selectedId) {
+      return;
+    }
+    if (!objects.some((obj) => obj.id === selectedId)) {
+      setSelectedId(null);
+    }
+  }, [objects, selectedId]);
+
+  useEffect(() => {
+    setLineStart(null);
+    setSelectedId(null);
+    setAddedObjectHistory([]);
+  }, [activeFrameId]);
+
   const workspaceHeight = useMemo(() => getWorkspaceHeightForPitchMode(pitchMode), [pitchMode]);
 
-  const currentConfig = useMemo(() => toConfig(objects, pitchMode, value), [objects, pitchMode, value]);
+  const currentConfig = useMemo(() => toConfig(frames, value), [frames, value]);
+  const activeFrameConfig = useMemo<DrillDiagramConfigDto>(() => {
+    if (!activeFrame) {
+      return currentConfig;
+    }
+
+    return {
+      schemaVersion: currentConfig.schemaVersion,
+      meta: currentConfig.meta,
+      frames: [
+        {
+          id: activeFrame.id,
+          name: activeFrame.name,
+          pitch: activeFrame.pitch,
+          objects: activeFrame.objects.map((obj) => ({ ...obj })),
+        },
+      ],
+    };
+  }, [activeFrame, currentConfig]);
+
   const selectedObject = selectedId ? objects.find((obj) => obj.id === selectedId) : undefined;
   const selectedCaptionTarget =
     selectedObject && selectedObject.type !== 'line' && selectedObject.type !== 'arrow' ? selectedObject : undefined;
   const selectedPlayer = selectedObject?.type === 'player' ? selectedObject : undefined;
 
+  const commitFrames = (nextFrames: DiagramFrame[]) => {
+    const ensuredFrames = nextFrames.length > 0 ? nextFrames : parseFrames(undefined);
+    setFrames(ensuredFrames);
+    onChange(toConfig(ensuredFrames, value));
+  };
+
+  const updateActiveFrame = (updater: (frame: DiagramFrame) => DiagramFrame) => {
+    if (!activeFrame) {
+      return;
+    }
+
+    const nextFrames = frames.map((frame) => (frame.id === activeFrame.id ? updater(frame) : frame));
+    commitFrames(nextFrames);
+  };
+
   const updateObjects = (next: DiagramObject[]) => {
     const clamped = clampObjectsToWorkspace(next, pitchMode);
-    setObjects(clamped);
-    onChange(toConfig(clamped, pitchMode, value));
+    updateActiveFrame((frame) => ({
+      ...frame,
+      objects: clamped,
+    }));
   };
 
   const updatePitchMode = (nextMode: PitchMode) => {
     const clamped = clampObjectsToWorkspace(objects, nextMode);
-    setPitchMode(nextMode);
-    setObjects(clamped);
-    onChange(toConfig(clamped, nextMode, value));
+    updateActiveFrame((frame) => ({
+      ...frame,
+      pitch: {
+        ...(frame.pitch ?? {}),
+        mode: nextMode,
+      },
+      objects: clamped,
+    }));
   };
 
   const pointFromPointer = (event: React.PointerEvent<SVGSVGElement>): Point => {
@@ -751,6 +863,138 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     );
   };
 
+  const addFrame = () => {
+    if (disabled || !activeFrame) return;
+
+    const newFrame: DiagramFrame = {
+      id: createId(),
+      pitch: {
+        ...(activeFrame.pitch ?? {}),
+        mode: pitchMode,
+      },
+      objects: [],
+    };
+
+    const nextFrames = [...frames, newFrame];
+    commitFrames(nextFrames);
+    setActiveFrameId(newFrame.id);
+  };
+
+  const duplicateFrame = (frameId?: string) => {
+    if (disabled) return;
+
+    const sourceFrame = frameId ? frames.find((frame) => frame.id === frameId) : activeFrame;
+    if (!sourceFrame) return;
+
+    const clone: DiagramFrame = {
+      id: createId(),
+      pitch: { ...(sourceFrame.pitch ?? {}) },
+      objects: sourceFrame.objects.map((obj) => ({ ...obj, id: createId() })),
+    };
+
+    const nextFrames = [...frames, clone];
+    commitFrames(nextFrames);
+    setActiveFrameId(clone.id);
+  };
+
+  const deleteFrame = (frameId?: string) => {
+    if (disabled || frames.length <= 1) return;
+
+    const targetFrameId = frameId ?? activeFrame?.id;
+    if (!targetFrameId) return;
+
+    const frameToDelete = frames.find((frame) => frame.id === targetFrameId);
+    if (!frameToDelete) return;
+
+    const index = frames.findIndex((frame) => frame.id === frameToDelete.id);
+    const nextFrames = frames.filter((frame) => frame.id !== frameToDelete.id);
+    const fallback = nextFrames[Math.min(index, nextFrames.length - 1)];
+    commitFrames(nextFrames);
+
+    if (activeFrame?.id === frameToDelete.id) {
+      setActiveFrameId(fallback.id);
+    }
+  };
+
+  const getFramePreviewConfig = (frame: DiagramFrame): DrillDiagramConfigDto => ({
+    schemaVersion: currentConfig.schemaVersion,
+    meta: currentConfig.meta,
+    frames: [
+      {
+        id: frame.id,
+        name: frame.name,
+        pitch: frame.pitch,
+        objects: frame.objects.map((obj) => ({ ...obj })),
+      },
+    ],
+  });
+
+  const renderFrameRail = () => (
+    <div className="mx-auto w-full max-w-34 space-y-2">
+      {frames.map((frame, index) => {
+        const isActive = frame.id === activeFrame?.id;
+        return (
+          <button
+            key={frame.id}
+            type="button"
+            onClick={() => {
+              setActiveFrameId(frame.id);
+            }}
+            className="w-full text-left"
+          >
+            <div
+              className={`relative overflow-hidden rounded ${
+                isActive
+                  ? 'ring-2 ring-primary-600 dark:ring-primary-500'
+                  : 'ring-1 ring-gray-300 dark:ring-gray-600'
+              }`}
+            >
+              <div className="absolute left-1 top-1 z-10 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-gray-700 dark:bg-gray-900/90 dark:text-gray-200">
+                Slide {index + 1}
+              </div>
+              <div className="absolute right-1 top-1 z-10 flex gap-1">
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    duplicateFrame(frame.id);
+                  }}
+                  disabled={disabled}
+                  className="flex h-6 w-6 items-center justify-center rounded bg-white/90 text-gray-700 shadow hover:bg-white disabled:opacity-60 dark:bg-gray-800/90 dark:text-gray-200 dark:hover:bg-gray-800"
+                  title="Duplicate slide"
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    deleteFrame(frame.id);
+                  }}
+                  disabled={disabled || frames.length <= 1}
+                  className="flex h-6 w-6 items-center justify-center rounded bg-white/90 text-red-600 shadow hover:bg-white disabled:opacity-60 dark:bg-gray-800/90 dark:text-red-300 dark:hover:bg-gray-800"
+                  title="Delete slide"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <DrillDiagramRenderer drillDiagramConfig={getFramePreviewConfig(frame)} className="border-0" forceSquare />
+            </div>
+          </button>
+        );
+      })}
+
+      <button
+        type="button"
+        onClick={addFrame}
+        disabled={disabled}
+        className="w-full rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
+      >
+        + Frame
+      </button>
+    </div>
+  );
+
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -779,6 +1023,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         >
           Full
         </button>
+        <div className="ml-auto flex flex-wrap items-center gap-2" />
       </div>
 
       {editModalOpen && selectedObject && (
@@ -890,8 +1135,10 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
       )}
 
-      <div ref={previewRef} className="relative mt-2">
-        <DrillDiagramRenderer drillDiagramConfig={currentConfig} className="border border-gray-300 dark:border-gray-600" />
+      <div className="grid gap-3 lg:grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,0.8fr)]">
+        <div>
+          <div ref={previewRef} className="relative mt-2">
+        <DrillDiagramRenderer drillDiagramConfig={activeFrameConfig} className="border border-gray-300 dark:border-gray-600" />
         <div className="absolute left-2 top-2 z-20 h-9 w-9 overflow-visible">
           <SpeedDial
             ariaLabel="Add drill item"
@@ -1141,13 +1388,30 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
             </div>
           );
         })()}
-      </div>
+          </div>
 
-      <p className="text-xs text-gray-500 dark:text-gray-400">
-        {tool === 'select' && 'Select and drag objects to reposition them. You can place items around the pitch workspace.'}
-        {(tool === 'line' || tool === 'arrow') && (lineStart ? 'Click end point to complete the line/arrow.' : 'Click start point to begin a line/arrow.')}
-        {tool !== 'select' && tool !== 'line' && tool !== 'arrow' && `Click on the pitch to place a ${tool}.`}
-      </p>
+          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+            {tool === 'select' && 'Select and drag objects to reposition them. You can place items around the pitch workspace.'}
+            {(tool === 'line' || tool === 'arrow') && (lineStart ? 'Click end point to complete the line/arrow.' : 'Click start point to begin a line/arrow.')}
+            {tool !== 'select' && tool !== 'line' && tool !== 'arrow' && `Click on the pitch to place a ${tool}.`}
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
+          <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Diagram Instructions</h4>
+          <div className="mt-3 space-y-3 text-xs text-gray-600 dark:text-gray-300">
+            <p>Select a tool from the plus menu, then click the pitch to place it.</p>
+            <p>Tap a placed object to move, resize, rotate, duplicate, or delete it.</p>
+            <p>Use the Slides panel to add, duplicate, delete, or switch frames.</p>
+            <p>Current frame: <span className="font-semibold">{frames.findIndex((frame) => frame.id === activeFrame?.id) + 1}</span> of <span className="font-semibold">{frames.length}</span>.</p>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-gray-300 bg-white p-3 dark:border-gray-600 dark:bg-gray-800/60">
+          <h4 className="mb-2 text-sm font-semibold text-gray-900 dark:text-white">Slides</h4>
+          {renderFrameRail()}
+        </div>
+      </div>
     </div>
   );
 }

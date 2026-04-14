@@ -3,6 +3,7 @@ import type { DrillDiagramConfigDto } from '@/api/client';
 type DrillDiagramRendererProps = {
   drillDiagramConfig?: DrillDiagramConfigDto;
   className?: string;
+  forceSquare?: boolean;
 };
 
 type DiagramObject = Record<string, unknown>;
@@ -220,6 +221,7 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
 export default function DrillDiagramRenderer({
   drillDiagramConfig,
   className = '',
+  forceSquare = false,
 }: DrillDiagramRendererProps) {
   const frame = drillDiagramConfig?.frames?.[0];
   const objects = (frame?.objects ?? []) as DiagramObject[];
@@ -241,7 +243,10 @@ export default function DrillDiagramRenderer({
   const bottomPenaltyArcY = pitchBottomY - PENALTY_AREA_DEPTH;
 
   return (
-    <div className={`relative w-full overflow-hidden rounded-md bg-linear-to-b from-green-500 to-green-600 ${className}`} style={{ paddingBottom: `${(workspaceHeight / WORKSPACE_WIDTH) * 100}%` }}>
+    <div
+      className={`relative w-full overflow-hidden rounded-md bg-linear-to-b from-green-500 to-green-600 ${className}`}
+      style={{ paddingBottom: forceSquare ? '100%' : `${(workspaceHeight / WORKSPACE_WIDTH) * 100}%` }}
+    >
       <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${WORKSPACE_WIDTH} ${workspaceHeight}`} preserveAspectRatio="xMidYMid meet">
         <defs>
           <pattern id="goal-net" width="1.8" height="1.8" patternUnits="userSpaceOnUse">
