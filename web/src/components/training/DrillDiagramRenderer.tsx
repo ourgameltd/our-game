@@ -82,7 +82,7 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
   if (type === 'line' || type === 'arrow') {
     const x2 = clamp(pickNumber(obj, ['x2', 'toX', 'endX'], x), 0, WORKSPACE_WIDTH);
     const y2 = clamp(pickNumber(obj, ['y2', 'toY', 'endY'], y), 0, workspaceHeight);
-    const strokeWidth = clamp(pickNumber(obj, ['strokeWidth', 'width'], 0.15), 0.06, 0.5);
+    const strokeWidth = clamp(pickNumber(obj, ['strokeWidth', 'width'], 0.1), 0.04, 0.25);
     const lineStyle = pickString(obj, ['lineStyle', 'strokeStyle'], 'solid').toLowerCase();
 
     return (

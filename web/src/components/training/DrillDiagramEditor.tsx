@@ -38,6 +38,7 @@ type DiagramObject = {
   label?: string;
   caption?: string;
   color?: string;
+  strokeWidth?: number;
   lineStyle?: 'solid' | 'dashed';
 };
 
@@ -254,6 +255,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const overlayRef = useRef<SVGSVGElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{ id: string; pointer: Point } | null>(null);
+  const lineEndpointRef = useRef<{ id: string; endpoint: 'start' | 'end' } | null>(null);
   const objectResizeRef = useRef<
     | {
         mode: 'resize';
@@ -470,6 +472,24 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
     const point = pointFromPointer(event);
 
+    if (selectedObject && (selectedObject.type === 'line' || selectedObject.type === 'arrow')) {
+      const LINE_ENDPOINT_HIT = 2.0;
+      const sx = selectedObject.x ?? 0;
+      const sy = selectedObject.y ?? 0;
+      const ex = selectedObject.x2 ?? sx;
+      const ey = selectedObject.y2 ?? sy;
+      if (Math.hypot(point.x - sx, point.y - sy) <= LINE_ENDPOINT_HIT) {
+        lineEndpointRef.current = { id: selectedObject.id, endpoint: 'start' };
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
+      if (Math.hypot(point.x - ex, point.y - ey) <= LINE_ENDPOINT_HIT) {
+        lineEndpointRef.current = { id: selectedObject.id, endpoint: 'end' };
+        event.currentTarget.setPointerCapture(event.pointerId);
+        return;
+      }
+    }
+
     if (selectedObject && (selectedObject.type === 'player' || selectedObject.type === 'cone' || selectedObject.type === 'ball' || selectedObject.type === 'goal')) {
       const anchors = getObjectTransformAnchors(selectedObject);
       if (anchors) {
@@ -543,7 +563,8 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         y: lineStart.y,
         x2: point.x,
         y2: point.y,
-        color: '#ffffff',
+        color: '#4b5563',
+        strokeWidth: 0.1,
         lineStyle,
       };
 
@@ -576,6 +597,19 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     if (disabled) return;
 
     const point = pointFromPointer(event);
+
+    if (lineEndpointRef.current) {
+      const ep = lineEndpointRef.current;
+      updateObjects(
+        objects.map((obj) => {
+          if (obj.id !== ep.id) return obj;
+          return ep.endpoint === 'start'
+            ? { ...obj, x: point.x, y: point.y }
+            : { ...obj, x2: point.x, y2: point.y };
+        })
+      );
+      return;
+    }
 
     if (objectResizeRef.current) {
       const transform = objectResizeRef.current;
@@ -714,10 +748,11 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   };
 
   const onCanvasPointerUp = (event: React.PointerEvent<SVGSVGElement>) => {
-    if ((dragRef.current || objectResizeRef.current) && event.currentTarget.hasPointerCapture(event.pointerId)) {
+    if ((dragRef.current || objectResizeRef.current || lineEndpointRef.current) && event.currentTarget.hasPointerCapture(event.pointerId)) {
       event.currentTarget.releasePointerCapture(event.pointerId);
     }
     dragRef.current = null;
+    lineEndpointRef.current = null;
     objectResizeRef.current = null;
   };
 
@@ -1062,8 +1097,9 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
             if (object.type === 'line' || object.type === 'arrow') {
               return (
                 <g key={`selected-${object.id}`}>
-                  <circle cx={object.x ?? 0} cy={object.y ?? 0} r={0.9} fill="#ef4444" />
-                  <circle cx={object.x2 ?? 0} cy={object.y2 ?? 0} r={0.9} fill="#ef4444" />
+                  <line x1={object.x ?? 0} y1={object.y ?? 0} x2={object.x2 ?? 0} y2={object.y2 ?? 0} stroke="#2563eb" strokeWidth={0.2} strokeOpacity={0.5} />
+                  <circle cx={object.x ?? 0} cy={object.y ?? 0} r={HANDLE_RADIUS} fill="#ffffff" stroke="#2563eb" strokeWidth={0.32} />
+                  <circle cx={object.x2 ?? 0} cy={object.y2 ?? 0} r={HANDLE_RADIUS} fill="#ffffff" stroke="#2563eb" strokeWidth={0.32} />
                 </g>
               );
             }
