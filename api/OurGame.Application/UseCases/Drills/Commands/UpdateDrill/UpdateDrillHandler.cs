@@ -77,7 +77,6 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
             ? JsonSerializer.Serialize(dto.Variations)
             : null;
 
-        ValidateFrameLimit(dto.DrillDiagramConfig);
         var drillDiagramConfigJson = dto.DrillDiagramConfig is null
             ? null
             : JsonSerializer.Serialize(dto.DrillDiagramConfig);
@@ -180,13 +179,6 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
         };
     }
 
-    private static void ValidateFrameLimit(DrillDiagramConfigDto? config)
-    {
-        if (config?.Frames is not null && config.Frames.Count > 1)
-        {
-            throw new ValidationException("DrillDiagramConfig", "Only one frame is currently supported.");
-        }
-    }
 }
 
 /// <summary>

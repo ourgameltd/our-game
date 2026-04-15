@@ -483,22 +483,53 @@ export default function DrillFormPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Duration (minutes) *
-                  </label>
-                  <input
-                    type="number"
-                    value={duration}
-                    onChange={(e) => setDuration(Number(e.target.value))}
-                    min={1}
-                    max={120}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    disabled={isInherited}
-                    required
-                  />
+                <div className={`grid gap-3 ${!isInherited ? 'md:grid-cols-2' : ''}`}>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Duration (minutes) *
+                    </label>
+                    <input
+                      type="number"
+                      value={duration}
+                      onChange={(e) => setDuration(Number(e.target.value))}
+                      min={1}
+                      max={120}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isInherited}
+                      required
+                    />
+                  </div>
+
+                  {!isInherited && (
+                    <div className="flex items-end">
+                      <label className="w-full flex items-center gap-3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+                        <input
+                          type="checkbox"
+                          checked={isPublic}
+                          onChange={(e) => setIsPublic(e.target.checked)}
+                          className="w-4 h-4"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                          Share this drill with other teams in the club
+                        </span>
+                      </label>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+
+            {/* Drill Diagram Editor */}
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-2">Drill Diagram</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Draw your setup directly on the pitch. Add multiple frames and edit each frame from the slide list.
+              </p>
+              <DrillDiagramEditor
+                value={drillDiagramConfig}
+                onChange={setDrillDiagramConfig}
+                disabled={isInherited}
+              />
             </div>
 
             {/* Attributes */}
@@ -507,7 +538,7 @@ export default function DrillFormPage() {
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                 Select the player attributes this drill improves. Category is auto-calculated.
               </p>
-              
+
               {Object.entries(attributesByCategory).map(([category, attrs]) => (
                 <div key={category} className="mb-4">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -523,7 +554,7 @@ export default function DrillFormPage() {
                           onClick={() => !isInherited && toggleAttribute(attr.key)}
                           disabled={isInherited}
                           className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                            isSelected 
+                            isSelected
                               ? 'bg-primary-600 text-white dark:bg-primary-500'
                               : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                           } ${isInherited ? 'cursor-not-allowed opacity-60' : ''}`}
@@ -535,14 +566,6 @@ export default function DrillFormPage() {
                   </div>
                 </div>
               ))}
-
-              {selectedAttributes.length > 0 && (
-                <div className="mt-4 p-3 bg-primary-50 dark:bg-primary-900/20 rounded-lg">
-                  <p className="text-sm font-medium text-primary-900 dark:text-primary-200">
-                    Category: <span className="capitalize">{getCategory()}</span> ({selectedAttributes.length} attributes selected)
-                  </p>
-                </div>
-              )}
             </div>
 
             {/* Links (Optional) */}
@@ -602,37 +625,6 @@ export default function DrillFormPage() {
                 )}
               </div>
             </div>
-
-            {/* Drill Diagram Editor */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-2">Drill Diagram</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Draw your setup directly on the pitch. Add multiple frames and edit each frame from the slide list.
-              </p>
-              <DrillDiagramEditor
-                value={drillDiagramConfig}
-                onChange={setDrillDiagramConfig}
-                disabled={isInherited}
-              />
-            </div>
-
-            {/* Sharing */}
-            {!isInherited && (
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Sharing</h3>
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    className="w-4 h-4"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    Share this drill with other teams in the club
-                  </span>
-                </label>
-              </div>
-            )}
 
             {/* Form Actions */}
             {!isInherited && (

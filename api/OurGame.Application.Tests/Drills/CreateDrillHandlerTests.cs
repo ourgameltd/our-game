@@ -125,10 +125,14 @@ public class CreateDrillHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenDiagramConfigHasMultipleFrames_ThrowsValidationException()
+    public async Task Handle_WhenDiagramConfigHasMultipleFrames_SavesDiagramConfig()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
+        var (_, userId) = await db.SeedCoachAsync(clubId: clubId);
+
+        var user = await db.Context.Users.FindAsync(userId);
+        Assert.NotNull(user);
 
         var handler = new CreateDrillHandler(db.Context);
 
@@ -148,9 +152,9 @@ public class CreateDrillHandlerTests
             }
         };
 
-        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
-            handler.Handle(new CreateDrillCommand(dto, "user1"), CancellationToken.None));
+        var result = await handler.Handle(new CreateDrillCommand(dto, user!.AuthId), CancellationToken.None);
 
-        Assert.Contains("DrillDiagramConfig", ex.Errors.Keys);
+        Assert.NotNull(result.DrillDiagramConfig);
+        Assert.Equal(2, result.DrillDiagramConfig!.Frames.Count);
     }
 }
