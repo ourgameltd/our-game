@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, AlertCircle, ExternalLink, Globe, Play, Trash2, X } from 'lucide-react';
-import { getAttributeCategory, playerAttributes } from '@/constants/referenceData';
+import { drillCategories, normalizeDrillCategory, playerAttributes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import { detectLinkProvider } from '@utils/linkProviders';
 import PageTitle from '@components/common/PageTitle';
@@ -171,6 +171,7 @@ export default function DrillFormPage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState(10);
+  const [category, setCategory] = useState<'Drill' | 'Skills Practice' | 'Game Related Practice' | 'Conditioned Game'>('Drill');
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
   const [instructions, setInstructions] = useState<string[]>([]);
   const [links, setLinks] = useState<DrillFormLink[]>([]);
@@ -195,6 +196,8 @@ export default function DrillFormPage() {
       setName(drillData.name);
       setDescription(drillData.description || '');
       setDuration(drillData.durationMinutes || 10);
+      const normalizedCategory = normalizeDrillCategory(drillData.category);
+      setCategory(normalizedCategory === 'Mixed' ? 'Drill' : normalizedCategory);
       setSelectedAttributes(drillData.attributes);
       setInstructions(drillData.instructions);
       setLinks(drillData.links.map(l => ({
@@ -221,33 +224,6 @@ export default function DrillFormPage() {
       }
     }
   }, [createData, updateData, clubId, ageGroupId, teamId, team, ageGroup, navigate]);
-
-  // Calculate category based on selected attributes
-  const getCategory = (): 'technical' | 'tactical' | 'physical' | 'mental' => {
-    const categories = selectedAttributes.map(attr => {
-      const category = getAttributeCategory(attr);
-      if (category === 'Skills') return 'technical';
-      if (category === 'Physical') return 'physical';
-      if (category === 'Mental') return 'mental';
-      return 'technical';
-    });
-    
-    const categoryCounts: Record<string, number> = {};
-    categories.forEach(cat => {
-      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-    });
-    
-    let maxCategory: 'technical' | 'tactical' | 'physical' | 'mental' = 'technical';
-    let maxCount = 0;
-    Object.entries(categoryCounts).forEach(([cat, count]) => {
-      if (count > maxCount) {
-        maxCount = count;
-        maxCategory = cat as any;
-      }
-    });
-    
-    return maxCategory;
-  };
 
   // Group attributes by category
   const attributesByCategory: Record<string, Array<{key: string; label: string}>> = {
@@ -353,6 +329,10 @@ export default function DrillFormPage() {
       alert('Please select at least one attribute');
       return;
     }
+    if (!category.trim()) {
+      alert('Please select a category');
+      return;
+    }
 
     // Clean up data
     const diagramInstructions = getDiagramInstructions();
@@ -372,7 +352,7 @@ export default function DrillFormPage() {
         name: name.trim(),
         description: description.trim() || undefined,
         durationMinutes: duration,
-        category: getCategory(),
+        category,
         attributes: selectedAttributes,
         equipment: [],
         instructions: cleanedInstructions,
@@ -392,7 +372,7 @@ export default function DrillFormPage() {
         name: name.trim(),
         description: description.trim() || undefined,
         durationMinutes: duration,
-        category: getCategory(),
+        category,
         attributes: selectedAttributes,
         equipment: [],
         instructions: cleanedInstructions,
@@ -585,7 +565,7 @@ export default function DrillFormPage() {
                   />
                 </div>
 
-                <div className={`grid gap-3 ${!isInherited ? 'md:grid-cols-2' : ''}`}>
+                <div className={`grid gap-3 ${!isInherited ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Duration (minutes) *
@@ -600,6 +580,27 @@ export default function DrillFormPage() {
                       disabled={isInherited}
                       required
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Category *
+                    </label>
+                    <select
+                      value={category}
+                      onChange={(e) => setCategory(e.target.value as 'Drill' | 'Skills Practice' | 'Game Related Practice' | 'Conditioned Game')}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isInherited}
+                      required
+                    >
+                      {drillCategories
+                        .filter((drillCategory) => drillCategory.value !== 'Mixed')
+                        .map((drillCategory) => (
+                          <option key={drillCategory.value} value={drillCategory.value}>
+                            {drillCategory.label}
+                          </option>
+                        ))}
+                    </select>
                   </div>
 
                   {!isInherited && (
@@ -638,7 +639,7 @@ export default function DrillFormPage() {
             <div className="card">
               <h3 className="text-lg font-semibold mb-2">Attributes Developed *</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Select the player attributes this drill improves. Category is auto-calculated.
+                Select the player attributes this drill improves.
               </p>
 
               {Object.entries(attributesByCategory).map(([category, attrs]) => (

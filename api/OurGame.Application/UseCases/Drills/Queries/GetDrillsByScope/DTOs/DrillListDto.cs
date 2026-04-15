@@ -48,7 +48,7 @@ public class DrillListDto
     public int Duration { get; set; }
 
     /// <summary>
-    /// Category of the drill (technical, tactical, physical, mental)
+    /// Category of the drill (Drill, Skills Practice, Game Related Practice, Conditioned Game)
     /// </summary>
     public string Category { get; set; } = string.Empty;
 

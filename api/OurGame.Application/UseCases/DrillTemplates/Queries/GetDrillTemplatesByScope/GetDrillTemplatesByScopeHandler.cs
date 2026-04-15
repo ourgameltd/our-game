@@ -75,7 +75,7 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
         if (!string.IsNullOrEmpty(query.Category) && query.Category != "all")
         {
             sql += $" AND dt.Category = {{{parameters.Count}}}";
-            parameters.Add(query.Category.ToLower());
+            parameters.Add(MapTemplateCategoryFilter(query.Category));
         }
 
         // Add optional search filter
@@ -207,6 +207,25 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
         return json.Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .ToList();
+    }
+
+    private static string MapTemplateCategoryFilter(string category)
+    {
+        return category.Trim().ToLowerInvariant() switch
+        {
+            "drill" => "Drill",
+            "skills practice" => "Skills Practice",
+            "game related practice" => "Game Related Practice",
+            "conditioned game" => "Conditioned Game",
+            "mixed" => "mixed",
+
+            // Legacy aliases for backward compatibility
+            "technical" => "Skills Practice",
+            "tactical" => "Game Related Practice",
+            "physical" => "Conditioned Game",
+            "mental" => "Drill",
+            _ => category.Trim()
+        };
     }
 }
 

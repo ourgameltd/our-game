@@ -208,12 +208,19 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
     {
         return category switch
         {
-            0 => "technical",
-            1 => "tactical",
-            2 => "physical",
-            3 => "mental",
-            4 => "mixed",
-            _ => "technical"
+            // New persisted values
+            10 => "Drill",
+            11 => "Skills Practice",
+            12 => "Game Related Practice",
+            13 => "Conditioned Game",
+
+            // Legacy persisted values normalized to new category strings
+            0 => "Skills Practice",
+            1 => "Game Related Practice",
+            2 => "Conditioned Game",
+            3 => "Drill",
+            4 => "Drill",
+            _ => "Drill"
         };
     }
 

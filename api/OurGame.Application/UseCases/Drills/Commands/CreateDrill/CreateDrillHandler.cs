@@ -182,14 +182,22 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
 
     private static DrillCategory ParseCategory(string category)
     {
-        return category.ToLowerInvariant() switch
+        var normalized = category.Trim().ToLowerInvariant();
+
+        return normalized switch
         {
-            "technical" => DrillCategory.Technical,
-            "tactical" => DrillCategory.Tactical,
-            "physical" => DrillCategory.Physical,
-            "mental" => DrillCategory.Mental,
-            "mixed" => DrillCategory.Mixed,
-            _ => throw new ValidationException("Category", $"Invalid category: {category}. Must be one of: technical, tactical, physical, mental, mixed.")
+            "drill" => DrillCategory.Drill,
+            "skills practice" => DrillCategory.SkillsPractice,
+            "game related practice" => DrillCategory.GameRelatedPractice,
+            "conditioned game" => DrillCategory.ConditionedGame,
+
+            // Legacy aliases for backward compatibility
+            "technical" => DrillCategory.SkillsPractice,
+            "tactical" => DrillCategory.GameRelatedPractice,
+            "physical" => DrillCategory.ConditionedGame,
+            "mental" => DrillCategory.Drill,
+            "mixed" => DrillCategory.Drill,
+            _ => throw new ValidationException("Category", $"Invalid category: {category}. Must be one of: Drill, Skills Practice, Game Related Practice, Conditioned Game.")
         };
     }
 

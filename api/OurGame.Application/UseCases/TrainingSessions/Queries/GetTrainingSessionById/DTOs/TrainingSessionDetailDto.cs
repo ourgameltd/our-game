@@ -86,7 +86,7 @@ public record SessionDrillDto
     /// <summary>Duration of the drill in minutes</summary>
     public int? DurationMinutes { get; init; }
 
-    /// <summary>Category of the drill: technical, tactical, physical, mental, or mixed</summary>
+    /// <summary>Category of the drill: Drill, Skills Practice, Game Related Practice, or Conditioned Game</summary>
     public string Category { get; init; } = string.Empty;
 
     /// <summary>Source of the drill: 'adhoc' or 'template'</summary>

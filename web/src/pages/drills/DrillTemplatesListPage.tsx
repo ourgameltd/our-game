@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users } from 'lucide-react';
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
-import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors } from '@/constants/referenceData';
+import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -122,7 +122,7 @@ export default function DrillTemplatesListPage() {
   };
 
   const getCategoryColor = (category?: string) => {
-    const colors = getDrillCategoryColors(category || 'mixed');
+    const colors = getDrillCategoryColors(category || 'Mixed');
     return `${colors.bgColor} ${colors.textColor}`;
   };
 
@@ -307,7 +307,7 @@ export default function DrillTemplatesListPage() {
                           </h3>
                           {template.category && (
                             <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getCategoryColor(template.category)}`}>
-                              {template.category}
+                              {getDrillCategoryLabel(template.category || 'Mixed')}
                             </span>
                           )}
                         </div>
@@ -398,7 +398,7 @@ export default function DrillTemplatesListPage() {
                             </div>
                             {template.category && (
                               <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getCategoryColor(template.category)}`}>
-                                {template.category}
+                                {getDrillCategoryLabel(template.category || 'Mixed')}
                               </span>
                             )}
                           </div>

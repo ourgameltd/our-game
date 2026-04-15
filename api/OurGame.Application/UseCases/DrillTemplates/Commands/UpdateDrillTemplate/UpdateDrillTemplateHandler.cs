@@ -129,7 +129,7 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
             }
 
             // Count categories
-            var category = Enum.GetName(typeof(DrillCategory), drill.Category)?.ToLowerInvariant() ?? "mixed";
+            var category = MapDrillCategoryToTemplateCategory(drill.Category);
             categoryCount[category] = categoryCount.GetValueOrDefault(category, 0) + 1;
         }
 
@@ -219,6 +219,26 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
         {
             return new List<string>();
         }
+    }
+
+    private static string MapDrillCategoryToTemplateCategory(int category)
+    {
+        return category switch
+        {
+            // New persisted values
+            10 => "Drill",
+            11 => "Skills Practice",
+            12 => "Game Related Practice",
+            13 => "Conditioned Game",
+
+            // Legacy persisted values normalized to new category strings
+            0 => "Skills Practice",
+            1 => "Game Related Practice",
+            2 => "Conditioned Game",
+            3 => "Drill",
+            4 => "Drill",
+            _ => "Drill"
+        };
     }
 }
 

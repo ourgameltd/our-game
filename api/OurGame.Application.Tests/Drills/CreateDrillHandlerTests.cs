@@ -17,7 +17,7 @@ public class CreateDrillHandlerTests
         var dto = new CreateDrillRequestDto
         {
             Name = "",
-            Category = "technical",
+            Category = "Skills Practice",
             Scope = new CreateDrillScopeDto { ClubId = Guid.NewGuid() }
         };
 
@@ -53,7 +53,7 @@ public class CreateDrillHandlerTests
         var dto = new CreateDrillRequestDto
         {
             Name = "My Drill",
-            Category = "technical",
+            Category = "Skills Practice",
             Scope = new CreateDrillScopeDto() // all empty
         };
 
@@ -71,7 +71,7 @@ public class CreateDrillHandlerTests
         var dto = new CreateDrillRequestDto
         {
             Name = "My Drill",
-            Category = "technical",
+            Category = "Skills Practice",
             Scope = new CreateDrillScopeDto { ClubId = Guid.NewGuid(), TeamId = Guid.NewGuid() }
         };
 
@@ -98,7 +98,7 @@ public class CreateDrillHandlerTests
             Name = "Rondo 4v2",
             Description = "Passing drill in a box",
             DurationMinutes = 15,
-            Category = "technical",
+            Category = "Skills Practice",
             Attributes = new List<string> { "passing", "movement" },
             Equipment = new List<string> { "cones", "balls" },
             Instructions = new List<string> { "Form a circle", "Keep ball" },
@@ -117,7 +117,7 @@ public class CreateDrillHandlerTests
         Assert.Equal("Rondo 4v2", result.Name);
         Assert.Equal("Passing drill in a box", result.Description);
         Assert.Equal(15, result.DurationMinutes);
-        Assert.Equal("Technical", result.Category);
+        Assert.Equal("Skills Practice", result.Category);
         Assert.True(result.IsPublic);
         Assert.Equal(coachId, result.CreatedBy);
         Assert.Single(result.Links);
@@ -139,7 +139,7 @@ public class CreateDrillHandlerTests
         var dto = new CreateDrillRequestDto
         {
             Name = "Rondo 4v2",
-            Category = "technical",
+            Category = "Skills Practice",
             Scope = new CreateDrillScopeDto { ClubId = clubId },
             DrillDiagramConfig = new DrillDiagramConfigDto
             {

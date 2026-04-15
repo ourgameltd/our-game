@@ -10,7 +10,7 @@ import {
   useUpdateDrillTemplate
 } from '@/api/hooks';
 import type { DrillListDto, CreateDrillTemplateRequest, UpdateDrillTemplateRequest } from '@/api';
-import { getAttributeLabel } from '@/constants/referenceData';
+import { getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
@@ -135,17 +135,17 @@ export default function DrillTemplateFormPage() {
     const attributes = Array.from(attributeSet);
     
     // Category calculation
-    const categories = drills.map(d => d.category);
+    const categories = drills.map(d => normalizeDrillCategory(d.category));
     const categoryCounts: Record<string, number> = {};
     categories.forEach(cat => {
       categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
     });
     
-    let category: 'technical' | 'tactical' | 'physical' | 'mental' | 'mixed' = 'mixed';
+    let category: 'Drill' | 'Skills Practice' | 'Game Related Practice' | 'Conditioned Game' | 'Mixed' = 'Mixed';
     if (Object.keys(categoryCounts).length === 1) {
       category = Object.keys(categoryCounts)[0] as any;
     } else if (Object.keys(categoryCounts).length > 1) {
-      category = 'mixed';
+      category = 'Mixed';
     }
     
     return { totalDuration, attributes, category };
@@ -179,14 +179,8 @@ export default function DrillTemplateFormPage() {
   };
 
   const getCategoryColor = (cat?: string) => {
-    switch (cat) {
-      case 'technical': return 'bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300';
-      case 'tactical': return 'bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300';
-      case 'physical': return 'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300';
-      case 'mental': return 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300';
-      case 'mixed': return 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-300';
-      default: return 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-300';
-    }
+    const colors = getDrillCategoryColors(cat || 'Mixed');
+    return `${colors.bgColor} ${colors.textColor}`;
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -425,7 +419,7 @@ export default function DrillTemplateFormPage() {
                               {drill.name}
                             </h4>
                             <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryColor(drill.category)}`}>
-                              {drill.category}
+                              {getDrillCategoryLabel(drill.category)}
                             </span>
                           </div>
                           <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
@@ -485,7 +479,7 @@ export default function DrillTemplateFormPage() {
                                   {drill.name}
                                 </h5>
                                 <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryColor(drill.category)}`}>
-                                  {drill.category}
+                                  {getDrillCategoryLabel(drill.category)}
                                 </span>
                               </div>
                               <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">

@@ -373,7 +373,7 @@ export interface Drill {
   name: string;
   description: string;
   duration: number; // minutes
-  category: 'technical' | 'tactical' | 'physical' | 'mental'; // Auto-calculated from attributes
+  category: 'Drill' | 'Skills Practice' | 'Game Related Practice' | 'Conditioned Game';
   attributes: string[]; // Player attribute keys that this drill improves (e.g., ['ballControl', 'dribbling', 'pace'])
   equipment: string[];
   diagram?: string;
@@ -407,7 +407,7 @@ export interface DrillTemplate {
   drillIds: string[]; // Ordered list of drills
   attributes: string[]; // Aggregated from included drills (e.g., ['ballControl', 'dribbling', 'pace'])
   totalDuration: number; // Calculated from drills
-  category?: 'technical' | 'tactical' | 'physical' | 'mental' | 'mixed'; // Auto-calculated from attributes
+  category?: 'Drill' | 'Skills Practice' | 'Game Related Practice' | 'Conditioned Game' | 'Mixed';
   clubId?: string; // If club-specific, otherwise it's global
   createdBy?: string; // Coach ID who created it
   isPublic?: boolean; // Whether it's shared across the club

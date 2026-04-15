@@ -419,7 +419,7 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
     public async Task<Guid> SeedDrillAsync(
         Guid? coachId = null,
         string name = "Passing Drill",
-        DrillCategory category = DrillCategory.Technical)
+        DrillCategory category = DrillCategory.SkillsPractice)
     {
         var drillId = Guid.NewGuid();
         var now = DateTime.UtcNow;

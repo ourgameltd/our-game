@@ -30,7 +30,7 @@ public class GetDrillByIdHandlerTests
         Assert.NotNull(result);
         Assert.Equal(drillId, result.Id);
         Assert.Equal("Rondo", result.Name);
-        Assert.Equal("Technical", result.Category);
+        Assert.Equal("Skills Practice", result.Category);
         Assert.Equal(coachId, result.CreatedBy);
     }
 

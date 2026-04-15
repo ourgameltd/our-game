@@ -247,8 +247,8 @@ export function getAllAttributeKeys(): string[] {
 // Helper to get attribute category by key - now re-exported from constants (see imports above)
 
 // Helper to determine drill/session category from attributes
-export function getDominantCategory(attributeKeys: string[]): 'technical' | 'tactical' | 'physical' | 'mental' | 'mixed' {
-  if (attributeKeys.length === 0) return 'mixed';
+export function getDominantCategory(attributeKeys: string[]): 'Drill' | 'Skills Practice' | 'Game Related Practice' | 'Conditioned Game' | 'Mixed' {
+  if (attributeKeys.length === 0) return 'Mixed';
   
   const categoryCounts = {
     skills: 0,
@@ -268,19 +268,19 @@ export function getDominantCategory(attributeKeys: string[]): 'technical' | 'tac
   const mentalPercent = categoryCounts.mental / total;
   
   // If one category dominates (>60%), return that category
-  if (skillsPercent > 0.6) return 'technical';
-  if (physicalPercent > 0.6) return 'physical';
+  if (skillsPercent > 0.6) return 'Skills Practice';
+  if (physicalPercent > 0.6) return 'Conditioned Game';
   if (mentalPercent > 0.6) {
     // Mental attributes can indicate tactical or mental training
     // Check for tactical indicators
     const tacticalAttributes = ['attackingPosition', 'defensivePositioning', 'positioning', 'vision', 'awareness'];
     const hasTactical = attributeKeys.some(key => tacticalAttributes.includes(key));
-    if (hasTactical && mentalPercent > 0.5) return 'tactical';
-    return 'mental';
+    if (hasTactical && mentalPercent > 0.5) return 'Game Related Practice';
+    return 'Drill';
   }
   
   // Mixed if no clear dominant category
-  return 'mixed';
+  return 'Mixed';
 }
 
 // ============================================================================

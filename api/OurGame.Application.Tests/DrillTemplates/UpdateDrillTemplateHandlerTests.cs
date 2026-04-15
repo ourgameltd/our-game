@@ -66,7 +66,7 @@ public class UpdateDrillTemplateHandlerTests
             Id = templateId,
             Name = "Original",
             Description = "",
-            Category = "technical",
+            Category = "Skills Practice",
             CreatedBy = coachId,
             CreatedAt = DateTime.UtcNow
         });
@@ -103,7 +103,7 @@ public class UpdateDrillTemplateHandlerTests
             Id = templateId,
             Name = "Original",
             Description = "",
-            Category = "technical",
+            Category = "Skills Practice",
             CreatedBy = coachId,
             CreatedAt = DateTime.UtcNow
         });
@@ -151,7 +151,7 @@ public class UpdateDrillTemplateHandlerTests
             Id = templateId,
             Name = "Template",
             Description = "",
-            Category = "technical",
+            Category = "Skills Practice",
             CreatedBy = coachId,
             CreatedAt = DateTime.UtcNow
         });

@@ -28,7 +28,7 @@ public record CreateDrillRequestDto
     public int? DurationMinutes { get; init; }
 
     /// <summary>
-    /// Category of the drill (technical, tactical, physical, mental, mixed)
+    /// Category of the drill (Drill, Skills Practice, Game Related Practice, Conditioned Game)
     /// </summary>
     [Required]
     [StringLength(50)]

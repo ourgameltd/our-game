@@ -30,7 +30,7 @@ public class GetDrillTemplateByIdHandlerTests
             Id = templateId,
             Name = "Warm-up Template",
             Description = "A basic warm-up",
-            Category = "physical",
+            Category = "Conditioned Game",
             TotalDuration = 30,
             AggregatedAttributes = "[\"agility\",\"speed\"]",
             CreatedBy = coachId,
@@ -52,7 +52,7 @@ public class GetDrillTemplateByIdHandlerTests
         Assert.NotNull(result);
         Assert.Equal(templateId, result.Id);
         Assert.Equal("Warm-up Template", result.Name);
-        Assert.Equal("physical", result.Category);
+        Assert.Equal("Conditioned Game", result.Category);
         Assert.Equal(30, result.TotalDuration);
         Assert.True(result.IsPublic);
         Assert.Equal(coachId, result.CreatedBy);
@@ -74,7 +74,7 @@ public class GetDrillTemplateByIdHandlerTests
             Id = templateId,
             Name = "Multi-Drill Template",
             Description = "",
-            Category = "mixed",
+            Category = "Mixed",
             CreatedAt = DateTime.UtcNow
         });
         db.Context.Set<DrillTemplateClub>().Add(new DrillTemplateClub
@@ -111,7 +111,7 @@ public class GetDrillTemplateByIdHandlerTests
             Id = templateId,
             Name = "Attr Template",
             Description = "",
-            Category = "technical",
+            Category = "Skills Practice",
             AggregatedAttributes = "[\"passing\",\"dribbling\"]",
             CreatedAt = DateTime.UtcNow
         });

@@ -32,7 +32,7 @@ public class GetDrillTemplatesByScopeHandlerTests
             Id = templateId,
             Name = "Club Template",
             Description = "",
-            Category = "technical",
+            Category = "Skills Practice",
             CreatedAt = DateTime.UtcNow
         });
         db.Context.Set<DrillTemplateClub>().Add(new DrillTemplateClub
@@ -64,7 +64,7 @@ public class GetDrillTemplatesByScopeHandlerTests
             Id = templateId,
             Name = "Inherited Template",
             Description = "",
-            Category = "physical",
+            Category = "Conditioned Game",
             CreatedAt = DateTime.UtcNow
         });
         db.Context.Set<DrillTemplateClub>().Add(new DrillTemplateClub
@@ -97,7 +97,7 @@ public class GetDrillTemplatesByScopeHandlerTests
             Id = clubTemplateId,
             Name = "AAA Club Template",
             Description = "",
-            Category = "tactical",
+            Category = "Game Related Practice",
             CreatedAt = DateTime.UtcNow
         });
         db.Context.Set<DrillTemplateClub>().Add(new DrillTemplateClub
@@ -114,7 +114,7 @@ public class GetDrillTemplatesByScopeHandlerTests
             Id = teamTemplateId,
             Name = "BBB Team Template",
             Description = "",
-            Category = "mixed",
+            Category = "Mixed",
             CreatedAt = DateTime.UtcNow
         });
         db.Context.Set<DrillTemplateTeam>().Add(new DrillTemplateTeam

@@ -82,20 +82,36 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
         // Add optional category filter
         if (!string.IsNullOrEmpty(query.Category) && query.Category != "all")
         {
-            var categoryValue = query.Category.ToLower() switch
+            var categoryValues = query.Category.Trim().ToLowerInvariant() switch
             {
-                "technical" => 0,
-                "tactical" => 1,
-                "physical" => 2,
-                "mental" => 3,
-                "mixed" => 4,
-                _ => -1
+                "drill" => new[] { 10, 0, 3, 4 },
+                "skills practice" => new[] { 11, 1 },
+                "game related practice" => new[] { 12, 2 },
+                "conditioned game" => new[] { 13 },
+
+                // Legacy aliases for backward compatibility
+                "technical" => new[] { 11, 1 },
+                "tactical" => new[] { 12, 2 },
+                "physical" => new[] { 13 },
+                "mental" => new[] { 10, 0, 3, 4 },
+                "mixed" => new[] { 10, 0, 3, 4 },
+                _ => Array.Empty<int>()
             };
 
-            if (categoryValue >= 0)
+            if (categoryValues.Length > 0)
             {
-                sql += $" AND d.Category = {{{parameters.Count}}}";
-                parameters.Add(categoryValue);
+                var placeholders = new List<string>();
+                foreach (var categoryValue in categoryValues)
+                {
+                    placeholders.Add($"{{{parameters.Count}}}");
+                    parameters.Add(categoryValue);
+                }
+
+                sql += $" AND d.Category IN ({string.Join(", ", placeholders)})";
+            }
+            else
+            {
+                sql += " AND 1 = 0";
             }
         }
 
@@ -210,12 +226,19 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
     {
         return category switch
         {
-            0 => "technical",
-            1 => "tactical",
-            2 => "physical",
-            3 => "mental",
-            4 => "mixed",
-            _ => "technical"
+            // New persisted values
+            10 => "Drill",
+            11 => "Skills Practice",
+            12 => "Game Related Practice",
+            13 => "Conditioned Game",
+
+            // Legacy persisted values normalized to new category strings
+            0 => "Skills Practice",
+            1 => "Game Related Practice",
+            2 => "Conditioned Game",
+            3 => "Drill",
+            4 => "Drill",
+            _ => "Drill"
         };
     }
 

@@ -89,7 +89,7 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
             Name = drill.Name ?? string.Empty,
             Description = drill.Description,
             DurationMinutes = drill.DurationMinutes,
-            Category = ((DrillCategory)drill.Category).ToString(),
+            Category = MapCategoryToString(drill.Category),
             Attributes = ParseJsonArray(drill.Attributes),
             Equipment = ParseJsonArray(drill.Equipment),
             DrillDiagramConfig = ParseDiagramConfig(drill.DrillDiagramConfig),
@@ -112,6 +112,26 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
                 AgeGroupIds = ageGroupIds,
                 TeamIds = teamIds
             }
+        };
+    }
+
+    private static string MapCategoryToString(int category)
+    {
+        return category switch
+        {
+            // New persisted values
+            10 => "Drill",
+            11 => "Skills Practice",
+            12 => "Game Related Practice",
+            13 => "Conditioned Game",
+
+            // Legacy persisted values normalized to new category strings
+            0 => "Skills Practice",
+            1 => "Game Related Practice",
+            2 => "Conditioned Game",
+            3 => "Drill",
+            4 => "Drill",
+            _ => "Drill"
         };
     }
 

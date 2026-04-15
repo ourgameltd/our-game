@@ -145,18 +145,47 @@ export function getAttributeLabel(key: string): string {
 
 // Drill categories
 export const drillCategories = [
-  { value: 'technical', label: 'Technical', bgColor: 'bg-blue-100 dark:bg-blue-900/30', textColor: 'text-blue-800 dark:text-blue-300' },
-  { value: 'tactical', label: 'Tactical', bgColor: 'bg-purple-100 dark:bg-purple-900/30', textColor: 'text-purple-800 dark:text-purple-300' },
-  { value: 'physical', label: 'Physical', bgColor: 'bg-orange-100 dark:bg-orange-900/30', textColor: 'text-orange-800 dark:text-orange-300' },
-  { value: 'mental', label: 'Mental', bgColor: 'bg-green-100 dark:bg-green-900/30', textColor: 'text-green-800 dark:text-green-300' },
-  { value: 'mixed', label: 'Mixed', bgColor: 'bg-gray-100 dark:bg-gray-900/30', textColor: 'text-gray-800 dark:text-gray-300' },
+  { value: 'Drill', label: 'Drill', bgColor: 'bg-slate-100 dark:bg-slate-900/30', textColor: 'text-slate-800 dark:text-slate-300' },
+  { value: 'Skills Practice', label: 'Skills Practice', bgColor: 'bg-blue-100 dark:bg-blue-900/30', textColor: 'text-blue-800 dark:text-blue-300' },
+  { value: 'Game Related Practice', label: 'Game Related Practice', bgColor: 'bg-amber-100 dark:bg-amber-900/30', textColor: 'text-amber-800 dark:text-amber-300' },
+  { value: 'Conditioned Game', label: 'Conditioned Game', bgColor: 'bg-emerald-100 dark:bg-emerald-900/30', textColor: 'text-emerald-800 dark:text-emerald-300' },
+  { value: 'Mixed', label: 'Mixed', bgColor: 'bg-gray-100 dark:bg-gray-900/30', textColor: 'text-gray-800 dark:text-gray-300' },
 ] as const;
 
 export type DrillCategory = typeof drillCategories[number]['value'];
 
+export function normalizeDrillCategory(category: string): DrillCategory {
+  const normalized = category.trim().toLowerCase();
+
+  switch (normalized) {
+    case 'drill':
+      return 'Drill';
+    case 'skills practice':
+    case 'technical':
+      return 'Skills Practice';
+    case 'game related practice':
+    case 'tactical':
+      return 'Game Related Practice';
+    case 'conditioned game':
+    case 'physical':
+      return 'Conditioned Game';
+    case 'mental':
+      return 'Drill';
+    case 'mixed':
+      return 'Mixed';
+    default:
+      return 'Drill';
+  }
+}
+
+export function getDrillCategoryLabel(category: string): string {
+  return normalizeDrillCategory(category);
+}
+
 // Get drill category colors
 export function getDrillCategoryColors(category: string): { bgColor: string; textColor: string } {
-  const drillCategory = drillCategories.find(c => c.value === category);
+  const normalizedCategory = normalizeDrillCategory(category);
+  const drillCategory = drillCategories.find(c => c.value === normalizedCategory);
   return {
     bgColor: drillCategory?.bgColor ?? 'bg-gray-100 dark:bg-gray-900/30',
     textColor: drillCategory?.textColor ?? 'text-gray-800 dark:text-gray-300',

@@ -6,7 +6,7 @@ export const sampleDrills: Drill[] = [
     name: 'Passing Triangle',
     description: 'Three players form a triangle and practice quick one-touch passing',
     duration: 10,
-    category: 'technical',
+    category: 'Skills Practice',
     attributes: ['shortPassing', 'ballControl', 'communication', 'awareness'],
     equipment: ['Cones', 'Balls'],
     instructions: [
@@ -34,7 +34,7 @@ export const sampleDrills: Drill[] = [
     name: 'Dribbling Gates',
     description: 'Players dribble through small gates to improve close control',
     duration: 15,
-    category: 'technical',
+    category: 'Skills Practice',
     attributes: ['dribbling', 'ballControl', 'agility', 'acceleration'],
     equipment: ['Cones', 'Balls'],
     instructions: [
@@ -62,7 +62,7 @@ export const sampleDrills: Drill[] = [
     name: '5v5 Possession',
     description: 'Small-sided game focusing on keeping possession',
     duration: 20,
-    category: 'tactical',
+    category: 'Game Related Practice',
     attributes: ['shortPassing', 'positioning', 'awareness', 'vision', 'ballControl'],
     equipment: ['Cones', 'Balls', 'Bibs'],
     instructions: [
@@ -78,7 +78,7 @@ export const sampleDrills: Drill[] = [
     name: 'Finishing Circuit',
     description: 'Rotate through different finishing scenarios',
     duration: 20,
-    category: 'technical',
+    category: 'Skills Practice',
     attributes: ['finishing', 'shotPower', 'composure', 'attackingPosition', 'volleys'],
     equipment: ['Goals', 'Balls', 'Cones'],
     instructions: [
@@ -95,7 +95,7 @@ export const sampleDrills: Drill[] = [
     name: 'Defensive Shape',
     description: 'Practice maintaining defensive formation',
     duration: 15,
-    category: 'tactical',
+    category: 'Game Related Practice',
     attributes: ['defensivePositioning', 'marking', 'communication', 'interceptions', 'awareness'],
     equipment: ['Cones', 'Balls', 'Bibs'],
     instructions: [
@@ -111,7 +111,7 @@ export const sampleDrills: Drill[] = [
     name: 'Sprint Intervals',
     description: 'High-intensity sprint training to build speed and endurance',
     duration: 20,
-    category: 'physical',
+    category: 'Conditioned Game',
     attributes: ['pace', 'sprintSpeed', 'stamina', 'acceleration'],
     equipment: ['Cones'],
     instructions: [
@@ -127,7 +127,7 @@ export const sampleDrills: Drill[] = [
     name: '1v1 Defending',
     description: 'Practice individual defensive techniques',
     duration: 15,
-    category: 'technical',
+    category: 'Skills Practice',
     attributes: ['standingTackle', 'slidingTackle', 'balance', 'strength', 'positioning'],
     equipment: ['Cones', 'Balls', 'Bibs'],
     instructions: [
@@ -143,7 +143,7 @@ export const sampleDrills: Drill[] = [
     name: 'Crossing & Finishing',
     description: 'Wide players deliver crosses for strikers to finish',
     duration: 20,
-    category: 'technical',
+    category: 'Skills Practice',
     attributes: ['crossing', 'finishing', 'heading', 'attackingPosition', 'timing'],
     equipment: ['Goals', 'Balls', 'Cones'],
     instructions: [
@@ -441,7 +441,7 @@ export const sampleDrillTemplates: DrillTemplate[] = [
     ],
     attributes: ['shortPassing', 'ballControl', 'dribbling', 'agility', 'communication'],
     totalDuration: 25,
-    category: 'technical',
+    category: 'Skills Practice',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
     isPublic: true
   },
@@ -455,7 +455,7 @@ export const sampleDrillTemplates: DrillTemplate[] = [
     ],
     attributes: ['shortPassing', 'positioning', 'awareness', 'vision', 'ballControl', 'communication'],
     totalDuration: 30,
-    category: 'tactical',
+    category: 'Game Related Practice',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
     isPublic: true
   },
@@ -469,7 +469,7 @@ export const sampleDrillTemplates: DrillTemplate[] = [
     ],
     attributes: ['finishing', 'shotPower', 'composure', 'crossing', 'heading', 'attackingPosition'],
     totalDuration: 40,
-    category: 'technical',
+    category: 'Skills Practice',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
     isPublic: true
   },
@@ -482,7 +482,7 @@ export const sampleDrillTemplates: DrillTemplate[] = [
     ],
     attributes: ['pace', 'sprintSpeed', 'stamina', 'acceleration'],
     totalDuration: 20,
-    category: 'physical',
+    category: 'Conditioned Game',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
     isPublic: true
   },
@@ -496,7 +496,7 @@ export const sampleDrillTemplates: DrillTemplate[] = [
     ],
     attributes: ['standingTackle', 'slidingTackle', 'defensivePositioning', 'marking', 'communication', 'interceptions'],
     totalDuration: 30,
-    category: 'tactical',
+    category: 'Game Related Practice',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
     isPublic: true
   },
@@ -512,7 +512,7 @@ export const sampleDrillTemplates: DrillTemplate[] = [
     ],
     attributes: ['dribbling', 'ballControl', 'shortPassing', 'positioning', 'awareness', 'finishing', 'shotPower', 'composure'],
     totalDuration: 65,
-    category: 'mixed',
+    category: 'Mixed',
     clubId: '8f4e9a2b-1c3d-4e5f-6a7b-8c9d0e1f2a3b',
     isPublic: true
   }

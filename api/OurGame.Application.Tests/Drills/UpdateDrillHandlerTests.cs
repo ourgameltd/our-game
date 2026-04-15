@@ -14,7 +14,7 @@ public class UpdateDrillHandlerTests
         Name = "Updated Drill",
         Description = "Updated description",
         DurationMinutes = 20,
-        Category = "tactical",
+        Category = "Game Related Practice",
         Attributes = new List<string> { "passing" },
         Equipment = new List<string> { "cones" },
         Instructions = new List<string> { "Step 1" },
@@ -96,7 +96,7 @@ public class UpdateDrillHandlerTests
         Assert.Equal("Updated Drill", result.Name);
         Assert.Equal("Updated description", result.Description);
         Assert.Equal(20, result.DurationMinutes);
-        Assert.Equal("Tactical", result.Category);
+        Assert.Equal("Game Related Practice", result.Category);
         Assert.True(result.IsPublic);
     }
 
@@ -133,11 +133,15 @@ public class UpdateDrillHandlerTests
     }
 
     [Theory]
-    [InlineData("technical", "Technical")]
-    [InlineData("tactical", "Tactical")]
-    [InlineData("physical", "Physical")]
-    [InlineData("mental", "Mental")]
-    [InlineData("mixed", "Mixed")]
+    [InlineData("Drill", "Drill")]
+    [InlineData("Skills Practice", "Skills Practice")]
+    [InlineData("Game Related Practice", "Game Related Practice")]
+    [InlineData("Conditioned Game", "Conditioned Game")]
+    [InlineData("technical", "Skills Practice")]
+    [InlineData("tactical", "Game Related Practice")]
+    [InlineData("physical", "Conditioned Game")]
+    [InlineData("mental", "Drill")]
+    [InlineData("mixed", "Drill")]
     public async Task Handle_AllValidCategories(string input, string expected)
     {
         await using var db = await TestDatabaseFactory.CreateAsync();

@@ -27,7 +27,7 @@ public class DrillDetailDto
     public int? DurationMinutes { get; set; }
 
     /// <summary>
-    /// Category of the drill (Technical, Tactical, Physical, Mental, Mixed)
+    /// Category of the drill (Drill, Skills Practice, Game Related Practice, Conditioned Game)
     /// </summary>
     public string Category { get; set; } = string.Empty;
 

@@ -5,7 +5,6 @@ using Microsoft.EntityFrameworkCore.Storage;
 using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplatesByScope;
 using OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplatesByScope.DTOs;
-using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.DrillTemplates.Commands.CreateDrillTemplate;
@@ -97,7 +96,7 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
             }
 
             // Collect categories
-            categories.Add(drill.Category.ToString().ToLower());
+            categories.Add(MapDrillCategoryToTemplateCategory(drill.Category));
         }
 
         var aggregatedAttributes = JsonSerializer.Serialize(allAttributes.OrderBy(a => a).ToList());
@@ -239,6 +238,26 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
             .Select(s => s.Trim())
             .ToList();
     }
+
+    private static string MapDrillCategoryToTemplateCategory(int category)
+    {
+        return category switch
+        {
+            // New persisted values
+            10 => "Drill",
+            11 => "Skills Practice",
+            12 => "Game Related Practice",
+            13 => "Conditioned Game",
+
+            // Legacy persisted values normalized to new category strings
+            0 => "Skills Practice",
+            1 => "Game Related Practice",
+            2 => "Conditioned Game",
+            3 => "Drill",
+            4 => "Drill",
+            _ => "Drill"
+        };
+    }
 }
 
 /// <summary>
@@ -248,6 +267,6 @@ public class DrillDataDto
 {
     public Guid Id { get; set; }
     public int? DurationMinutes { get; set; }
-    public DrillCategory Category { get; set; }
+    public int Category { get; set; }
     public string? Attributes { get; set; }
 }

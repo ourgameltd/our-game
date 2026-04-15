@@ -5,7 +5,7 @@ import { sampleDrills, sampleDrillTemplates } from '@/data/training';
 import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById } from '@/api/hooks';
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest } from '@/api/client';
 import { sessionDurations } from '@/data/referenceData';
-import { drillCategories, getDrillCategoryColors } from '@/constants/referenceData';
+import { drillCategories, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { Drill, SessionDrill } from '@/types';
@@ -358,7 +358,7 @@ export default function AddEditTrainingSessionPage() {
         return false;
       }
     }
-    if (drillCategoryFilter !== 'all' && drill.category !== drillCategoryFilter) {
+    if (drillCategoryFilter !== 'all' && normalizeDrillCategory(drill.category) !== drillCategoryFilter) {
       return false;
     }
     return true;
@@ -854,7 +854,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                               {drill.name}
                             </h4>
                             <span className={`px-2 py-0.5 text-xs rounded-full ${getDrillCategoryColors(drill.category).bgColor} ${getDrillCategoryColors(drill.category).textColor}`}>
-                              {drill.category}
+                              {getDrillCategoryLabel(drill.category)}
                             </span>
                             <span className="text-sm text-gray-500 dark:text-gray-400">
                               {drill.duration} mins
@@ -1246,7 +1246,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
                   >
                     <option value="all">All Categories</option>
-                    {drillCategories.filter(c => c.value !== 'mixed').map(cat => (
+                    {drillCategories.filter(c => c.value !== 'Mixed').map(cat => (
                       <option key={cat.value} value={cat.value}>{cat.label}</option>
                     ))}
                   </select>
@@ -1281,7 +1281,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                                   {drill.name}
                                 </h4>
                                 <span className={`px-2 py-0.5 text-xs rounded-full ${getDrillCategoryColors(drill.category).bgColor} ${getDrillCategoryColors(drill.category).textColor}`}>
-                                  {drill.category}
+                                  {getDrillCategoryLabel(drill.category)}
                                 </span>
                                 <span className="text-sm text-gray-500 dark:text-gray-400">
                                   {drill.duration} mins
@@ -1336,7 +1336,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                       </h3>
                       <div className="flex items-center gap-2 mb-3">
                         <span className={`px-2 py-1 text-xs rounded-full ${getDrillCategoryColors(previewDrill.category).bgColor} ${getDrillCategoryColors(previewDrill.category).textColor}`}>
-                          {previewDrill.category}
+                          {getDrillCategoryLabel(previewDrill.category)}
                         </span>
                         <span className="text-sm text-gray-500 dark:text-gray-400">
                           ⏱️ {previewDrill.duration} minutes
