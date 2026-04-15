@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, Settings } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
 import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
@@ -171,6 +171,12 @@ export default function DrillsListPage() {
     return Routes.drill(clubId!, drillId);
   };
 
+  const getDrillEditRoute = (drillId: string) => {
+    if (teamId) return Routes.teamDrillEdit(clubId!, ageGroupId!, teamId!, drillId);
+    if (ageGroupId) return Routes.ageGroupDrillEdit(clubId!, ageGroupId!, drillId);
+    return Routes.drillEdit(clubId!, drillId);
+  };
+
   const getNewDrillRoute = () => {
     if (teamId) return Routes.teamDrillNew(clubId!, ageGroupId!, teamId!);
     if (ageGroupId) return Routes.ageGroupDrillNew(clubId!, ageGroupId!);
@@ -302,45 +308,52 @@ export default function DrillsListPage() {
         ) : filteredDrills.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {filteredDrills.map((drill: DrillListDto) => (
-              <Link
+              <div
                 key={drill.id}
-                to={getDrillRoute(drill.id)}
-                className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
+                className="bg-white dark:bg-gray-800 rounded-lg md:rounded-none px-3 py-2 md:px-3 md:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
               >
-                <div className="flex flex-col gap-3">
-                  <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                  {/* Name and Category */}
-                  <div className="flex items-center justify-between md:w-64 md:shrink-0">
-                    <h3 className="text-base font-semibold text-gray-900 dark:text-white flex-1 truncate">
-                      {drill.name}
-                    </h3>
-                    <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getCategoryColor(drill.category)}`}>
-                      {drill.category}
-                    </span>
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 md:w-14 md:h-14 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden bg-gray-50 dark:bg-gray-900 shrink-0">
+                    {drill.drillDiagramConfig ? (
+                      <DrillDiagramRenderer drillDiagramConfig={drill.drillDiagramConfig} forceSquare />
+                    ) : null}
                   </div>
-                  
-                  {/* Description */}
-                  <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-1 md:flex-1 md:min-w-0">
-                    {drill.description}
-                  </p>
 
-                  {/* Stats */}
-                  <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:shrink-0">
-                    <span>⏱️ {drill.duration}m</span>
-                    <span>🎯 {drill.attributes.length}</span>
-                    {drill.links && drill.links.length > 0 && (
-                      <span>🔗 {drill.links.length}</span>
-                    )}
-                  </div>
-                </div>
-
-                  {drill.drillDiagramConfig ? (
-                    <div className="w-full max-w-55 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden">
-                      <DrillDiagramRenderer drillDiagramConfig={drill.drillDiagramConfig} />
+                  <Link to={getDrillRoute(drill.id)} className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                        {drill.name}
+                      </h3>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">⏱️ {drill.duration}m</span>
+                        <span className={`px-2 py-0.5 text-[11px] rounded-full whitespace-nowrap ${getCategoryColor(drill.category)}`}>
+                          {drill.category}
+                        </span>
+                      </div>
                     </div>
-                  ) : null}
+
+                    <p className="text-gray-600 dark:text-gray-400 text-xs line-clamp-1 mt-0.5">
+                      {drill.description}
+                    </p>
+
+                    <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      <span>🎯 {drill.attributes.length}</span>
+                      {drill.links && drill.links.length > 0 && (
+                        <span>🔗 {drill.links.length}</span>
+                      )}
+                    </div>
+                  </Link>
+
+                  <Link
+                    to={getDrillEditRoute(drill.id)}
+                    className="p-1.5 bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 rounded-lg transition-colors shrink-0"
+                    aria-label={`Edit ${drill.name}`}
+                    title="Settings"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </Link>
                 </div>
-              </Link>
+              </div>
             ))}
           </div>
         ) : (
