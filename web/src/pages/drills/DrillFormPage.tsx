@@ -546,20 +546,6 @@ export default function DrillFormPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Description
-                  </label>
-                  <textarea
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                    placeholder="Brief description of the drill"
-                    rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    disabled={isInherited}
-                  />
-                </div>
-
                 <div className={`grid gap-3 ${!isInherited ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -630,42 +616,6 @@ export default function DrillFormPage() {
               />
             </div>
 
-            {/* Attributes */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-2">Attributes Developed *</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Select the player attributes this drill improves.
-              </p>
-
-              {Object.entries(attributesByCategory).map(([category, attrs]) => (
-                <div key={category} className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {category} {category === 'Skills' ? '⚽' : category === 'Physical' ? '💪' : '🧠'}
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {attrs.map(attr => {
-                      const isSelected = selectedAttributes.includes(attr.key);
-                      return (
-                        <button
-                          key={attr.key}
-                          type="button"
-                          onClick={() => !isInherited && toggleAttribute(attr.key)}
-                          disabled={isInherited}
-                          className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                            isSelected
-                              ? 'bg-primary-600 text-white dark:bg-primary-500'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                          } ${isInherited ? 'cursor-not-allowed opacity-60' : ''}`}
-                        >
-                          {attr.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-
             {/* Links (Optional) */}
             <div className="card">
               <div className="mb-4 flex items-center justify-between">
@@ -725,6 +675,43 @@ export default function DrillFormPage() {
                 )}
 
               </div>
+            </div>
+
+
+            {/* Attributes */}
+            <div className="card">
+              <h3 className="text-lg font-semibold mb-2">Attributes Developed *</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Select the player attributes this drill improves.
+              </p>
+
+              {Object.entries(attributesByCategory).map(([category, attrs]) => (
+                <div key={category} className="mb-4">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    {category} {category === 'Skills' ? '⚽' : category === 'Physical' ? '💪' : '🧠'}
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {attrs.map(attr => {
+                      const isSelected = selectedAttributes.includes(attr.key);
+                      return (
+                        <button
+                          key={attr.key}
+                          type="button"
+                          onClick={() => !isInherited && toggleAttribute(attr.key)}
+                          disabled={isInherited}
+                          className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                            isSelected
+                              ? 'bg-primary-600 text-white dark:bg-primary-500'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          } ${isInherited ? 'cursor-not-allowed opacity-60' : ''}`}
+                        >
+                          {attr.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Form Actions */}
