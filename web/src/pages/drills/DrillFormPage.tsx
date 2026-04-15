@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, AlertCircle, ExternalLink, Globe, Play, Trash2, X } from 'lucide-react';
+import { Plus, AlertCircle, ExternalLink, Globe, Play, Trash2, X } from 'lucide-react';
 import { drillCategories, normalizeDrillCategory, playerAttributes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import { detectLinkProvider } from '@utils/linkProviders';
@@ -395,13 +395,7 @@ export default function DrillFormPage() {
   };
 
   const handleCancel = () => {
-    if (team) {
-      navigate(Routes.teamDrills(clubId!, ageGroupId!, teamId!));
-    } else if (ageGroup) {
-      navigate(Routes.ageGroupDrills(clubId!, ageGroupId!));
-    } else {
-      navigate(Routes.drills(clubId!));
-    }
+    navigate(backLink);
   };
 
   if (!club) {
@@ -417,6 +411,13 @@ export default function DrillFormPage() {
   }
 
   const contextName = team ? team.name : ageGroup ? ageGroup.name : club.name;
+  const backLink = team && clubId && ageGroupId && teamId
+    ? Routes.teamDrills(clubId, ageGroupId, teamId)
+    : ageGroup && clubId && ageGroupId
+      ? Routes.ageGroupDrills(clubId, ageGroupId)
+      : clubId
+        ? Routes.drills(clubId)
+        : Routes.dashboard();
 
   // ---- Loading state (edit mode only) --------------------------------------
   const showSkeletons = isEditMode && isDrillLoading;
@@ -429,6 +430,7 @@ export default function DrillFormPage() {
             <PageTitle
               title="Edit Drill"
               subtitle={`${contextName} • Loading…`}
+              backLink={backLink}
             />
           </div>
 
@@ -455,6 +457,7 @@ export default function DrillFormPage() {
             <PageTitle
               title="Edit Drill"
               subtitle={`${contextName} • Error`}
+              backLink={backLink}
             />
           </div>
 
@@ -465,16 +468,6 @@ export default function DrillFormPage() {
             </p>
           </div>
 
-          <div className="mt-4 flex justify-center">
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="btn btn-secondary"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Drills
-            </button>
-          </div>
         </main>
       </div>
     );
@@ -489,6 +482,7 @@ export default function DrillFormPage() {
           <PageTitle
             title={isEditMode ? (isInherited ? 'View Drill (Read-Only)' : 'Edit Drill') : 'Create Drill'}
             subtitle={`${contextName}`}
+            backLink={backLink}
           />
         </div>
 
@@ -741,18 +735,6 @@ export default function DrillFormPage() {
               />
             )}
 
-            {isInherited && (
-              <div className="flex justify-center">
-                <button
-                  type="button"
-                  onClick={handleCancel}
-                  className="btn btn-secondary"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Back to Drills
-                </button>
-              </div>
-            )}
           </div>
         </form>
 
