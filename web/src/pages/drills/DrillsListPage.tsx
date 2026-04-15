@@ -1,10 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, Settings, Images } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, Settings, Images, X } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
 import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
-import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors } from '@/constants/referenceData';
+import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
+import { getAttributeLabel, getDrillCategoryColors } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -61,7 +62,6 @@ export default function DrillsListPage() {
   const navigate = useNavigate();
   
   const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
   const [filtersExpanded, setFiltersExpanded] = useState(true);
 
@@ -128,16 +128,16 @@ export default function DrillsListPage() {
     );
   }
 
-  // Toggle attribute selection
-  const toggleAttribute = (attr: string) => {
-    setSelectedAttributes(prev => 
-      prev.includes(attr) 
-        ? prev.filter(a => a !== attr)
-        : [...prev, attr]
-    );
-  };
+  const attributeOptions = useMemo(
+    () =>
+      availableAttributes.map((attr) => ({
+        value: attr,
+        label: getAttributeLabel(attr),
+      })),
+    [availableAttributes]
+  );
 
-  // Filter drills based on search term, category, and attributes
+  // Filter drills based on search term and selected attributes
   const filteredDrills = allDrills.filter((drill: DrillListDto) => {
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
@@ -148,12 +148,9 @@ export default function DrillsListPage() {
         return false;
       }
     }
-    if (categoryFilter !== 'all' && drill.category !== categoryFilter) {
-      return false;
-    }
-    // Filter by selected attributes - drill must have ALL selected attributes
+    // Filter by selected attributes - drill must include ANY selected attribute
     if (selectedAttributes.length > 0) {
-      if (!selectedAttributes.every(attr => drill.attributes.includes(attr))) {
+      if (!selectedAttributes.some(attr => drill.attributes.includes(attr))) {
         return false;
       }
     }
@@ -211,9 +208,9 @@ export default function DrillsListPage() {
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {(searchTerm || categoryFilter !== 'all' || selectedAttributes.length > 0) && (
+              {(searchTerm || selectedAttributes.length > 0) && (
                 <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {[searchTerm ? 1 : 0, categoryFilter !== 'all' ? 1 : 0, selectedAttributes.length].reduce((a, b) => a + b, 0)} active
+                  {[searchTerm ? 1 : 0, selectedAttributes.length > 0 ? 1 : 0].reduce((a, b) => a + b, 0)} active
                 </span>
               )}
             </div>
@@ -226,7 +223,7 @@ export default function DrillsListPage() {
 
           {filtersExpanded && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Search className="w-4 h-4 inline mr-1" />
@@ -242,63 +239,53 @@ export default function DrillsListPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Category
+                    Filter by Attributes
                   </label>
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  >
-                    <option value="all">All Categories</option>
-                    {drillCategories.filter(c => c.value !== 'mixed').map(cat => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
-                    ))}
-                  </select>
+                  {drillsLoading ? (
+                    <FilterAttributesSkeleton />
+                  ) : (
+                    <MultiSelectTypeahead
+                      options={attributeOptions}
+                      value={selectedAttributes}
+                      onChange={setSelectedAttributes}
+                      placeholder="Type to find and add attributes..."
+                      showSelectedChips={false}
+                    />
+                  )}
                 </div>
               </div>
 
-              {/* Attribute Filters */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Filter by Attributes {selectedAttributes.length > 0 && `(${selectedAttributes.length} selected)`}
-                </label>
-                {drillsLoading ? (
-                  <FilterAttributesSkeleton />
-                ) : (
+              {selectedAttributes.length > 0 && (
+                <div className="mt-2">
                   <div className="flex flex-wrap gap-2">
-                    {availableAttributes.map(attr => {
-                      const category = getAttributeCategory(attr);
-                      const isSelected = selectedAttributes.includes(attr);
+                    {selectedAttributes.map((attribute) => {
+                      const label = getAttributeLabel(attribute);
                       return (
-                        <button
-                          key={attr}
-                          onClick={() => toggleAttribute(attr)}
-                          className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                            isSelected 
-                              ? 'bg-primary-600 text-white dark:bg-primary-500'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                          }`}
+                        <span
+                          key={attribute}
+                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300"
                         >
-                          {getAttributeLabel(attr)}
-                          {category && (
-                            <span className="ml-1 opacity-60 text-[10px]">
-                              {category === 'Skills' ? '⚽' : category === 'Physical' ? '💪' : '🧠'}
-                            </span>
-                          )}
-                        </button>
+                          {label}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedAttributes((prev) => prev.filter((item) => item !== attribute))}
+                            className="hover:text-primary-900 dark:hover:text-primary-100"
+                            aria-label={`Remove ${label}`}
+                          >
+                            <X className="w-3 h-3" />
+                          </button>
+                        </span>
                       );
                     })}
                   </div>
-                )}
-                {selectedAttributes.length > 0 && (
                   <button
                     onClick={() => setSelectedAttributes([])}
                     className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
                   >
                     Clear all filters
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -368,7 +355,7 @@ export default function DrillsListPage() {
             <span className="text-5xl mb-3 block">⚽</span>
             <p className="font-medium text-gray-900 dark:text-white">No drills found</p>
             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {searchTerm || categoryFilter !== 'all' 
+              {searchTerm || selectedAttributes.length > 0
                 ? 'Try adjusting your filters'
                 : 'Create your first drill to get started'
               }

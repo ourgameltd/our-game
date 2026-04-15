@@ -1,9 +1,14 @@
 import { useState, useRef, useEffect } from 'react';
 import { X } from 'lucide-react';
 
+export interface MultiSelectOption {
+  value: string;
+  label: string;
+}
+
 interface MultiSelectTypeaheadProps {
   /** Array of available options to select from */
-  options: string[];
+  options: string[] | MultiSelectOption[];
   /** Currently selected values */
   value: string[];
   /** Callback when selection changes */
@@ -12,6 +17,8 @@ interface MultiSelectTypeaheadProps {
   label?: string;
   /** Optional placeholder text */
   placeholder?: string;
+  /** Show selected values as chips above input */
+  showSelectedChips?: boolean;
 }
 
 /**
@@ -23,7 +30,8 @@ export default function MultiSelectTypeahead({
   value,
   onChange,
   label,
-  placeholder = 'Type to filter...'
+  placeholder = 'Type to filter...',
+  showSelectedChips = true,
 }: MultiSelectTypeaheadProps) {
   const [inputValue, setInputValue] = useState('');
   const [isOpen, setIsOpen] = useState(false);
@@ -31,11 +39,17 @@ export default function MultiSelectTypeahead({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const normalizedOptions: MultiSelectOption[] = options.map((option) =>
+    typeof option === 'string' ? { value: option, label: option } : option
+  );
+
+  const optionMap = new Map(normalizedOptions.map((option) => [option.value, option.label]));
+
   // Filter options based on input and exclude already selected values
-  const filteredOptions = options.filter(
+  const filteredOptions = normalizedOptions.filter(
     option =>
-      !value.includes(option) &&
-      option.toLowerCase().includes(inputValue.toLowerCase())
+      !value.includes(option.value) &&
+      option.label.toLowerCase().includes(inputValue.toLowerCase())
   );
 
   // Handle clicking outside to close dropdown
@@ -64,9 +78,9 @@ export default function MultiSelectTypeahead({
     setIsOpen(true);
   };
 
-  const handleSelectOption = (option: string) => {
-    if (!value.includes(option)) {
-      onChange([...value, option]);
+  const handleSelectOption = (optionValue: string) => {
+    if (!value.includes(optionValue)) {
+      onChange([...value, optionValue]);
     }
     setInputValue('');
     setIsOpen(false);
@@ -97,7 +111,7 @@ export default function MultiSelectTypeahead({
       case 'Enter':
         e.preventDefault();
         if (filteredOptions[highlightedIndex]) {
-          handleSelectOption(filteredOptions[highlightedIndex]);
+          handleSelectOption(filteredOptions[highlightedIndex].value);
         }
         break;
       case 'Escape':
@@ -118,25 +132,26 @@ export default function MultiSelectTypeahead({
       {label && <label className="label">{label}</label>}
       
       <div className="relative">
-        {/* Selected values as chips */}
-        <div className="flex flex-wrap gap-2 mb-2">
-          {value.map(item => (
-            <span
-              key={item}
-              className="badge bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300"
-            >
-              {item}
-              <button
-                type="button"
-                onClick={() => handleRemoveValue(item)}
-                className="ml-1 hover:text-primary-900 dark:hover:text-primary-100 focus:outline-none"
-                aria-label={`Remove ${item}`}
+        {showSelectedChips && (
+          <div className="flex flex-wrap gap-2 mb-2">
+            {value.map(item => (
+              <span
+                key={item}
+                className="badge bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300"
               >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          ))}
-        </div>
+                {optionMap.get(item) ?? item}
+                <button
+                  type="button"
+                  onClick={() => handleRemoveValue(item)}
+                  className="ml-1 hover:text-primary-900 dark:hover:text-primary-100 focus:outline-none"
+                  aria-label={`Remove ${optionMap.get(item) ?? item}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
 
         {/* Input field */}
         <input
@@ -168,11 +183,11 @@ export default function MultiSelectTypeahead({
             ) : (
               filteredOptions.map((option, index) => (
                 <button
-                  key={option}
+                  key={option.value}
                   type="button"
                   role="option"
                   aria-selected={index === highlightedIndex}
-                  onClick={() => handleSelectOption(option)}
+                  onClick={() => handleSelectOption(option.value)}
                   onMouseEnter={() => setHighlightedIndex(index)}
                   className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                     index === highlightedIndex
@@ -180,7 +195,7 @@ export default function MultiSelectTypeahead({
                       : 'text-gray-900 dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
-                  {option}
+                  {option.label}
                 </button>
               ))
             )}
