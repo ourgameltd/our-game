@@ -122,7 +122,7 @@ export default function DrillFormPage() {
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState(10);
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
-  const [instructions, setInstructions] = useState<string[]>(['']);
+  const [instructions, setInstructions] = useState<string[]>([]);
   const [links, setLinks] = useState<Array<{url: string; title: string; type: string}>>([]);
   const [drillDiagramConfig, setDrillDiagramConfig] = useState<DrillDiagramConfigDto | undefined>(undefined);
   const [isPublic, setIsPublic] = useState(true);
@@ -142,7 +142,7 @@ export default function DrillFormPage() {
       setDescription(drillData.description || '');
       setDuration(drillData.durationMinutes || 10);
       setSelectedAttributes(drillData.attributes);
-      setInstructions(drillData.instructions.length > 0 ? drillData.instructions : ['']);
+      setInstructions(drillData.instructions);
       setLinks(drillData.links.map(l => ({
         url: l.url,
         title: l.title || '',
@@ -210,20 +210,6 @@ export default function DrillFormPage() {
     );
   };
 
-  const updateInstruction = (index: number, value: string) => {
-    const updated = [...instructions];
-    updated[index] = value;
-    setInstructions(updated);
-  };
-
-  const addInstruction = () => {
-    setInstructions([...instructions, '']);
-  };
-
-  const removeInstruction = (index: number) => {
-    setInstructions(instructions.filter((_, i) => i !== index));
-  };
-
   const updateLink = (index: number, field: 'url' | 'title' | 'type', value: string) => {
     const updated = [...links];
     updated[index] = { ...updated[index], [field]: value };
@@ -236,6 +222,16 @@ export default function DrillFormPage() {
 
   const removeLink = (index: number) => {
     setLinks(links.filter((_, i) => i !== index));
+  };
+
+  const getDiagramInstructions = (): string[] => {
+    return (drillDiagramConfig?.frames ?? [])
+      .map((frame) => {
+        const pitchData = (frame.pitch as Record<string, unknown> | undefined) ?? {};
+        const rawText = pitchData.instructionsText;
+        return typeof rawText === 'string' ? rawText.trim() : '';
+      })
+      .filter((instruction) => instruction.length > 0);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -254,13 +250,17 @@ export default function DrillFormPage() {
       alert('Please select at least one attribute');
       return;
     }
-    if (instructions.filter(i => i.trim()).length === 0) {
-      alert('Please add at least one instruction');
+
+    // Clean up data
+    const diagramInstructions = getDiagramInstructions();
+    const fallbackInstructions = instructions.filter(i => i.trim());
+    const cleanedInstructions = diagramInstructions.length > 0 ? diagramInstructions : fallbackInstructions;
+
+    if (cleanedInstructions.length === 0) {
+      alert('Please add at least one diagram instruction');
       return;
     }
 
-    // Clean up data
-    const cleanedInstructions = instructions.filter(i => i.trim());
     const cleanedLinks = links.filter(l => l.url.trim() && l.title.trim());
 
     if (isEditMode && drillId) {
@@ -543,45 +543,6 @@ export default function DrillFormPage() {
                   </p>
                 </div>
               )}
-            </div>
-
-            {/* Instructions */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Instructions *</h3>
-              <div className="space-y-2">
-                {instructions.map((instruction, index) => (
-                  <div key={index} className="flex gap-2">
-                    <span className="text-gray-500 dark:text-gray-400 mt-2">{index + 1}.</span>
-                    <textarea
-                      value={instruction}
-                      onChange={(e) => updateInstruction(index, e.target.value)}
-                      placeholder="Instruction step..."
-                      rows={2}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      disabled={isInherited}
-                    />
-                    {!isInherited && instructions.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => removeInstruction(index)}
-                        className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 mt-2"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-                {!isInherited && (
-                  <button
-                    type="button"
-                    onClick={addInstruction}
-                    className="btn btn-secondary"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Instruction
-                  </button>
-                )}
-              </div>
             </div>
 
             {/* Links (Optional) */}
