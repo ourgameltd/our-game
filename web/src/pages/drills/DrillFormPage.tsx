@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, AlertCircle } from 'lucide-react';
-import { getAttributeCategory, playerAttributes, linkTypes } from '@/constants/referenceData';
+import { ArrowLeft, Plus, AlertCircle, ExternalLink, Globe, Play, Trash2, X } from 'lucide-react';
+import { getAttributeCategory, playerAttributes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
+import { detectLinkProvider } from '@utils/linkProviders';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import DrillDiagramEditor from '@components/training/DrillDiagramEditor';
@@ -92,6 +93,55 @@ function FormActionsSkeleton() {
   );
 }
 
+type DrillFormLink = {
+  url: string;
+  title: string;
+  type: string;
+};
+
+function getProviderIcon(type: string) {
+  switch (type) {
+    case 'youtube':
+      return (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" aria-label="YouTube icon" role="img">
+          <rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0000" />
+          <path d="M10 9l6 3-6 3V9z" fill="#ffffff" />
+        </svg>
+      );
+    case 'instagram':
+      return (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" aria-label="Instagram icon" role="img">
+          <rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="#e1306c" strokeWidth="2" />
+          <circle cx="12" cy="12" r="4" fill="none" stroke="#e1306c" strokeWidth="2" />
+          <circle cx="17" cy="7" r="1.2" fill="#e1306c" />
+        </svg>
+      );
+    case 'tiktok':
+      return (
+        <svg viewBox="0 0 24 24" className="w-5 h-5" aria-label="TikTok icon" role="img">
+          <path d="M14 4c.4 1.8 1.5 3.3 3 4.3 1 .7 2.2 1.1 3.5 1.2v3.2c-1.7-.1-3.3-.6-4.8-1.4v5.7c0 3.2-2.7 5.8-5.9 5.8S4 20.2 4 17s2.7-5.8 5.8-5.8c.3 0 .6 0 .8.1v3.2c-.2 0-.5-.1-.7-.1-1.5 0-2.7 1.2-2.7 2.7S8.4 19.8 9.9 19.8s2.7-1.2 2.7-2.7V4h1.4z" fill="#111111" />
+        </svg>
+      );
+    case 'website':
+      return <Globe className="w-5 h-5" />;
+    default:
+      return <ExternalLink className="w-5 h-5" />;
+  }
+}
+
+function isSupportedLinkType(type: string): boolean {
+  return ['youtube', 'instagram', 'tiktok', 'website', 'other'].includes(type);
+}
+
+function detectSupportedLinkType(url: string): string {
+  const detected = detectLinkProvider(url);
+  if (detected && isSupportedLinkType(detected)) {
+    return detected;
+  }
+
+  return 'website';
+}
+
 export default function DrillFormPage() {
   usePageTitle(['Drill Form']);
 
@@ -123,7 +173,11 @@ export default function DrillFormPage() {
   const [duration, setDuration] = useState(10);
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
   const [instructions, setInstructions] = useState<string[]>([]);
-  const [links, setLinks] = useState<Array<{url: string; title: string; type: string}>>([]);
+  const [links, setLinks] = useState<DrillFormLink[]>([]);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
+  const [newLinkTitle, setNewLinkTitle] = useState('');
+  const [newLinkUrl, setNewLinkUrl] = useState('');
+  const [newLinkError, setNewLinkError] = useState<string | null>(null);
   const [drillDiagramConfig, setDrillDiagramConfig] = useState<DrillDiagramConfigDto | undefined>(undefined);
   const [isPublic, setIsPublic] = useState(true);
 
@@ -146,7 +200,7 @@ export default function DrillFormPage() {
       setLinks(drillData.links.map(l => ({
         url: l.url,
         title: l.title || '',
-        type: l.linkType
+        type: isSupportedLinkType(l.linkType) ? l.linkType : detectSupportedLinkType(l.url)
       })));
       setDrillDiagramConfig(drillData.drillDiagramConfig);
       setIsPublic(drillData.isPublic);
@@ -210,18 +264,67 @@ export default function DrillFormPage() {
     );
   };
 
-  const updateLink = (index: number, field: 'url' | 'title' | 'type', value: string) => {
-    const updated = [...links];
-    updated[index] = { ...updated[index], [field]: value };
-    setLinks(updated);
+  const normalizeUrl = (value: string): string => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    if (/^https?:\/\//i.test(trimmed)) {
+      return trimmed;
+    }
+
+    return `https://${trimmed}`;
   };
 
-  const addLink = () => {
-    setLinks([...links, { url: '', title: '', type: 'youtube' }]);
+  const openAddLinkModal = () => {
+    setNewLinkTitle('');
+    setNewLinkUrl('');
+    setNewLinkError(null);
+    setIsLinkModalOpen(true);
   };
 
-  const removeLink = (index: number) => {
-    setLinks(links.filter((_, i) => i !== index));
+  const closeAddLinkModal = () => {
+    setIsLinkModalOpen(false);
+    setNewLinkError(null);
+  };
+
+  const handleAddLink = () => {
+    const normalizedUrl = normalizeUrl(newLinkUrl);
+
+    if (!normalizedUrl) {
+      setNewLinkError('Please enter a link URL.');
+      return;
+    }
+
+    try {
+      new URL(normalizedUrl);
+    } catch {
+      setNewLinkError('Please enter a valid URL.');
+      return;
+    }
+
+    setLinks((prev) => [
+      ...prev,
+      {
+        url: normalizedUrl,
+        title: newLinkTitle.trim(),
+        type: detectSupportedLinkType(normalizedUrl),
+      },
+    ]);
+    closeAddLinkModal();
+  };
+
+  const handlePlayLink = (link: DrillFormLink) => {
+    if (!link.url.trim()) {
+      return;
+    }
+
+    window.open(link.url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleDeleteLink = (indexToDelete: number) => {
+    setLinks((prev) => prev.filter((_, index) => index !== indexToDelete));
   };
 
   const getDiagramInstructions = (): string[] => {
@@ -261,7 +364,7 @@ export default function DrillFormPage() {
       return;
     }
 
-    const cleanedLinks = links.filter(l => l.url.trim() && l.title.trim());
+    const cleanedLinks = links.filter(l => l.url.trim());
 
     if (isEditMode && drillId) {
       // Update existing drill
@@ -470,7 +573,7 @@ export default function DrillFormPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Description *
+                    Description
                   </label>
                   <textarea
                     value={description}
@@ -479,7 +582,6 @@ export default function DrillFormPage() {
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                     disabled={isInherited}
-                    required
                   />
                 </div>
 
@@ -570,59 +672,62 @@ export default function DrillFormPage() {
 
             {/* Links (Optional) */}
             <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Reference Links (Optional)</h3>
-              <div className="space-y-2">
-                {links.map((link, index) => (
-                  <div key={index} className="space-y-2 p-3 border border-gray-200 dark:border-gray-700 rounded-lg">
-                    <div className="flex gap-2">
-                      <select
-                        value={link.type}
-                        onChange={(e) => updateLink(index, 'type', e.target.value)}
-                        className="w-32 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        disabled={isInherited}
-                      >
-                        {linkTypes.map(lt => (
-                          <option key={lt.value} value={lt.value}>{lt.label}</option>
-                        ))}
-                      </select>
-                      <input
-                        type="text"
-                        value={link.title}
-                        onChange={(e) => updateLink(index, 'title', e.target.value)}
-                        placeholder="Link title"
-                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        disabled={isInherited}
-                      />
-                      {!isInherited && (
-                        <button
-                          type="button"
-                          onClick={() => removeLink(index)}
-                          className="text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                    <input
-                      type="url"
-                      value={link.url}
-                      onChange={(e) => updateLink(index, 'url', e.target.value)}
-                      placeholder="https://..."
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      disabled={isInherited}
-                    />
-                  </div>
-                ))}
+              <div className="mb-4 flex items-center justify-between">
+                <h3 className="text-lg font-semibold">Reference Links</h3>
                 {!isInherited && (
                   <button
                     type="button"
-                    onClick={addLink}
-                    className="btn btn-secondary"
+                    onClick={openAddLinkModal}
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-2 rounded-lg transition-colors inline-flex items-center"
+                    aria-label="Add reference link"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Link
+                    <Plus className="w-4 h-4" />
                   </button>
                 )}
+              </div>
+              <div className="space-y-2">
+                {links.some((link) => link.url.trim().length > 0) ? (
+                  links
+                    .filter((link) => link.url.trim().length > 0)
+                    .map((link, index) => (
+                      <div
+                        key={`${link.url}-${index}`}
+                        className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-800/60 rounded-lg border border-gray-200 dark:border-gray-700"
+                      >
+                        <div className="shrink-0">
+                          {getProviderIcon(link.type)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                            {link.title.trim() || link.url}
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handlePlayLink(link)}
+                          className="inline-flex items-center gap-1 px-3 py-2 text-xs rounded-lg bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+                        >
+                          <Play className="w-3 h-3" />
+                          Open
+                        </button>
+                        {!isInherited && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteLink(index)}
+                            className="inline-flex items-center justify-center p-2 rounded-lg text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/20 transition-colors"
+                            aria-label="Delete link"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    ))
+                ) : (
+                  <div className="rounded-lg border border-dashed border-gray-300 dark:border-gray-700 p-4 text-sm text-gray-600 dark:text-gray-400">
+                    No reference links added yet. Click the + button to add one.
+                  </div>
+                )}
+
               </div>
             </div>
 
@@ -649,6 +754,81 @@ export default function DrillFormPage() {
             )}
           </div>
         </form>
+
+        {isLinkModalOpen && (
+          <div className="fixed inset-0 z-1000 flex items-center justify-center p-4 bg-black/50" onClick={closeAddLinkModal}>
+            <div
+              className="w-full max-w-lg rounded-xl bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 shadow-2xl"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                <h4 className="text-lg font-semibold text-gray-900 dark:text-white">Add Reference Link</h4>
+                <button
+                  type="button"
+                  onClick={closeAddLinkModal}
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+                  aria-label="Close add link modal"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="p-4 space-y-3">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Link Title (optional)
+                  </label>
+                  <input
+                    type="text"
+                    value={newLinkTitle}
+                    onChange={(e) => setNewLinkTitle(e.target.value)}
+                    placeholder="e.g. Passing tutorial"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Link URL *
+                  </label>
+                  <input
+                    type="url"
+                    value={newLinkUrl}
+                    onChange={(e) => {
+                      setNewLinkUrl(e.target.value);
+                      if (newLinkError) {
+                        setNewLinkError(null);
+                      }
+                    }}
+                    placeholder="https://..."
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  />
+                  {newLinkError && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">{newLinkError}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  type="button"
+                  onClick={closeAddLinkModal}
+                  className="px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddLink}
+                  className="px-3 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700"
+                >
+                  Add Link
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
       </main>
     </div>
   );

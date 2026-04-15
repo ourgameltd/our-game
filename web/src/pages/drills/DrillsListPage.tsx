@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, Settings } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, Settings, Images } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
 import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
@@ -141,8 +141,9 @@ export default function DrillsListPage() {
   const filteredDrills = allDrills.filter((drill: DrillListDto) => {
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
+      const drillDescription = (drill.description ?? '').toLowerCase();
       if (!drill.name.toLowerCase().includes(searchLower) && 
-          !drill.description.toLowerCase().includes(searchLower) &&
+          !drillDescription.includes(searchLower) &&
           !drill.attributes.some((attr: string) => getAttributeLabel(attr).toLowerCase().includes(searchLower))) {
         return false;
       }
@@ -307,7 +308,9 @@ export default function DrillsListPage() {
           <DrillsListSkeleton />
         ) : filteredDrills.length > 0 ? (
           <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-            {filteredDrills.map((drill: DrillListDto) => (
+            {filteredDrills.map((drill: DrillListDto) => {
+              const slideCount = drill.drillDiagramConfig?.frames?.length ?? 0;
+              return (
               <div
                 key={drill.id}
                 className="bg-white dark:bg-gray-800 rounded-lg md:rounded-none px-3 py-2 md:px-3 md:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
@@ -320,8 +323,8 @@ export default function DrillsListPage() {
                   </div>
 
                   <Link to={getDrillRoute(drill.id)} className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate min-w-0 flex-1">
                         {drill.name}
                       </h3>
                       <div className="flex items-center gap-1.5 shrink-0">
@@ -337,7 +340,10 @@ export default function DrillsListPage() {
                     </p>
 
                     <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      <span>🎯 {drill.attributes.length}</span>
+                      <span className="inline-flex items-center gap-1" aria-label={`Slides: ${slideCount}`}>
+                        <Images className="w-3.5 h-3.5" aria-hidden="true" />
+                        {slideCount}
+                      </span>
                       {drill.links && drill.links.length > 0 && (
                         <span>🔗 {drill.links.length}</span>
                       )}
@@ -354,7 +360,8 @@ export default function DrillsListPage() {
                   </Link>
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="card text-center py-12">
