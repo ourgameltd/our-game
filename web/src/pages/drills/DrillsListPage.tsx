@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, Settings, Images, X } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, Settings, Images, GitBranch, X } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
 import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
 import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
-import { drillCategories, getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
+import { drillCategories, getAttributeLabel, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -80,6 +80,11 @@ export default function DrillsListPage() {
   const allDrills = useMemo(() => {
     if (!drillsData) return [];
     return [...drillsData.drills, ...drillsData.inheritedDrills];
+  }, [drillsData]);
+
+  const inheritedDrillIds = useMemo(() => {
+    if (!drillsData) return new Set<string>();
+    return new Set(drillsData.inheritedDrills.map((drill) => drill.id));
   }, [drillsData]);
 
   // Get all unique attributes from drills
@@ -163,9 +168,27 @@ export default function DrillsListPage() {
     return true;
   });
 
-  const getCategoryColor = (category: string) => {
-    const colors = getDrillCategoryColors(category);
-    return `${colors.bgColor} ${colors.textColor}`;
+  const getCategoryPillClasses = (category: string) => {
+    const normalizedCategory = normalizeDrillCategory(category);
+
+    switch (normalizedCategory) {
+      case 'Skills Practice':
+        return 'bg-blue-100 text-blue-800 border border-blue-200 dark:bg-blue-900/40 dark:text-blue-200 dark:border-blue-700/60';
+      case 'Game Related Practice':
+        return 'bg-amber-100 text-amber-900 border border-amber-200 dark:bg-amber-900/40 dark:text-amber-200 dark:border-amber-700/60';
+      case 'Conditioned Game':
+        return 'bg-emerald-100 text-emerald-900 border border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-200 dark:border-emerald-700/60';
+      case 'Drill':
+      default:
+        return 'bg-slate-200 text-slate-900 border border-slate-300 dark:bg-slate-700/50 dark:text-slate-100 dark:border-slate-600';
+    }
+  };
+
+  const getInheritedLabel = (scopeType: string) => {
+    const normalized = scopeType.toLowerCase();
+    if (normalized.includes('age')) return 'Inherited from age group';
+    if (normalized.includes('club')) return 'Inherited from club';
+    return 'Inherited from higher level';
   };
 
   // Generate the correct route based on context
@@ -326,6 +349,8 @@ export default function DrillsListPage() {
           <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {filteredDrills.map((drill: DrillListDto) => {
               const slideCount = drill.drillDiagramConfig?.frames?.length ?? 0;
+              const isInheritedDrill = inheritedDrillIds.has(drill.id);
+              const inheritedLabel = getInheritedLabel(drill.scopeType);
               return (
               <div
                 key={drill.id}
@@ -340,12 +365,21 @@ export default function DrillsListPage() {
 
                   <Link to={getDrillRoute(drill.id)} className="min-w-0 flex-1">
                     <div className="flex items-center justify-between gap-2 min-w-0">
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white truncate min-w-0 flex-1">
-                        {drill.name}
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white min-w-0 flex-1 inline-flex items-center gap-1.5">
+                        <span className="truncate">{drill.name}</span>
+                        {isInheritedDrill && (
+                          <span
+                            className="inline-flex items-center text-blue-600 dark:text-blue-400 shrink-0"
+                            title={inheritedLabel}
+                            aria-label={inheritedLabel}
+                          >
+                            <GitBranch className="w-3.5 h-3.5" />
+                          </span>
+                        )}
                       </h3>
                       <div className="flex items-center gap-1.5 shrink-0">
                         <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">⏱️ {drill.duration}m</span>
-                        <span className={`px-2 py-0.5 text-[11px] rounded-full whitespace-nowrap ${getCategoryColor(drill.category)}`}>
+                        <span className={`px-2 py-0.5 text-[11px] rounded-full whitespace-nowrap ${getCategoryPillClasses(drill.category)}`}>
                           {getDrillCategoryLabel(drill.category)}
                         </span>
                       </div>

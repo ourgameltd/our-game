@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, AlertCircle, ExternalLink, Globe, Play, Trash2, X } from 'lucide-react';
+import { Plus, AlertCircle, ExternalLink, Globe, GitBranch, Play, Trash2, X } from 'lucide-react';
 import { drillCategories, normalizeDrillCategory, playerAttributes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import { detectLinkProvider } from '@utils/linkProviders';
@@ -189,6 +189,13 @@ export default function DrillFormPage() {
     if (ageGroupId && !scope.ageGroupIds.includes(ageGroupId) && scope.clubIds.length > 0 && scope.teamIds.length === 0) return true;
     return false;
   })() : false;
+
+  const inheritedFromLabel = isInherited && drillData ? (() => {
+    const { scope } = drillData;
+    if (scope.ageGroupIds.length > 0) return 'Inherited from age group';
+    if (scope.clubIds.length > 0) return 'Inherited from club';
+    return 'Inherited from higher level';
+  })() : null;
 
   // Initialize form state from API data (edit mode)
   useEffect(() => {
@@ -480,7 +487,7 @@ export default function DrillFormPage() {
         {/* Header */}
         <div className="mb-4">
           <PageTitle
-            title={isEditMode ? (isInherited ? 'View Drill (Read-Only)' : 'Edit Drill') : 'Create Drill'}
+            title={isEditMode ? (isInherited ? 'View Inherited Drill' : 'Edit Drill') : 'Create Drill'}
             subtitle={`${contextName}`}
             backLink={backLink}
           />
@@ -507,33 +514,27 @@ export default function DrillFormPage() {
           </div>
         )}
 
-        {isInherited && (
-          <div className="card mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
-            <div className="flex items-start gap-3">
-              <span className="text-2xl">⚠️</span>
-              <div>
-                <h3 className="font-semibold text-yellow-900 dark:text-yellow-200 mb-1">
-                  Inherited Drill
-                </h3>
-                <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                  This drill was created at a higher level and cannot be edited here. 
-                  You can view it or create a copy by creating a new drill with similar content.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
         <form onSubmit={handleSubmit}>
           <div className="space-y-2">
             {/* Basic Information */}
             <div className="card">
-              <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+              <h3 className="text-lg font-semibold mb-4">Basic Information&nbsp;
+                    {inheritedFromLabel && (
+                      <span
+                        className="inline-flex items-center text-blue-600 dark:text-blue-400"
+                        title={inheritedFromLabel}
+                        aria-label={inheritedFromLabel}
+                      >
+                        <GitBranch className="w-4 h-4" />
+                      </span>
+                    )}</h3>
               <div className="space-y-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Drill Name *
-                  </label>
+                  <div className="mb-2 flex items-center gap-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Drill Name *
+                    </label>
+                  </div>
                   <input
                     type="text"
                     value={name}
