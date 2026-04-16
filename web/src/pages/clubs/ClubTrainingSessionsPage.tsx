@@ -15,20 +15,20 @@ function SessionRowSkeleton() {
     <div className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b animate-pulse">
       <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-4">
         {/* Date & Time skeleton */}
-        <div className="flex items-center gap-3 md:flex-shrink-0 md:w-[130px] md:order-1">
-          <div className="flex-shrink-0">
+        <div className="flex items-center gap-3 md:shrink-0 md:w-32.5 md:order-1">
+          <div className="shrink-0">
             <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-1"></div>
             <div className="h-3 w-12 bg-gray-200 dark:bg-gray-700 rounded"></div>
           </div>
         </div>
 
         {/* Team Info skeleton */}
-        <div className="md:w-[180px] md:flex-shrink-0 md:order-2">
+        <div className="md:w-45 md:shrink-0 md:order-2">
           <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
 
         {/* Session Details skeleton */}
-        <div className="flex-grow md:order-3">
+        <div className="grow md:order-3">
           <div className="flex flex-wrap gap-2 mb-2">
             <div className="h-6 w-24 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
             <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
@@ -37,12 +37,12 @@ function SessionRowSkeleton() {
         </div>
 
         {/* Duration skeleton - desktop only */}
-        <div className="hidden md:flex md:flex-shrink-0 md:w-[80px] md:order-4 justify-end">
+        <div className="hidden md:flex md:shrink-0 md:w-20 md:order-4 justify-end">
           <div className="h-4 w-10 bg-gray-200 dark:bg-gray-700 rounded"></div>
         </div>
 
         {/* Status skeleton */}
-        <div className="md:flex-shrink-0 md:w-[90px] md:order-5 flex justify-end">
+        <div className="md:shrink-0 md:w-22.5 md:order-5 flex justify-end">
           <div className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
         </div>
       </div>
@@ -178,8 +178,8 @@ export default function ClubTrainingSessionsPage() {
       >
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-4">
           {/* Date & Time */}
-          <div className="flex items-center gap-3 md:flex-shrink-0 md:w-[130px] md:order-1">
-            <div className="flex-shrink-0">
+          <div className="flex items-center gap-3 md:shrink-0 md:w-32.5 md:order-1">
+            <div className="shrink-0">
               <div className="text-sm font-semibold text-gray-900 dark:text-white">
                 {sessionDate.toLocaleDateString('en-GB', { 
                   weekday: 'short', 
@@ -200,14 +200,14 @@ export default function ClubTrainingSessionsPage() {
           </div>
 
           {/* Team Info */}
-          <div className="md:w-[180px] md:flex-shrink-0 md:order-2">
+          <div className="md:w-45 md:shrink-0 md:order-2">
             <div className="text-sm font-medium text-gray-900 dark:text-white">
               {session.ageGroupName} - {session.teamName}
             </div>
           </div>
 
           {/* Session Details */}
-          <div className="flex-grow md:order-3">
+          <div className="grow md:order-3">
             {/* Focus Areas */}
             {session.focusAreas && session.focusAreas.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
@@ -239,20 +239,20 @@ export default function ClubTrainingSessionsPage() {
             
             {/* Location */}
             <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <MapPin className="w-4 h-4 flex-shrink-0" />
+              <MapPin className="w-4 h-4 shrink-0" />
               <span className="truncate">{session.location}</span>
             </div>
           </div>
 
           {/* Duration - desktop only */}
-          <div className="hidden md:flex md:flex-shrink-0 md:w-[80px] md:order-4 justify-end">
+          <div className="hidden md:flex md:shrink-0 md:w-20 md:order-4 justify-end">
             <span className="text-sm text-gray-600 dark:text-gray-400">
               {session.durationMinutes || 0}m
             </span>
           </div>
 
           {/* Status */}
-          <div className="md:flex-shrink-0 md:w-[90px] md:order-5 flex justify-end">
+          <div className="md:shrink-0 md:w-22.5 md:order-5 flex justify-end">
             <span className={`text-xs px-2 py-1 rounded-full ${
               isPast 
                 ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'

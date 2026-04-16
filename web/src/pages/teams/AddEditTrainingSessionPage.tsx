@@ -716,10 +716,10 @@ export default function AddEditTrainingSessionPage() {
                             <img 
                               src={coach.photoUrl} 
                               alt={`${coach.firstName} ${coach.lastName}`}
-                              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                              className="w-12 h-12 rounded-full object-cover shrink-0"
                             />
                           ) : (
-                            <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+                            <div className="w-12 h-12 bg-linear-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold shrink-0">
                               {(coach.firstName || '')[0]}{(coach.lastName || '')[0]}
                             </div>
                           )}
@@ -921,7 +921,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                                   title={link.title}
                                 >
                                   {getLinkIcon(link.type)}
-                                  <span className="max-w-[150px] truncate">{link.title}</span>
+                                  <span className="max-w-37.5 truncate">{link.title}</span>
                                 </a>
                               ))}
                             </div>
@@ -1166,7 +1166,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
 
       {/* Coach Selection Modal */}
       {showCoachModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-1000">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-lg w-full max-h-[80vh] overflow-hidden">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
@@ -1198,10 +1198,10 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                           <img 
                             src={coach.photoUrl} 
                             alt={`${coach.firstName} ${coach.lastName}`}
-                            className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                            className="w-10 h-10 rounded-full object-cover shrink-0"
                           />
                         ) : (
-                          <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0">
+                          <div className="w-10 h-10 bg-linear-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white font-bold shrink-0">
                             {(coach.firstName || '')[0]}{(coach.lastName || '')[0]}
                           </div>
                         )}
@@ -1229,7 +1229,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
 
       {/* Drill Selection Modal */}
       {showDrillModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-1000">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
@@ -1333,7 +1333,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                                   handleAddDrill(drill.id);
                                 }
                               }}
-                              className={`px-4 py-2 rounded-lg font-medium transition-colors flex-shrink-0 ${
+                              className={`px-4 py-2 rounded-lg font-medium transition-colors shrink-0 ${
                                 isSelected
                                   ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50'
                                   : 'bg-green-600 text-white hover:bg-green-700'
@@ -1423,7 +1423,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                               rel="noopener noreferrer"
                               className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors group"
                             >
-                              <div className="flex-shrink-0 text-blue-600 dark:text-blue-400">
+                              <div className="shrink-0 text-blue-600 dark:text-blue-400">
                                 {getLinkIcon(link.type)}
                               </div>
                               <div className="flex-1 min-w-0">
@@ -1434,7 +1434,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                                   {link.url}
                                 </p>
                               </div>
-                              <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 flex-shrink-0" />
+                              <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 shrink-0" />
                             </a>
                           ))}
                         </div>
@@ -1468,7 +1468,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
 
       {/* Template Selection Modal */}
       {showTemplateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-1000">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>

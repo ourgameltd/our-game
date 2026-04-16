@@ -13,20 +13,20 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 function PlayerCardSkeleton() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 md:rounded-none md:shadow-none md:p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b flex flex-col md:flex-row md:items-center md:gap-4 animate-pulse">
-      <div className="flex items-center gap-3 mb-3 md:mb-0 md:flex-shrink-0 md:order-1">
+      <div className="flex items-center gap-3 mb-3 md:mb-0 md:shrink-0 md:order-1">
         <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-700" />
         <div className="flex-1 min-w-0 md:hidden">
           <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
           <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
       </div>
-      <div className="hidden md:flex md:items-baseline md:gap-2 md:min-w-48 md:flex-shrink-0 md:order-2">
+      <div className="hidden md:flex md:items-baseline md:gap-2 md:min-w-48 md:shrink-0 md:order-2">
         <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
-      <div className="hidden md:block md:w-16 md:flex-shrink-0 md:order-3">
+      <div className="hidden md:block md:w-16 md:shrink-0 md:order-3">
         <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
-      <div className="mb-3 md:mb-0 md:w-32 md:flex-shrink-0 md:order-4">
+      <div className="mb-3 md:mb-0 md:w-32 md:shrink-0 md:order-4">
         <div className="flex flex-wrap gap-1">
           <div className="h-5 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
           <div className="h-5 w-10 bg-gray-200 dark:bg-gray-700 rounded" />

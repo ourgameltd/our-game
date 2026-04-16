@@ -149,7 +149,7 @@ export default function AgeGroupMatchesPage() {
           ) : (
             <>
               <div className="flex items-center gap-2 mb-4">
-                <div className="flex-grow">
+                <div className="grow">
                   <PageTitle
                     title="All Matches"
                     subtitle="Manage matches across all teams in this age group"

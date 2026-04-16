@@ -75,7 +75,7 @@ export default function AgeGroupTrainingSessionsPage() {
           ) : (
             <>
               <div className="flex items-center gap-2 mb-4">
-                <div className="flex-grow">
+                <div className="grow">
                   <PageTitle
                     title="All Training Sessions"
                     subtitle="Manage training sessions across all teams in this age group"

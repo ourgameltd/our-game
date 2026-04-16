@@ -60,13 +60,13 @@ function AgeGroupCardSkeleton() {
 
       {/* Desktop: Row Layout */}
       <div className="hidden md:flex md:items-center md:gap-4">
-        <div className="w-1 h-12 bg-gray-200 dark:bg-gray-700 rounded-full flex-shrink-0" />
+        <div className="w-1 h-12 bg-gray-200 dark:bg-gray-700 rounded-full shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="h-5 w-24 bg-gray-200 dark:bg-gray-700 rounded mb-1" />
           <div className="h-3 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="flex-shrink-0 w-[60px] text-center">
+          <div key={i} className="shrink-0 w-15 text-center">
             <div className="h-5 w-8 mx-auto bg-gray-200 dark:bg-gray-700 rounded mb-1" />
             <div className="h-3 w-10 mx-auto bg-gray-200 dark:bg-gray-700 rounded" />
           </div>

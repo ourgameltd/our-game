@@ -159,7 +159,7 @@
   }
 
   .mobile-nav-hamburger {
-    @apply p-2 -ml-2 bg-transparent border-none cursor-pointer flex flex-col gap-1 w-10 flex-shrink-0;
+    @apply p-2 -ml-2 bg-transparent border-none cursor-pointer flex flex-col gap-1 w-10 shrink-0;
   }
 
   .hamburger-line {
@@ -167,7 +167,7 @@
   }
 
   .hamburger-line.open:nth-child(1) {
-    @apply rotate-45 translate-y-[5px];
+    @apply rotate-45 translate-y-1.25;
   }
 
   .hamburger-line.open:nth-child(2) {
@@ -175,7 +175,7 @@
   }
 
   .hamburger-line.open:nth-child(3) {
-    @apply -rotate-45 -translate-y-[5px];
+    @apply -rotate-45 -translate-y-1.25;
   }
 
   .mobile-nav-logo {
@@ -191,7 +191,7 @@
   }
 
   .mobile-nav-actions {
-    @apply flex items-center gap-1 flex-shrink-0;
+    @apply flex items-center gap-1 shrink-0;
   }
 
   .mobile-nav-notification-btn {
@@ -199,15 +199,15 @@
   }
 
   .mobile-nav-notification-badge {
-    @apply absolute top-0 right-0 bg-red-600 text-white rounded-full px-1.5 py-0.5 text-xs font-bold min-w-[20px] text-center;
+    @apply absolute top-0 right-0 bg-red-600 text-white rounded-full px-1.5 py-0.5 text-xs font-bold min-w-5 text-center;
   }
 
   .mobile-nav-overlay {
-    @apply fixed inset-0 bg-black/50 z-[998] opacity-100 transition-opacity duration-300 lg:hidden;
+    @apply fixed inset-0 bg-black/50 z-998 opacity-100 transition-opacity duration-300 lg:hidden;
   }
 
   .mobile-nav-drawer {
-    @apply fixed top-0 left-0 w-[280px] h-full bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 z-[999] overflow-y-auto;
+    @apply fixed top-0 left-0 w-70 h-full bg-white dark:bg-gray-900 shadow-2xl transition-all duration-300 z-999 overflow-y-auto;
     transform: translateX(-100%);
   }
 
@@ -231,7 +231,7 @@
     }
     
     .mobile-nav-drawer:not(.lg\:open) {
-      @apply w-[4px] overflow-visible bg-gray-300 dark:bg-gray-700;
+      @apply w-1 overflow-visible bg-gray-300 dark:bg-gray-700;
       box-shadow: none;
     }
 
@@ -335,7 +335,7 @@
   }
 
   .mobile-nav-toggle[aria-expanded="true"] + .mobile-nav-submenu {
-    @apply max-h-[500px];
+    @apply max-h-125;
   }
 
   .mobile-nav-sublink {

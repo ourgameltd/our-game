@@ -176,7 +176,7 @@ export default function TeamPlayersPage() {
         <main className="mx-auto px-4 py-4">
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
               <div>
                 <h2 className="text-xl font-semibold text-red-800 dark:text-red-300 mb-2">
                   Invalid Route Parameters
@@ -262,7 +262,7 @@ export default function TeamPlayersPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         <div className="flex items-center gap-2 mb-4">
-          <div className="flex-grow">
+          <div className="grow">
             <PageTitle
               title="Squad List"
               badge={teamPlayers.length}
@@ -388,7 +388,7 @@ export default function TeamPlayersPage() {
             return fullName.includes(query);
           });
           return (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-[1000]">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-1000">
             <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
               <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
                 <div>
@@ -430,10 +430,10 @@ export default function TeamPlayersPage() {
                             <img 
                               src={player.photo} 
                               alt={`${player.firstName} ${player.lastName}`}
-                              className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                              className="w-10 h-10 rounded-full object-cover shrink-0"
                             />
                           ) : (
-                            <div className="w-10 h-10 bg-gradient-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                            <div className="w-10 h-10 bg-linear-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
                               {player.firstName[0]}{player.lastName[0]}
                             </div>
                           )}
@@ -455,7 +455,7 @@ export default function TeamPlayersPage() {
                           <button
                             onClick={(e) => handleAddPlayer(player.id, e)}
                             disabled={addPlayerMutation.isSubmitting}
-                            className="bg-green-500 text-white p-1.5 rounded-full hover:bg-green-600 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="bg-green-500 text-white p-1.5 rounded-full hover:bg-green-600 transition-colors shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
                             title="Add to team"
                           >
                             {addPlayerMutation.isSubmitting ? '...' : <Plus className="w-4 h-4" />}

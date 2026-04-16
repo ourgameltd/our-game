@@ -12,11 +12,11 @@ function TacticRowSkeleton() {
     <div className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0 animate-pulse">
       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
         {/* Name skeleton */}
-        <div className="md:w-64 md:flex-shrink-0">
+        <div className="md:w-64 md:shrink-0">
           <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
         {/* Formation skeleton */}
-        <div className="md:w-48 md:flex-shrink-0">
+        <div className="md:w-48 md:shrink-0">
           <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
         {/* Summary skeleton */}
@@ -109,7 +109,7 @@ export default function TacticsListPage() {
           {/* Error State */}
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-              <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+              <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
               <p className="text-red-700 dark:text-red-300">
                 Failed to load tactics: {error.message}
               </p>
@@ -143,12 +143,12 @@ export default function TacticsListPage() {
                     >
                       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                         {/* Name */}
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-base md:w-64 md:flex-shrink-0 truncate">
+                        <h3 className="font-semibold text-gray-900 dark:text-white text-base md:w-64 md:shrink-0 truncate">
                           {tactic.name}
                         </h3>
                         
                         {/* Formation */}
-                        <p className="text-sm text-gray-600 dark:text-gray-400 md:w-48 md:flex-shrink-0 truncate">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 md:w-48 md:shrink-0 truncate">
                           {tactic.parentFormationName || 'Unknown Formation'}
                         </p>
                         
@@ -184,17 +184,17 @@ export default function TacticsListPage() {
                     >
                       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
                         {/* Name with scope badge */}
-                        <div className="flex items-center gap-2 md:w-64 md:flex-shrink-0">
+                        <div className="flex items-center gap-2 md:w-64 md:shrink-0">
                           <h3 className="font-semibold text-gray-900 dark:text-white text-base flex-1 truncate">
                             {tactic.name}
                           </h3>
-                          <span className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0">
+                          <span className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded shrink-0">
                             {scopeLabel}
                           </span>
                         </div>
                         
                         {/* Formation */}
-                        <p className="text-sm text-gray-600 dark:text-gray-400 md:w-48 md:flex-shrink-0 truncate">
+                        <p className="text-sm text-gray-600 dark:text-gray-400 md:w-48 md:shrink-0 truncate">
                           {tactic.parentFormationName || 'Unknown Formation'}
                         </p>
                         

@@ -93,7 +93,7 @@ function buildPrinciplesPayload(principles: TacticPrinciple[] | undefined) {
 function PitchEditorSkeleton() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 animate-pulse">
-      <div className="aspect-[3/4] bg-gray-200 dark:bg-gray-700 rounded-lg" />
+      <div className="aspect-3/4 bg-gray-200 dark:bg-gray-700 rounded-lg" />
     </div>
   );
 }
@@ -175,7 +175,7 @@ function BlockingState({ title, subtitle, message, badge, backLink }: BlockingSt
           />
         </div>
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+          <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
           <p className="text-red-700 dark:text-red-300">{message}</p>
         </div>
       </main>
@@ -573,7 +573,7 @@ export default function AddEditTacticPage() {
         {/* Mutation error panel */}
         {mutationError && (
           <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
             <div>
               <p className="text-red-700 dark:text-red-300">
                 {mutationError.message}

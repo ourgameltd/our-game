@@ -130,7 +130,7 @@ export default function TeamKitsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         <div className="flex items-center gap-2 mb-4">
-          <div className="flex-grow">
+          <div className="grow">
             <PageTitle
               title={overviewLoading ? 'Loading...' : `${team?.name} - Kit Management`}
               subtitle="Manage team-specific kits"
@@ -289,18 +289,6 @@ export default function TeamKitsPage() {
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Info Box */}
-            <div className="card mt-4 bg-gray-50 dark:bg-gray-800/50">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                About Team Kits
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Team-specific kits take priority when scheduling matches. If no team kit is selected, 
-                club kits will be available. If neither is selected, the system will use the club's 
-                primary colors by default.
-              </p>
             </div>
           </>
         )}
