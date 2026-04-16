@@ -16,7 +16,7 @@ public class UpdateMyProfileHandlerTests
         mediator.Register<GetUserByAzureIdQuery, OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs.UserProfileDto?>(
             (q, ct) => new GetUserByAzureIdHandler(db.Context).Handle(q, ct));
 
-        var handler = new UpdateMyProfileHandler(db.Context, mediator);
+        var handler = new UpdateMyProfileHandler(db.Context, mediator, new StubBlobStorageService());
         var command = new UpdateMyProfileCommand("non-existent-auth", new UpdateMyProfileRequestDto
         {
             FirstName = "John",
@@ -34,7 +34,7 @@ public class UpdateMyProfileHandlerTests
         await db.SeedUserAsync("auth-123");
         var mediator = new TestMediator();
 
-        var handler = new UpdateMyProfileHandler(db.Context, mediator);
+        var handler = new UpdateMyProfileHandler(db.Context, mediator, new StubBlobStorageService());
         var command = new UpdateMyProfileCommand("auth-123", new UpdateMyProfileRequestDto
         {
             FirstName = "  ",
@@ -53,7 +53,7 @@ public class UpdateMyProfileHandlerTests
         await db.SeedUserAsync("auth-123");
         var mediator = new TestMediator();
 
-        var handler = new UpdateMyProfileHandler(db.Context, mediator);
+        var handler = new UpdateMyProfileHandler(db.Context, mediator, new StubBlobStorageService());
         var command = new UpdateMyProfileCommand("auth-123", new UpdateMyProfileRequestDto
         {
             FirstName = "John",
@@ -75,7 +75,7 @@ public class UpdateMyProfileHandlerTests
         mediator.Register<GetUserByAzureIdQuery, OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs.UserProfileDto?>(
             (q, ct) => new GetUserByAzureIdHandler(db.Context).Handle(q, ct));
 
-        var handler = new UpdateMyProfileHandler(db.Context, mediator);
+        var handler = new UpdateMyProfileHandler(db.Context, mediator, new StubBlobStorageService());
         var command = new UpdateMyProfileCommand("auth-123", new UpdateMyProfileRequestDto
         {
             FirstName = "Updated",

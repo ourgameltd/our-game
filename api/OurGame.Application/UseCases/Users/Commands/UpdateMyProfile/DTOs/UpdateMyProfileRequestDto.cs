@@ -21,4 +21,9 @@ public record UpdateMyProfileRequestDto
     [StringLength(100)]
     public string LastName { get; init; } = string.Empty;
 
+    /// <summary>
+    /// Profile photo as a base64 data URI (e.g. "data:image/png;base64,...") or an existing URL.
+    /// Pass an empty string to clear the photo.
+    /// </summary>
+    public string? Photo { get; init; }
 }

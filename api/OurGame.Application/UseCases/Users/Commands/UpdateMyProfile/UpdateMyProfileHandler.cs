@@ -1,6 +1,7 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Services;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
 using OurGame.Persistence.Models;
@@ -15,11 +16,13 @@ public class UpdateMyProfileHandler : IRequestHandler<UpdateMyProfileCommand, Us
 {
     private readonly OurGameContext _db;
     private readonly IMediator _mediator;
+    private readonly IBlobStorageService _blobStorage;
 
-    public UpdateMyProfileHandler(OurGameContext db, IMediator mediator)
+    public UpdateMyProfileHandler(OurGameContext db, IMediator mediator, IBlobStorageService blobStorage)
     {
         _db = db;
         _mediator = mediator;
+        _blobStorage = blobStorage;
     }
 
     public async Task<UserProfileDto> Handle(UpdateMyProfileCommand command, CancellationToken cancellationToken)
@@ -74,11 +77,28 @@ public class UpdateMyProfileHandler : IRequestHandler<UpdateMyProfileCommand, Us
         // 4. Update user entity (email is read-only from identity provider)
         var now = DateTime.UtcNow;
 
+        // Upload new photo to blob storage if provided as a data URI; pass-through for URLs.
+        // When Photo is null we preserve the existing value; empty string clears it.
+        string? photo;
+        if (dto.Photo == null)
+        {
+            photo = user.Photo;
+        }
+        else if (dto.Photo.Length == 0)
+        {
+            photo = string.Empty;
+        }
+        else
+        {
+            photo = await _blobStorage.UploadImageAsync(dto.Photo, "user-photos", user.Id.ToString(), cancellationToken);
+        }
+
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
             UPDATE Users
             SET 
                 FirstName = {firstName},
                 LastName = {lastName},
+                Photo = {photo},
                 UpdatedAt = {now}
             WHERE Id = {user.Id}
         ", cancellationToken);

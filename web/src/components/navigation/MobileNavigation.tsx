@@ -24,12 +24,15 @@ import {
 } from 'lucide-react';
 import { useClubById, useTeamOverview, useAgeGroup, usePlayer, useCoach } from '@/api/hooks';
 import { apiClient } from '@/api/client';
+import { getCurrentUser } from '@/api/users';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
 import { Routes, areAllParamsValid, isValidParam } from '@/utils/routes';
 import type { UserProfile } from '@/api/users';
+
+const USER_PROFILE_UPDATED_EVENT = 'ourgame:user-profile-updated';
 
 export default function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -38,7 +41,7 @@ export default function MobileNavigation() {
   const [isSchedulingExpanded, setIsSchedulingExpanded] = useState(false);
   const [isManagementExpanded, setIsManagementExpanded] = useState(false);
   const [isTacticsExpanded, setIsTacticsExpanded] = useState(false);
-  const [userProfile] = useState<UserProfile | null>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const { isDesktopOpen, toggleDesktopNav } = useNavigation();
   const { displayName, isAdmin } = useAuth();
@@ -136,6 +139,36 @@ export default function MobileNavigation() {
       cancelled = true;
     };
   }, [location.pathname]);
+
+  // Load current user profile for the nav avatar and refresh after profile updates.
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadUserProfile = async () => {
+      try {
+        const profile = await getCurrentUser();
+        if (!cancelled) {
+          setUserProfile(profile);
+        }
+      } catch {
+        if (!cancelled) {
+          setUserProfile(null);
+        }
+      }
+    };
+
+    const handleProfileUpdated = () => {
+      void loadUserProfile();
+    };
+
+    void loadUserProfile();
+    window.addEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
+    };
+  }, []);
 
 
   // Close menu when route changes (mobile only)

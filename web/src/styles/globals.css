@@ -267,7 +267,7 @@
   }
 
   .mobile-nav-user-avatar-wrapper {
-    @apply w-10 h-10 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center;
+    @apply w-10 h-10 rounded-full overflow-hidden bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center;
   }
 
   .mobile-nav-user-info {

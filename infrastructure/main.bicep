@@ -142,6 +142,14 @@ resource playerAlbumContainer 'Microsoft.Storage/storageAccounts/blobServices/co
   }
 }
 
+resource userPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'user-photos'
+  properties: {
+    publicAccess: 'Blob'
+  }
+}
+
 // Log Analytics Workspace
 resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
   name: logAnalyticsName

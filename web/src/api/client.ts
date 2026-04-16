@@ -144,6 +144,11 @@ export interface UserProfile {
 export interface UpdateCurrentUserRequest {
   firstName: string;
   lastName: string;
+  /**
+   * Profile photo as a base64 data URI, existing URL, or empty string to clear.
+   * When omitted (undefined), the current photo is preserved.
+   */
+  photo?: string;
 }
 
 // Team colors DTO

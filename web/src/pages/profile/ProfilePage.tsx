@@ -1,11 +1,13 @@
-import { useState, useEffect } from 'react';
-import { User, Mail, Calendar, Save, Moon, Sun, Monitor, Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { User, Mail, Calendar, Save, Moon, Sun, Monitor, Loader2, Camera, X } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { getCurrentUser, UserProfile } from '@/api/users';
 import { useUpdateCurrentUser, UpdateCurrentUserRequest } from '@/api';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
+
+const USER_PROFILE_UPDATED_EVENT = 'ourgame:user-profile-updated';
 
 export default function ProfilePage() {
   usePageTitle(['Profile']);
@@ -21,6 +23,10 @@ export default function ProfilePage() {
     firstName: '',
     lastName: '',
   });
+  const [photoPreview, setPhotoPreview] = useState<string>('');
+  const [photoChange, setPhotoChange] = useState<string | undefined>(undefined);
+  const [photoError, setPhotoError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Mutation hook for updating profile
   const { updateCurrentUser, data: updatedProfile, isSubmitting, error } = useUpdateCurrentUser();
@@ -38,6 +44,8 @@ export default function ProfilePage() {
             firstName: profile.firstName,
             lastName: profile.lastName,
           });
+          setPhotoPreview(profile.photo || '');
+          setPhotoChange(undefined);
         } catch (error) {
           console.error('Failed to fetch user profile:', error);
         } finally {
@@ -53,6 +61,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (updatedProfile) {
       setUserProfile(updatedProfile);
+      setPhotoPreview(updatedProfile.photo || '');
+      setPhotoChange(undefined);
+      window.dispatchEvent(new Event(USER_PROFILE_UPDATED_EVENT));
       setIsEditing(false);
       setSuccessMessage('Profile updated successfully!');
       
@@ -62,6 +73,41 @@ export default function ProfilePage() {
     }
   }, [updatedProfile]);
 
+  const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhotoError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      setPhotoError('Unsupported image type. Use JPEG, PNG, GIF, or WebP.');
+      return;
+    }
+
+    const maxBytes = 5 * 1024 * 1024;
+    if (file.size > maxBytes) {
+      setPhotoError('Image exceeds the 5 MB limit.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = reader.result as string;
+      setPhotoPreview(result);
+      setPhotoChange(result);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handlePhotoRemove = () => {
+    setPhotoError(null);
+    setPhotoPreview('');
+    setPhotoChange('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSave = async () => {
     setSuccessMessage(null);
     
@@ -69,6 +115,9 @@ export default function ProfilePage() {
       firstName: formData.firstName,
       lastName: formData.lastName,
     };
+    if (photoChange !== undefined) {
+      request.photo = photoChange;
+    }
     
     await updateCurrentUser(request);
   };
@@ -79,6 +128,12 @@ export default function ProfilePage() {
         firstName: userProfile.firstName,
         lastName: userProfile.lastName,
       });
+      setPhotoPreview(userProfile.photo || '');
+    }
+    setPhotoChange(undefined);
+    setPhotoError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
     setIsEditing(false);
     setSuccessMessage(null);
@@ -141,15 +196,50 @@ export default function ProfilePage() {
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 mb-4 transition-colors">
           <div className="flex items-start justify-between mb-4">
             <div className="flex items-center space-x-2">
-              <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center overflow-hidden">
-                {userProfile.photo ? (
-                  <img 
-                    src={userProfile.photo} 
-                    alt={`${userProfile.firstName} ${userProfile.lastName}`}
-                    className="w-full h-full object-cover"
-                  />
-                ) : (
-                  <User className="w-10 h-10 text-primary-600 dark:text-primary-400" />
+              <div className="relative">
+                <div className="w-20 h-20 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center overflow-hidden">
+                  {photoPreview ? (
+                    <img 
+                      src={photoPreview} 
+                      alt={`${userProfile.firstName} ${userProfile.lastName}`}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-10 h-10 text-primary-600 dark:text-primary-400" />
+                  )}
+                </div>
+                {isEditing && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isSubmitting}
+                      aria-label="Upload profile picture"
+                      title="Upload profile picture"
+                      className="absolute bottom-0 right-0 w-7 h-7 bg-primary-600 hover:bg-primary-700 text-white rounded-full flex items-center justify-center shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Camera className="w-4 h-4" />
+                    </button>
+                    {photoPreview && (
+                      <button
+                        type="button"
+                        onClick={handlePhotoRemove}
+                        disabled={isSubmitting}
+                        aria-label="Remove profile picture"
+                        title="Remove profile picture"
+                        className="absolute top-0 right-0 w-6 h-6 bg-gray-700 hover:bg-gray-800 text-white rounded-full flex items-center justify-center shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/gif,image/webp"
+                      onChange={handlePhotoChange}
+                      className="hidden"
+                    />
+                  </>
                 )}
               </div>
               <div>
@@ -190,6 +280,13 @@ export default function ProfilePage() {
               </button>
             )}
           </div>
+
+          {/* Photo upload error */}
+          {photoError && (
+            <div className="mb-3 p-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <p className="text-sm text-red-800 dark:text-red-300">{photoError}</p>
+            </div>
+          )}
 
           {/* Profile Information */}
           <div className="space-y-2">
