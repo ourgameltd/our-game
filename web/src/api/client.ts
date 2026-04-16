@@ -1534,6 +1534,7 @@ export interface DrillTemplateListDto {
   attributes: string[];
   scopeType: string;
   isPublic: boolean;
+  isArchived: boolean;
   createdBy?: string;
   createdAt: string;
 }
@@ -1551,6 +1552,7 @@ export interface DrillTemplateDetailDto {
   description?: string;
   drillIds: string[];
   isPublic: boolean;
+  isArchived: boolean;
   createdBy?: string;
   createdAt: string;
   updatedAt?: string;
@@ -1583,6 +1585,10 @@ export interface UpdateDrillTemplateRequest {
   drillIds: string[];
   isPublic: boolean;
   sessionCategory?: string;
+}
+
+export interface ArchiveDrillTemplateRequest {
+  isArchived: boolean;
 }
 
 // Age Group Development Plan DTOs
@@ -3552,6 +3558,24 @@ export const apiClient = {
           `/v1/drill-templates/${templateId}`,
           request
         );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Archive or unarchive an existing drill template
+     */
+    archive: async (templateId: string, request: ArchiveDrillTemplateRequest): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<void>>(
+          `/v1/drill-templates/${templateId}/archive`,
+          request
+        );
+        if (response.status === 204) {
+          return { success: true, statusCode: 204, data: undefined };
+        }
         return response.data;
       } catch (error) {
         return handleApiError(error);

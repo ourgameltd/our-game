@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users, Clock3, ListOrdered, Globe2 } from 'lucide-react';
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
 import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
@@ -15,7 +15,7 @@ function TemplateRowSkeleton() {
     <div className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0 animate-pulse">
       <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
         {/* Name and Category skeleton */}
-        <div className="flex items-center justify-between md:w-64 md:flex-shrink-0">
+        <div className="flex items-center justify-between md:w-64 md:shrink-0">
           <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
           <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded-full ml-2" />
         </div>
@@ -24,12 +24,12 @@ function TemplateRowSkeleton() {
           <div className="h-4 w-full max-w-md bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
         {/* Stats skeleton */}
-        <div className="flex items-center gap-3 md:flex-shrink-0">
+        <div className="flex items-center gap-3 md:shrink-0">
           <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
           <div className="h-4 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
         {/* Attributes skeleton - desktop only */}
-        <div className="hidden md:flex flex-wrap gap-1 md:flex-shrink-0 md:w-48">
+        <div className="hidden md:flex flex-wrap gap-1 md:shrink-0 md:w-48">
           <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
           <div className="h-5 w-14 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
@@ -125,6 +125,26 @@ export default function DrillTemplatesListPage() {
   const getCategoryColor = (category?: string) => {
     const colors = getDrillCategoryColors(category || 'Mixed');
     return `${colors.bgColor} ${colors.textColor}`;
+  };
+
+  const getCategoryBadge = (template: DrillTemplateListDto) => {
+    if (template.sessionCategory) {
+      const normalizedSessionCategory = normalizeSessionCategory(template.sessionCategory);
+      const sessionColors = getSessionCategoryColors(normalizedSessionCategory);
+      return {
+        label: normalizedSessionCategory,
+        classes: `${sessionColors.bgColor} ${sessionColors.textColor}`
+      };
+    }
+
+    if (template.category) {
+      return {
+        label: getDrillCategoryLabel(template.category),
+        classes: getCategoryColor(template.category)
+      };
+    }
+
+    return null;
   };
 
   // Generate the correct route based on context
@@ -232,6 +252,7 @@ export default function DrillTemplatesListPage() {
                     {availableAttributes.map(attr => {
                       const category = getAttributeCategory(attr);
                       const isSelected = selectedAttributes.includes(attr);
+                      const categoryShortLabel = category === 'Skills' ? 'SK' : category === 'Physical' ? 'PH' : 'MN';
                       return (
                         <button
                           key={attr}
@@ -245,7 +266,7 @@ export default function DrillTemplatesListPage() {
                           {getAttributeLabel(attr)}
                           {category && (
                             <span className="ml-1 opacity-60 text-[10px]">
-                              {category === 'Skills' ? '⚽' : category === 'Physical' ? '💪' : '🧠'}
+                              {categoryShortLabel}
                             </span>
                           )}
                         </button>
@@ -271,7 +292,7 @@ export default function DrillTemplatesListPage() {
         {/* Error State */}
         {error && (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3 mb-4">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0" />
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
             <p className="text-red-700 dark:text-red-300">
               Failed to load session templates: {error.message}
             </p>
@@ -288,8 +309,8 @@ export default function DrillTemplatesListPage() {
           <div className="space-y-6">
             {/* Current Scope Templates */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                📋 {getScopeLabel()} Sessions ({templates.length})
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                {getScopeLabel()} Sessions ({templates.length})
               </h2>
               
               {templates.length > 0 ? (
@@ -301,37 +322,46 @@ export default function DrillTemplatesListPage() {
                       className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
                     >
                       <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
-                        {/* Name and Category */}
-                        <div className="flex items-center justify-between md:w-64 md:flex-shrink-0">
-                          <h3 className="text-base font-semibold text-gray-900 dark:text-white flex-1 truncate">
-                            {template.name}
-                          </h3>
-                          {template.category && (
-                            <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getCategoryColor(template.category)}`}>
-                              {getDrillCategoryLabel(template.category || 'Mixed')}
-                            </span>
-                          )}
-                          {template.sessionCategory && (
-                            <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getSessionCategoryColors(normalizeSessionCategory(template.sessionCategory)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(template.sessionCategory)).textColor}`}>
-                              {normalizeSessionCategory(template.sessionCategory)}
-                            </span>
-                          )}
+                        {/* Name, Category, Description */}
+                        <div className="md:flex-1 md:min-w-0">
+                          <div className="flex flex-wrap items-start gap-2">
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-white wrap-break-word leading-snug">
+                              {template.name}
+                            </h3>
+                            {(() => {
+                              const categoryBadge = getCategoryBadge(template);
+                              if (!categoryBadge) {
+                                return null;
+                              }
+
+                              return (
+                                <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${categoryBadge.classes}`}>
+                                  {categoryBadge.label}
+                                </span>
+                              );
+                            })()}
+                          </div>
+
+                          <p className="mt-1 text-gray-600 dark:text-gray-400 text-sm line-clamp-2 md:line-clamp-1">
+                            {template.description || 'No description provided.'}
+                          </p>
                         </div>
-                        
-                        {/* Description */}
-                        <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-1 md:flex-1 md:min-w-0">
-                          {template.description}
-                        </p>
 
                         {/* Stats */}
-                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:flex-shrink-0">
-                          <span>⏱️ {template.totalDuration}m</span>
-                          <span>⚽ {template.drillIds.length}</span>
-                          {template.isPublic && <span>🌐</span>}
+                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:shrink-0">
+                          <span className="inline-flex items-center gap-1">
+                            <Clock3 className="w-4 h-4" />
+                            {template.totalDuration}m
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <ListOrdered className="w-4 h-4" />
+                            {template.drillIds.length}
+                          </span>
+                          {template.isPublic && <Globe2 className="w-4 h-4" title="Shared session" aria-label="Shared session" />}
                         </div>
 
                         {/* Attributes - desktop only */}
-                        <div className="hidden md:flex flex-wrap gap-1 md:flex-shrink-0 md:w-48">
+                        <div className="hidden md:flex flex-wrap gap-1 md:shrink-0 md:w-48">
                           {template.attributes.slice(0, 2).map((attr, i) => (
                             <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded truncate">
                               {getAttributeLabel(attr)}
@@ -363,7 +393,6 @@ export default function DrillTemplatesListPage() {
                 </div>
               ) : (
                 <div className="card text-center py-12">
-                  <span className="text-5xl mb-3 block">📋</span>
                   <p className="font-medium text-gray-900 dark:text-white">No sessions found</p>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {hasActiveFilters
@@ -393,41 +422,48 @@ export default function DrillTemplatesListPage() {
                       >
                         <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
                           {/* Name and Category with scope badge */}
-                          <div className="flex items-center justify-between md:w-64 md:flex-shrink-0">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <h3 className="text-base font-semibold text-gray-900 dark:text-white truncate">
+                          <div className="md:flex-1 md:min-w-0">
+                            <div className="flex flex-wrap items-start gap-2">
+                              <h3 className="text-base font-semibold text-gray-900 dark:text-white wrap-break-word leading-snug">
                                 {template.name}
                               </h3>
-                              <span className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded flex-shrink-0">
+                              <span className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
                                 {scopeLabel}
                               </span>
+                              {(() => {
+                                const categoryBadge = getCategoryBadge(template);
+                                if (!categoryBadge) {
+                                  return null;
+                                }
+
+                                return (
+                                  <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${categoryBadge.classes}`}>
+                                    {categoryBadge.label}
+                                  </span>
+                                );
+                              })()}
                             </div>
-                            {template.category && (
-                              <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getCategoryColor(template.category)}`}>
-                                {getDrillCategoryLabel(template.category || 'Mixed')}
-                              </span>
-                            )}
-                            {template.sessionCategory && (
-                              <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getSessionCategoryColors(normalizeSessionCategory(template.sessionCategory)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(template.sessionCategory)).textColor}`}>
-                                {normalizeSessionCategory(template.sessionCategory)}
-                              </span>
-                            )}
+
+                            <p className="mt-1 text-gray-600 dark:text-gray-400 text-sm line-clamp-2 md:line-clamp-1">
+                              {template.description || 'No description provided.'}
+                            </p>
                           </div>
-                          
-                          {/* Description */}
-                          <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-1 md:flex-1 md:min-w-0">
-                            {template.description}
-                          </p>
 
                           {/* Stats */}
-                          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:flex-shrink-0">
-                            <span>⏱️ {template.totalDuration}m</span>
-                            <span>⚽ {template.drillIds.length}</span>
-                            {template.isPublic && <span>🌐</span>}
+                          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:shrink-0">
+                            <span className="inline-flex items-center gap-1">
+                              <Clock3 className="w-4 h-4" />
+                              {template.totalDuration}m
+                            </span>
+                            <span className="inline-flex items-center gap-1">
+                              <ListOrdered className="w-4 h-4" />
+                              {template.drillIds.length}
+                            </span>
+                            {template.isPublic && <Globe2 className="w-4 h-4" title="Shared session" aria-label="Shared session" />}
                           </div>
 
                           {/* Attributes - desktop only */}
-                          <div className="hidden md:flex flex-wrap gap-1 md:flex-shrink-0 md:w-48">
+                          <div className="hidden md:flex flex-wrap gap-1 md:shrink-0 md:w-48">
                             {template.attributes.slice(0, 2).map((attr, i) => (
                               <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded truncate">
                                 {getAttributeLabel(attr)}

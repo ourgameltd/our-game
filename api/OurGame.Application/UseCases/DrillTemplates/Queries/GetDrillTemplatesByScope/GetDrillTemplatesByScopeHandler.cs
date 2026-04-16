@@ -49,6 +49,7 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
                 dt.SessionCategory,
                 dt.CreatedBy,
                 dt.IsPublic,
+                dt.IsArchived,
                 dt.CreatedAt,
                 CASE 
                     WHEN dtt.DrillTemplateId IS NOT NULL THEN 'team'
@@ -63,7 +64,8 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
             LEFT JOIN DrillTemplateClubs dtc ON dt.Id = dtc.DrillTemplateId AND dtc.ClubId = {0}
             LEFT JOIN DrillTemplateAgeGroups dtag ON dt.Id = dtag.DrillTemplateId AND dtag.AgeGroupId = {1}
             LEFT JOIN DrillTemplateTeams dtt ON dt.Id = dtt.DrillTemplateId AND dtt.TeamId = {2}
-            WHERE dtc.DrillTemplateId IS NOT NULL OR dtag.DrillTemplateId IS NOT NULL OR dtt.DrillTemplateId IS NOT NULL";
+                        WHERE (dtc.DrillTemplateId IS NOT NULL OR dtag.DrillTemplateId IS NOT NULL OR dtt.DrillTemplateId IS NOT NULL)
+                            AND dt.IsArchived = 0";
 
         var parameters = new List<object>
         {
@@ -183,6 +185,7 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
             Attributes = ParseJsonArray(raw.AggregatedAttributes),
             ScopeType = raw.ScopeType ?? "unknown",
             IsPublic = raw.IsPublic,
+            IsArchived = raw.IsArchived,
             CreatedBy = raw.CreatedBy,
             CreatedAt = raw.CreatedAt
         };
@@ -245,6 +248,7 @@ public class DrillTemplateRawDto
     public string? SessionCategory { get; set; }
     public Guid? CreatedBy { get; set; }
     public bool IsPublic { get; set; }
+    public bool IsArchived { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? ScopeType { get; set; }
     public Guid? ScopeClubId { get; set; }

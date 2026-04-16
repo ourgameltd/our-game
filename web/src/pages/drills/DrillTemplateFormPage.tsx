@@ -7,7 +7,8 @@ import {
   useDrillsByScope, 
   useClubById,
   useCreateDrillTemplate,
-  useUpdateDrillTemplate
+  useUpdateDrillTemplate,
+  useArchiveDrillTemplate
 } from '@/api/hooks';
 import type { DrillListDto, CreateDrillTemplateRequest, UpdateDrillTemplateRequest } from '@/api';
 import { getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
@@ -70,6 +71,7 @@ export default function DrillTemplateFormPage() {
   // Mutations
   const createMutation = useCreateDrillTemplate();
   const updateMutation = useUpdateDrillTemplate(templateId || '');
+  const archiveMutation = useArchiveDrillTemplate(templateId);
   
   // Determine if user can edit based on scope
   const canEdit = useMemo(() => {
@@ -104,6 +106,7 @@ export default function DrillTemplateFormPage() {
   const [drillCategoryFilter, setDrillCategoryFilter] = useState<string>('all');
   const [pendingSelectedDrillIds, setPendingSelectedDrillIds] = useState<string[]>([]);
   const [previewDrillId, setPreviewDrillId] = useState<string | null>(null);
+  const [focusedSlideIndex, setFocusedSlideIndex] = useState(0);
 
   // Initialize form when template loads
   useEffect(() => {
@@ -179,12 +182,15 @@ export default function DrillTemplateFormPage() {
     () => availableDrillsForSelection.find((drill) => drill.id === previewDrillId) ?? null,
     [availableDrillsForSelection, previewDrillId]
   );
+  const previewFrames = previewDrill?.drillDiagramConfig?.frames ?? [];
+  const focusedFrame = previewFrames[focusedSlideIndex] ?? previewFrames[0] ?? null;
 
   const openDrillModal = () => {
     setPendingSelectedDrillIds([]);
     setDrillSearchTerm('');
     setDrillCategoryFilter('all');
     setPreviewDrillId(null);
+    setFocusedSlideIndex(0);
     setShowDrillModal(true);
   };
 
@@ -194,6 +200,7 @@ export default function DrillTemplateFormPage() {
     setDrillSearchTerm('');
     setDrillCategoryFilter('all');
     setPreviewDrillId(null);
+    setFocusedSlideIndex(0);
   };
 
   const togglePendingDrillSelection = (drillId: string) => {
@@ -261,7 +268,7 @@ export default function DrillTemplateFormPage() {
       // Update existing template
       const updateRequest: UpdateDrillTemplateRequest = {
         name: name.trim(),
-        description: description.trim(),
+        description: description.trim() || undefined,
         drillIds: selectedDrillIds,
         isPublic,
         sessionCategory
@@ -277,7 +284,7 @@ export default function DrillTemplateFormPage() {
       // Create new template
       const createRequest: CreateDrillTemplateRequest = {
         name: name.trim(),
-        description: description.trim(),
+        description: description.trim() || undefined,
         drillIds: selectedDrillIds,
         isPublic,
         sessionCategory,
@@ -311,6 +318,24 @@ export default function DrillTemplateFormPage() {
     navigateBack();
   };
 
+  const handleArchive = async () => {
+    if (!templateId || !isEditMode || isInherited) {
+      return;
+    }
+
+    const isCurrentlyArchived = template?.isArchived ?? false;
+    const action = isCurrentlyArchived ? 'unarchive' : 'archive';
+    const templateName = name.trim() || 'this session';
+    if (!confirm(`Are you sure you want to ${action} "${templateName}"?`)) {
+      return;
+    }
+
+    const updated = await archiveMutation.mutate(!isCurrentlyArchived);
+    if (updated) {
+      navigateBack();
+    }
+  };
+
   if (!club) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -332,7 +357,8 @@ export default function DrillTemplateFormPage() {
   }
 
   const contextName = club.name;
-  const isSubmitting = createMutation.isSubmitting || updateMutation.isSubmitting;
+  const isSubmitting = createMutation.isSubmitting || updateMutation.isSubmitting || archiveMutation.isSubmitting;
+  const mutationError = createMutation.error || updateMutation.error || archiveMutation.error;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -346,6 +372,13 @@ export default function DrillTemplateFormPage() {
             />
           </div>
         </div>
+
+        {mutationError && (
+          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
+            <p className="text-red-700 dark:text-red-300">{mutationError.message}</p>
+          </div>
+        )}
 
         {isInherited && (
           <div className="card mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">
@@ -402,7 +435,7 @@ export default function DrillTemplateFormPage() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Description *
+                      Description (optional)
                     </label>
                     <textarea
                       value={description}
@@ -411,7 +444,6 @@ export default function DrillTemplateFormPage() {
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       disabled={isInherited || isSubmitting}
-                      required
                     />
                   </div>
 
@@ -620,6 +652,8 @@ export default function DrillTemplateFormPage() {
             {/* Form Actions */}
             {!isInherited && (
               <FormActions
+                isArchived={template?.isArchived}
+                onArchive={isEditMode ? handleArchive : undefined}
                 onCancel={handleCancel}
                 saveLabel={isEditMode ? 'Update Session' : 'Create Session'}
                 saveDisabled={isSubmitting || !!templateError}
@@ -704,7 +738,10 @@ export default function DrillTemplateFormPage() {
                       return (
                         <div
                           key={drill.id}
-                          onClick={() => setPreviewDrillId(drill.id)}
+                          onClick={() => {
+                            setPreviewDrillId(drill.id);
+                            setFocusedSlideIndex(0);
+                          }}
                           className={`p-4 rounded-lg border transition-colors cursor-pointer ${
                             isPreviewed
                               ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
@@ -774,14 +811,14 @@ export default function DrillTemplateFormPage() {
 
                         {/* Primary slide */}
                         <div className="mb-3">
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Primary slide</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Focused slide</p>
                           <div className="w-full max-w-65 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
-                            {previewDrill.drillDiagramConfig.frames[0] ? (
+                            {focusedFrame ? (
                               <DrillDiagramRenderer
                                 drillDiagramConfig={{
                                   schemaVersion: previewDrill.drillDiagramConfig.schemaVersion,
                                   meta: previewDrill.drillDiagramConfig.meta,
-                                  frames: [previewDrill.drillDiagramConfig.frames[0]],
+                                  frames: [focusedFrame],
                                 }}
                                 forceSquare
                               />
@@ -793,10 +830,19 @@ export default function DrillTemplateFormPage() {
                         {previewDrill.drillDiagramConfig.frames.length > 1 && (
                           <div>
                             <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">All slides</p>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-4 gap-1">
                               {previewDrill.drillDiagramConfig.frames.map((frame, index) => (
-                                <div key={`slide-${index}`} className="border border-gray-200 dark:border-gray-700 rounded-md p-1 bg-white dark:bg-gray-800">
-                                  <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1 px-1">Slide {index + 1}</div>
+                                <button
+                                  type="button"
+                                  key={`slide-${index}`}
+                                  onClick={() => setFocusedSlideIndex(index)}
+                                  className={`border rounded-md p-0.5 bg-white dark:bg-gray-800 text-left transition-colors ${
+                                    focusedSlideIndex === index
+                                      ? 'border-primary-500 ring-1 ring-primary-400'
+                                      : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-500'
+                                  }`}
+                                >
+                                  <div className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5 px-0.5">S{index + 1}</div>
                                   <DrillDiagramRenderer
                                     drillDiagramConfig={{
                                       schemaVersion: previewDrill.drillDiagramConfig!.schemaVersion,
@@ -805,7 +851,7 @@ export default function DrillTemplateFormPage() {
                                     }}
                                     forceSquare
                                   />
-                                </div>
+                                </button>
                               ))}
                             </div>
                           </div>

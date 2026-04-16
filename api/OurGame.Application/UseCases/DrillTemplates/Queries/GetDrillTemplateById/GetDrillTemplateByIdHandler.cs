@@ -37,6 +37,7 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
                 dt.SessionCategory,
                 dt.CreatedBy,
                 dt.IsPublic,
+                dt.IsArchived,
                 dt.CreatedAt,
                 CASE 
                     WHEN dtt.DrillTemplateId IS NOT NULL THEN 'team'
@@ -51,7 +52,8 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
             LEFT JOIN DrillTemplateClubs dtc ON dt.Id = dtc.DrillTemplateId
             LEFT JOIN DrillTemplateAgeGroups dtag ON dt.Id = dtag.DrillTemplateId
             LEFT JOIN DrillTemplateTeams dtt ON dt.Id = dtt.DrillTemplateId
-            WHERE dt.Id = {0}";
+                        WHERE dt.Id = {0}
+                            AND dt.IsArchived = 0";
 
         var template = await _db.Database
             .SqlQueryRaw<DrillTemplateRawDto>(sql, query.Id)
@@ -85,6 +87,7 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
             SessionCategory = raw.SessionCategory ?? "Whole Part Whole",
             Attributes = ParseJsonArray(raw.AggregatedAttributes),
             IsPublic = raw.IsPublic,
+            IsArchived = raw.IsArchived,
             CreatedBy = raw.CreatedBy,
             CreatedAt = raw.CreatedAt,
             ScopeType = raw.ScopeType ?? "unknown",
@@ -132,6 +135,7 @@ public class DrillTemplateRawDto
     public string? SessionCategory { get; set; }
     public Guid? CreatedBy { get; set; }
     public bool IsPublic { get; set; }
+    public bool IsArchived { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? ScopeType { get; set; }
     public Guid? ScopeClubId { get; set; }

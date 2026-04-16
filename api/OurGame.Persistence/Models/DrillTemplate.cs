@@ -25,6 +25,8 @@ public partial class DrillTemplate
 
     public bool IsPublic { get; set; }
 
+    public bool IsArchived { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public virtual ICollection<AppliedTemplate> AppliedTemplates { get; set; } = new List<AppliedTemplate>();

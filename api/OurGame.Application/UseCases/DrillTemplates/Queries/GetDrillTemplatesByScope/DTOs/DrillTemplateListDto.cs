@@ -82,6 +82,11 @@ public class DrillTemplateListDto
     public bool IsPublic { get; set; }
 
     /// <summary>
+    /// Whether the template is archived
+    /// </summary>
+    public bool IsArchived { get; set; }
+
+    /// <summary>
     /// ID of the coach who created the template
     /// </summary>
     public Guid? CreatedBy { get; set; }
