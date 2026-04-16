@@ -3,7 +3,6 @@ import { MapPin } from 'lucide-react';
 import { sampleDrills } from '@/data/training';
 import { Routes } from '@utils/routes';
 import { TrainingSession } from '@/types';
-import { getSessionCategoryColors, normalizeSessionCategory } from '@/constants/sessionCategories';
 
 interface TrainingSessionsListContentProps {
   sessions: TrainingSession[];
@@ -86,11 +85,6 @@ export default function TrainingSessionsListContent({
             {/* Focus Areas */}
             {session.focusAreas.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
-                <span
-                  className={`px-2 py-1 text-xs rounded-full ${getSessionCategoryColors(normalizeSessionCategory(session.sessionCategory)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(session.sessionCategory)).textColor}`}
-                >
-                  {normalizeSessionCategory(session.sessionCategory)}
-                </span>
                 {session.focusAreas.map((area, idx) => (
                   <span
                     key={idx}
@@ -102,16 +96,6 @@ export default function TrainingSessionsListContent({
               </div>
             )}
 
-            {session.focusAreas.length === 0 && (
-              <div className="mb-2">
-                <span
-                  className={`px-2 py-1 text-xs rounded-full ${getSessionCategoryColors(normalizeSessionCategory(session.sessionCategory)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(session.sessionCategory)).textColor}`}
-                >
-                  {normalizeSessionCategory(session.sessionCategory)}
-                </span>
-              </div>
-            )}
-            
             {/* Drills Info */}
             {drills.length > 0 && (
               <div className="text-xs text-gray-500 dark:text-gray-500">

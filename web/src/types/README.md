@@ -12,7 +12,7 @@ TypeScript type definitions and interfaces used across the application.
 
 ## Recent Notes
 
-- `TrainingSession` includes a session-specific category model (`Whole Part Whole`, `Skills Practice`, `Circuits`, `Scenario`) to keep session planning taxonomy separate from drill categories.
+- `TrainingSession` no longer has a session category; session category is a property of `DrillTemplate` only (`Whole Part Whole`, `Skills Practice`, `Circuits`, `Scenario`).
 
 ## Files
 

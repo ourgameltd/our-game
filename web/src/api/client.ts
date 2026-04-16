@@ -587,7 +587,6 @@ export interface TeamTrainingSessionDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
-  category?: string;
 }
 
 export interface SystemFormationPositionDto {
@@ -705,7 +704,6 @@ export interface TeamTrainingSessionDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
-  category?: string;
   drillIds: string[];
   attendance: AttendanceDto[];
   status: string;
@@ -884,7 +882,6 @@ export interface ClubTrainingSessionDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
-  category?: string;
   drillIds: string[];
   attendance: {
     playerId: string;
@@ -912,7 +909,6 @@ export interface TrainingSessionDetailDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
-  category?: string;
   templateId?: string;
   notes?: string;
   status: string;
@@ -969,7 +965,6 @@ export interface CreateTrainingSessionRequest {
   durationMinutes?: number;
   location?: string;
   focusAreas: string[];
-  category: string;
   notes?: string;
   status: string;
   isLocked: boolean;
@@ -1005,7 +1000,6 @@ export interface UpdateTrainingSessionRequest {
   durationMinutes?: number;
   location?: string;
   focusAreas: string[];
-  category: string;
   templateId?: string;
   notes?: string;
   status: string;

@@ -350,7 +350,6 @@ export interface TrainingSession {
   duration: number; // minutes
   location: string;
   focusAreas: string[];
-  sessionCategory?: 'Whole Part Whole' | 'Skills Practice' | 'Circuits' | 'Scenario';
   drillIds: string[]; // Legacy: simple array of drill IDs (for backward compatibility)
   sessionDrills?: SessionDrill[]; // Enhanced: drills with source tracking
   appliedTemplates?: { // Templates that have been applied to this session
