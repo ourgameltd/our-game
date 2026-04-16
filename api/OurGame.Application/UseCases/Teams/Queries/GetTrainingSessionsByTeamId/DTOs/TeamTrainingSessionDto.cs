@@ -36,9 +36,9 @@ public record TeamTrainingSessionDto
     public List<string> FocusAreas { get; init; } = new();
 
     /// <summary>
-    /// Session category: Whole Part Whole, Skills Practice, Circuits, or Scenario
+    /// Optional selected drill template reference for this session
     /// </summary>
-    public string Category { get; init; } = "Whole Part Whole";
+    public Guid? TemplateId { get; init; }
 
     /// <summary>
     /// List of drill IDs included in the session

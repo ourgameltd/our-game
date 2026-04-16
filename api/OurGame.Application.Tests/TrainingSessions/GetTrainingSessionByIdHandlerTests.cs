@@ -32,7 +32,7 @@ public class GetTrainingSessionByIdHandlerTests
         Assert.Equal(teamId, result.TeamId);
         Assert.Equal(ageGroupId, result.AgeGroupId);
         Assert.Equal("Training Ground", result.Location);
-        Assert.Equal("Whole Part Whole", result.Category);
+        Assert.Null(result.TemplateId);
         Assert.Equal("scheduled", result.Status);
     }
 

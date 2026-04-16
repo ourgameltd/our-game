@@ -13,8 +13,7 @@ API client layer for communicating with the Azure Functions backend. Includes au
 
 ## Recent Notes
 
-- Training sessions now include a dedicated session category field that is separate from drill categories.
-- Supported session categories are: `Whole Part Whole`, `Skills Practice`, `Circuits`, and `Scenario`.
+- Training sessions now reference the selected template/session via `TemplateId` and `AppliedTemplates` rather than storing a dedicated session category field.
 
 ## Files
 

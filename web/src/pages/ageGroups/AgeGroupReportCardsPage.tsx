@@ -7,6 +7,7 @@ import { Routes } from '@utils/routes';
 import { Filter, FileText } from 'lucide-react';
 import { useAgeGroupReportCards, useAgeGroup } from '@/api/hooks';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import EmptyState from '@components/common/EmptyState';
 
 export default function AgeGroupReportCardsPage() {
   usePageTitle(['Age Group Report Cards']);
@@ -165,17 +166,15 @@ export default function AgeGroupReportCardsPage() {
             </div>
           </>
         ) : filteredReports.length === 0 ? (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-            <FileText className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-              No Report Cards Found
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {filterRating !== 'all' 
+          <EmptyState
+            icon={FileText}
+            title="No Report Cards Found"
+            description={
+              filterRating !== 'all'
                 ? 'No report cards match the selected filter.'
-                : 'No report cards have been created for this age group yet.'}
-            </p>
-          </div>
+                : 'No report cards have been created for this age group yet.'
+            }
+          />
         ) : (
           <>
             {/* Mobile Card View */}

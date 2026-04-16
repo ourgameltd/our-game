@@ -1,7 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { Users } from 'lucide-react';
 import { useClubById, useAgeGroupById, useTeamsByAgeGroupId } from '@/api/hooks';
 import TeamListCard from '@components/team/TeamListCard';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
 import { Team, Club, AgeGroup, SquadSize } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -181,11 +183,11 @@ export default function TeamsListPage() {
             </div>
           </div>
         ) : teamsMapped.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-            <p className="text-gray-600 dark:text-gray-400">
-              No teams found for this age group.
-            </p>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No teams yet"
+            description="No teams found for this age group."
+          />
         ) : (
           <div className="flex flex-col gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {teamsMapped.map((team) => {

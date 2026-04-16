@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { apiClient } from '@/api';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import type {
@@ -16,6 +16,7 @@ import TopPerformersCard from '../../components/players/TopPerformersCard';
 import NeedsSupportCard from '../../components/players/NeedsSupportCard';
 import TeamListCard from '../../components/team/TeamListCard';
 import PageTitle from '../../components/common/PageTitle';
+import EmptyState from '../../components/common/EmptyState';
 import { Routes } from '@utils/routes';
 import { useRequiredParams } from '@utils/routeParams';
 
@@ -332,17 +333,21 @@ const AgeGroupOverviewPage: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-600 dark:text-gray-400 mb-4">No teams yet in this age group</p>
-              {!isArchived && clubId && ageGroupId && (
-                <Link
-                  to={Routes.teamNew(clubId, ageGroupId)}
-                  className="inline-flex px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                >
-                  Create First Team
-                </Link>
-              )}
-            </div>
+            <EmptyState
+              icon={Users}
+              title="No teams yet"
+              description="No teams yet in this age group"
+              action={
+                !isArchived && clubId && ageGroupId ? (
+                  <Link
+                    to={Routes.teamNew(clubId, ageGroupId)}
+                    className="inline-flex px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                  >
+                    Create First Team
+                  </Link>
+                ) : undefined
+              }
+            />
           )}
         </div>
 

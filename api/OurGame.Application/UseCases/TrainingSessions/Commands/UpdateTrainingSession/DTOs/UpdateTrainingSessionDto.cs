@@ -27,13 +27,6 @@ public record UpdateTrainingSessionRequest
     /// </summary>
     public List<string> FocusAreas { get; init; } = new();
 
-    /// <summary>
-    /// Session category: Whole Part Whole, Skills Practice, Circuits, or Scenario
-    /// </summary>
-    [Required]
-    [StringLength(100)]
-    public string Category { get; init; } = "Whole Part Whole";
-
     public Guid? TemplateId { get; init; }
 
     [StringLength(4000)]

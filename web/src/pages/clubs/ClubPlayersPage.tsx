@@ -1,11 +1,12 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useRequiredParams } from '@utils/routeParams';
-import { Plus, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Filter, Users, Search } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
 import type { ClubPlayerDto, ClubTeamDto, ClubDetailDto } from '@/api';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import type { Player, PlayerPosition, PlayerAttributes } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -461,33 +462,38 @@ export default function ClubPlayersPage() {
         )}
 
         {!playersLoading && filteredPlayers.length === 0 && allPlayers.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">⚽</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No players yet</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Get started by adding your first player to the club</p>
-            <button className="btn-success btn-md flex items-center gap-2" title="Add First Player">
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No players yet"
+            description="Get started by adding your first player to the club"
+            action={
+              <button className="btn-success btn-md flex items-center gap-2" title="Add First Player">
+                <Plus className="w-5 h-5" />
+                Add First Player
+              </button>
+            }
+          />
         )}
 
         {!playersLoading && filteredPlayers.length === 0 && allPlayers.length > 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">🔍</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No players found</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Try adjusting your filters to see more results</p>
-            <button 
-              onClick={() => {
-                setSearchName('');
-                setFilterAgeGroup('');
-                setFilterPosition('');
-                setFilterTeam('');
-              }}
-              className="btn-secondary btn-md"
-            >
-              Clear Filters
-            </button>
-          </div>
+          <EmptyState
+            icon={Search}
+            title="No players found"
+            description="Try adjusting your filters to see more results"
+            action={
+              <button
+                onClick={() => {
+                  setSearchName('');
+                  setFilterAgeGroup('');
+                  setFilterPosition('');
+                  setFilterTeam('');
+                }}
+                className="btn-secondary btn-md"
+              >
+                Clear Filters
+              </button>
+            }
+          />
         )}
       </main>
     </div>

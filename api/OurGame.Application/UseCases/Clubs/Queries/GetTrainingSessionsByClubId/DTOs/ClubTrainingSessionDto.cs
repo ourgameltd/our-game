@@ -15,7 +15,7 @@ public class ClubTrainingSessionDto
     public int? DurationMinutes { get; set; }
     public string Location { get; set; } = string.Empty;
     public List<string> FocusAreas { get; set; } = new();
-    public string Category { get; set; } = "Whole Part Whole";
+    public Guid? TemplateId { get; set; }
     public List<Guid> DrillIds { get; set; } = new();
     public List<AttendanceDto> Attendance { get; set; } = new();
     public string Status { get; set; } = string.Empty;

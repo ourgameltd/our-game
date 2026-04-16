@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import { Plus, Loader2, AlertCircle, Search } from 'lucide-react';
+import { Plus, Loader2, AlertCircle, Search, UserCog } from 'lucide-react';
 import { useTeamOverview, useTeamCoaches, useClubCoaches, useAssignTeamCoach, useRemoveTeamCoach } from '@/api/hooks';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
 import { mapUiRoleToApi } from '@/api/mappers';
 import { useRequiredParams } from '@utils/routeParams';
@@ -299,21 +300,23 @@ export default function TeamCoachesPage() {
         )}
 
         {safeTeamCoaches.length === 0 && (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">👨‍🏫</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No coaches assigned yet</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Assign coaches from your club to manage this team</p>
-            {!team.isArchived && (
-              <button 
-                onClick={() => setShowAddModal(true)}
-                className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 mx-auto"
-                title="Assign Coaches"
-              >
-                <Plus className="w-5 h-5" />
-                Assign Coach
-              </button>
-            )}
-          </div>
+          <EmptyState
+            icon={UserCog}
+            title="No coaches assigned yet"
+            description="Assign coaches from your club to manage this team"
+            action={
+              !team.isArchived ? (
+                <button
+                  onClick={() => setShowAddModal(true)}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                  title="Assign Coaches"
+                >
+                  <Plus className="w-5 h-5" />
+                  Assign Coach
+                </button>
+              ) : undefined
+            }
+          />
         )}
 
         {/* Assign Coach Modal */}

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Shirt } from 'lucide-react';
 import { Kit } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
@@ -14,6 +15,7 @@ import { CreateClubKitRequest, UpdateClubKitRequest } from '@/api/client';
 import KitBuilder from '@/components/kit/KitBuilder';
 import KitCard from '@/components/kit/KitCard';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 
 // Skeleton component for kit card loading state
 function KitCardSkeleton() {
@@ -221,17 +223,19 @@ export default function ClubKitsPage() {
 
         {/* Empty State */}
         {!showBuilder && !kitsLoading && !kitsError && kits.length === 0 && (
-          <div className="card text-center py-8">
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              No kits have been created for this club yet.
-            </p>
-            <button
-              onClick={() => setShowBuilder(true)}
-              className="btn-success"
-            >
-              Create First Kit
-            </button>
-          </div>
+          <EmptyState
+            icon={Shirt}
+            title="No kits yet"
+            description="No kits have been created for this club yet."
+            action={
+              <button
+                onClick={() => setShowBuilder(true)}
+                className="btn-success"
+              >
+                Create First Kit
+              </button>
+            }
+          />
         )}
       </main>
     </div>

@@ -22,8 +22,6 @@ public partial class TrainingSession
 
     public string FocusAreas { get; set; }
 
-    public string Category { get; set; }
-
     public Guid? TemplateId { get; set; }
 
     public string Notes { get; set; }

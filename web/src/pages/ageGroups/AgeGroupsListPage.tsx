@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, Users } from 'lucide-react';
 import { useClubById, useAgeGroupsByClubId, AgeGroupListDto } from '@/api';
 import PageTitle from '../../components/common/PageTitle';
+import EmptyState from '../../components/common/EmptyState';
 import AgeGroupListCard from '../../components/ageGroup/AgeGroupListCard';
 import { Routes } from '@utils/routes';
 import { Club, AgeGroup } from '@/types';
@@ -253,9 +254,11 @@ const AgeGroupsListPage: React.FC = () => {
 
         {/* Empty state */}
         {!isLoading && !hasError && sortedAgeGroups.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-gray-500 dark:text-gray-400 text-lg">No age groups found for this club</p>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No age groups yet"
+            description="No age groups found for this club."
+          />
         )}
       </main>
     </div>

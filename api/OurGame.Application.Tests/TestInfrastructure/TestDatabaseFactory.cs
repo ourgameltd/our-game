@@ -463,7 +463,6 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
             Location = "Training Ground",
             Status = status,
             FocusAreas = "[]",
-            Category = "Whole Part Whole",
             Notes = string.Empty,
             CreatedAt = now,
             UpdatedAt = now

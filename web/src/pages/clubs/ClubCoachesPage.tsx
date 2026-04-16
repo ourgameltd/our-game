@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Filter, UserCog, Search } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
 import type { ClubCoachDto, ClubTeamDto } from '@/api';
@@ -8,6 +8,7 @@ import { Routes } from '@utils/routes';
 import { useRequiredParams } from '@utils/routeParams';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import type { Coach } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { parseDateOfBirth } from '@/utils/dateOfBirth';
@@ -437,38 +438,42 @@ export default function ClubCoachesPage() {
         )}
 
         {!coachesLoading && filteredCoaches.length === 0 && allCoaches.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">👨‍🏫</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No coaches yet</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Get started by adding your first coach to the club</p>
-            <button 
-              onClick={() => navigate(Routes.coachSettings(clubId, 'new'))}
-              className="btn-success btn-md flex items-center gap-2 mx-auto" 
-              title="Add First Coach"
-            >
-              <Plus className="w-5 h-5" />
-              Add First Coach
-            </button>
-          </div>
+          <EmptyState
+            icon={UserCog}
+            title="No coaches yet"
+            description="Get started by adding your first coach to the club"
+            action={
+              <button
+                onClick={() => navigate(Routes.coachSettings(clubId, 'new'))}
+                className="btn-success btn-md flex items-center gap-2"
+                title="Add First Coach"
+              >
+                <Plus className="w-5 h-5" />
+                Add First Coach
+              </button>
+            }
+          />
         )}
 
         {!coachesLoading && filteredCoaches.length === 0 && allCoaches.length > 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">🔍</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No coaches found</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Try adjusting your filters to see more results</p>
-            <button 
-              onClick={() => {
-                setSearchName('');
-                setFilterRole('');
-                setFilterAgeGroup('');
-                setFilterTeam('');
-              }}
-              className="btn-secondary btn-md"
-            >
-              Clear Filters
-            </button>
-          </div>
+          <EmptyState
+            icon={Search}
+            title="No coaches found"
+            description="Try adjusting your filters to see more results"
+            action={
+              <button
+                onClick={() => {
+                  setSearchName('');
+                  setFilterRole('');
+                  setFilterAgeGroup('');
+                  setFilterTeam('');
+                }}
+                className="btn-secondary btn-md"
+              >
+                Clear Filters
+              </button>
+            }
+          />
         )}
       </main>
     </div>

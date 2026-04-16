@@ -1,12 +1,13 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users, Clock3, ListOrdered, Globe2 } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users, Clock3, ListOrdered, Globe2, ClipboardList } from 'lucide-react';
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
 import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
 import { normalizeSessionCategory, getSessionCategoryColors } from '@/constants/sessionCategories';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton component for template row loading state
@@ -381,15 +382,15 @@ export default function DrillTemplatesListPage() {
                   ))}
                 </div>
               ) : (
-                <div className="card text-center py-12">
-                  <p className="font-medium text-gray-900 dark:text-white">No sessions found</p>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                    {hasActiveFilters
+                <EmptyState
+                  icon={ClipboardList}
+                  title="No sessions found"
+                  description={
+                    hasActiveFilters
                       ? 'Try adjusting your filters'
                       : 'Create your first session template to get started'
-                    }
-                  </p>
-                </div>
+                  }
+                />
               )}
             </div>
 

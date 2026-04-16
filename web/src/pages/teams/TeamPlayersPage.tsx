@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, AlertCircle, Search, ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { Plus, AlertCircle, Search, ChevronDown, ChevronUp, Filter, Users } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { 
@@ -13,6 +13,7 @@ import {
 } from '@/api';
 import PlayerCard from '@components/player/PlayerCard';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
 import { Player, PlayerAttributes } from '@/types';
 import { useRequiredParams } from '@utils/routeParams';
@@ -365,18 +366,21 @@ export default function TeamPlayersPage() {
         )}
 
         {teamPlayers.length === 0 && (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">👥</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No players in this team yet</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">Add players from your club to build your squad</p>
-            <button 
-              onClick={() => setShowAddModal(true)}
-              className="btn-success btn-md flex items-center gap-2"
-              title="Add Players from Club"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No players in this team yet"
+            description="Add players from your club to build your squad"
+            action={
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="btn-success btn-md flex items-center gap-2"
+                title="Add Players from Club"
+              >
+                <Plus className="w-5 h-5" />
+                Add Players
+              </button>
+            }
+          />
         )}
 
         {/* Add Player Modal */}

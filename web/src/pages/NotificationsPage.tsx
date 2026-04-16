@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageTitle from '@/components/common/PageTitle';
+import EmptyState from '@/components/common/EmptyState';
 import { Bell, BellOff, Check, CheckCheck, Trash2, Filter, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2 } from 'lucide-react';
 import { getNotificationTypeColors } from '@/data/referenceData';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -248,18 +249,15 @@ export default function NotificationsPage() {
               <p className="text-sm text-red-700 dark:text-red-300">{dataError}</p>
             </div>
           ) : filteredNotifications.length === 0 ? (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-12 text-center">
-              <Bell className="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" />
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-                No notifications
-              </h3>
-              <p className="text-gray-600 dark:text-gray-400">
-                {filter === 'unread' 
+            <EmptyState
+              icon={Bell}
+              title="No notifications"
+              description={
+                filter === 'unread'
                   ? "You're all caught up! No unread notifications."
                   : "You don't have any notifications yet."
-                }
-              </p>
-            </div>
+              }
+            />
           ) : (
             filteredNotifications.map((notification) => (
               <div

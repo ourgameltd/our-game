@@ -35,9 +35,6 @@ public record TrainingSessionDetailDto
     /// <summary>Areas of focus for the session (e.g. passing, defending, set pieces)</summary>
     public string[] FocusAreas { get; init; } = [];
 
-    /// <summary>Session category: Whole Part Whole, Skills Practice, Circuits, or Scenario</summary>
-    public string Category { get; init; } = "Whole Part Whole";
-
     /// <summary>Optional drill template this session is based on</summary>
     public Guid? TemplateId { get; init; }
 

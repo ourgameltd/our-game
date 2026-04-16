@@ -1,9 +1,10 @@
 import { useParams } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, MapPin, Filter } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Filter, ClipboardList } from 'lucide-react';
 import { useClubById, useClubTeams, useClubTrainingSessions } from '@/api/hooks';
 import { ClubTrainingSessionDto } from '@/api/client';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
 import { Link } from 'react-router-dom';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -438,29 +439,29 @@ export default function ClubTrainingSessionsPage() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-            <div className="text-gray-400 dark:text-gray-500 text-5xl mb-4">📋</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-              {allSessions.length === 0 ? 'No training sessions yet' : 'No sessions found'}
-            </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              {allSessions.length === 0 
+          <EmptyState
+            icon={ClipboardList}
+            title={allSessions.length === 0 ? 'No training sessions yet' : 'No sessions found'}
+            description={
+              allSessions.length === 0
                 ? 'Training sessions will appear here once they are scheduled'
-                : 'Try adjusting your filters to see more results'}
-            </p>
-            {allSessions.length > 0 && (
-              <button 
-                onClick={() => {
-                  setFilterAgeGroup('');
-                  setFilterTeam('');
-                  setFilterStatus('all');
-                }}
-                className="btn-secondary btn-md"
-              >
-                Clear Filters
-              </button>
-            )}
-          </div>
+                : 'Try adjusting your filters to see more results'
+            }
+            action={
+              allSessions.length > 0 ? (
+                <button
+                  onClick={() => {
+                    setFilterAgeGroup('');
+                    setFilterTeam('');
+                    setFilterStatus('all');
+                  }}
+                  className="btn-secondary btn-md"
+                >
+                  Clear Filters
+                </button>
+              ) : undefined
+            }
+          />
         )}
       </main>
     </div>

@@ -1,9 +1,10 @@
 import { Link, useParams } from 'react-router-dom';
-import { Users, AlertCircle } from 'lucide-react';
+import { Users, AlertCircle, LayoutGrid } from 'lucide-react';
 import { useTacticsByScope } from '@/api/hooks';
 import type { TacticListDto } from '@/api';
 import { Routes } from '@/utils/routes';
 import PageTitle from '@/components/common/PageTitle';
+import EmptyState from '@/components/common/EmptyState';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton component for tactic row loading state
@@ -128,11 +129,11 @@ export default function TacticsListPage() {
           {!isLoading && !error && (
             <div>
               {tactics.length === 0 ? (
-                <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
-                  <p className="text-gray-600 dark:text-gray-400">
-                    No tactics created yet. Create your first tactic to get started.
-                  </p>
-                </div>
+                <EmptyState
+                  icon={LayoutGrid}
+                  title="No tactics yet"
+                  description="Create your first tactic to get started."
+                />
               ) : (
                 <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
                   {tactics.map((tactic: TacticListDto) => (

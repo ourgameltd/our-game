@@ -9,10 +9,7 @@ public class TrainingSessionConfiguration : IEntityTypeConfiguration<TrainingSes
 {
     public void Configure(EntityTypeBuilder<TrainingSession> builder)
     {
-        builder.Property(ts => ts.Category)
-            .IsRequired()
-            .HasMaxLength(100)
-            .HasDefaultValue("Whole Part Whole");
+        // No additional configuration currently required for TrainingSession.
     }
 }
 

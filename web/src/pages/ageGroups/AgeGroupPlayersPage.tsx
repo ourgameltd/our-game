@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, Users } from 'lucide-react';
 import { useAgeGroupPlayers } from '@/api/hooks';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { 
@@ -13,6 +13,7 @@ import {
 } from '@/api/client';
 import PlayerCard from '@components/player/PlayerCard';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
 import { useRequiredParams } from '@utils/routeParams';
 import { Player, PlayerAttributes } from '@/types';
@@ -295,21 +296,21 @@ export default function AgeGroupPlayersPage() {
           </div>
         )}
         {ageGroupPlayers.length === 0 && (
-          <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
-            <div className="text-gray-400 text-5xl mb-4">👥</div>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No players in this age group yet</h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Players will appear here once they are assigned to teams in this age group
-            </p>
-            {clubId && ageGroupId && (
-              <Link
-                to={Routes.teams(clubId, ageGroupId)}
-                className="btn-primary btn-md inline-block"
-              >
-                View Teams
-              </Link>
-            )}
-          </div>
+          <EmptyState
+            icon={Users}
+            title="No players in this age group yet"
+            description="Players will appear here once they are assigned to teams in this age group"
+            action={
+              clubId && ageGroupId ? (
+                <Link
+                  to={Routes.teams(clubId, ageGroupId)}
+                  className="btn-primary btn-md inline-block"
+                >
+                  View Teams
+                </Link>
+              ) : undefined
+            }
+          />
         )}
       </main>
     </div>

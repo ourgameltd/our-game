@@ -13,7 +13,6 @@ public class UpdateTrainingSessionHandlerTests
         SessionDate = DateTime.UtcNow.AddDays(5),
         Location = "Updated Pitch",
         FocusAreas = new List<string> { "defending" },
-        Category = "Scenario",
         Notes = "Updated notes",
         Status = "scheduled",
         IsLocked = false,
@@ -47,23 +46,6 @@ public class UpdateTrainingSessionHandlerTests
 
         Assert.Equal(sessionId, result.Id);
         Assert.Equal("Updated Pitch", result.Location);
-        Assert.Equal("Scenario", result.Category);
-    }
-
-    [Fact]
-    public async Task Handle_WhenCategoryInvalid_ThrowsValidationException()
-    {
-        await using var db = await TestDatabaseFactory.CreateAsync();
-        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
-        var sessionId = await db.SeedTrainingSessionAsync(teamId: teamId);
-
-        var handler = new UpdateTrainingSessionHandler(db.Context);
-        var dto = ValidDto(teamId) with { Category = "Nope" };
-
-        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
-            handler.Handle(new UpdateTrainingSessionCommand(sessionId, dto), CancellationToken.None));
-
-        Assert.Contains("Category", ex.Errors.Keys);
     }
 
     [Fact]

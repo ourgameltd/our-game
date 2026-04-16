@@ -1,7 +1,7 @@
 import { useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useRequiredParams } from '@utils/routeParams';
-import { Plus } from 'lucide-react';
+import { Plus, Users } from 'lucide-react';
 import { apiClient } from '@/api';
 import type { 
   ClubDetailDto, 
@@ -14,6 +14,7 @@ import StatsGrid from '@components/stats/StatsGrid';
 import MatchesCard from '@components/matches/MatchesCard';
 import AgeGroupListCard from '@components/ageGroup/AgeGroupListCard';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -329,15 +330,19 @@ export default function ClubOverviewPage() {
               })}
             </div>
           ) : (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-600 dark:text-gray-400 mb-4">No age groups yet in this club</p>
-              <Link
-                to={Routes.ageGroupNew(clubId)}
-                className="inline-flex px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-              >
-                Create First Age Group
-              </Link>
-            </div>
+            <EmptyState
+              icon={Users}
+              title="No age groups yet"
+              description="No age groups yet in this club"
+              action={
+                <Link
+                  to={Routes.ageGroupNew(clubId)}
+                  className="inline-flex px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+                >
+                  Create First Age Group
+                </Link>
+              }
+            />
           )}
         </div>
 

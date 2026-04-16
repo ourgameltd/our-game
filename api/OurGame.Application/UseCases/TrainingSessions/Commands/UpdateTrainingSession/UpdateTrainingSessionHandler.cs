@@ -15,14 +15,6 @@ namespace OurGame.Application.UseCases.TrainingSessions.Commands.UpdateTrainingS
 /// </summary>
 public class UpdateTrainingSessionHandler : IRequestHandler<UpdateTrainingSessionCommand, TrainingSessionDetailDto>
 {
-    private static readonly HashSet<string> ValidSessionCategories = new(StringComparer.Ordinal)
-    {
-        "Whole Part Whole",
-        "Skills Practice",
-        "Circuits",
-        "Scenario"
-    };
-
     private readonly OurGameContext _db;
 
     public UpdateTrainingSessionHandler(OurGameContext db)
@@ -45,10 +37,7 @@ public class UpdateTrainingSessionHandler : IRequestHandler<UpdateTrainingSessio
         var location = dto.Location ?? string.Empty;
         var focusAreasJson = JsonSerializer.Serialize(dto.FocusAreas);
         var notes = dto.Notes ?? string.Empty;
-        var category = string.IsNullOrWhiteSpace(dto.Category) ? "Whole Part Whole" : dto.Category.Trim();
-
-        if (!ValidSessionCategories.Contains(category))
-            throw new ValidationException("Category", "Category must be one of: Whole Part Whole, Skills Practice, Circuits, Scenario.");
+        var templateId = dto.TemplateId ?? dto.AppliedTemplates.FirstOrDefault()?.TemplateId;
 
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
@@ -63,8 +52,7 @@ public class UpdateTrainingSessionHandler : IRequestHandler<UpdateTrainingSessio
                     DurationMinutes = {dto.DurationMinutes},
                     Location = {location},
                     FocusAreas = {focusAreasJson},
-                    Category = {category},
-                    TemplateId = {dto.TemplateId},
+                    TemplateId = {templateId},
                     Notes = {notes},
                     Status = {statusInt},
                     IsLocked = {dto.IsLocked},

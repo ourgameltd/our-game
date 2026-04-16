@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, Settings, Images, GitBranch, X } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, Settings, Images, GitBranch, X, Dumbbell } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
 import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
@@ -8,6 +8,7 @@ import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
 import { drillCategories, getAttributeLabel, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 // Skeleton component for drills list loading state
@@ -407,17 +408,15 @@ export default function DrillsListPage() {
             })}
           </div>
         ) : (
-          <div className="card text-center py-12">
-            <span className="text-5xl mb-3 block">⚽</span>
-            <p className="font-medium text-gray-900 dark:text-white">No drills found</p>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-              {searchTerm || selectedAttributes.length > 0
-                || selectedCategory !== 'all'
+          <EmptyState
+            icon={Dumbbell}
+            title="No drills found"
+            description={
+              searchTerm || selectedAttributes.length > 0 || selectedCategory !== 'all'
                 ? 'Try adjusting your filters'
                 : 'Create your first drill to get started'
-              }
-            </p>
-          </div>
+            }
+          />
         )}
       </main>
     </div>
