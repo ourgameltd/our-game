@@ -292,7 +292,7 @@ export default function ClubPlayersPage() {
         )}
 
         {/* Search and Filter */}
-        <div className="card mb-4">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
           <button
             onClick={() => setShowFilters(!showFilters)}
             className="w-full flex items-center justify-between text-left"
