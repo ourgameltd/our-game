@@ -42,6 +42,7 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
                 ts.DurationMinutes,
                 ts.Location,
                 ts.FocusAreas,
+                ts.Category,
                 ts.Status,
                 ts.IsLocked,
                 (SELECT STRING_AGG(CAST(sd.DrillId AS VARCHAR(36)), ',') 
@@ -121,6 +122,7 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
             DurationMinutes = s.DurationMinutes,
             Location = s.Location ?? string.Empty,
             FocusAreas = ParseFocusAreas(s.FocusAreas),
+            Category = string.IsNullOrWhiteSpace(s.Category) ? "Whole Part Whole" : s.Category,
             DrillIds = ParseDrillIds(s.DrillIdsString),
             Attendance = ParseAttendance(s.AttendanceString),
             Status = MapStatusToString(s.Status),
@@ -224,6 +226,7 @@ public class TrainingSessionRawDto
     public int? DurationMinutes { get; set; }
     public string? Location { get; set; }
     public string? FocusAreas { get; set; }
+    public string? Category { get; set; }
     public int Status { get; set; }
     public bool IsLocked { get; set; }
     public string? DrillIdsString { get; set; }

@@ -36,6 +36,11 @@ public record TeamTrainingSessionDto
     public List<string> FocusAreas { get; init; } = new();
 
     /// <summary>
+    /// Session category: Whole Part Whole, Skills Practice, Circuits, or Scenario
+    /// </summary>
+    public string Category { get; init; } = "Whole Part Whole";
+
+    /// <summary>
     /// List of drill IDs included in the session
     /// </summary>
     public List<Guid> DrillIds { get; init; } = new();

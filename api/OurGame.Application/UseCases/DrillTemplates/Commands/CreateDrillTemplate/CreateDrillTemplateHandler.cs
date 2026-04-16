@@ -17,6 +17,11 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
     private readonly OurGameContext _db;
     private readonly GetDrillTemplatesByScopeHandler _getDrillTemplatesByScopeHandler;
 
+    private static readonly HashSet<string> ValidSessionCategories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Whole Part Whole", "Skills Practice", "Circuits", "Scenario"
+    };
+
     public CreateDrillTemplateHandler(OurGameContext db)
     {
         _db = db;
@@ -47,6 +52,12 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
         if (scopeCount != 1)
         {
             throw new ValidationException("Scope", "Exactly one scope (ClubId, AgeGroupId, or TeamId) must be provided.");
+        }
+
+        // Validate session category
+        if (!string.IsNullOrWhiteSpace(dto.SessionCategory) && !ValidSessionCategories.Contains(dto.SessionCategory))
+        {
+            throw new ValidationException("SessionCategory", $"Invalid session category '{dto.SessionCategory}'. Valid values: {string.Join(", ", ValidSessionCategories)}.");
         }
 
         // Resolve CreatedBy coach ID from authenticated user
@@ -101,6 +112,7 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
 
         var aggregatedAttributes = JsonSerializer.Serialize(allAttributes.OrderBy(a => a).ToList());
         var category = categories.Count == 1 ? categories.First() : "mixed";
+        var sessionCategory = string.IsNullOrWhiteSpace(dto.SessionCategory) ? "Whole Part Whole" : dto.SessionCategory;
 
         // Generate IDs and timestamps
         var templateId = Guid.NewGuid();
@@ -114,8 +126,8 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
 
             // Insert into DrillTemplates table
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO DrillTemplates (Id, Name, Description, AggregatedAttributes, TotalDuration, Category, CreatedBy, IsPublic, CreatedAt)
-                VALUES ({templateId}, {dto.Name}, {dto.Description}, {aggregatedAttributes}, {totalDuration}, {category}, {coachId}, {dto.IsPublic}, {now})
+                INSERT INTO DrillTemplates (Id, Name, Description, AggregatedAttributes, TotalDuration, Category, SessionCategory, CreatedBy, IsPublic, CreatedAt)
+                VALUES ({templateId}, {dto.Name}, {dto.Description}, {aggregatedAttributes}, {totalDuration}, {category}, {sessionCategory}, {coachId}, {dto.IsPublic}, {now})
             ", cancellationToken);
 
             // Insert scope link row

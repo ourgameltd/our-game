@@ -33,6 +33,7 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
                 ts.DurationMinutes,
                 ts.Location,
                 ts.FocusAreas,
+                ts.Category,
                 ts.TemplateId,
                 ts.Notes,
                 ts.Status,
@@ -137,6 +138,7 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
             DurationMinutes = session.DurationMinutes,
             Location = session.Location ?? string.Empty,
             FocusAreas = ParseFocusAreas(session.FocusAreas),
+            Category = string.IsNullOrWhiteSpace(session.Category) ? "Whole Part Whole" : session.Category,
             TemplateId = session.TemplateId,
             Notes = session.Notes,
             Status = MapSessionStatusToString(session.Status),
@@ -269,6 +271,7 @@ public class TrainingSessionRaw
     public int? DurationMinutes { get; set; }
     public string? Location { get; set; }
     public string? FocusAreas { get; set; }
+    public string? Category { get; set; }
     public Guid? TemplateId { get; set; }
     public string? Notes { get; set; }
     public int Status { get; set; }

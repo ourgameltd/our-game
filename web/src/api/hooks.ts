@@ -87,6 +87,7 @@ import {
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 import { normalizeCoachDetail } from './mappers';
+import { normalizeSessionCategory } from '@/constants/sessionCategories';
 
 /**
  * Validates if an ID is valid for API calls.
@@ -1728,6 +1729,7 @@ function mapTrainingSessionDetailToUi(dto: TrainingSessionDetailDto): TrainingSe
     duration: dto.durationMinutes || 0,
     location: dto.location || '',
     focusAreas: dto.focusAreas || [],
+    sessionCategory: normalizeSessionCategory(dto.category),
     drillIds: (dto.drills || []).map(d => d.drillId),
     sessionDrills: (dto.drills || []).map(d => ({
       drillId: d.drillId,

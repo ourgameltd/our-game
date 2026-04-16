@@ -7,6 +7,7 @@ import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { Link } from 'react-router-dom';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { getSessionCategoryColors, normalizeSessionCategory } from '@/constants/sessionCategories';
 
 // Skeleton components for loading states
 function SessionRowSkeleton() {
@@ -210,6 +211,11 @@ export default function ClubTrainingSessionsPage() {
             {/* Focus Areas */}
             {session.focusAreas && session.focusAreas.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${getSessionCategoryColors(normalizeSessionCategory(session.category)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(session.category)).textColor}`}
+                >
+                  {normalizeSessionCategory(session.category)}
+                </span>
                 {session.focusAreas.map((area: string, idx: number) => (
                   <span
                     key={idx}
@@ -218,6 +224,16 @@ export default function ClubTrainingSessionsPage() {
                     {area}
                   </span>
                 ))}
+              </div>
+            )}
+
+            {(!session.focusAreas || session.focusAreas.length === 0) && (
+              <div className="mb-2">
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${getSessionCategoryColors(normalizeSessionCategory(session.category)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(session.category)).textColor}`}
+                >
+                  {normalizeSessionCategory(session.category)}
+                </span>
               </div>
             )}
             

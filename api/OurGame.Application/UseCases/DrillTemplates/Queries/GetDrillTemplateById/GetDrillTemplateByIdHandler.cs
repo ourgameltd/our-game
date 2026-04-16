@@ -34,6 +34,7 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
                 dt.AggregatedAttributes,
                 dt.TotalDuration,
                 dt.Category,
+                dt.SessionCategory,
                 dt.CreatedBy,
                 dt.IsPublic,
                 dt.CreatedAt,
@@ -81,6 +82,7 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
             DrillIds = drillIds,
             TotalDuration = raw.TotalDuration ?? 0,
             Category = raw.Category,
+            SessionCategory = raw.SessionCategory ?? "Whole Part Whole",
             Attributes = ParseJsonArray(raw.AggregatedAttributes),
             IsPublic = raw.IsPublic,
             CreatedBy = raw.CreatedBy,
@@ -127,6 +129,7 @@ public class DrillTemplateRawDto
     public string? AggregatedAttributes { get; set; }
     public int? TotalDuration { get; set; }
     public string? Category { get; set; }
+    public string? SessionCategory { get; set; }
     public Guid? CreatedBy { get; set; }
     public bool IsPublic { get; set; }
     public DateTime CreatedAt { get; set; }

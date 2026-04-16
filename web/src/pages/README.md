@@ -36,3 +36,8 @@ Page-level route components. Each domain folder contains the page components ren
 | `public/` | Public-facing pages (club page, fan view) |
 | `tactics/` | Tactics and formation management pages |
 | `teams/` | Team overview and roster pages |
+
+## Recent Updates
+
+- Team training session edit page now supports a dedicated session category selector and displays the selected session category beside the page title.
+- Drill form reference-link add action now uses shared add-button styling for visual consistency with other add actions.

@@ -38,3 +38,4 @@ Business logic layer implementing CQRS with MediatR. Contains use case handlers,
 - Coach update command DTOs and handlers now support unlinking linked accounts:
   - `UnlinkCoachAccount` to remove the coach's own user link
   - `RemoveLinkedEmergencyContactIds` to remove linked emergency-contact accounts
+- Training session create/update/query flows now include a dedicated session category field with validation for: `Whole Part Whole`, `Skills Practice`, `Circuits`, and `Scenario`.

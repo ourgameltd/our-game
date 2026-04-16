@@ -42,6 +42,13 @@ public record CreateTrainingSessionDto
     public List<string> FocusAreas { get; init; } = new();
 
     /// <summary>
+    /// Session category: Whole Part Whole, Skills Practice, Circuits, or Scenario
+    /// </summary>
+    [Required]
+    [StringLength(100)]
+    public string Category { get; init; } = "Whole Part Whole";
+
+    /// <summary>
     /// Optional free-text notes about the session
     /// </summary>
     [StringLength(4000)]

@@ -28,6 +28,12 @@ public record UpdateDrillTemplateRequestDto
     public List<Guid> DrillIds { get; init; } = new();
 
     /// <summary>
+    /// Session category (Whole Part Whole, Skills Practice, Circuits, Scenario)
+    /// </summary>
+    [StringLength(100)]
+    public string SessionCategory { get; init; } = "Whole Part Whole";
+
+    /// <summary>
     /// Whether the template is public/shared
     /// </summary>
     public bool IsPublic { get; init; }

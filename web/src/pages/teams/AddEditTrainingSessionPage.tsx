@@ -6,6 +6,7 @@ import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, us
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest } from '@/api/client';
 import { sessionDurations } from '@/data/referenceData';
 import { drillCategories, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
+import { sessionCategories, normalizeSessionCategory, getSessionCategoryColors } from '@/constants/sessionCategories';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { Drill, SessionDrill } from '@/types';
@@ -41,6 +42,7 @@ export default function AddEditTrainingSessionPage() {
   const [duration, setDuration] = useState('60');
   const [location, setLocation] = useState('');
   const [focusAreas, setFocusAreas] = useState<string[]>([]);
+  const [sessionCategory, setSessionCategory] = useState<'Whole Part Whole' | 'Skills Practice' | 'Circuits' | 'Scenario'>('Whole Part Whole');
   const [focusAreaInput, setFocusAreaInput] = useState('');
   const [sessionDrills, setSessionDrills] = useState<SessionDrill[]>([]);
   const [appliedTemplates, setAppliedTemplates] = useState<{ templateId: string; appliedAt: Date; drillIds: string[] }[]>([]);
@@ -76,6 +78,7 @@ export default function AddEditTrainingSessionPage() {
     setDuration(existingSession.duration?.toString() || '60');
     setLocation(existingSession.location || '');
     setFocusAreas(existingSession.focusAreas || []);
+    setSessionCategory(normalizeSessionCategory(existingSession.sessionCategory));
     setNotes(existingSession.notes || '');
     setIsLocked(existingSession.isLocked || false);
     setAssignedCoachIds(existingSession.coachIds || []);
@@ -288,6 +291,7 @@ export default function AddEditTrainingSessionPage() {
           durationMinutes: parseInt(duration) || 60,
           location,
           focusAreas,
+          category: sessionCategory,
           notes: notes || undefined,
           status: existingSession?.status || 'scheduled',
           isLocked,
@@ -317,6 +321,7 @@ export default function AddEditTrainingSessionPage() {
           durationMinutes: parseInt(duration) || 60,
           location,
           focusAreas,
+          category: sessionCategory,
           notes: notes || undefined,
           status: 'scheduled',
           isLocked,
@@ -459,9 +464,14 @@ export default function AddEditTrainingSessionPage() {
         <div className="mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {isEditing ? 'Edit Training Session' : 'Add New Training Session'}
-              </h2>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                  {isEditing ? 'Edit Training Session' : 'Add New Training Session'}
+                </h2>
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getSessionCategoryColors(sessionCategory).bgColor} ${getSessionCategoryColors(sessionCategory).textColor}`}>
+                  {sessionCategory}
+                </span>
+              </div>
               <p className="text-gray-600 dark:text-gray-400">
                 {team.name} - {club.name}
               </p>
@@ -566,6 +576,24 @@ export default function AddEditTrainingSessionPage() {
                   >
                     {sessionDurations.map(d => (
                       <option key={d.value} value={d.value.toString()}>{d.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Session Category
+                  </label>
+                  <select
+                    value={sessionCategory}
+                    onChange={(e) => setSessionCategory(normalizeSessionCategory(e.target.value))}
+                    disabled={isLocked}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {sessionCategories.map((category) => (
+                      <option key={category.value} value={category.value}>
+                        {category.label}
+                      </option>
                     ))}
                   </select>
                 </div>

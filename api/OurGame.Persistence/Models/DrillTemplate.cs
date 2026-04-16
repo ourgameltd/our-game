@@ -19,6 +19,8 @@ public partial class DrillTemplate
 
     public string Category { get; set; }
 
+    public string SessionCategory { get; set; }
+
     public Guid? CreatedBy { get; set; }
 
     public bool IsPublic { get; set; }

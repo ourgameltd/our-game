@@ -31,9 +31,14 @@ public class DrillTemplateDetailDto
     public int TotalDuration { get; set; }
 
     /// <summary>
-    /// Category of the template (technical, tactical, physical, mental, mixed)
+    /// Category of the template (Drill, Skills Practice, Game Related Practice, Conditioned Game, Mixed)
     /// </summary>
     public string? Category { get; set; }
+
+    /// <summary>
+    /// Session category (Whole Part Whole, Skills Practice, Circuits, Scenario)
+    /// </summary>
+    public string SessionCategory { get; set; } = "Whole Part Whole";
 
     /// <summary>
     /// Aggregated attributes from included drills

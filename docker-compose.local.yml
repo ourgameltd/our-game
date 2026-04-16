@@ -8,7 +8,7 @@ services:
     ports:
       - "14330:1433"
     volumes:
-      - ./.sqldata:/var/opt/mssql
+      - sqlserver_data:/var/opt/mssql
     restart: unless-stopped
 
   azurite:
@@ -19,19 +19,21 @@ services:
       - "10002:10002"
     command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
     volumes:
-      - ./.azurite:/data
+      - azurite_data:/data
     restart: unless-stopped
 
   seeder:
-    image: mcr.microsoft.com/dotnet/sdk:8.0
+    build:
+      context: ./api
+      dockerfile: OurGame.Seeder/Dockerfile
     profiles:
       - seed
-    working_dir: /workspace/api
-    volumes:
-      - ./api:/workspace/api
     environment:
       ConnectionStrings__DefaultConnection: "Server=sqlserver,1433;Database=OurGame;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True"
     depends_on:
       - sqlserver
-    command: ["dotnet", "run", "--project", "OurGame.Seeder", "--", "--clean"]
     restart: "no"
+
+volumes:
+  sqlserver_data:
+  azurite_data:

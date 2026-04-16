@@ -11,6 +11,7 @@ import {
 } from '@/api/hooks';
 import type { DrillListDto, CreateDrillTemplateRequest, UpdateDrillTemplateRequest } from '@/api';
 import { getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
+import { sessionCategories, normalizeSessionCategory, getSessionCategoryColors } from '@/constants/sessionCategories';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
@@ -96,6 +97,7 @@ export default function DrillTemplateFormPage() {
   const [description, setDescription] = useState('');
   const [selectedDrillIds, setSelectedDrillIds] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(true);
+  const [sessionCategory, setSessionCategory] = useState<'Whole Part Whole' | 'Skills Practice' | 'Circuits' | 'Scenario'>('Whole Part Whole');
   const [showDrillPicker, setShowDrillPicker] = useState(false);
 
   // Initialize form when template loads
@@ -105,6 +107,7 @@ export default function DrillTemplateFormPage() {
       setDescription(template.description || '');
       setSelectedDrillIds(template.drillIds);
       setIsPublic(template.isPublic);
+      setSessionCategory(normalizeSessionCategory(template.sessionCategory));
     }
   }, [template]);
 
@@ -115,6 +118,7 @@ export default function DrillTemplateFormPage() {
       setDescription(template.description || '');
       setSelectedDrillIds(template.drillIds);
       setIsPublic(template.isPublic);
+      setSessionCategory(normalizeSessionCategory(template.sessionCategory));
     }
   }, [template]);
 
@@ -207,7 +211,8 @@ export default function DrillTemplateFormPage() {
         name: name.trim(),
         description: description.trim(),
         drillIds: selectedDrillIds,
-        isPublic
+        isPublic,
+        sessionCategory
       };
       
       updateMutation.mutate(updateRequest).then(() => {
@@ -223,6 +228,7 @@ export default function DrillTemplateFormPage() {
         description: description.trim(),
         drillIds: selectedDrillIds,
         isPublic,
+        sessionCategory,
         scope: {
           clubId,
           ageGroupId,
@@ -281,10 +287,15 @@ export default function DrillTemplateFormPage() {
       <main className="mx-auto px-4 py-4">
         {/* Header */}
         <div className="mb-4">
-          <PageTitle
-            title={isEditMode ? (isInherited ? 'View Session (Read-Only)' : 'Edit Session') : 'Create Session'}
-            subtitle={`${contextName}`}
-          />
+          <div className="flex items-center gap-3">
+            <PageTitle
+              title={isEditMode ? (isInherited ? 'View Session (Read-Only)' : 'Edit Session') : 'Create Session'}
+              subtitle={`${contextName}`}
+            />
+            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getSessionCategoryColors(sessionCategory).bgColor} ${getSessionCategoryColors(sessionCategory).textColor}`}>
+              {sessionCategory}
+            </span>
+          </div>
         </div>
 
         {isInherited && (
@@ -353,6 +364,22 @@ export default function DrillTemplateFormPage() {
                       disabled={isInherited || isSubmitting}
                       required
                     />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Session Category
+                    </label>
+                    <select
+                      value={sessionCategory}
+                      onChange={(e) => setSessionCategory(e.target.value as typeof sessionCategory)}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isInherited || isSubmitting}
+                    >
+                      {sessionCategories.map((cat) => (
+                        <option key={cat.value} value={cat.value}>{cat.label}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
               </div>

@@ -6,6 +6,7 @@
 
 import type { ClubTrainingSessionDto, CoachDetailDto } from './client';
 import type { TrainingSession } from '@/types';
+import { normalizeSessionCategory } from '@/constants/sessionCategories';
 
 /**
  * Map ClubTrainingSessionDto to TrainingSession
@@ -20,6 +21,7 @@ export function mapClubTrainingSessionToTrainingSession(dto: ClubTrainingSession
     duration: dto.durationMinutes ?? 60, // Default to 60 minutes if not specified
     location: dto.location,
     focusAreas: dto.focusAreas,
+    sessionCategory: normalizeSessionCategory(dto.category),
     drillIds: dto.drillIds,
     attendance: dto.attendance.map(a => ({
       playerId: a.playerId,

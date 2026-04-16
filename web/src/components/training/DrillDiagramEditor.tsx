@@ -950,13 +950,21 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       {frames.map((frame, index) => {
         const isActive = frame.id === activeFrame?.id;
         return (
-          <button
+          <div
             key={frame.id}
-            type="button"
             onClick={() => {
               setActiveFrameId(frame.id);
             }}
-            className="w-full text-left"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault();
+                setActiveFrameId(frame.id);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            className="w-full text-left cursor-pointer"
+            aria-label={`Select slide ${index + 1}`}
           >
             <div
               className={`relative overflow-hidden rounded ${
@@ -996,7 +1004,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
               </div>
               <DrillDiagramRenderer drillDiagramConfig={getFramePreviewConfig(frame)} className="border-0" forceSquare />
             </div>
-          </button>
+          </div>
         );
       })}
 

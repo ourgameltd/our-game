@@ -15,6 +15,14 @@ namespace OurGame.Application.UseCases.TrainingSessions.Commands.CreateTrainingS
 /// </summary>
 public class CreateTrainingSessionHandler : IRequestHandler<CreateTrainingSessionCommand, TrainingSessionDetailDto>
 {
+    private static readonly HashSet<string> ValidSessionCategories = new(StringComparer.Ordinal)
+    {
+        "Whole Part Whole",
+        "Skills Practice",
+        "Circuits",
+        "Scenario"
+    };
+
     private readonly OurGameContext _db;
 
     public CreateTrainingSessionHandler(OurGameContext db)
@@ -35,6 +43,10 @@ public class CreateTrainingSessionHandler : IRequestHandler<CreateTrainingSessio
 
         if (string.IsNullOrWhiteSpace(dto.Location))
             throw new ValidationException("Location", "Location is required.");
+
+        var category = string.IsNullOrWhiteSpace(dto.Category) ? "Whole Part Whole" : dto.Category.Trim();
+        if (!ValidSessionCategories.Contains(category))
+            throw new ValidationException("Category", "Category must be one of: Whole Part Whole, Skills Practice, Circuits, Scenario.");
 
         // Validate team exists and is not archived
         var team = await _db.Database
@@ -60,8 +72,8 @@ public class CreateTrainingSessionHandler : IRequestHandler<CreateTrainingSessio
         {
             // Insert training session
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO TrainingSessions (Id, TeamId, SessionDate, MeetTime, DurationMinutes, Location, FocusAreas, Notes, Status, IsLocked, CreatedAt, UpdatedAt)
-                VALUES ({sessionId}, {dto.TeamId}, {dto.SessionDate}, {dto.MeetTime}, {dto.DurationMinutes}, {dto.Location}, {focusAreasJson}, {notes}, {statusInt}, {dto.IsLocked}, {now}, {now})
+                INSERT INTO TrainingSessions (Id, TeamId, SessionDate, MeetTime, DurationMinutes, Location, FocusAreas, Category, Notes, Status, IsLocked, CreatedAt, UpdatedAt)
+                VALUES ({sessionId}, {dto.TeamId}, {dto.SessionDate}, {dto.MeetTime}, {dto.DurationMinutes}, {dto.Location}, {focusAreasJson}, {category}, {notes}, {statusInt}, {dto.IsLocked}, {now}, {now})
             ", cancellationToken);
 
             // Insert session drills

@@ -624,8 +624,9 @@ export default function DrillFormPage() {
                   <button
                     type="button"
                     onClick={openAddLinkModal}
-                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-2 rounded-lg transition-colors inline-flex items-center"
+                    className="btn-success btn-md"
                     aria-label="Add reference link"
+                    title="Add reference link"
                   >
                     <Plus className="w-4 h-4" />
                   </button>

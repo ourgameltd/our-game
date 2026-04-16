@@ -6,6 +6,7 @@ import { useTeamTrainingSessions } from '@/api/hooks';
 import { TeamTrainingSessionDto } from '@/api/client';
 import { TrainingSession } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { normalizeSessionCategory } from '@/constants/sessionCategories';
 
 // Helper function to map API DTO to UI model
 const mapApiSessionToUiSession = (dto: TeamTrainingSessionDto): TrainingSession => ({
@@ -16,6 +17,7 @@ const mapApiSessionToUiSession = (dto: TeamTrainingSessionDto): TrainingSession 
   duration: dto.durationMinutes || 90,
   location: dto.location,
   focusAreas: dto.focusAreas,
+  sessionCategory: normalizeSessionCategory(dto.category),
   drillIds: dto.drillIds,
   attendance: dto.attendance.map(a => ({
     playerId: a.playerId,

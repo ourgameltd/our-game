@@ -30,6 +30,11 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
 {
     private readonly OurGameContext _db;
 
+    private static readonly HashSet<string> ValidSessionCategories = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Whole Part Whole", "Skills Practice", "Circuits", "Scenario"
+    };
+
     public UpdateDrillTemplateHandler(OurGameContext db)
     {
         _db = db;
@@ -49,6 +54,12 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
         if (dto.DrillIds == null || dto.DrillIds.Count == 0)
         {
             throw new ValidationException("DrillIds", "At least one drill is required.");
+        }
+
+        // Validate session category
+        if (!string.IsNullOrWhiteSpace(dto.SessionCategory) && !ValidSessionCategories.Contains(dto.SessionCategory))
+        {
+            throw new ValidationException("SessionCategory", $"Invalid session category '{dto.SessionCategory}'. Valid values: {string.Join(", ", ValidSessionCategories)}.");
         }
 
         // Check template exists and fetch CreatedBy coach ID
@@ -145,6 +156,7 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
         var name = dto.Name;
         var description = dto.Description ?? string.Empty;
         var isPublic = dto.IsPublic;
+        var sessionCategory = string.IsNullOrWhiteSpace(dto.SessionCategory) ? "Whole Part Whole" : dto.SessionCategory;
 
         // Begin transaction
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
@@ -159,6 +171,7 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
                     AggregatedAttributes = {aggregatedAttributesJson},
                     TotalDuration = {totalDuration},
                     Category = {predominantCategory},
+                    SessionCategory = {sessionCategory},
                     IsPublic = {isPublic}
                 WHERE Id = {templateId}
             ", cancellationToken);

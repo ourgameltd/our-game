@@ -34,3 +34,4 @@ Data access layer built with Entity Framework Core 9. Contains the `OurGameConte
 ## Recent Updates
 
 - Added optional `Email` column support for `EmergencyContacts` via EF model/configuration and migration `AddEmergencyContactEmail`.
+- Added required `Category` column support for `TrainingSessions` via EF model updates and migration `AddTrainingSessionCategory`.

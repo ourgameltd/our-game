@@ -4,6 +4,7 @@ import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users } from 'luci
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
 import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
+import { normalizeSessionCategory, getSessionCategoryColors } from '@/constants/sessionCategories';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -310,6 +311,11 @@ export default function DrillTemplatesListPage() {
                               {getDrillCategoryLabel(template.category || 'Mixed')}
                             </span>
                           )}
+                          {template.sessionCategory && (
+                            <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getSessionCategoryColors(normalizeSessionCategory(template.sessionCategory)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(template.sessionCategory)).textColor}`}>
+                              {normalizeSessionCategory(template.sessionCategory)}
+                            </span>
+                          )}
                         </div>
                         
                         {/* Description */}
@@ -399,6 +405,11 @@ export default function DrillTemplatesListPage() {
                             {template.category && (
                               <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getCategoryColor(template.category)}`}>
                                 {getDrillCategoryLabel(template.category || 'Mixed')}
+                              </span>
+                            )}
+                            {template.sessionCategory && (
+                              <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ml-2 ${getSessionCategoryColors(normalizeSessionCategory(template.sessionCategory)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(template.sessionCategory)).textColor}`}>
+                                {normalizeSessionCategory(template.sessionCategory)}
                               </span>
                             )}
                           </div>

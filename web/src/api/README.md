@@ -11,6 +11,11 @@ related:
 
 API client layer for communicating with the Azure Functions backend. Includes auto-generated TypeScript client, authentication helpers, and React hooks for data fetching.
 
+## Recent Notes
+
+- Training sessions now include a dedicated session category field that is separate from drill categories.
+- Supported session categories are: `Whole Part Whole`, `Skills Practice`, `Circuits`, and `Scenario`.
+
 ## Files
 
 | File | Purpose |

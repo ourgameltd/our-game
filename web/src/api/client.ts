@@ -587,6 +587,7 @@ export interface TeamTrainingSessionDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
+  category?: string;
 }
 
 export interface SystemFormationPositionDto {
@@ -704,6 +705,7 @@ export interface TeamTrainingSessionDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
+  category?: string;
   drillIds: string[];
   attendance: AttendanceDto[];
   status: string;
@@ -882,6 +884,7 @@ export interface ClubTrainingSessionDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
+  category?: string;
   drillIds: string[];
   attendance: {
     playerId: string;
@@ -909,6 +912,7 @@ export interface TrainingSessionDetailDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
+  category?: string;
   templateId?: string;
   notes?: string;
   status: string;
@@ -965,6 +969,7 @@ export interface CreateTrainingSessionRequest {
   durationMinutes?: number;
   location?: string;
   focusAreas: string[];
+  category: string;
   notes?: string;
   status: string;
   isLocked: boolean;
@@ -1000,6 +1005,7 @@ export interface UpdateTrainingSessionRequest {
   durationMinutes?: number;
   location?: string;
   focusAreas: string[];
+  category: string;
   templateId?: string;
   notes?: string;
   status: string;
@@ -1524,6 +1530,7 @@ export interface DrillTemplateListDto {
   drillIds: string[];
   totalDuration: number;
   category?: string;
+  sessionCategory?: string;
   attributes: string[];
   scopeType: string;
   isPublic: boolean;
@@ -1549,6 +1556,7 @@ export interface DrillTemplateDetailDto {
   updatedAt?: string;
   totalDuration?: number;
   category?: string;
+  sessionCategory?: string;
   aggregatedAttributes: string[];
   scopeType: string;
   scopeClubId?: string;
@@ -1561,6 +1569,7 @@ export interface CreateDrillTemplateRequest {
   description?: string;
   drillIds: string[];
   isPublic: boolean;
+  sessionCategory?: string;
   scope: {
     clubId?: string;
     ageGroupId?: string;
@@ -1573,6 +1582,7 @@ export interface UpdateDrillTemplateRequest {
   description?: string;
   drillIds: string[];
   isPublic: boolean;
+  sessionCategory?: string;
 }
 
 // Age Group Development Plan DTOs
