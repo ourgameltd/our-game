@@ -143,11 +143,8 @@ export default function ClubMatchesPage() {
             <>
               <PageTitle
                 title="All Matches"
-                subtitle={club?.name ?? ''}
+                subtitle="Manage matches across all teams in this club"
               />
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                Viewing matches from all teams across the club
-              </p>
             </>
           )}
         </div>

@@ -100,13 +100,6 @@ export default function DrillTemplatesListPage() {
     return templatesData?.availableAttributes || [];
   }, [templatesData?.availableAttributes]);
 
-  // Determine context name
-  const contextName = useMemo(() => {
-    if (teamId) return 'Team';
-    if (ageGroupId) return 'Age Group';
-    return club?.name || 'Club';
-  }, [teamId, ageGroupId, club?.name]);
-
   const getScopeLabel = () => {
     if (teamId) return 'Team';
     if (ageGroupId) return 'Age Group';
@@ -174,7 +167,7 @@ export default function DrillTemplatesListPage() {
         <div className="mb-4">
           <PageTitle
             title="Sessions"
-            subtitle={`${contextName} - Reusable training session plans`}
+            subtitle={`Reusable training session plans for your ${getScopeLabel().toLowerCase()}`}
             action={{
               label: 'Create Template',
               icon: 'plus',
@@ -309,10 +302,6 @@ export default function DrillTemplatesListPage() {
           <div className="space-y-6">
             {/* Current Scope Templates */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                {getScopeLabel()} Sessions ({templates.length})
-              </h2>
-              
               {templates.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
                   {templates.map((template: DrillTemplateListDto) => (

@@ -78,7 +78,7 @@ export default function AgeGroupTrainingSessionsPage() {
                 <div className="flex-grow">
                   <PageTitle
                     title="All Training Sessions"
-                    subtitle={`${ageGroup.name} - ${club.name}`}
+                    subtitle="Manage training sessions across all teams in this age group"
                   />
                 </div>
                 {ageGroup.isArchived && (

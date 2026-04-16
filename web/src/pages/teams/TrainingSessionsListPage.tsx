@@ -100,7 +100,7 @@ export default function TrainingSessionsListPage() {
             <div className="flex-grow">
               <PageTitle
                 title="Training Sessions"
-                subtitle={`${team.name} - ${club.name}`}
+                subtitle="Manage training sessions for your team"
                 action={!team.isArchived ? {
                   label: 'Add Session',
                   icon: 'plus',

@@ -1,5 +1,5 @@
 import { Link, useParams } from 'react-router-dom';
-import { Settings2, Users, AlertCircle } from 'lucide-react';
+import { Users, AlertCircle } from 'lucide-react';
 import { useTacticsByScope } from '@/api/hooks';
 import type { TacticListDto } from '@/api';
 import { Routes } from '@/utils/routes';
@@ -127,11 +127,6 @@ export default function TacticsListPage() {
           {/* Current Scope Tactics */}
           {!isLoading && !error && (
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Settings2 className="w-5 h-5" />
-                {getScopeLabel()} Tactics ({tactics.length})
-              </h2>
-            
               {tactics.length === 0 ? (
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-8 text-center">
                   <p className="text-gray-600 dark:text-gray-400">

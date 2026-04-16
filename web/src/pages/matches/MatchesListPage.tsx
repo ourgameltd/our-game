@@ -129,7 +129,7 @@ export default function MatchesListPage() {
                 <div className="flex-grow">
                   <PageTitle
                     title="Matches"
-                    subtitle={team ? `${team.name} - ${club?.name}` : ''}
+                    subtitle="Manage matches for your team"
                     action={team && !team.isArchived ? {
                       label: 'Add Match',
                       icon: 'plus',

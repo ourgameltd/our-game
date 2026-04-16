@@ -98,13 +98,6 @@ export default function DrillsListPage() {
     );
   }, [allDrills]);
 
-  // Determine context name for display
-  const contextName = useMemo(() => {
-    if (teamId) return 'Team';
-    if (ageGroupId) return 'Age Group';
-    return club?.name || 'Club';
-  }, [teamId, ageGroupId, club?.name]);
-
   // Error handling
   if (clubError || drillsError) {
     return (
@@ -217,7 +210,7 @@ export default function DrillsListPage() {
         <div className="mb-4">
           <PageTitle
             title="Drills"
-            subtitle={`${contextName} - Manage training drills`}
+            subtitle={`Manage training drills for your ${teamId ? 'team' : ageGroupId ? 'age group' : 'club'}`}
             action={{
               label: 'Create Drill',
               icon: 'plus',

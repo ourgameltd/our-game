@@ -152,7 +152,7 @@ export default function AgeGroupMatchesPage() {
                 <div className="flex-grow">
                   <PageTitle
                     title="All Matches"
-                    subtitle={`${ageGroup?.name ?? ''} - ${club?.name ?? ''}`}
+                    subtitle="Manage matches across all teams in this age group"
                   />
                 </div>
                 {ageGroup?.isArchived && (
@@ -170,10 +170,6 @@ export default function AgeGroupMatchesPage() {
                   </p>
                 </div>
               )}
-
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
-                Viewing matches from all teams in this age group
-              </p>
             </>
           )}
         </div>
