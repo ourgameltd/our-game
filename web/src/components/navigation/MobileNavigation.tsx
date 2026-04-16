@@ -971,8 +971,12 @@ export default function MobileNavigation() {
             </>
           )}
 
-          {/* Only show divider if not on dashboard */}
-          {(location.pathname !== '/dashboard' && location.pathname !== '/profile') && (
+          {/* Only show divider if the primary menu above has content */}
+          {(location.pathname !== '/dashboard'
+            && location.pathname !== '/profile'
+            && location.pathname !== '/notifications'
+            && !location.pathname.startsWith('/help')
+            && location.pathname !== '/clubs') && (
             <div className="mobile-nav-divider"></div>
           )}
 
