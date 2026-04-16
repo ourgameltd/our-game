@@ -74,11 +74,11 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
             query.TeamId ?? Guid.Empty
         };
 
-        // Add optional category filter
+        // Add optional session category filter
         if (!string.IsNullOrEmpty(query.Category) && query.Category != "all")
         {
-            sql += $" AND dt.Category = {{{parameters.Count}}}";
-            parameters.Add(MapTemplateCategoryFilter(query.Category));
+            sql += $" AND dt.SessionCategory = {{{parameters.Count}}}";
+            parameters.Add(query.Category.Trim());
         }
 
         // Add optional search filter
@@ -106,13 +106,13 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
             .GroupBy(td => td.TemplateId)
             .ToDictionary(g => g.Key, g => g.Select(td => td.DrillId).ToList());
 
-        // Filter by attributes if specified (template must have ALL selected attributes)
+        // Filter by attributes if specified (template must have ANY selected attribute)
         if (query.Attributes is { Count: > 0 })
         {
             templates = templates.Where(t =>
             {
                 var attrs = ParseJsonArray(t.AggregatedAttributes);
-                return query.Attributes.All(attr => attrs.Contains(attr));
+                return query.Attributes.Any(attr => attrs.Contains(attr));
             }).ToList();
         }
 
@@ -212,25 +212,6 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
         return json.Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .ToList();
-    }
-
-    private static string MapTemplateCategoryFilter(string category)
-    {
-        return category.Trim().ToLowerInvariant() switch
-        {
-            "drill" => "Drill",
-            "skills practice" => "Skills Practice",
-            "game related practice" => "Game Related Practice",
-            "conditioned game" => "Conditioned Game",
-            "mixed" => "mixed",
-
-            // Legacy aliases for backward compatibility
-            "technical" => "Skills Practice",
-            "tactical" => "Game Related Practice",
-            "physical" => "Conditioned Game",
-            "mental" => "Drill",
-            _ => category.Trim()
-        };
     }
 }
 

@@ -1,10 +1,11 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users, Clock3, ListOrdered, Globe2, ClipboardList } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users, Clock3, ListOrdered, Globe2, ClipboardList, X } from 'lucide-react';
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
-import { getAttributeLabel, getAttributeCategory, drillCategories, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
-import { normalizeSessionCategory, getSessionCategoryColors } from '@/constants/sessionCategories';
+import { getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
+import { normalizeSessionCategory, getSessionCategoryColors, sessionCategories } from '@/constants/sessionCategories';
+import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
@@ -101,19 +102,18 @@ export default function DrillTemplatesListPage() {
     return templatesData?.availableAttributes || [];
   }, [templatesData?.availableAttributes]);
 
+  const attributeOptions = useMemo(
+    () =>
+      availableAttributes
+        .map((attr) => ({ value: attr, label: getAttributeLabel(attr) }))
+        .sort((a, b) => a.label.localeCompare(b.label)),
+    [availableAttributes]
+  );
+
   const getScopeLabel = () => {
     if (teamId) return 'Team';
     if (ageGroupId) return 'Age Group';
     return 'Club';
-  };
-
-  // Toggle attribute selection
-  const toggleAttribute = (attr: string) => {
-    setSelectedAttributes(prev => 
-      prev.includes(attr) 
-        ? prev.filter(a => a !== attr)
-        : [...prev, attr]
-    );
   };
 
   const getCategoryColor = (category?: string) => {
@@ -203,7 +203,7 @@ export default function DrillTemplatesListPage() {
 
           {filtersExpanded && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                     <Search className="w-4 h-4 inline mr-1" />
@@ -227,58 +227,66 @@ export default function DrillTemplatesListPage() {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     <option value="all">All Categories</option>
-                    {drillCategories.map(cat => (
+                    {sessionCategories.map((cat) => (
                       <option key={cat.value} value={cat.value}>{cat.label}</option>
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Filter by Attributes
+                  </label>
+                  {isLoading ? (
+                    <AttributeFiltersSkeleton />
+                  ) : (
+                    <MultiSelectTypeahead
+                      options={attributeOptions}
+                      value={selectedAttributes}
+                      onChange={setSelectedAttributes}
+                      placeholder="Type to find and add attributes..."
+                      showSelectedChips={false}
+                    />
+                  )}
+                </div>
               </div>
 
-              {/* Attribute Filters */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Filter by Attributes {selectedAttributes.length > 0 && `(${selectedAttributes.length} selected)`}
-                </label>
-                {isLoading ? (
-                  <AttributeFiltersSkeleton />
-                ) : availableAttributes.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {availableAttributes.map(attr => {
-                      const category = getAttributeCategory(attr);
-                      const isSelected = selectedAttributes.includes(attr);
-                      const categoryShortLabel = category === 'Skills' ? 'SK' : category === 'Physical' ? 'PH' : 'MN';
-                      return (
-                        <button
-                          key={attr}
-                          onClick={() => toggleAttribute(attr)}
-                          className={`px-3 py-1 text-xs rounded-full transition-colors ${
-                            isSelected 
-                              ? 'bg-primary-600 text-white dark:bg-primary-500'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                          }`}
-                        >
-                          {getAttributeLabel(attr)}
-                          {category && (
-                            <span className="ml-1 opacity-60 text-[10px]">
-                              {categoryShortLabel}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-500 dark:text-gray-400">No attributes available</p>
-                )}
-                {selectedAttributes.length > 0 && (
+              {(searchTerm || categoryFilter !== 'all' || selectedAttributes.length > 0) && (
+                <div className="mt-2">
+                  {selectedAttributes.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {selectedAttributes.map((attribute) => {
+                        const label = getAttributeLabel(attribute);
+                        return (
+                          <span
+                            key={attribute}
+                            className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300"
+                          >
+                            {label}
+                            <button
+                              type="button"
+                              onClick={() => setSelectedAttributes((prev) => prev.filter((item) => item !== attribute))}
+                              className="hover:text-primary-900 dark:hover:text-primary-100"
+                              aria-label={`Remove ${label}`}
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
                   <button
-                    onClick={() => setSelectedAttributes([])}
+                    onClick={() => {
+                      setSearchTerm('');
+                      setCategoryFilter('all');
+                      setSelectedAttributes([]);
+                    }}
                     className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
                   >
                     Clear all filters
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
           )}
         </div>

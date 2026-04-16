@@ -1,4 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
+import { User, BarChart3 } from 'lucide-react';
 import { Routes } from '@utils/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
@@ -30,27 +31,31 @@ export default function PlayerSubNav() {
   const isProfilePage = !isAbilitiesPage && !location.pathname.includes('/settings') && !location.pathname.includes('/album');
 
   const tabs = [
-    { label: 'Overview', href: profileLink, active: isProfilePage },
+    { label: 'Overview', href: profileLink, active: isProfilePage, Icon: User },
     ...(abilitiesLink && canViewPlayerAbilities(profile)
-      ? [{ label: 'Abilities', href: abilitiesLink, active: isAbilitiesPage }]
+      ? [{ label: 'Abilities', href: abilitiesLink, active: isAbilitiesPage, Icon: BarChart3 }]
       : []),
   ];
 
   return (
-    <div className="flex gap-1 mb-4 border-b border-gray-200 dark:border-gray-700">
-      {tabs.map((tab) => (
-        <Link
-          key={tab.label}
-          to={tab.href}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-            tab.active
-              ? 'border-primary-600 text-primary-600 dark:border-primary-400 dark:text-primary-400'
-              : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600'
-          }`}
-        >
-          {tab.label}
-        </Link>
-      ))}
+    <div className="flex justify-evenly sm:justify-start sm:flex-wrap gap-2 mb-4 border-b border-gray-200 dark:border-gray-700 pb-4">
+      {tabs.map((tab) => {
+        const Icon = tab.Icon;
+        return (
+          <Link
+            key={tab.label}
+            to={tab.href}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              tab.active
+                ? 'bg-primary-600 text-white'
+                : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            }`}
+          >
+            <Icon className="w-5 h-5" />
+            <span className="hidden sm:inline">{tab.label}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }
