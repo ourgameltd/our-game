@@ -359,6 +359,11 @@ export default function DrillTemplateFormPage() {
   const contextName = club.name;
   const isSubmitting = createMutation.isSubmitting || updateMutation.isSubmitting || archiveMutation.isSubmitting;
   const mutationError = createMutation.error || updateMutation.error || archiveMutation.error;
+  const backLink = teamId
+    ? Routes.teamDrillTemplates(clubId!, ageGroupId!, teamId)
+    : ageGroupId
+      ? Routes.ageGroupDrillTemplates(clubId!, ageGroupId)
+      : Routes.drillTemplates(clubId!);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -369,6 +374,7 @@ export default function DrillTemplateFormPage() {
             <PageTitle
               title={isEditMode ? (isInherited ? 'View Session (Read-Only)' : 'Edit Session') : 'Create Session'}
               subtitle={`${contextName}`}
+              backLink={backLink}
             />
           </div>
         </div>
