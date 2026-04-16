@@ -11,10 +11,11 @@ import {
 } from '@/api/hooks';
 import type { DrillListDto, CreateDrillTemplateRequest, UpdateDrillTemplateRequest } from '@/api';
 import { getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
-import { sessionCategories, normalizeSessionCategory, getSessionCategoryColors } from '@/constants/sessionCategories';
+import { sessionCategories, normalizeSessionCategory } from '@/constants/sessionCategories';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
+import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
 
 // Skeleton components for loading states
 function BasicInfoSkeleton() {
@@ -98,18 +99,11 @@ export default function DrillTemplateFormPage() {
   const [selectedDrillIds, setSelectedDrillIds] = useState<string[]>([]);
   const [isPublic, setIsPublic] = useState(true);
   const [sessionCategory, setSessionCategory] = useState<'Whole Part Whole' | 'Skills Practice' | 'Circuits' | 'Scenario'>('Whole Part Whole');
-  const [showDrillPicker, setShowDrillPicker] = useState(false);
-
-  // Initialize form when template loads
-  useEffect(() => {
-    if (template) {
-      setName(template.name);
-      setDescription(template.description || '');
-      setSelectedDrillIds(template.drillIds);
-      setIsPublic(template.isPublic);
-      setSessionCategory(normalizeSessionCategory(template.sessionCategory));
-    }
-  }, [template]);
+  const [showDrillModal, setShowDrillModal] = useState(false);
+  const [drillSearchTerm, setDrillSearchTerm] = useState('');
+  const [drillCategoryFilter, setDrillCategoryFilter] = useState<string>('all');
+  const [pendingSelectedDrillIds, setPendingSelectedDrillIds] = useState<string[]>([]);
+  const [previewDrillId, setPreviewDrillId] = useState<string | null>(null);
 
   // Initialize form when template loads
   useEffect(() => {
@@ -157,11 +151,69 @@ export default function DrillTemplateFormPage() {
 
   const { totalDuration, attributes, category } = getAggregatedData();
 
-  const addDrill = (drillId: string) => {
-    if (!selectedDrillIds.includes(drillId)) {
-      setSelectedDrillIds([...selectedDrillIds, drillId]);
+  const availableDrillsForSelection = useMemo(
+    () => availableDrills.filter((drill) => !selectedDrillIds.includes(drill.id)),
+    [availableDrills, selectedDrillIds]
+  );
+
+  const filteredAvailableDrills = useMemo(() => {
+    return availableDrillsForSelection.filter((drill) => {
+      if (drillSearchTerm) {
+        const searchLower = drillSearchTerm.toLowerCase();
+        const description = (drill.description || '').toLowerCase();
+        const attrMatch = drill.attributes.some((attr) => getAttributeLabel(attr).toLowerCase().includes(searchLower));
+        if (!drill.name.toLowerCase().includes(searchLower) && !description.includes(searchLower) && !attrMatch) {
+          return false;
+        }
+      }
+
+      if (drillCategoryFilter !== 'all' && normalizeDrillCategory(drill.category) !== drillCategoryFilter) {
+        return false;
+      }
+
+      return true;
+    });
+  }, [availableDrillsForSelection, drillSearchTerm, drillCategoryFilter]);
+
+  const previewDrill = useMemo(
+    () => availableDrillsForSelection.find((drill) => drill.id === previewDrillId) ?? null,
+    [availableDrillsForSelection, previewDrillId]
+  );
+
+  const openDrillModal = () => {
+    setPendingSelectedDrillIds([]);
+    setDrillSearchTerm('');
+    setDrillCategoryFilter('all');
+    setPreviewDrillId(null);
+    setShowDrillModal(true);
+  };
+
+  const closeDrillModal = () => {
+    setShowDrillModal(false);
+    setPendingSelectedDrillIds([]);
+    setDrillSearchTerm('');
+    setDrillCategoryFilter('all');
+    setPreviewDrillId(null);
+  };
+
+  const togglePendingDrillSelection = (drillId: string) => {
+    setPendingSelectedDrillIds((prev) =>
+      prev.includes(drillId) ? prev.filter((id) => id !== drillId) : [...prev, drillId]
+    );
+  };
+
+  const addSelectedDrills = () => {
+    if (pendingSelectedDrillIds.length === 0) {
+      closeDrillModal();
+      return;
     }
-    setShowDrillPicker(false);
+
+    const idsToAdd = filteredAvailableDrills
+      .filter((drill) => pendingSelectedDrillIds.includes(drill.id))
+      .map((drill) => drill.id);
+
+    setSelectedDrillIds((prev) => [...prev, ...idsToAdd.filter((id) => !prev.includes(id))]);
+    closeDrillModal();
   };
 
   const removeDrill = (drillId: string) => {
@@ -265,7 +317,7 @@ export default function DrillTemplateFormPage() {
         <main className="mx-auto px-4 py-4">
           <div className="card">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
               <div>
                 <h2 className="text-xl font-semibold mb-2">Club not found</h2>
                 <p className="text-gray-600 dark:text-gray-400">
@@ -324,7 +376,7 @@ export default function DrillTemplateFormPage() {
                 {templateError && (
                   <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                       <div className="text-sm text-red-800 dark:text-red-300">
                         {templateError.message || 'Failed to load session template'}
                       </div>
@@ -363,20 +415,42 @@ export default function DrillTemplateFormPage() {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Session Category
-                    </label>
-                    <select
-                      value={sessionCategory}
-                      onChange={(e) => setSessionCategory(e.target.value as typeof sessionCategory)}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      disabled={isInherited || isSubmitting}
-                    >
-                      {sessionCategories.map((cat) => (
-                        <option key={cat.value} value={cat.value}>{cat.label}</option>
-                      ))}
-                    </select>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Session Category
+                      </label>
+                      <select
+                        value={sessionCategory}
+                        onChange={(e) => setSessionCategory(e.target.value as typeof sessionCategory)}
+                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        disabled={isInherited || isSubmitting}
+                      >
+                        {sessionCategories.map((cat) => (
+                          <option key={cat.value} value={cat.value}>{cat.label}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        Sharing
+                      </label>
+                      <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
+                        <label className="flex items-center gap-3">
+                          <input
+                            type="checkbox"
+                            checked={isPublic}
+                            onChange={(e) => setIsPublic(e.target.checked)}
+                            disabled={isInherited || isSubmitting}
+                            className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Share this session template with other teams in the club
+                          </span>
+                        </label>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -387,15 +461,29 @@ export default function DrillTemplateFormPage() {
               <DrillsSkeleton />
             ) : (
               <div className="card">
-                <h3 className="text-lg font-semibold mb-2">Drills *</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Add drills to your session. You can reorder them by dragging or using the arrow buttons.
-                </p>
+                <div className="mb-4 flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div>
+                    <h3 className="text-lg font-semibold mb-1">Drills *</h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Add drills to your session. You can reorder them by using the arrow buttons.
+                    </p>
+                  </div>
+                  {!isInherited && !drillsError && (
+                    <button
+                      type="button"
+                      onClick={openDrillModal}
+                      disabled={isSubmitting}
+                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
 
                 {drillsError && (
                   <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                     <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+                      <AlertCircle className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
                       <div className="text-sm text-red-800 dark:text-red-300">
                         {drillsError.message || 'Failed to load drills'}
                       </div>
@@ -471,56 +559,6 @@ export default function DrillTemplateFormPage() {
                 </div>
               )}
 
-              {/* Add Drill Button */}
-              {!isInherited && !drillsError && (
-                <div className="space-y-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowDrillPicker(!showDrillPicker)}
-                    disabled={isSubmitting}
-                    className="btn btn-secondary disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Drill
-                  </button>
-
-                  {/* Drill Picker */}
-                  {showDrillPicker && (
-                    <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 max-h-96 overflow-y-auto">
-                      <h4 className="font-medium mb-3">Select a drill to add:</h4>
-                      <div className="space-y-2">
-                        {availableDrills
-                          .filter(drill => !selectedDrillIds.includes(drill.id))
-                          .map(drill => (
-                            <button
-                              key={drill.id}
-                              type="button"
-                              onClick={() => addDrill(drill.id)}
-                              className="w-full text-left p-3 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg border border-gray-200 dark:border-gray-600 transition-colors"
-                            >
-                              <div className="flex items-center justify-between mb-1">
-                                <h5 className="font-semibold text-gray-900 dark:text-white">
-                                  {drill.name}
-                                </h5>
-                                <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryColor(drill.category)}`}>
-                                  {getDrillCategoryLabel(drill.category)}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                                {drill.description}
-                              </p>
-                              <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                <span>⏱️ {drill.duration || 0}m</span>
-                                <span>🎯 {drill.attributes.length} attributes</span>
-                              </div>
-                            </button>
-                          ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-
               {selectedDrillIds.length === 0 && (
                 <p className="text-center text-gray-500 dark:text-gray-400 py-8">
                   No drills added yet. Click "Add Drill" to get started.
@@ -579,25 +617,6 @@ export default function DrillTemplateFormPage() {
               </div>
             )}
 
-            {/* Sharing */}
-            {!isInherited && (
-              <div className="card">
-                <h3 className="text-lg font-semibold mb-4">Sharing</h3>
-                <label className="flex items-center gap-3">
-                  <input
-                    type="checkbox"
-                    checked={isPublic}
-                    onChange={(e) => setIsPublic(e.target.checked)}
-                    disabled={isSubmitting}
-                    className="w-4 h-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                  />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">
-                    Share this session template with other teams in the club
-                  </span>
-                </label>
-              </div>
-            )}
-
             {/* Form Actions */}
             {!isInherited && (
               <FormActions
@@ -622,6 +641,240 @@ export default function DrillTemplateFormPage() {
           </div>
         </form>
       </main>
+
+      {/* Drill Selection Modal */}
+      {showDrillModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-1000">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-5xl w-full max-h-[88vh] overflow-hidden flex flex-col">
+            <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
+              <div>
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white">Add Drills to Session</h2>
+                <p className="text-gray-600 dark:text-gray-400 mt-1">Search and select one or more drills to add.</p>
+              </div>
+              <button
+                type="button"
+                onClick={closeDrillModal}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+                  <input
+                    type="text"
+                    value={drillSearchTerm}
+                    onChange={(e) => setDrillSearchTerm(e.target.value)}
+                    placeholder="Search by name, description, or attributes..."
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                  <select
+                    value={drillCategoryFilter}
+                    onChange={(e) => setDrillCategoryFilter(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                  >
+                    <option value="all">All Categories</option>
+                    {[
+                      { value: 'Drill', label: 'Drill' },
+                      { value: 'Skills Practice', label: 'Skills Practice' },
+                      { value: 'Game Related Practice', label: 'Game Related Practice' },
+                      { value: 'Conditioned Game', label: 'Conditioned Game' }
+                    ].map((cat) => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex-1 overflow-hidden flex">
+              <div className={`p-6 overflow-y-auto ${previewDrill ? 'w-1/2 border-r border-gray-200 dark:border-gray-700' : 'w-full'}`}>
+                {filteredAvailableDrills.length > 0 ? (
+                  <div className="space-y-2">
+                    {filteredAvailableDrills.map((drill) => {
+                      const isChecked = pendingSelectedDrillIds.includes(drill.id);
+                      const isPreviewed = previewDrillId === drill.id;
+
+                      return (
+                        <div
+                          key={drill.id}
+                          onClick={() => setPreviewDrillId(drill.id)}
+                          className={`p-4 rounded-lg border transition-colors cursor-pointer ${
+                            isPreviewed
+                              ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700'
+                              : isChecked
+                              ? 'bg-green-50 dark:bg-green-900/20 border-green-300 dark:border-green-700'
+                              : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600 hover:border-gray-300 dark:hover:border-gray-500'
+                          }`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onClick={(e) => e.stopPropagation()}
+                              onChange={() => togglePendingDrillSelection(drill.id)}
+                              className="mt-1 w-4 h-4"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-wrap items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-gray-900 dark:text-white">{drill.name}</h4>
+                                <span className={`px-2 py-0.5 text-xs rounded-full ${getCategoryColor(drill.category)}`}>
+                                  {getDrillCategoryLabel(drill.category)}
+                                </span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">⏱️ {drill.duration || 0}m</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">🎯 {drill.attributes.length} attributes</span>
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">{drill.description}</p>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No available drills found matching your search.
+                  </p>
+                )}
+              </div>
+
+              {previewDrill && (
+                <div className="w-1/2 p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                  <div className="mb-4 flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1">{previewDrill.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getCategoryColor(previewDrill.category)}`}>
+                          {getDrillCategoryLabel(previewDrill.category)}
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">⏱️ {previewDrill.duration || 0} minutes</span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setPreviewDrillId(null)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  <div className="space-y-4">
+                    {previewDrill.drillDiagramConfig?.frames?.length ? (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                          Slides ({previewDrill.drillDiagramConfig.frames.length})
+                        </h4>
+
+                        {/* Primary slide */}
+                        <div className="mb-3">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Primary slide</p>
+                          <div className="w-full max-w-65 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden bg-gray-100 dark:bg-gray-800">
+                            {previewDrill.drillDiagramConfig.frames[0] ? (
+                              <DrillDiagramRenderer
+                                drillDiagramConfig={{
+                                  schemaVersion: previewDrill.drillDiagramConfig.schemaVersion,
+                                  meta: previewDrill.drillDiagramConfig.meta,
+                                  frames: [previewDrill.drillDiagramConfig.frames[0]],
+                                }}
+                                forceSquare
+                              />
+                            ) : null}
+                          </div>
+                        </div>
+
+                        {/* Additional slides */}
+                        {previewDrill.drillDiagramConfig.frames.length > 1 && (
+                          <div>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">All slides</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {previewDrill.drillDiagramConfig.frames.map((frame, index) => (
+                                <div key={`slide-${index}`} className="border border-gray-200 dark:border-gray-700 rounded-md p-1 bg-white dark:bg-gray-800">
+                                  <div className="text-[11px] text-gray-500 dark:text-gray-400 mb-1 px-1">Slide {index + 1}</div>
+                                  <DrillDiagramRenderer
+                                    drillDiagramConfig={{
+                                      schemaVersion: previewDrill.drillDiagramConfig!.schemaVersion,
+                                      meta: previewDrill.drillDiagramConfig!.meta,
+                                      frames: [frame],
+                                    }}
+                                    forceSquare
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : null}
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Description</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{previewDrill.description || 'No description provided.'}</p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Attributes</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {previewDrill.attributes.map((attr) => (
+                          <span
+                            key={attr}
+                            className="px-2 py-1 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700"
+                          >
+                            {getAttributeLabel(attr)}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => togglePendingDrillSelection(previewDrill.id)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                        pendingSelectedDrillIds.includes(previewDrill.id)
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-900/50'
+                          : 'bg-green-600 text-white hover:bg-green-700'
+                      }`}
+                    >
+                      {pendingSelectedDrillIds.includes(previewDrill.id) ? 'Remove from selection' : 'Select this drill'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700/50">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {pendingSelectedDrillIds.length} selected from {filteredAvailableDrills.length} results
+                </p>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={closeDrillModal}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={addSelectedDrills}
+                    disabled={pendingSelectedDrillIds.length === 0}
+                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add Selected ({pendingSelectedDrillIds.length})
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

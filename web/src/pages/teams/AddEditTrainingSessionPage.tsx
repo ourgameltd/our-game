@@ -823,7 +823,6 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                       className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
                     >
                       <Plus className="w-5 h-5" />
-                      <span className="hidden sm:inline">Add Drill</span>
                     </button>
                   </div>
                 )}
