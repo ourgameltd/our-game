@@ -566,7 +566,15 @@ try
         await context.DevelopmentGoals.AddRangeAsync(devGoals);
         await context.SaveChangesAsync();
     }
-    
+
+    if (!await context.Notifications.AnyAsync())
+    {
+        Console.WriteLine("  🔔 Seeding notifications...");
+        var notifications = OurGame.Persistence.Data.SeedData.NotificationSeedData.GetNotifications();
+        await context.Notifications.AddRangeAsync(notifications);
+        await context.SaveChangesAsync();
+    }
+
     Console.WriteLine("✅ Database seeded successfully!");
     Console.WriteLine();
     

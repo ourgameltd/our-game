@@ -23,6 +23,7 @@ import {
   Dumbbell
 } from 'lucide-react';
 import { useClubById, useTeamOverview, useAgeGroup, usePlayer, useCoach } from '@/api/hooks';
+import { apiClient } from '@/api/client';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,6 +39,7 @@ export default function MobileNavigation() {
   const [isManagementExpanded, setIsManagementExpanded] = useState(false);
   const [isTacticsExpanded, setIsTacticsExpanded] = useState(false);
   const [userProfile] = useState<UserProfile | null>(null);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const { isDesktopOpen, toggleDesktopNav } = useNavigation();
   const { displayName, isAdmin } = useAuth();
   const { profile } = useAccessProfile(isAdmin);
@@ -116,6 +118,24 @@ export default function MobileNavigation() {
       setIsTacticsExpanded(true);
     }
   }, [isTacticsPage]);
+
+  // Load unread notification count for the badge
+  useEffect(() => {
+    let cancelled = false;
+    const loadUnread = async () => {
+      const response = await apiClient.notifications.getMyNotifications(true);
+      if (!cancelled && response.success && response.data) {
+        setUnreadNotificationCount(response.data.length);
+      } else if (!cancelled && !response.success) {
+        setUnreadNotificationCount(0);
+      }
+    };
+    void loadUnread();
+    // Refresh when navigating (cheap way to pick up reads made on the notifications page)
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname]);
 
 
   // Close menu when route changes (mobile only)
@@ -267,7 +287,11 @@ export default function MobileNavigation() {
           </button>
           <Link to="/notifications" className="mobile-nav-notification-btn" aria-label="Notifications">
             <Bell className="w-5 h-5" />
-            <span className="mobile-nav-notification-badge">3</span>
+            {unreadNotificationCount > 0 && (
+              <span className="mobile-nav-notification-badge">
+                {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+              </span>
+            )}
           </Link>
         </div>
       </div>
@@ -968,6 +992,21 @@ export default function MobileNavigation() {
                   Theme: {theme === 'system' ? 'System' : theme === 'dark' ? 'Dark' : 'Light'}
                 </span>
               </button>
+            </li>
+
+            <li className="mobile-nav-item">
+              <Link 
+                to="/notifications" 
+                className="mobile-nav-link"
+              >
+                <Bell className="mobile-nav-icon" />
+                <span className="mobile-nav-text">Notifications</span>
+                {unreadNotificationCount > 0 && (
+                  <span className="ml-auto bg-red-600 text-white rounded-full px-2 py-0.5 text-xs font-bold min-w-5 text-center">
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </span>
+                )}
+              </Link>
             </li>
 
             <li className="mobile-nav-item">

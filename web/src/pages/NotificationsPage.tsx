@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import PageTitle from '@/components/common/PageTitle';
 import EmptyState from '@/components/common/EmptyState';
-import { Bell, BellOff, Check, CheckCheck, Trash2, Filter, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2 } from 'lucide-react';
+import { Bell, BellOff, Check, CheckCheck, Filter, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2 } from 'lucide-react';
 import { getNotificationTypeColors } from '@/data/referenceData';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -93,10 +93,6 @@ export default function NotificationsPage() {
         prev.map(n => ({ ...n, isRead: true }))
       );
     }
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
   const filteredNotifications = filter === 'all' 
@@ -317,13 +313,6 @@ export default function NotificationsPage() {
                             View Details
                           </a>
                         )}
-                        <button
-                          onClick={() => deleteNotification(notification.id)}
-                          className="text-xs px-3 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 dark:bg-red-900/30 dark:hover:bg-red-900/50 dark:text-red-400 transition-colors flex items-center gap-1 ml-auto"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          Delete
-                        </button>
                       </div>
                     </div>
                   </div>

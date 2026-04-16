@@ -4051,6 +4051,9 @@ export const apiClient = {
     markAsRead: async (notificationId: string): Promise<ApiResponse<void>> => {
       try {
         const response = await axiosInstance.post<ApiResponse<void>>(`/v1/notifications/${notificationId}/read`, {});
+        if (response.status === 204) {
+          return { success: true, statusCode: 204 };
+        }
         return response.data;
       } catch (error) {
         return handleApiError(error);
@@ -4060,6 +4063,9 @@ export const apiClient = {
     markAllAsRead: async (): Promise<ApiResponse<void>> => {
       try {
         const response = await axiosInstance.post<ApiResponse<void>>('/v1/notifications/read-all', {});
+        if (response.status === 204) {
+          return { success: true, statusCode: 204 };
+        }
         return response.data;
       } catch (error) {
         return handleApiError(error);
