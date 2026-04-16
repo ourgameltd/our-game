@@ -69,7 +69,7 @@ export default function DrillTemplatesListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
-  const [filtersExpanded, setFiltersExpanded] = useState(true);
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
   // Debounce search term

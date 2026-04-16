@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
 import type { ClubCoachDto, ClubTeamDto } from '@/api';
@@ -87,7 +87,7 @@ export default function ClubCoachesPage() {
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [showArchived, setShowArchived] = useState(false);
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   // Fetch data from API
   useEffect(() => {
@@ -258,52 +258,30 @@ export default function ClubCoachesPage() {
         )}
 
         {/* Search and Filter */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
-          {/* Show Archived Toggle */}
-          {coachesLoading ? (
-            <div className="flex items-center justify-between gap-4 mb-4 animate-pulse">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 bg-gray-200 dark:bg-gray-700 rounded" />
-                <div className="h-4 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
-              </div>
-              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
-            </div>
-          ) : (
-          <div className="flex items-center justify-between gap-4 mb-4">
-            <label className="flex items-center gap-2 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showArchived}
-                onChange={(e) => setShowArchived(e.target.checked)}
-                className="w-4 h-4 text-secondary-600 border-gray-300 rounded focus:ring-secondary-500"
-              />
-              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                Show archived coaches ({allCoaches.filter(c => c.isArchived).length})
-              </span>
-            </label>
-            
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-            >
-              {showFilters ? (
-                <>
-                  <ChevronUp className="w-4 h-4" />
-                  Hide Filters
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-4 h-4" />
-                  Show Filters
-                </>
+        <div className="card mb-4">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
+              {(searchName || filterRole || filterAgeGroup || filterTeam || showArchived) && (
+                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                  {[searchName ? 1 : 0, filterRole ? 1 : 0, filterAgeGroup ? 1 : 0, filterTeam ? 1 : 0, showArchived ? 1 : 0].reduce((a, b) => a + b, 0)} active
+                </span>
               )}
-            </button>
-          </div>
-          )}
-          
+            </div>
+            {showFilters ? (
+              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            )}
+          </button>
+
           {showFilters && !coachesLoading && (
             <>
-              <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search Name</label>
@@ -360,6 +338,20 @@ export default function ClubCoachesPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showArchived}
+                onChange={(e) => setShowArchived(e.target.checked)}
+                className="w-4 h-4 text-secondary-600 border-gray-300 rounded focus:ring-secondary-500"
+              />
+              <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                Show archived coaches ({allCoaches.filter(c => c.isArchived).length})
+              </span>
+            </label>
           </div>
           
           {/* Active filters display and clear */}

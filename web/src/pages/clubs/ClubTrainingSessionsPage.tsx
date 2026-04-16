@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useState, useMemo } from 'react';
-import { ChevronDown, ChevronUp, MapPin } from 'lucide-react';
+import { ChevronDown, ChevronUp, MapPin, Filter } from 'lucide-react';
 import { useClubById, useClubTeams, useClubTrainingSessions } from '@/api/hooks';
 import { ClubTrainingSessionDto } from '@/api/client';
 import PageTitle from '@components/common/PageTitle';
@@ -75,7 +75,7 @@ export default function ClubTrainingSessionsPage() {
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [filterStatus, setFilterStatus] = useState<'upcoming' | 'past' | 'all'>('all');
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   // API hooks
   const { data: club, isLoading: isLoadingClub, error: clubError } = useClubById(clubId);
@@ -283,71 +283,74 @@ export default function ClubTrainingSessionsPage() {
         />
 
         {/* Search and Filter */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4">
-          <div className="flex items-center justify-between gap-4 mb-4">
+        <div className="card mb-4">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full flex items-center justify-between text-left"
+          >
             <div className="flex items-center gap-2">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
-                  checked={filterStatus === 'all'}
-                  onChange={() => setFilterStatus('all')}
-                  className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
-                />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  All Sessions
+              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
+              {(filterStatus !== 'all' || filterAgeGroup || filterTeam) && (
+                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                  {[filterStatus !== 'all' ? 1 : 0, filterAgeGroup ? 1 : 0, filterTeam ? 1 : 0].reduce((a, b) => a + b, 0)} active
                 </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
-                  checked={filterStatus === 'upcoming'}
-                  onChange={() => setFilterStatus('upcoming')}
-                  className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
-                />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Upcoming
-                </span>
-              </label>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name="status"
-                  checked={filterStatus === 'past'}
-                  onChange={() => setFilterStatus('past')}
-                  className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
-                />
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  Past
-                </span>
-              </label>
-            </div>
-            
-            <button
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300"
-            >
-              {showFilters ? (
-                <>
-                  <ChevronUp className="w-4 h-4" />
-                  Hide Filters
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-4 h-4" />
-                  Show Filters
-                </>
               )}
-            </button>
-          </div>
+            </div>
+            {showFilters ? (
+              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            )}
+          </button>
           
           {showFilters && (
             <>
               {isLoadingTeams ? (
                 <FiltersSkeleton />
               ) : (
-                <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                    <div className="flex items-center gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          checked={filterStatus === 'all'}
+                          onChange={() => setFilterStatus('all')}
+                          className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          All Sessions
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          checked={filterStatus === 'upcoming'}
+                          onChange={() => setFilterStatus('upcoming')}
+                          className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Upcoming
+                        </span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          checked={filterStatus === 'past'}
+                          onChange={() => setFilterStatus('past')}
+                          className="w-4 h-4 text-primary-600 border-gray-300 focus:ring-primary-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Past
+                        </span>
+                      </label>
+                    </div>
+                  </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Age Group</label>
