@@ -136,7 +136,9 @@ try
             "PersonalSessionDrills", "PersonalSessions",
             "KitOrderItems", "KitOrders", "MatchAttendances",
             "DrillAgeGroups", "DrillClubs", "DrillTeams", "DrillUsers",
-            "DrillTemplateAgeGroups", "DrillTemplateClubs", "DrillTemplateTeams", "DrillTemplateUsers"
+            "DrillTemplateAgeGroups", "DrillTemplateClubs", "DrillTemplateTeams", "DrillTemplateUsers",
+            "NotificationReads", "Notifications", "PushSubscriptions",
+            "ClubMediaLinks", "Invites"
         ];
         
         foreach (var table in tablesToClean)

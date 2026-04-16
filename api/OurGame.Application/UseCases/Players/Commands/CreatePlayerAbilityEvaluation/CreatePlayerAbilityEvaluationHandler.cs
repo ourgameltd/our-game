@@ -79,8 +79,8 @@ public class CreatePlayerAbilityEvaluationHandler : IRequestHandler<CreatePlayer
         {
             // Insert into AttributeEvaluations
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO AttributeEvaluations (Id, PlayerId, EvaluatedBy, EvaluatedAt, OverallRating, CoachNotes, PeriodStart, PeriodEnd)
-                VALUES ({evaluationId}, {command.PlayerId}, {coachResult.CoachId}, {evaluatedAtDateTime}, {overallRating}, {dto.CoachNotes}, {dto.PeriodStart}, {dto.PeriodEnd})
+                INSERT INTO AttributeEvaluations (Id, PlayerId, EvaluatedBy, EvaluatedAt, OverallRating, CoachNotes, PeriodStart, PeriodEnd, IsArchived)
+                VALUES ({evaluationId}, {command.PlayerId}, {coachResult.CoachId}, {evaluatedAtDateTime}, {overallRating}, {dto.CoachNotes}, {dto.PeriodStart}, {dto.PeriodEnd}, 0)
             ", cancellationToken);
 
             // Insert into EvaluationAttributes for each provided attribute
@@ -112,6 +112,7 @@ public class CreatePlayerAbilityEvaluationHandler : IRequestHandler<CreatePlayer
                     ae.CoachNotes,
                     ae.PeriodStart,
                     ae.PeriodEnd,
+                    ae.IsArchived,
                     c.FirstName + ' ' + c.LastName as CoachName
                 FROM AttributeEvaluations ae
                 INNER JOIN Coaches c ON c.Id = ae.EvaluatedBy
@@ -144,6 +145,7 @@ public class CreatePlayerAbilityEvaluationHandler : IRequestHandler<CreatePlayer
             CoachNotes = evaluation.CoachNotes,
             PeriodStart = evaluation.PeriodStart,
             PeriodEnd = evaluation.PeriodEnd,
+            IsArchived = evaluation.IsArchived,
             Attributes = attributes.Select(a => new EvaluationAttributeDto
             {
                 AttributeName = a.AttributeName ?? string.Empty,
@@ -176,6 +178,7 @@ internal class EvaluationRawResult
     public string? CoachNotes { get; set; }
     public DateOnly? PeriodStart { get; set; }
     public DateOnly? PeriodEnd { get; set; }
+    public bool IsArchived { get; set; }
     public string? CoachName { get; set; }
 }
 

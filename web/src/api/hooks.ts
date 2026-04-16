@@ -73,6 +73,7 @@ import {
   PlayerAbilityEvaluationDto,
   CreatePlayerAbilityEvaluationRequest,
   UpdatePlayerAbilityEvaluationRequest,
+  ArchivePlayerAbilityEvaluationRequest,
   PlayerRecentPerformanceDto,
   PlayerUpcomingMatchDto,
   PlayerReportSummaryDto,
@@ -1067,6 +1068,42 @@ export function useDeletePlayerAbilityEvaluation(
       setIsSubmitting(false);
     }
   }, [playerId, evaluationId]);
+
+  return { mutate, isSubmitting, data, error };
+}
+
+/**
+ * Hook to archive or unarchive a player ability evaluation. Archived
+ * evaluations are excluded from rating calculations on the client.
+ */
+export function useArchivePlayerAbilityEvaluation(
+  playerId: string
+): UseMutationState<void> & {
+  mutate: (evaluationId: string, isArchived: boolean) => Promise<void>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const mutate = useCallback(
+    async (evaluationId: string, isArchived: boolean): Promise<void> => {
+      setIsSubmitting(true);
+      setError(null);
+      setData(null);
+      try {
+        const request: ArchivePlayerAbilityEvaluationRequest = { isArchived };
+        await apiClient.players.archiveAbilityEvaluation(playerId, evaluationId, request);
+        setData(undefined);
+      } catch (err) {
+        setError({
+          message: err instanceof Error ? err.message : 'Failed to update evaluation archive state',
+        });
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [playerId]
+  );
 
   return { mutate, isSubmitting, data, error };
 }

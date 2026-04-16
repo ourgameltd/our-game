@@ -1,10 +1,7 @@
 import { useParams } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { Plus, Target, Dumbbell, Brain } from 'lucide-react';
-import { usePlayerAbilities, useCreatePlayerAbilityEvaluation, usePlayer } from '@api/hooks';
-import { CreatePlayerAbilityEvaluationRequest } from '@api/client';
-import { groupAttributes, getQualityColor } from '@utils/attributeHelpers';
-import { PlayerAttributes } from '@/types';
+import { useEffect } from 'react';
+import { usePlayerAbilities, usePlayer } from '@api/hooks';
+import { groupAttributes } from '@utils/attributeHelpers';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -37,7 +34,6 @@ export default function PlayerAbilitiesPage() {
   const { isAdmin } = useAuth();
   const { profile } = useAccessProfile(isAdmin);
   const { data: abilities, isLoading: loading, error, refetch } = usePlayerAbilities(playerId);
-  const { mutate: createEvaluation, isSubmitting } = useCreatePlayerAbilityEvaluation(playerId!);
   const { actualTheme } = useTheme();
   const { setEntityName } = useNavigation();
   const isDark = actualTheme === 'dark';
@@ -98,13 +94,6 @@ export default function PlayerAbilitiesPage() {
     emerald: { stroke: '#10B981', fill: '#10B981' },
   };
   
-  const [showEvaluationForm, setShowEvaluationForm] = useState(false);
-  const [evaluationDate, setEvaluationDate] = useState(new Date().toISOString().split('T')[0]);
-  const [selectedCategory, setSelectedCategory] = useState<'skills' | 'physical' | 'mental'>('skills');
-  const [attributeRatings, setAttributeRatings] = useState<Record<string, number>>({});
-  const [coachNotes, setCoachNotes] = useState('');
-  const [submitError, setSubmitError] = useState<string | null>(null);
-
   if (!playerId) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -122,64 +111,6 @@ export default function PlayerAbilitiesPage() {
       <AccessDeniedPage description="Player abilities are not visible for linked parent accounts." />
     );
   }
-
-  // Get the last evaluation for pre-filling the form
-  const getLastEvaluation = () => {
-    if (!abilities?.evaluations || abilities.evaluations.length === 0) return null;
-    return abilities.evaluations[0]; // Evaluations are already sorted by date (most recent first)
-  };
-
-  // Initialize form with last evaluation or current attributes
-  const initializeForm = () => {
-    if (!abilities) return;
-    
-    const lastEval = getLastEvaluation();
-    const newRatings: Record<string, number> = {};
-
-    if (lastEval) {
-      // Use last evaluation
-      lastEval.attributes.forEach(attr => {
-        newRatings[attr.attributeName] = attr.rating;
-      });
-      setCoachNotes(lastEval.coachNotes || '');
-    } else {
-      // Use current attributes
-      Object.entries(abilities.attributes).forEach(([key, value]) => {
-        newRatings[key] = value;
-      });
-    }
-
-    setAttributeRatings(newRatings);
-    setSubmitError(null);
-    setShowEvaluationForm(true);
-  };
-
-  const handleSubmitEvaluation = async () => {
-    if (!abilities) return;
-    
-    setSubmitError(null);
-    
-    // Build request with all attributes
-    const request: CreatePlayerAbilityEvaluationRequest = {
-      evaluatedAt: new Date(evaluationDate).toISOString(),
-      coachNotes: coachNotes || undefined,
-      attributes: Object.entries(attributeRatings).map(([attributeName, rating]) => ({
-        attributeName,
-        rating,
-      })),
-    };
-
-    try {
-      await createEvaluation(request);
-      // On success, close form and refresh data
-      setShowEvaluationForm(false);
-      setAttributeRatings({});
-      setCoachNotes('');
-      await refetch();
-    } catch (err) {
-      setSubmitError(err instanceof Error ? err.message : 'Failed to submit evaluation');
-    }
-  };
 
   // Group attributes by category
   const groupedAttributes = abilities ? groupAttributes(abilities.attributes) : { skills: [], physical: [], mental: [] };
@@ -200,15 +131,16 @@ export default function PlayerAbilitiesPage() {
     .slice(0, 1);
   const focusArea = lowestAbilities[0];
 
-  // Calculate historical data from evaluations
+  // Calculate historical data from evaluations (excluding archived)
+  const activeEvaluations = abilities?.evaluations?.filter(e => !e.isArchived) ?? [];
   const getHistoricalData = () => {
     if (!abilities) return [];
-    
-    if (!abilities.evaluations || abilities.evaluations.length === 0) {
+
+    if (activeEvaluations.length === 0) {
       return [{ date: 'Current', rating: abilities.overallRating }];
     }
 
-    return abilities.evaluations
+    return activeEvaluations
       .slice()
       .reverse() // Reverse to get chronological order
       .slice(-6) // Last 6 evaluations
@@ -284,43 +216,6 @@ export default function PlayerAbilitiesPage() {
   const physicalRadarData = getPhysicalRadarData();
   const mentalRadarData = getMentalRadarData();
 
-  const currentAttributes = abilities ? groupedAttributes[selectedCategory] : [];
-  const attributeKeyMap: Record<string, string> = {
-    'Ball Control': 'ballControl',
-    'Crossing': 'crossing',
-    'Weak Foot': 'weakFoot',
-    'Dribbling': 'dribbling',
-    'Finishing': 'finishing',
-    'Free Kick': 'freeKick',
-    'Heading': 'heading',
-    'Long Passing': 'longPassing',
-    'Long Shot': 'longShot',
-    'Penalties': 'penalties',
-    'Short Passing': 'shortPassing',
-    'Shot Power': 'shotPower',
-    'Sliding Tackle': 'slidingTackle',
-    'Standing Tackle': 'standingTackle',
-    'Volleys': 'volleys',
-    'Acceleration': 'acceleration',
-    'Agility': 'agility',
-    'Balance': 'balance',
-    'Jumping': 'jumping',
-    'Pace': 'pace',
-    'Reactions': 'reactions',
-    'Sprint Speed': 'sprintSpeed',
-    'Stamina': 'stamina',
-    'Strength': 'strength',
-    'Aggression': 'aggression',
-    'Attacking Position': 'attackingPosition',
-    'Awareness': 'awareness',
-    'Composure': 'composure',
-    'Defensive Positioning': 'defensivePositioning',
-    'Interceptions': 'interceptions',
-    'Marking': 'marking',
-    'Positioning': 'positioning',
-    'Vision': 'vision'
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -376,23 +271,14 @@ export default function PlayerAbilitiesPage() {
             <div>
               <p className="text-gray-600 dark:text-gray-400">
                 Overall Rating: {abilities.overallRating}/99
-                {abilities.evaluations.length > 0 && (
+                {activeEvaluations.length > 0 && (
                   <span className="ml-2 text-sm">
-                    (Based on {abilities.evaluations.length} evaluation{abilities.evaluations.length !== 1 ? 's' : ''})
+                    (Based on {activeEvaluations.length} review{activeEvaluations.length !== 1 ? 's' : ''})
                   </span>
                 )}
               </p>
             </div>
           ) : null}
-          {!loading && abilities && (
-            <button
-              onClick={initializeForm}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-              title="Add New Evaluation"
-            >
-              <Plus className="w-5 h-5" />
-            </button>
-          )}
         </div>
 
         {/* Progress Summary */}
@@ -415,7 +301,7 @@ export default function PlayerAbilitiesPage() {
                   {abilities.overallRating}/99
                 </div>
                 <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                  {abilities.evaluations.length} evaluation{abilities.evaluations.length !== 1 ? 's' : ''}
+                  {activeEvaluations.length} review{activeEvaluations.length !== 1 ? 's' : ''}
                 </div>
               </div>
               <div className="card">
@@ -431,152 +317,6 @@ export default function PlayerAbilitiesPage() {
             </>
           ) : null}
         </div>
-
-        {/* Evaluation Form Modal */}
-        {showEvaluationForm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[1000] p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 p-6">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      New Evaluation - {abilities?.firstName} {abilities?.lastName}
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400 mt-1">
-                      {getLastEvaluation() ? 'Values auto-populated from last evaluation' : 'Values auto-populated from current attributes'}
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setShowEvaluationForm(false)}
-                    className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-6">
-                {/* Submit Error */}
-                {submitError && (
-                  <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                    <p className="text-sm text-red-800 dark:text-red-200">{submitError}</p>
-                  </div>
-                )}
-                
-                {/* Evaluation Date */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Evaluation Date
-                  </label>
-                  <input
-                    type="date"
-                    value={evaluationDate}
-                    onChange={(e) => setEvaluationDate(e.target.value)}
-                    className="w-full md:w-auto px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                      bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
-                </div>
-
-                {/* Category Tabs */}
-                <div className="flex justify-evenly sm:justify-start sm:flex-wrap gap-2 mb-4 border-b border-gray-200 dark:border-gray-700 pb-4">
-                  {([
-                    { key: 'skills', Icon: Target },
-                    { key: 'physical', Icon: Dumbbell },
-                    { key: 'mental', Icon: Brain },
-                  ] as const).map(({ key: category, Icon }) => (
-                    <button
-                      key={category}
-                      type="button"
-                      onClick={() => setSelectedCategory(category)}
-                      className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium capitalize transition-colors ${
-                        selectedCategory === category
-                          ? 'bg-primary-600 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      }`}
-                    >
-                      <Icon className="w-5 h-5" />
-                      <span className="hidden sm:inline">{category} ({groupedAttributes[category].length})</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Attributes Grid */}
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  {currentAttributes.map((attr) => {
-                    const attrKey = attributeKeyMap[attr.name];
-                    const currentRating = attributeRatings[attrKey] ?? (abilities?.attributes[attrKey as keyof PlayerAttributes] || 50);
-                    const quality = getQualityColor(attr.quality);
-
-                    return (
-                      <div key={attr.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <label className="font-medium text-gray-900 dark:text-white">
-                            {attr.name}
-                          </label>
-                          <span className={`text-lg font-bold ${quality}`}>
-                            {currentRating}/99
-                          </span>
-                        </div>
-                        <input
-                          type="range"
-                          min="0"
-                          max="99"
-                          value={currentRating}
-                          onChange={(e) => setAttributeRatings(prev => ({
-                            ...prev,
-                            [attrKey]: parseInt(e.target.value)
-                          }))}
-                          className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                        />
-                        <div className="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          <span>0</span>
-                          <span>50</span>
-                          <span>99</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {/* Coach Notes */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Overall Coach Comments
-                  </label>
-                  <textarea
-                    value={coachNotes}
-                    onChange={(e) => setCoachNotes(e.target.value)}
-                    rows={4}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg 
-                      bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    placeholder="Provide overall feedback on player performance, areas of improvement, and recommendations..."
-                  />
-                </div>
-
-                {/* Action Buttons */}
-                <div className="flex gap-4">
-                  <button
-                    onClick={handleSubmitEvaluation}
-                    disabled={isSubmitting}
-                    className="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isSubmitting ? 'Submitting...' : 'Submit Evaluation'}
-                  </button>
-                  <button
-                    onClick={() => setShowEvaluationForm(false)}
-                    disabled={isSubmitting}
-                    className="flex-1 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 
-                      text-gray-900 dark:text-white font-medium py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Main Charts Row */}
         {loading ? (
@@ -955,52 +695,6 @@ export default function PlayerAbilitiesPage() {
             </div>
           </div>
         </div>
-        ) : null}
-
-        {/* Evaluation History */}
-        {loading ? (
-          <div className="card mt-4">
-            <div className="h-6 bg-gray-200 dark:bg-gray-700 animate-pulse rounded w-48 mb-4" />
-            <div className="space-y-2">
-              {[1, 2, 3].map(i => (
-                <div key={i} className="h-12 bg-gray-200 dark:bg-gray-700 animate-pulse rounded" />
-              ))}
-            </div>
-          </div>
-        ) : abilities && abilities.evaluations.length > 0 ? (
-          <div className="card mt-4">
-            <h3 className="text-xl font-semibold mb-4">Evaluation History</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Date</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Coach</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Overall Rating</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Notes</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {abilities.evaluations.map((evaluation) => (
-                    <tr key={evaluation.evaluationId} className="border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
-                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                        {new Date(evaluation.evaluatedAt).toLocaleDateString()}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                        {evaluation.coachName || 'Unknown Coach'}
-                      </td>
-                      <td className="py-3 px-4 text-sm">
-                        <span className="font-bold text-primary-600">{evaluation.overallRating}/99</span>
-                      </td>
-                      <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                        {evaluation.coachNotes || '-'}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
         ) : null}
       </main>
     </div>

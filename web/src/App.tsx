@@ -40,6 +40,7 @@ import TeamSettingsPage from '@pages/teams/TeamSettingsPage';
 import AddEditTeamPage from '@pages/teams/AddEditTeamPage';
 import PlayerProfilePage from '@pages/players/PlayerProfilePage';
 import PlayerAbilitiesPage from '@pages/players/PlayerAbilitiesPage';
+import PlayerReviewsPage from '@pages/players/PlayerReviewsPage';
 import MatchReportPage from '@pages/matches/MatchReportPage';
 import MatchesListPage from '@pages/matches/MatchesListPage';
 import AddEditMatchPage from '@pages/matches/AddEditMatchPage';
@@ -186,6 +187,7 @@ function AppContent() {
         {/* Players - Age Group Level */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId" element={<PlayerProfilePage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/reviews" element={<PlayerReviewsPage />} />
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards" element={<PlayerReportCardsPage />} /> */}
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} /> */}
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} /> */}
@@ -217,6 +219,7 @@ function AppContent() {
         {/* Players - Team Context */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId" element={<PlayerProfilePage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/abilities" element={<PlayerAbilitiesPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/reviews" element={<PlayerReviewsPage />} />
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards" element={<PlayerReportCardsPage />} /> */}
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/new" element={<AddEditReportCardPage />} /> */}
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/report-cards/:reportId/edit" element={<AddEditReportCardPage />} /> */}

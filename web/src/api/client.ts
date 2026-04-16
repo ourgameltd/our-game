@@ -1879,13 +1879,16 @@ export interface EvaluationAttributeDto {
 }
 
 export interface PlayerAbilityEvaluationDto {
+  id: string;
   evaluationId: string;
+  evaluatedBy?: string;
   evaluatedAt: string;
   overallRating: number;
   coachName?: string;
   coachNotes?: string;
   periodStart?: string;
   periodEnd?: string;
+  isArchived: boolean;
   attributes: EvaluationAttributeDto[];
 }
 
@@ -1922,6 +1925,10 @@ export interface UpdatePlayerAbilityEvaluationRequest {
     rating: number;
     notes?: string;
   }[];
+}
+
+export interface ArchivePlayerAbilityEvaluationRequest {
+  isArchived: boolean;
 }
 
 export interface PlayerAlbumDto {
@@ -3692,6 +3699,21 @@ export const apiClient = {
     deleteAbilityEvaluation: async (playerId: string, evaluationId: string): Promise<void> => {
       // No need to check status for 204 - void return type handles it naturally
       await axiosInstance.delete(`/v1/players/${playerId}/abilities/evaluations/${evaluationId}`);
+    },
+
+    /**
+     * Archive or unarchive an ability evaluation. Archived evaluations
+     * are excluded from rating calculations.
+     */
+    archiveAbilityEvaluation: async (
+      playerId: string,
+      evaluationId: string,
+      request: ArchivePlayerAbilityEvaluationRequest
+    ): Promise<void> => {
+      await axiosInstance.patch(
+        `/v1/players/${playerId}/abilities/evaluations/${evaluationId}/archive`,
+        request
+      );
     },
 
     /**

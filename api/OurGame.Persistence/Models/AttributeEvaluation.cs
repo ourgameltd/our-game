@@ -23,6 +23,8 @@ public partial class AttributeEvaluation
 
     public DateOnly? PeriodEnd { get; set; }
 
+    public bool IsArchived { get; set; }
+
     public virtual Coach EvaluatedByNavigation { get; set; }
 
     public virtual ICollection<EvaluationAttribute> EvaluationAttributes { get; set; } = new List<EvaluationAttribute>();

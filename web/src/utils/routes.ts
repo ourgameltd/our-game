@@ -188,6 +188,14 @@ export class Routes {
     return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/abilities`;
   }
 
+  static playerReviews(
+    clubId: string,
+    ageGroupId: string,
+    playerId: string
+  ): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/reviews`;
+  }
+
   static playerReportCard(
     clubId: string,
     ageGroupId: string,
@@ -297,6 +305,15 @@ export class Routes {
     playerId: string
   ): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/abilities`;
+  }
+
+  static teamPlayerReviews(
+    clubId: string,
+    ageGroupId: string,
+    teamId: string,
+    playerId: string
+  ): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/reviews`;
   }
 
   static teamPlayerReportCard(

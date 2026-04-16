@@ -94,9 +94,9 @@ public class GetPlayerAbilitiesHandler : IRequestHandler<GetPlayerAbilitiesQuery
             .SqlQueryRaw<PlayerAttributesRawDto>(attributesSql, query.PlayerId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        // 4. Fetch last 12 evaluations
+        // 4. Fetch all evaluations (ordered by date descending)
         var evaluationsSql = @"
-            SELECT TOP 12
+            SELECT
                 ae.Id,
                 ae.EvaluatedBy,
                 CONCAT(c.FirstName, ' ', c.LastName) AS CoachName,
@@ -104,7 +104,8 @@ public class GetPlayerAbilitiesHandler : IRequestHandler<GetPlayerAbilitiesQuery
                 ae.OverallRating,
                 ae.CoachNotes,
                 ae.PeriodStart,
-                ae.PeriodEnd
+                ae.PeriodEnd,
+                ae.IsArchived
             FROM AttributeEvaluations ae
             INNER JOIN Coaches c ON c.Id = ae.EvaluatedBy
             WHERE ae.PlayerId = {0}
@@ -187,6 +188,7 @@ public class GetPlayerAbilitiesHandler : IRequestHandler<GetPlayerAbilitiesQuery
             CoachNotes = e.CoachNotes,
             PeriodStart = e.PeriodStart,
             PeriodEnd = e.PeriodEnd,
+            IsArchived = e.IsArchived,
             Attributes = evaluationAttributes
                 .Where(ea => ea.EvaluationId == e.Id)
                 .Select(ea => new EvaluationAttributeDto
@@ -283,6 +285,7 @@ public class EvaluationRawDto
     public string? CoachNotes { get; set; }
     public DateOnly? PeriodStart { get; set; }
     public DateOnly? PeriodEnd { get; set; }
+    public bool IsArchived { get; set; }
 }
 
 /// <summary>

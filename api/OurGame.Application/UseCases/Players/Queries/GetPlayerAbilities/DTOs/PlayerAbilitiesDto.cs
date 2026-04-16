@@ -184,6 +184,9 @@ public record PlayerAbilityEvaluationDto
     /// <summary>Evaluation period end date</summary>
     public DateOnly? PeriodEnd { get; init; }
 
+    /// <summary>Whether this evaluation is archived and excluded from rating calculations</summary>
+    public bool IsArchived { get; init; }
+
     /// <summary>Individual attribute ratings for this evaluation</summary>
     public List<EvaluationAttributeDto> Attributes { get; init; } = new();
 }

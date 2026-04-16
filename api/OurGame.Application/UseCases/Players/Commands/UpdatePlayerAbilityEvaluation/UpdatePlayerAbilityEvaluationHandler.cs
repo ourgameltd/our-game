@@ -132,6 +132,7 @@ public class UpdatePlayerAbilityEvaluationHandler : IRequestHandler<UpdatePlayer
                     ae.CoachNotes,
                     ae.PeriodStart,
                     ae.PeriodEnd,
+                    ae.IsArchived,
                     c.FirstName + ' ' + c.LastName as CoachName
                 FROM AttributeEvaluations ae
                 INNER JOIN Coaches c ON c.Id = ae.EvaluatedBy
@@ -164,6 +165,7 @@ public class UpdatePlayerAbilityEvaluationHandler : IRequestHandler<UpdatePlayer
             CoachNotes = evaluation.CoachNotes,
             PeriodStart = evaluation.PeriodStart,
             PeriodEnd = evaluation.PeriodEnd,
+            IsArchived = evaluation.IsArchived,
             Attributes = attributes.Select(a => new EvaluationAttributeDto
             {
                 AttributeName = a.AttributeName ?? string.Empty,
@@ -206,6 +208,7 @@ internal class EvaluationRawResult
     public string? CoachNotes { get; set; }
     public DateOnly? PeriodStart { get; set; }
     public DateOnly? PeriodEnd { get; set; }
+    public bool IsArchived { get; set; }
     public string? CoachName { get; set; }
 }
 
