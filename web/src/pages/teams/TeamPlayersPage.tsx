@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { Plus, AlertCircle, Search } from 'lucide-react';
+import { Plus, AlertCircle, Search, ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { 
@@ -22,6 +22,7 @@ export default function TeamPlayersPage() {
   usePageTitle(['Team Players']);
 
   const [showArchived, setShowArchived] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   const [showAddModal, setShowAddModal] = useState(false);
   const [modalSearchQuery, setModalSearchQuery] = useState('');
 
@@ -291,19 +292,43 @@ export default function TeamPlayersPage() {
           </div>
         )}
 
-        {/* Archived Toggle */}
-        <div className="mb-4 flex items-center gap-2">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-              className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-            />
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              Show archived players
-            </span>
-          </label>
+        {/* Filters */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
+              {showArchived && (
+                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                  1 active
+                </span>
+              )}
+            </div>
+            {showFilters ? (
+              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            )}
+          </button>
+
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                  className="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Show archived players
+                </span>
+              </label>
+            </div>
+          )}
         </div>
 
         {/* Players List */}

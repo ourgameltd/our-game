@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
+import { ChevronDown, ChevronUp, Filter } from 'lucide-react';
 import { useClubById, useAgeGroupsByClubId, AgeGroupListDto } from '@/api';
 import PageTitle from '../../components/common/PageTitle';
 import AgeGroupListCard from '../../components/ageGroup/AgeGroupListCard';
@@ -95,6 +96,7 @@ const AgeGroupsListPage: React.FC = () => {
   usePageTitle(['Club', 'Age Groups']);
   
   const [showArchived, setShowArchived] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
   
   // Fetch club from API
   const { data: clubData, isLoading: clubLoading, error: clubError } = useClubById(clubId);
@@ -161,17 +163,43 @@ const AgeGroupsListPage: React.FC = () => {
           />
         )}
 
-        {/* Show Archived Checkbox */}
-        <div className="mb-4">
-          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={showArchived}
-              onChange={(e) => setShowArchived(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
-            />
-            Show Archived Age Groups
-          </label>
+        {/* Filters */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            className="w-full flex items-center justify-between text-left"
+          >
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
+              {showArchived && (
+                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                  1 active
+                </span>
+              )}
+            </div>
+            {showFilters ? (
+              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            )}
+          </button>
+
+          {showFilters && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Show archived age groups
+                </span>
+              </label>
+            </div>
+          )}
         </div>
 
         {/* Error state */}

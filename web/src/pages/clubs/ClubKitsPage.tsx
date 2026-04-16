@@ -216,17 +216,6 @@ export default function ClubKitsPage() {
                 />
               ))}
             </div>
-
-            <div className="card mt-4 bg-gray-50 dark:bg-gray-800/50">
-              <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                About Club Kits
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                Club kits are available to all teams within the club. When scheduling a match, 
-                teams can select from club kits or their own team-specific kits. If no kit is 
-                selected, the system will use the club's primary colors by default.
-              </p>
-            </div>
           </div>
         )}
 
