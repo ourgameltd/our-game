@@ -292,9 +292,6 @@ export default function DrillTemplateFormPage() {
               title={isEditMode ? (isInherited ? 'View Session (Read-Only)' : 'Edit Session') : 'Create Session'}
               subtitle={`${contextName}`}
             />
-            <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getSessionCategoryColors(sessionCategory).bgColor} ${getSessionCategoryColors(sessionCategory).textColor}`}>
-              {sessionCategory}
-            </span>
           </div>
         </div>
 
