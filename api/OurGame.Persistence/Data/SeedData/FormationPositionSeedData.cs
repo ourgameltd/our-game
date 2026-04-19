@@ -131,10 +131,10 @@ public static class FormationPositionSeedData
             },
             [FormationSeedData.Formation_4aside_121_Id] = new List<(PlayerPosition Position, decimal XCoord, decimal YCoord)>
             {
-                (PlayerPosition.GK, 50.0m, 5.0m),
-                (PlayerPosition.CB, 50.0m, 30.0m),
-                (PlayerPosition.CM, 50.0m, 58.0m),
-                (PlayerPosition.ST, 50.0m, 82.0m)
+                 (PlayerPosition.CB, 50.0m, 18.0m),
+                 (PlayerPosition.CM, 35.0m, 50.0m),
+                 (PlayerPosition.CM, 65.0m, 50.0m),
+                 (PlayerPosition.ST, 50.0m, 82.0m)
             }
         };
 

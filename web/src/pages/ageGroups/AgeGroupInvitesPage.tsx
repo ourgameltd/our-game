@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { Plus, Copy, Check, RefreshCw, Loader2 } from 'lucide-react';
 import { useRequiredParams } from '@/utils/routeParams';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import PageTitle from '@/components/common/PageTitle';
@@ -149,8 +150,8 @@ export default function AgeGroupInvitesPage() {
           <div className="space-y-3">
             {inviteRoles.map(role => (
               <div key={role.type} className="card">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <div className="min-w-0">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{role.label}</h3>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
                       {role.type === 2
@@ -158,40 +159,56 @@ export default function AgeGroupInvitesPage() {
                         : 'Users can link one account and switch if needed.'}
                     </p>
                   </div>
-                  {!invites[role.type] ? (
+                  {!invites[role.type] && (
                     <button
                       type="button"
                       onClick={() => createInvite(role.type)}
                       disabled={creating[role.type]}
-                      className="px-4 py-2 bg-primary-600 text-white rounded-lg disabled:opacity-50"
+                      title="Create invite link"
+                      aria-label="Create invite link"
+                      className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 shrink-0"
                     >
-                      {creating[role.type] ? 'Creating...' : 'Create Link'}
+                      {creating[role.type] ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Plus className="w-5 h-5" />
+                      )}
                     </button>
-                  ) : (
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => copyLink(role.type)}
-                        className="px-4 py-2 bg-green-600 text-white rounded-lg"
-                      >
-                        {copied[role.type] ? 'Copied' : 'Copy Link'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => regenerateInvite(role.type)}
-                        disabled={regenerating[role.type]}
-                        className="px-4 py-2 bg-amber-600 text-white rounded-lg disabled:opacity-50"
-                        title="Regenerate this invite link (invalidates the current one)"
-                      >
-                        {regenerating[role.type] ? 'Regenerating...' : 'Regenerate'}
-                      </button>
-                    </div>
                   )}
                 </div>
 
                 {invites[role.type] && (
-                  <div className="mt-3 p-3 rounded border border-gray-200 dark:border-gray-700 text-sm break-all">
-                    {inviteLinks[role.type]}
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={inviteLinks[role.type]}
+                      onFocus={(e) => e.currentTarget.select()}
+                      className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-mono truncate"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => copyLink(role.type)}
+                      title={copied[role.type] ? 'Copied' : 'Copy link'}
+                      aria-label="Copy invite link"
+                      className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 shrink-0"
+                    >
+                      {copied[role.type] ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => regenerateInvite(role.type)}
+                      disabled={regenerating[role.type]}
+                      title="Regenerate link (invalidates the current one)"
+                      aria-label="Regenerate invite link"
+                      className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 shrink-0"
+                    >
+                      {regenerating[role.type] ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-5 h-5" />
+                      )}
+                    </button>
                   </div>
                 )}
                 {errors[role.type] && (

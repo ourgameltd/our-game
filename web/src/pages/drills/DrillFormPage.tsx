@@ -529,34 +529,18 @@ export default function DrillFormPage() {
                       </span>
                     )}</h3>
               <div className="space-y-2">
-                <div>
-                  <div className="mb-2 flex items-center gap-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Drill Name *
-                    </label>
-                  </div>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="e.g., Passing Triangle, Dribbling Gates"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    disabled={isInherited}
-                    required
-                  />
-                </div>
-
-                <div className={`grid gap-3 ${!isInherited ? 'md:grid-cols-3' : 'md:grid-cols-2'}`}>
+                <div className="grid gap-3 md:grid-cols-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Duration (minutes) *
-                    </label>
+                    <div className="mb-2 flex items-center gap-2">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Drill Name *
+                      </label>
+                    </div>
                     <input
-                      type="number"
-                      value={duration}
-                      onChange={(e) => setDuration(Number(e.target.value))}
-                      min={1}
-                      max={120}
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="e.g., Passing Triangle, Dribbling Gates"
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       disabled={isInherited}
                       required
@@ -582,6 +566,24 @@ export default function DrillFormPage() {
                           </option>
                         ))}
                     </select>
+                  </div>
+                </div>
+
+                <div className={`grid gap-3 ${!isInherited ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Duration (minutes) *
+                    </label>
+                    <input
+                      type="number"
+                      value={duration}
+                      onChange={(e) => setDuration(Number(e.target.value))}
+                      min={1}
+                      max={120}
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      disabled={isInherited}
+                      required
+                    />
                   </div>
 
                   {!isInherited && (

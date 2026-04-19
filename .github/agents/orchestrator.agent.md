@@ -2,7 +2,7 @@
 name: Orchestrator
 description: Sonnet, Codex, Gemini
 model: GPT-5.4 (copilot)
-tools: ['read/readFile', 'agent/runSubagent']
+tools: ['read/readFile', 'agent/runSubagent', 'vscode/memory']
 ---
 
 <!-- Note: Memory is experimental at the moment. You'll need to be in VS Code Insiders and toggle on memory in settings -->

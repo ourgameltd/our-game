@@ -280,10 +280,10 @@ try
         await context.SaveChangesAsync();
     }
 
-    var formationPositionRepair = await RepairSystemFormationPositionsAsync(context);
-    if (formationPositionRepair.UpdatedCount > 0 || formationPositionRepair.InsertedCount > 0)
+        var formationPositionRepair = await RepairSystemFormationPositionsAsync(context);
+        if (formationPositionRepair.UpdatedCount > 0 || formationPositionRepair.InsertedCount > 0 || formationPositionRepair.DeletedCount > 0)
     {
-        Console.WriteLine($"  🔧 Repaired system formation positions ({formationPositionRepair.UpdatedCount} updated, {formationPositionRepair.InsertedCount} inserted)...");
+            Console.WriteLine($"  🔧 Repaired system formation positions ({formationPositionRepair.UpdatedCount} updated, {formationPositionRepair.InsertedCount} inserted, {formationPositionRepair.DeletedCount} deleted)...");
     }
     
     if (!await context.TacticPrinciples.AnyAsync())
@@ -646,60 +646,113 @@ static string? FindApiDirectory(string startDirectory)
     return null;
 }
 
-static async Task<(int UpdatedCount, int InsertedCount)> RepairSystemFormationPositionsAsync(OurGameContext context)
+static async Task<(int UpdatedCount, int InsertedCount, int DeletedCount)> RepairSystemFormationPositionsAsync(OurGameContext context)
 {
     var seededPositions = OurGame.Persistence.Data.SeedData.FormationPositionSeedData.GetFormationPositions();
     var systemFormationIds = OurGame.Persistence.Data.SeedData.FormationSeedData.SystemFormationIds;
-    Func<FormationPosition, (Guid FormationId, int Position, decimal? XCoord, decimal? YCoord)> createFormationPositionKey =
-        position => (position.FormationId, (int)position.Position, position.XCoord, position.YCoord);
 
     var existingPositions = await context.FormationPositions
         .Where(position => systemFormationIds.Contains(position.FormationId))
         .ToListAsync();
 
-    var existingPositionsByKey = existingPositions
-        .GroupBy(createFormationPositionKey)
-        .ToDictionary(group => group.Key, group => group.OrderBy(position => position.Id).ToList());
+    var existingPositionsByFormationId = existingPositions
+        .GroupBy(position => position.FormationId)
+        .ToDictionary(
+            group => group.Key,
+            group => group
+                .OrderBy(position => position.PositionIndex)
+                .ThenBy(position => position.Id)
+                .ToList());
+
+    var seededPositionsByFormationId = seededPositions
+        .GroupBy(position => position.FormationId)
+        .ToDictionary(
+            group => group.Key,
+            group => group
+                .OrderBy(position => position.PositionIndex)
+                .ToList());
 
     var updatedCount = 0;
     var insertedCount = 0;
+    var deletedCount = 0;
 
-    foreach (var seededPosition in seededPositions)
+    foreach (var formationId in systemFormationIds)
     {
-        var key = createFormationPositionKey(seededPosition);
+        var seededFormationPositions = seededPositionsByFormationId.GetValueOrDefault(formationId, new List<FormationPosition>());
+        var existingFormationPositions = existingPositionsByFormationId.GetValueOrDefault(formationId, new List<FormationPosition>());
+        var sharedCount = Math.Min(seededFormationPositions.Count, existingFormationPositions.Count);
 
-        if (existingPositionsByKey.TryGetValue(key, out var matches) && matches.Any())
+        for (var index = 0; index < sharedCount; index++)
         {
-            var existingPosition = matches[0];
+            var seededPosition = seededFormationPositions[index];
+            var existingPosition = existingFormationPositions[index];
+            var rowUpdated = false;
+
+            if (existingPosition.Position != seededPosition.Position)
+            {
+                existingPosition.Position = seededPosition.Position;
+                rowUpdated = true;
+            }
+
+            if (existingPosition.XCoord != seededPosition.XCoord)
+            {
+                existingPosition.XCoord = seededPosition.XCoord;
+                rowUpdated = true;
+            }
+
+            if (existingPosition.YCoord != seededPosition.YCoord)
+            {
+                existingPosition.YCoord = seededPosition.YCoord;
+                rowUpdated = true;
+            }
+
+            if (existingPosition.Direction != seededPosition.Direction)
+            {
+                existingPosition.Direction = seededPosition.Direction;
+                rowUpdated = true;
+            }
+
             if (existingPosition.PositionIndex != seededPosition.PositionIndex)
             {
                 existingPosition.PositionIndex = seededPosition.PositionIndex;
-                updatedCount++;
+                rowUpdated = true;
             }
 
-            continue;
+            if (rowUpdated)
+            {
+                updatedCount++;
+            }
         }
 
-        await context.FormationPositions.AddAsync(new OurGame.Persistence.Models.FormationPosition
+        foreach (var seededPosition in seededFormationPositions.Skip(sharedCount))
         {
-            Id = Guid.NewGuid(),
-            FormationId = seededPosition.FormationId,
-            Position = seededPosition.Position,
-            XCoord = seededPosition.XCoord,
-            YCoord = seededPosition.YCoord,
-            Direction = seededPosition.Direction,
-            PositionIndex = seededPosition.PositionIndex
-        });
+            await context.FormationPositions.AddAsync(new OurGame.Persistence.Models.FormationPosition
+            {
+                Id = Guid.NewGuid(),
+                FormationId = seededPosition.FormationId,
+                Position = seededPosition.Position,
+                XCoord = seededPosition.XCoord,
+                YCoord = seededPosition.YCoord,
+                Direction = seededPosition.Direction,
+                PositionIndex = seededPosition.PositionIndex
+            });
 
-        insertedCount++;
+            insertedCount++;
+        }
+
+        foreach (var obsoletePosition in existingFormationPositions.Skip(sharedCount))
+        {
+            context.FormationPositions.Remove(obsoletePosition);
+            deletedCount++;
+        }
     }
 
-    if (updatedCount > 0 || insertedCount > 0)
+    if (updatedCount > 0 || insertedCount > 0 || deletedCount > 0)
     {
         await context.SaveChangesAsync();
     }
 
-    return (updatedCount, insertedCount);
+    return (updatedCount, insertedCount, deletedCount);
 }
 
 static async Task EnsureLineupPlayersPositionIndexAsync(OurGameContext context)

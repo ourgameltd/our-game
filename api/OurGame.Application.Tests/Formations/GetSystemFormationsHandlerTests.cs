@@ -1,5 +1,6 @@
 using OurGame.Application.Tests.TestInfrastructure;
 using OurGame.Application.UseCases.Formations.Queries.GetSystemFormations;
+using OurGame.Persistence.Data.SeedData;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
@@ -73,5 +74,23 @@ public class GetSystemFormationsHandlerTests
         Assert.Equal("GK", result[0].Positions[0].Position);
         Assert.Equal(50.0, result[0].Positions[0].X);
         Assert.Equal(95.0, result[0].Positions[0].Y);
+    }
+
+    [Fact]
+    public async Task Handle_ReturnsCanonicalFourASideSystemFormationPositions()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        await db.Context.Formations.AddRangeAsync(FormationSeedData.GetFormations());
+        await db.Context.FormationPositions.AddRangeAsync(FormationPositionSeedData.GetFormationPositions());
+        await db.Context.SaveChangesAsync();
+
+        var handler = new GetSystemFormationsHandler(db.Context);
+        var result = await handler.Handle(new GetSystemFormationsQuery(), CancellationToken.None);
+
+        var fourASide = Assert.Single(result.Where(formation => formation.Id == FormationSeedData.Formation_4aside_121_Id));
+
+        Assert.Equal(new[] { "CB", "CM", "CM", "ST" }, fourASide.Positions.Select(position => position.Position));
+        Assert.Equal(new[] { 0, 1, 2, 3 }, fourASide.Positions.Select(position => position.PositionIndex));
+        Assert.DoesNotContain(fourASide.Positions, position => position.Position == "GK");
     }
 }
