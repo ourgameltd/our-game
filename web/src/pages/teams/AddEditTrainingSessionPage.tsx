@@ -838,7 +838,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     .filter((sd) => sd.equipment && sd.equipment.length > 0)
                     .map((sd) => sd.equipment!)
                 )}
-                title="Equipment Needed (All Drills)"
+                title="Equipment Needed"
               />
 
               {selectedDrills.length > 0 ? (

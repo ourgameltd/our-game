@@ -17,6 +17,8 @@ import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
+import EquipmentSummary from '@components/training/EquipmentSummary';
+import { extractEquipmentFromDiagram, aggregateEquipment } from '@utils/equipmentFromDiagram';
 
 // Skeleton components for loading states
 function BasicInfoSkeleton() {
@@ -607,6 +609,17 @@ export default function DrillTemplateFormPage() {
               )}
             </div>
             )}
+
+            {/* Equipment Summary (aggregated from all drill diagrams) */}
+            <EquipmentSummary
+              equipment={aggregateEquipment(
+                selectedDrillIds
+                  .map((id) => availableDrills.find((d) => d.id === id))
+                  .filter(Boolean)
+                  .map((d) => extractEquipmentFromDiagram(d!.drillDiagramConfig))
+              )}
+              title="Equipment Needed"
+            />
 
             {/* Session Summary */}
             {selectedDrillIds.length > 0 && (
