@@ -277,80 +277,101 @@ export default function PlayerReviewsPage() {
             </p>
           </div>
         ) : (
-          <div className="card">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Date</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Coach</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Overall Rating</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Notes</th>
-                    <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Status</th>
-                    <th className="text-right py-3 px-4 text-sm font-semibold text-gray-700 dark:text-gray-300">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredEvaluations.map((evaluation) => {
-                    const evalId = evaluation.id || evaluation.evaluationId;
-                    const isBusy = isArchiving && busyId === evalId;
-                    return (
-                      <tr
-                        key={evalId}
-                        className={`border-b border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 ${
-                          evaluation.isArchived ? 'opacity-60' : ''
-                        }`}
-                      >
-                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
-                          {new Date(evaluation.evaluatedAt).toLocaleDateString()}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900 dark:text-white">
+          <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+            {filteredEvaluations.map((evaluation) => {
+              const evalId = evaluation.id || evaluation.evaluationId;
+              const isBusy = isArchiving && busyId === evalId;
+              return (
+                <div
+                  key={evalId}
+                  className={`block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b ${
+                    evaluation.isArchived ? 'opacity-60' : ''
+                  }`}
+                >
+                  <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                    {/* Date */}
+                    <div className="flex items-center justify-between md:flex-shrink-0 md:w-[120px] md:order-1">
+                      <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                        {new Date(evaluation.evaluatedAt).toLocaleDateString('en-GB', {
+                          weekday: 'short',
+                          day: 'numeric',
+                          month: 'short',
+                        })}
+                      </div>
+                      {/* Status badge - mobile only */}
+                      <div className="md:hidden">
+                        {evaluation.isArchived ? (
+                          <span className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                            Archived
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                            Active
+                          </span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Coach & Rating - main content */}
+                    <div className="flex-grow md:order-2">
+                      <div className="flex items-center gap-3">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           {evaluation.coachName || 'Unknown Coach'}
-                        </td>
-                        <td className="py-3 px-4 text-sm">
-                          <span className="font-bold text-primary-600">{evaluation.overallRating}/99</span>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-600 dark:text-gray-400 max-w-xs truncate">
-                          {evaluation.coachNotes || '-'}
-                        </td>
-                        <td className="py-3 px-4 text-sm">
-                          {evaluation.isArchived ? (
-                            <span className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
-                              Archived
-                            </span>
-                          ) : (
-                            <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
-                              Active
-                            </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-right">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleArchive(evalId, evaluation.isArchived)}
-                            disabled={isBusy}
-                            className="inline-flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 disabled:opacity-50"
-                            title={evaluation.isArchived ? 'Unarchive review' : 'Archive review'}
-                          >
-                            {evaluation.isArchived ? (
-                              <>
-                                <RotateCcw className="w-4 h-4" />
-                                <span className="hidden sm:inline">Unarchive</span>
-                              </>
-                            ) : (
-                              <>
-                                <Archive className="w-4 h-4" />
-                                <span className="hidden sm:inline">Archive</span>
-                              </>
-                            )}
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                        </div>
+                        <span className="text-sm font-bold text-primary-600">
+                          {evaluation.overallRating}/99
+                        </span>
+                      </div>
+                      {evaluation.coachNotes && (
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                          {evaluation.coachNotes}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Desktop-only: Status */}
+                    <div className="hidden md:block md:order-3 md:flex-shrink-0 md:w-[80px]">
+                      {evaluation.isArchived ? (
+                        <span className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full">
+                          Archived
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full">
+                          Active
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Actions */}
+                    <div className="flex justify-end md:order-4 md:flex-shrink-0 md:w-[100px] border-t border-gray-100 dark:border-gray-700 pt-2 -mx-4 px-4 -mb-1 md:border-0 md:pt-0 md:mx-0 md:px-0 md:mb-0">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleArchive(evalId, evaluation.isArchived)}
+                        disabled={isBusy}
+                        className={`inline-flex items-center gap-1 text-sm font-medium py-1.5 px-3 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                          evaluation.isArchived
+                            ? 'bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600'
+                            : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        }`}
+                        title={evaluation.isArchived ? 'Unarchive review' : 'Archive review'}
+                      >
+                        {evaluation.isArchived ? (
+                          <>
+                            <RotateCcw className="w-4 h-4" />
+                            <span>Unarchive</span>
+                          </>
+                        ) : (
+                          <>
+                            <Archive className="w-4 h-4" />
+                            <span>Archive</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         )}
 
