@@ -32,6 +32,15 @@ const GOAL_AREA_WIDTH = GOAL_AREA_WIDTH_METERS * PITCH_SCALE;
 const PENALTY_SPOT_DISTANCE = PENALTY_SPOT_DISTANCE_METERS * PITCH_SCALE;
 const PENALTY_SPOT_RADIUS = 0.35 * PITCH_SCALE;
 const PITCH_OFFSET_X = 10;
+const MARKER_MIN_RADIUS = 0.45;
+const MARKER_MAX_RADIUS = 2.2;
+const MANNEQUIN_DEFAULT_WIDTH = 2.8;
+const MANNEQUIN_DEFAULT_HEIGHT = 7;
+const MANNEQUIN_ASPECT_RATIO = MANNEQUIN_DEFAULT_WIDTH / MANNEQUIN_DEFAULT_HEIGHT;
+const MANNEQUIN_MIN_WIDTH = 1.6;
+const MANNEQUIN_MAX_WIDTH = 6.4;
+const MANNEQUIN_MIN_HEIGHT = MANNEQUIN_MIN_WIDTH / MANNEQUIN_ASPECT_RATIO;
+const MANNEQUIN_MAX_HEIGHT = MANNEQUIN_MAX_WIDTH / MANNEQUIN_ASPECT_RATIO;
 
 const clamp = (value: number, min: number, max: number): number =>
   Math.min(max, Math.max(min, value));
@@ -70,6 +79,29 @@ const getObjectType = (obj: DiagramObject): string =>
 
 const objectKey = (obj: DiagramObject, index: number): string =>
   pickString(obj, ['id', 'key', 'name'], `object-${index}`);
+
+const getMannequinDimensions = (obj: DiagramObject): { width: number; height: number } => {
+  const rawHeight = (() => {
+    const height = obj.height;
+    if (typeof height === 'number' && Number.isFinite(height)) {
+      return height;
+    }
+
+    const width = obj.width;
+    if (typeof width === 'number' && Number.isFinite(width)) {
+      return width / MANNEQUIN_ASPECT_RATIO;
+    }
+
+    return MANNEQUIN_DEFAULT_HEIGHT;
+  })();
+
+  const height = clamp(rawHeight, MANNEQUIN_MIN_HEIGHT, MANNEQUIN_MAX_HEIGHT);
+
+  return {
+    width: clamp(height * MANNEQUIN_ASPECT_RATIO, MANNEQUIN_MIN_WIDTH, MANNEQUIN_MAX_WIDTH),
+    height,
+  };
+};
 
 const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight: number) => {
   const type = getObjectType(obj);
@@ -199,14 +231,71 @@ const renderDiagramObject = (obj: DiagramObject, index: number, workspaceHeight:
     );
   }
 
+  if (type === 'marker') {
+    const radius = clamp(pickNumber(obj, ['size', 'radius', 'r'], 0.85), MARKER_MIN_RADIUS, MARKER_MAX_RADIUS);
+    const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
+    const innerRadius = radius * 0.58;
+
+    return (
+      <g key={key} transform={`rotate(${rotation} ${x} ${y})`}>
+        <circle cx={x} cy={y} r={radius} fill={color} opacity={0.96} stroke="#0f172a" strokeWidth={0.22} />
+        <circle cx={x} cy={y} r={innerRadius} fill="none" stroke="#ffffff" strokeOpacity={0.45} strokeWidth={Math.max(0.12, radius * 0.16)} />
+        {caption ? (
+          <text x={x} y={y + radius + 3.2} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
+            {caption.slice(0, 24)}
+          </text>
+        ) : null}
+      </g>
+    );
+  }
+
+  if (type === 'mannequin') {
+    const { width, height } = getMannequinDimensions(obj);
+    const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
+    const headRadius = Math.min(width * 0.27, height * 0.16);
+    const headCenterY = y - height / 2 + headRadius * 1.2;
+    const bodyTop = headCenterY + headRadius * 0.8;
+    const bodyHeight = Math.max(height - (bodyTop - (y - height / 2)) - headRadius * 0.35, height * 0.58);
+    const bodyBottom = bodyTop + bodyHeight;
+    const bodyRadius = width * 0.48;
+
+    return (
+      <g key={key} transform={`rotate(${rotation} ${x} ${y})`}>
+        <circle cx={x} cy={headCenterY} r={headRadius} fill={color} opacity={0.95} stroke="#0f172a" strokeWidth={0.24} />
+        <rect
+          x={x - width / 2}
+          y={bodyTop}
+          width={width}
+          height={bodyHeight}
+          rx={bodyRadius}
+          fill={color}
+          opacity={0.95}
+          stroke="#0f172a"
+          strokeWidth={0.24}
+        />
+        <line x1={x} y1={bodyTop + bodyHeight * 0.16} x2={x} y2={bodyBottom - bodyHeight * 0.12} stroke="#ffffff" strokeOpacity={0.45} strokeWidth={Math.max(0.14, width * 0.08)} strokeLinecap="round" />
+        <line x1={x - width * 0.22} y1={bodyTop + bodyHeight * 0.3} x2={x + width * 0.22} y2={bodyTop + bodyHeight * 0.3} stroke="#ffffff" strokeOpacity={0.28} strokeWidth={0.14} strokeLinecap="round" />
+        <line x1={x - width * 0.2} y1={bodyTop + bodyHeight * 0.58} x2={x + width * 0.2} y2={bodyTop + bodyHeight * 0.58} stroke="#ffffff" strokeOpacity={0.22} strokeWidth={0.14} strokeLinecap="round" />
+        {caption ? (
+          <text x={x} y={y + height / 2 + 3.2} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
+            {caption.slice(0, 24)}
+          </text>
+        ) : null}
+      </g>
+    );
+  }
+
   const r = clamp(pickNumber(obj, ['radius', 'r', 'size'], 1.5), 0.8, 4);
   const rotation = clamp(pickNumber(obj, ['rotation', 'angle'], 0), -180, 180);
+  const playerNumber = type === 'player' ? pickNumber(obj, ['number'], 0) : 0;
+  const displayText = playerNumber > 0 ? String(playerNumber) : label && label !== 'P' ? label.slice(0, 3) : '';
+  const fontSize = playerNumber > 0 ? Math.min(r * 1.2, 2.4) : 2.2;
   return (
     <g key={key} transform={`rotate(${rotation} ${x} ${y})`}>
       <circle cx={x} cy={y} r={r} fill={color} stroke="#0f172a" strokeWidth={0.28} />
-      {label && label !== 'P' ? (
-        <text x={x} y={y + 0.1} fill="#ffffff" fontSize={2.2} textAnchor="middle" dominantBaseline="middle">
-          {label.slice(0, 3)}
+      {displayText ? (
+        <text x={x} y={y + 0.1} fill="#ffffff" fontSize={fontSize} fontWeight={playerNumber > 0 ? 'bold' : 'normal'} textAnchor="middle" dominantBaseline="middle">
+          {displayText}
         </text>
       ) : null}
       {caption ? (

@@ -170,4 +170,81 @@ public class GetTrainingSessionByIdHandlerTests
         Assert.Contains("declined", statuses);
         Assert.Contains("pending", statuses);
     }
+
+    [Fact]
+    public async Task Handle_DrillsIncludeEquipmentFromDiagram()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var sessionId = await db.SeedTrainingSessionAsync(teamId: teamId);
+        var drillId = await db.SeedDrillAsync();
+
+        // Set a diagram config with equipment objects
+        var drill = await db.Context.Drills.FindAsync(drillId);
+        Assert.NotNull(drill);
+        drill!.DrillDiagramConfig = """
+        {
+            "schemaVersion": 1,
+            "frames": [{
+                "id": "frame-1",
+                "objects": [
+                    { "id": "c1", "type": "cone", "x": 10, "y": 20 },
+                    { "id": "c2", "type": "cone", "x": 15, "y": 25 },
+                    { "id": "b1", "type": "ball", "x": 30, "y": 40 },
+                    { "id": "p1", "type": "player", "x": 50, "y": 50 },
+                    { "id": "g1", "type": "goal", "x": 60, "y": 10 }
+                ]
+            }]
+        }
+        """;
+        await db.Context.SaveChangesAsync();
+
+        db.Context.SessionDrills.Add(new OurGame.Persistence.Models.SessionDrill
+        {
+            Id = Guid.NewGuid(),
+            SessionId = sessionId,
+            DrillId = drillId,
+            Source = "manual",
+            DrillOrder = 0
+        });
+        await db.Context.SaveChangesAsync();
+
+        var handler = new GetTrainingSessionByIdHandler(db.Context);
+        var result = await handler.Handle(new GetTrainingSessionByIdQuery(sessionId), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Single(result.Drills);
+        var equipment = result.Drills[0].Equipment;
+        Assert.Contains("2x Cones", equipment);
+        Assert.Contains("1x Balls", equipment);
+        Assert.Contains("1x Goals", equipment);
+        // Players should not appear in equipment
+        Assert.DoesNotContain(equipment, e => e.Contains("Player", StringComparison.OrdinalIgnoreCase));
+    }
+
+    [Fact]
+    public async Task Handle_DrillsWithNoDiagram_ReturnsEmptyEquipment()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var sessionId = await db.SeedTrainingSessionAsync(teamId: teamId);
+        var drillId = await db.SeedDrillAsync();
+
+        db.Context.SessionDrills.Add(new OurGame.Persistence.Models.SessionDrill
+        {
+            Id = Guid.NewGuid(),
+            SessionId = sessionId,
+            DrillId = drillId,
+            Source = "manual",
+            DrillOrder = 0
+        });
+        await db.Context.SaveChangesAsync();
+
+        var handler = new GetTrainingSessionByIdHandler(db.Context);
+        var result = await handler.Handle(new GetTrainingSessionByIdQuery(sessionId), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Single(result.Drills);
+        Assert.Empty(result.Drills[0].Equipment);
+    }
 }

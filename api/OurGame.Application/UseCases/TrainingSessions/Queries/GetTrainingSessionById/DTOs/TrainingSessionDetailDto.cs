@@ -97,6 +97,9 @@ public record SessionDrillDto
 
     /// <summary>Display order of the drill within the session</summary>
     public int Order { get; init; }
+
+    /// <summary>Equipment derived from the drill diagram (e.g. "4x Cones", "2x Balls")</summary>
+    public List<string> Equipment { get; init; } = new();
 }
 
 /// <summary>

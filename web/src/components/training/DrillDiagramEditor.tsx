@@ -17,14 +17,15 @@ import { SpeedDial, SpeedDialAction, SpeedDialIcon } from '@mui/material';
 import type { DrillDiagramConfigDto, DrillDiagramFrameDto } from '@/api/client';
 import DrillDiagramRenderer from '@/components/training/DrillDiagramRenderer';
 
-type Tool = 'select' | 'player' | 'cone' | 'ball' | 'goal' | 'line' | 'arrow';
+type Tool = 'select' | 'player' | 'cone' | 'ball' | 'marker' | 'mannequin' | 'goal' | 'line' | 'arrow';
 type Point = { x: number; y: number };
 type ObjectResizeCorner = 'nw' | 'ne' | 'se' | 'sw';
 type PitchMode = 'half' | 'full';
+type SizedObjectType = 'player' | 'cone' | 'ball' | 'marker' | 'mannequin' | 'goal';
 
 type DiagramObject = {
   id: string;
-  type: 'player' | 'cone' | 'ball' | 'text' | 'goal' | 'line' | 'arrow';
+  type: 'player' | 'cone' | 'ball' | 'marker' | 'mannequin' | 'text' | 'goal' | 'line' | 'arrow';
   x?: number;
   y?: number;
   x2?: number;
@@ -39,6 +40,7 @@ type DiagramObject = {
   color?: string;
   strokeWidth?: number;
   lineStyle?: 'solid' | 'dashed';
+  number?: number;
 };
 
 type DrillDiagramEditorProps = {
@@ -54,13 +56,15 @@ type DiagramFrame = {
   objects: DiagramObject[];
 };
 
-const ADD_TOOLS = ['player', 'cone', 'ball', 'goal', 'line', 'arrow'] as const;
+const ADD_TOOLS = ['player', 'cone', 'ball', 'marker', 'mannequin', 'goal', 'line', 'arrow'] as const;
 
 const TOOL_CONFIG: Record<Tool, { label: string; icon: typeof MousePointer2 }> = {
   select: { label: 'Select', icon: MousePointer2 },
   player: { label: 'Player', icon: UserRound },
   cone: { label: 'Cone', icon: Goal },
   ball: { label: 'Ball', icon: Circle },
+  marker: { label: 'Marker', icon: Circle },
+  mannequin: { label: 'Mannequin', icon: RectangleHorizontal },
   goal: { label: 'Goal', icon: RectangleHorizontal },
   line: { label: 'Line', icon: Minus },
   arrow: { label: 'Arrow', icon: MoveRight },
@@ -79,10 +83,19 @@ const PLAYER_MIN_RADIUS = 0.8;
 const PLAYER_MAX_RADIUS = 4;
 const BALL_MIN_RADIUS = 0.5;
 const BALL_MAX_RADIUS = 3;
+const MARKER_MIN_RADIUS = 0.45;
+const MARKER_MAX_RADIUS = 2.2;
 const CONE_MIN_WIDTH = 1.2;
 const CONE_MAX_WIDTH = 8;
 const CONE_MIN_HEIGHT = 1.2;
 const CONE_MAX_HEIGHT = 8;
+const MANNEQUIN_DEFAULT_WIDTH = 2.8;
+const MANNEQUIN_DEFAULT_HEIGHT = 7;
+const MANNEQUIN_ASPECT_RATIO = MANNEQUIN_DEFAULT_WIDTH / MANNEQUIN_DEFAULT_HEIGHT;
+const MANNEQUIN_MIN_WIDTH = 1.6;
+const MANNEQUIN_MAX_WIDTH = 6.4;
+const MANNEQUIN_MIN_HEIGHT = MANNEQUIN_MIN_WIDTH / MANNEQUIN_ASPECT_RATIO;
+const MANNEQUIN_MAX_HEIGHT = MANNEQUIN_MAX_WIDTH / MANNEQUIN_ASPECT_RATIO;
 const SELECTION_PADDING = 1.2;
 const HANDLE_RADIUS = 0.8;
 const ROTATE_HANDLE_OFFSET = 5;
@@ -154,11 +167,135 @@ const toNumber = (value: unknown, fallback: number): number =>
 const toLineStyle = (value: unknown): 'solid' | 'dashed' =>
   typeof value === 'string' && value.toLowerCase() === 'dashed' ? 'dashed' : 'solid';
 
+const isCircularSizedObject = (type: DiagramObject['type']): type is 'player' | 'ball' | 'marker' =>
+  type === 'player' || type === 'ball' || type === 'marker';
+
+const isRectangularSizedObject = (type: DiagramObject['type']): type is 'cone' | 'goal' | 'mannequin' =>
+  type === 'cone' || type === 'goal' || type === 'mannequin';
+
+const isTransformableObject = (type: DiagramObject['type']): type is SizedObjectType =>
+  isCircularSizedObject(type) || isRectangularSizedObject(type);
+
+const getDefaultObjectColor = (type: Tool): string => {
+  switch (type) {
+    case 'player':
+      return '#1d4ed8';
+    case 'cone':
+      return '#f59e0b';
+    case 'ball':
+      return '#111827';
+    case 'marker':
+      return '#fde047';
+    case 'mannequin':
+      return '#f97316';
+    case 'goal':
+      return '#ffffff';
+    default:
+      return '#ffffff';
+  }
+};
+
+const getCircularRadius = (object: DiagramObject): number | null => {
+  switch (object.type) {
+    case 'player':
+      return clamp(object.size ?? 1.5, PLAYER_MIN_RADIUS, PLAYER_MAX_RADIUS);
+    case 'ball':
+      return clamp(object.size ?? 1.0, BALL_MIN_RADIUS, BALL_MAX_RADIUS);
+    case 'marker':
+      return clamp(object.size ?? 0.85, MARKER_MIN_RADIUS, MARKER_MAX_RADIUS);
+    default:
+      return null;
+  }
+};
+
+const getRectangularDimensions = (object: DiagramObject): { width: number; height: number } | null => {
+  switch (object.type) {
+    case 'cone':
+      return {
+        width: clamp(object.width ?? 2.0, CONE_MIN_WIDTH, CONE_MAX_WIDTH),
+        height: clamp(object.height ?? 2.0, CONE_MIN_HEIGHT, CONE_MAX_HEIGHT),
+      };
+    case 'goal':
+      return {
+        width: clamp(object.width ?? 14, GOAL_MIN_WIDTH, GOAL_MAX_WIDTH),
+        height: clamp(object.height ?? 5, GOAL_MIN_HEIGHT, GOAL_MAX_HEIGHT),
+      };
+    case 'mannequin': {
+      const rawHeight = typeof object.height === 'number' && Number.isFinite(object.height)
+        ? object.height
+        : typeof object.width === 'number' && Number.isFinite(object.width)
+          ? object.width / MANNEQUIN_ASPECT_RATIO
+          : MANNEQUIN_DEFAULT_HEIGHT;
+      const height = clamp(rawHeight, MANNEQUIN_MIN_HEIGHT, MANNEQUIN_MAX_HEIGHT);
+      return {
+        width: clamp(height * MANNEQUIN_ASPECT_RATIO, MANNEQUIN_MIN_WIDTH, MANNEQUIN_MAX_WIDTH),
+        height,
+      };
+    }
+    default:
+      return null;
+  }
+};
+
+const createSizedObject = (type: Exclude<Tool, 'select' | 'line' | 'arrow'>, point: Point): DiagramObject => {
+  if (type === 'player' || type === 'ball' || type === 'marker') {
+    return {
+      id: createId(),
+      type,
+      x: point.x,
+      y: point.y,
+      color: getDefaultObjectColor(type),
+      label: undefined,
+      size: type === 'player' ? 1.5 : type === 'ball' ? 1.0 : 0.85,
+      rotation: 0,
+    };
+  }
+
+  return {
+    id: createId(),
+    type,
+    x: point.x,
+    y: point.y,
+    color: getDefaultObjectColor(type),
+    label: undefined,
+    width: type === 'cone' ? 2.0 : type === 'goal' ? 14 : MANNEQUIN_DEFAULT_WIDTH,
+    height: type === 'cone' ? 2.0 : type === 'goal' ? 5 : MANNEQUIN_DEFAULT_HEIGHT,
+    rotation: 0,
+  };
+};
+
+const clampFixedAspectDimensions = (
+  rawWidth: number,
+  rawHeight: number,
+  aspectRatio: number,
+  minWidth: number,
+  maxWidth: number,
+  minHeight: number,
+  maxHeight: number
+): { width: number; height: number } => {
+  const safeWidth = Math.max(rawWidth, 0);
+  const safeHeight = Math.max(rawHeight, 0);
+  const targetHeight = Math.max(safeHeight, safeWidth / aspectRatio);
+  const clampedHeight = clamp(targetHeight, minHeight, maxHeight);
+  const widthFromHeight = clamp(clampedHeight * aspectRatio, minWidth, maxWidth);
+  const heightFromWidth = widthFromHeight / aspectRatio;
+
+  if (heightFromWidth >= minHeight && heightFromWidth <= maxHeight) {
+    return { width: widthFromHeight, height: heightFromWidth };
+  }
+
+  const fallbackHeight = clamp(targetHeight, minHeight, maxHeight);
+  return {
+    width: clamp(fallbackHeight * aspectRatio, minWidth, maxWidth),
+    height: fallbackHeight,
+  };
+};
+
 const parseFrameObjects = (source: Record<string, unknown>[]): DiagramObject[] => {
   return source.reduce<DiagramObject[]>((acc, item, index) => {
       const obj = item as Record<string, unknown>;
       const type = typeof obj.type === 'string' ? obj.type.toLowerCase() : 'player';
-      if (!['player', 'cone', 'ball', 'text', 'goal', 'line', 'arrow'].includes(type)) {
+      if (!['player', 'cone', 'ball', 'marker', 'mannequin', 'text', 'goal', 'line', 'arrow'].includes(type)) {
         return acc;
       }
 
@@ -169,15 +306,16 @@ const parseFrameObjects = (source: Record<string, unknown>[]): DiagramObject[] =
         y: toNumber(obj.y, 70),
         x2: toNumber(obj.x2, 60),
         y2: toNumber(obj.y2, 70),
-        width: toNumber(obj.width, 14),
-        height: toNumber(obj.height, 5),
-        size: toNumber(obj.size, 2.1),
+        width: toNumber(obj.width, type === 'cone' ? 2.0 : type === 'goal' ? 14 : type === 'mannequin' ? MANNEQUIN_DEFAULT_WIDTH : 14),
+        height: toNumber(obj.height, type === 'cone' ? 2.0 : type === 'goal' ? 5 : type === 'mannequin' ? MANNEQUIN_DEFAULT_HEIGHT : 5),
+        size: toNumber(obj.size, type === 'player' ? 1.5 : type === 'ball' ? 1.0 : type === 'marker' ? 0.85 : 2.1),
         rotation: toNumber(obj.rotation, 0),
         text: typeof obj.text === 'string' ? obj.text : undefined,
         label: typeof obj.label === 'string' ? obj.label : undefined,
         caption: typeof obj.caption === 'string' ? obj.caption : undefined,
         color: typeof obj.color === 'string' ? obj.color : undefined,
         lineStyle: toLineStyle(obj.lineStyle),
+        number: typeof obj.number === 'number' && Number.isFinite(obj.number) ? obj.number : undefined,
       });
 
       return acc;
@@ -259,11 +397,12 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const previewRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef<{ id: string; pointer: Point } | null>(null);
   const lineEndpointRef = useRef<{ id: string; endpoint: 'start' | 'end' } | null>(null);
+  const clipboardRef = useRef<DiagramObject | null>(null);
   const objectResizeRef = useRef<
     | {
         mode: 'resize';
         id: string;
-        type: 'player' | 'cone' | 'ball' | 'goal';
+        type: SizedObjectType;
         center: Point;
         rotation: number;
         oppositeLocal: Point;
@@ -405,8 +544,12 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     const centerX = object.x ?? 0;
     const centerY = object.y ?? 0;
 
-    if (object.type === 'player') {
-      const radius = clamp(object.size ?? 1.5, PLAYER_MIN_RADIUS, PLAYER_MAX_RADIUS);
+    if (isCircularSizedObject(object.type)) {
+      const radius = getCircularRadius(object);
+      if (radius === null) {
+        return null;
+      }
+
       return {
         x: centerX - radius,
         y: centerY - radius,
@@ -416,37 +559,17 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       };
     }
 
-    if (object.type === 'ball') {
-      const radius = clamp(object.size ?? 1.0, BALL_MIN_RADIUS, BALL_MAX_RADIUS);
-      return {
-        x: centerX - radius,
-        y: centerY - radius,
-        width: radius * 2,
-        height: radius * 2,
-        rotation: object.rotation ?? 0,
-      };
-    }
+    if (isRectangularSizedObject(object.type)) {
+      const dimensions = getRectangularDimensions(object);
+      if (!dimensions) {
+        return null;
+      }
 
-    if (object.type === 'cone') {
-      const width = clamp(object.width ?? 2.0, CONE_MIN_WIDTH, CONE_MAX_WIDTH);
-      const height = clamp(object.height ?? 2.0, CONE_MIN_HEIGHT, CONE_MAX_HEIGHT);
       return {
-        x: centerX - width / 2,
-        y: centerY - height / 2,
-        width,
-        height,
-        rotation: object.rotation ?? 0,
-      };
-    }
-
-    if (object.type === 'goal') {
-      const width = clamp(object.width ?? 14, GOAL_MIN_WIDTH, GOAL_MAX_WIDTH);
-      const height = clamp(object.height ?? 5, GOAL_MIN_HEIGHT, GOAL_MAX_HEIGHT);
-      return {
-        x: centerX - width / 2,
-        y: centerY - height / 2,
-        width,
-        height,
+        x: centerX - dimensions.width / 2,
+        y: centerY - dimensions.height / 2,
+        width: dimensions.width,
+        height: dimensions.height,
         rotation: object.rotation ?? 0,
       };
     }
@@ -531,14 +654,36 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         continue;
       }
 
+      if (isRectangularSizedObject(object.type)) {
+        const bounds = getObjectBounds(object);
+        if (!bounds) {
+          continue;
+        }
+
+        const center = {
+          x: bounds.x + bounds.width / 2,
+          y: bounds.y + bounds.height / 2,
+        };
+        const localPoint = worldToLocal(point, center, bounds.rotation);
+        const dx = Math.max(Math.abs(localPoint.x) - bounds.width / 2, 0);
+        const dy = Math.max(Math.abs(localPoint.y) - bounds.height / 2, 0);
+        const distance = Math.hypot(dx, dy);
+        if (distance < 2 && (!best || distance < best.distance)) {
+          best = { id: object.id, distance };
+        }
+        continue;
+      }
+
       const ox = object.x ?? 0;
       const oy = object.y ?? 0;
-      if (object.type === 'goal') {
-        const width = clamp(object.width ?? 14, 6, 30);
-        const height = clamp(object.height ?? 5, 3, 20);
-        const radius = Math.hypot(width / 2, height / 2) + 2;
+      if (isCircularSizedObject(object.type)) {
+        const radius = getCircularRadius(object);
+        if (radius === null) {
+          continue;
+        }
+
         const distance = Math.hypot(point.x - ox, point.y - oy);
-        if (distance < radius && (!best || distance < best.distance)) {
+        if (distance < radius + 2 && (!best || distance < best.distance)) {
           best = { id: object.id, distance };
         }
         continue;
@@ -576,7 +721,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       }
     }
 
-    if (selectedObject && (selectedObject.type === 'player' || selectedObject.type === 'cone' || selectedObject.type === 'ball' || selectedObject.type === 'goal')) {
+    if (selectedObject && isTransformableObject(selectedObject.type)) {
       const anchors = getObjectTransformAnchors(selectedObject);
       if (anchors) {
         const rotateDistance = Math.hypot(point.x - anchors.rotateHandleWorld.x, point.y - anchors.rotateHandleWorld.y);
@@ -661,18 +806,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       return;
     }
 
-    const newObject: DiagramObject = {
-      id: createId(),
-      type: tool,
-      x: point.x,
-      y: point.y,
-      color: tool === 'player' ? '#1d4ed8' : tool === 'cone' ? '#f59e0b' : tool === 'ball' ? '#111827' : '#ffffff',
-      label: undefined,
-      size: tool === 'player' ? 1.5 : tool === 'ball' ? 1.0 : undefined,
-      width: tool === 'cone' ? 2.0 : tool === 'goal' ? 14 : undefined,
-      height: tool === 'cone' ? 2.0 : tool === 'goal' ? 5 : undefined,
-      rotation: 0,
-    };
+    const newObject = createSizedObject(tool, point);
 
     updateObjects([...objects, newObject]);
     setAddedObjectHistory((prev) => [...prev, newObject.id]);
@@ -720,16 +854,46 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
       const draggedLocal = worldToLocal(point, transform.center, transform.rotation);
 
-      if (transform.type === 'cone' || transform.type === 'goal') {
-        const minWidth = transform.type === 'goal' ? GOAL_MIN_WIDTH : CONE_MIN_WIDTH;
-        const maxWidth = transform.type === 'goal' ? GOAL_MAX_WIDTH : CONE_MAX_WIDTH;
-        const minHeight = transform.type === 'goal' ? GOAL_MIN_HEIGHT : CONE_MIN_HEIGHT;
-        const maxHeight = transform.type === 'goal' ? GOAL_MAX_HEIGHT : CONE_MAX_HEIGHT;
+      if (isRectangularSizedObject(transform.type)) {
+        const minWidth = transform.type === 'goal'
+          ? GOAL_MIN_WIDTH
+          : transform.type === 'mannequin'
+            ? MANNEQUIN_MIN_WIDTH
+            : CONE_MIN_WIDTH;
+        const maxWidth = transform.type === 'goal'
+          ? GOAL_MAX_WIDTH
+          : transform.type === 'mannequin'
+            ? MANNEQUIN_MAX_WIDTH
+            : CONE_MAX_WIDTH;
+        const minHeight = transform.type === 'goal'
+          ? GOAL_MIN_HEIGHT
+          : transform.type === 'mannequin'
+            ? MANNEQUIN_MIN_HEIGHT
+            : CONE_MIN_HEIGHT;
+        const maxHeight = transform.type === 'goal'
+          ? GOAL_MAX_HEIGHT
+          : transform.type === 'mannequin'
+            ? MANNEQUIN_MAX_HEIGHT
+            : CONE_MAX_HEIGHT;
 
-        const frameWidth = clamp(Math.abs(draggedLocal.x - transform.oppositeLocal.x), minWidth + SELECTION_PADDING * 2, maxWidth + SELECTION_PADDING * 2);
-        const frameHeight = clamp(Math.abs(draggedLocal.y - transform.oppositeLocal.y), minHeight + SELECTION_PADDING * 2, maxHeight + SELECTION_PADDING * 2);
-        const width = clamp(frameWidth - SELECTION_PADDING * 2, minWidth, maxWidth);
-        const height = clamp(frameHeight - SELECTION_PADDING * 2, minHeight, maxHeight);
+        const rawWidth = Math.abs(draggedLocal.x - transform.oppositeLocal.x) - SELECTION_PADDING * 2;
+        const rawHeight = Math.abs(draggedLocal.y - transform.oppositeLocal.y) - SELECTION_PADDING * 2;
+        const nextDimensions = transform.type === 'mannequin'
+          ? clampFixedAspectDimensions(
+              rawWidth,
+              rawHeight,
+              MANNEQUIN_ASPECT_RATIO,
+              minWidth,
+              maxWidth,
+              minHeight,
+              maxHeight
+            )
+          : {
+              width: clamp(rawWidth, minWidth, maxWidth),
+              height: clamp(rawHeight, minHeight, maxHeight),
+            };
+        const frameWidth = nextDimensions.width + SELECTION_PADDING * 2;
+        const frameHeight = nextDimensions.height + SELECTION_PADDING * 2;
 
         const signedDraggedLocal = {
           x: transform.oppositeLocal.x + (draggedLocal.x >= transform.oppositeLocal.x ? frameWidth : -frameWidth),
@@ -753,8 +917,8 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
                   ...obj,
                   x: center.x,
                   y: center.y,
-                  width,
-                  height,
+                  width: nextDimensions.width,
+                  height: nextDimensions.height,
                 }
               : obj
           )
@@ -762,8 +926,16 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         return;
       }
 
-      const minDiameter = transform.type === 'player' ? PLAYER_MIN_RADIUS * 2 : BALL_MIN_RADIUS * 2;
-      const maxDiameter = transform.type === 'player' ? PLAYER_MAX_RADIUS * 2 : BALL_MAX_RADIUS * 2;
+      const minDiameter = transform.type === 'player'
+        ? PLAYER_MIN_RADIUS * 2
+        : transform.type === 'ball'
+          ? BALL_MIN_RADIUS * 2
+          : MARKER_MIN_RADIUS * 2;
+      const maxDiameter = transform.type === 'player'
+        ? PLAYER_MAX_RADIUS * 2
+        : transform.type === 'ball'
+          ? BALL_MAX_RADIUS * 2
+          : MARKER_MAX_RADIUS * 2;
       const frameDiameter = clamp(
         Math.max(Math.abs(draggedLocal.x - transform.oppositeLocal.x), Math.abs(draggedLocal.y - transform.oppositeLocal.y)),
         minDiameter + SELECTION_PADDING * 2,
@@ -864,6 +1036,78 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     setAddedObjectHistory((prev) => [...prev, newId]);
     setSelectedId(newId);
   };
+
+  const copySelected = () => {
+    if (disabled || !selectedObject) return;
+    clipboardRef.current = { ...selectedObject };
+  };
+
+  const pasteFromClipboard = () => {
+    if (disabled) return;
+    const source = clipboardRef.current;
+    if (!source) return;
+    const newId = createId();
+    const offset = 3;
+    const clone: DiagramObject = {
+      ...source,
+      id: newId,
+      x: (source.x ?? 0) + offset,
+      y: (source.y ?? 0) + offset,
+      x2: source.x2 !== undefined ? source.x2 + offset : undefined,
+      y2: source.y2 !== undefined ? source.y2 + offset : undefined,
+    };
+    updateObjects([...objects, clone]);
+    setAddedObjectHistory((prev) => [...prev, newId]);
+    setSelectedId(newId);
+  };
+
+  useEffect(() => {
+    if (disabled) return;
+
+    const isEditableTarget = (target: EventTarget | null): boolean => {
+      const el = (target as HTMLElement | null) ?? (document.activeElement as HTMLElement | null);
+      if (!el) return false;
+      const tag = el.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+      if (el.isContentEditable) return true;
+      return false;
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isEditableTarget(event.target)) return;
+
+      const mod = event.metaKey || event.ctrlKey;
+      const key = event.key;
+
+      if (!mod && (key === 'Backspace' || key === 'Delete')) {
+        if (!selectedId) return;
+        event.preventDefault();
+        deleteSelected();
+        return;
+      }
+
+      if (mod && !event.shiftKey && !event.altKey) {
+        const lower = key.toLowerCase();
+        if (lower === 'c') {
+          if (!selectedObject) return;
+          event.preventDefault();
+          copySelected();
+        } else if (lower === 'v') {
+          if (!clipboardRef.current) return;
+          event.preventDefault();
+          pasteFromClipboard();
+        } else if (lower === 'd') {
+          if (!selectedObject) return;
+          event.preventDefault();
+          duplicateSelected();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [disabled, selectedId, objects, activeFrameId]);
 
   const canSetSelectedLineStyle = selectedObject?.type === 'line' || selectedObject?.type === 'arrow';
 
@@ -1084,6 +1328,27 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
               {selectedPlayer && (
                 <div>
+                  <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Number</label>
+                  <input
+                    type="number"
+                    min={0}
+                    value={selectedPlayer.number ?? ''}
+                    onChange={(event) => {
+                      const val = event.target.value === '' ? undefined : Math.max(0, parseInt(event.target.value, 10) || 0);
+                      updateObjects(
+                        objects.map((obj) =>
+                          obj.id === selectedPlayer.id ? { ...obj, number: val } : obj
+                        )
+                      );
+                    }}
+                    className="h-9 w-full rounded-md border border-gray-300 bg-white px-3 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                    placeholder="e.g. 7"
+                  />
+                </div>
+              )}
+
+              {selectedPlayer && (
+                <div>
                   <label className="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">Colour</label>
                   <div className="flex flex-wrap gap-2">
                     {[
@@ -1270,15 +1535,14 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
                       updateObjects([...objects, newObject]);
                     } else {
                       const newObject: DiagramObject = {
+                        ...createSizedObject(toolName, { x: placeX, y: placeY }),
                         id: newId,
-                        type: toolName,
-                        x: placeX,
-                        y: placeY,
-                        color: toolName === 'player' ? '#1d4ed8' : toolName === 'cone' ? '#f59e0b' : toolName === 'ball' ? '#111827' : '#ffffff',
-                        size: toolName === 'player' ? 1.5 : toolName === 'ball' ? 1.0 : undefined,
-                        width: toolName === 'cone' ? 2.0 : toolName === 'goal' ? 14 : undefined,
-                        height: toolName === 'cone' ? 2.0 : toolName === 'goal' ? 5 : undefined,
-                        rotation: 0,
+                        ...(toolName === 'player'
+                          ? {
+                              number:
+                                Math.max(0, ...objects.filter((o) => o.type === 'player' && typeof o.number === 'number').map((o) => o.number!)) + 1,
+                            }
+                          : {}),
                       };
                       updateObjects([...objects, newObject]);
                     }
@@ -1318,7 +1582,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
               );
             }
 
-            if (object.type === 'player' || object.type === 'cone' || object.type === 'ball' || object.type === 'goal') {
+            if (isTransformableObject(object.type)) {
               const selectionBounds = getSelectionBounds(object);
 
               if (selectionBounds) {

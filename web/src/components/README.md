@@ -29,4 +29,4 @@ Reusable React components organised by feature domain. Each subfolder contains c
 | `stats/` | Statistics and chart components (Recharts) |
 | `tactics/` | Tactic editor and display components |
 | `team/` | Team overview and management components |
-| `training/` | Training session and drill components |
+| `training/` | Training session and drill components, including the drill builder canvas with players, cones, balls, markers, mannequins, and goals |

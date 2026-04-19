@@ -29,7 +29,7 @@ Page-level route components. Each domain folder contains the page components ren
 | `auth/` | Authentication pages (login, register, password reset) |
 | `clubs/` | Club overview and management pages |
 | `coaches/` | Coach profile and certification pages |
-| `drills/` | Drill library and builder pages |
+| `drills/` | Drill library and builder pages, including the expanded drill canvas item set |
 | `matches/` | Match scheduling, lineups, and report pages |
 | `players/` | Player profiles, attributes, and development pages |
 | `profile/` | User profile management pages |
@@ -39,5 +39,6 @@ Page-level route components. Each domain folder contains the page components ren
 
 ## Recent Updates
 
+- Drill builder pages now support markers and mannequins on the canvas, with those items keeping their aspect ratio in line with drill canvas behaviour.
 - Team training session edit page now supports a dedicated session category selector and displays the selected session category beside the page title.
 - Drill form reference-link add action now uses shared add-button styling for visual consistency with other add actions.

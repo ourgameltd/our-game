@@ -79,7 +79,7 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
 
         var drillDiagramConfigJson = dto.DrillDiagramConfig is null
             ? null
-            : JsonSerializer.Serialize(dto.DrillDiagramConfig);
+            : JsonSerializer.Serialize(dto.DrillDiagramConfig, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
         var now = DateTime.UtcNow;
         var name = dto.Name;

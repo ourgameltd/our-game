@@ -340,6 +340,7 @@ export interface SessionDrill {
   source: 'template' | 'adhoc'; // Whether this drill came from a template or was added manually
   templateId?: string; // If source is 'template', which template it came from
   order: number; // Position in the session
+  equipment?: string[]; // Equipment derived from drill diagram (e.g. "4x Cones")
 }
 
 export interface TrainingSession {

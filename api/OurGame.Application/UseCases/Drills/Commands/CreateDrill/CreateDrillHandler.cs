@@ -96,7 +96,7 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
         var variationsJson = JsonSerializer.Serialize(dto.Variations ?? new List<string>());
         var drillDiagramConfigJson = dto.DrillDiagramConfig is null
             ? null
-            : JsonSerializer.Serialize(dto.DrillDiagramConfig);
+            : JsonSerializer.Serialize(dto.DrillDiagramConfig, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
 
         // Begin transaction
         IDbContextTransaction? transaction = null;

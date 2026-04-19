@@ -246,8 +246,13 @@ export default function DrillTemplateFormPage() {
     return `${colors.bgColor} ${colors.textColor}`;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent duplicate submissions when users click Save repeatedly.
+    if (createMutation.isSubmitting || updateMutation.isSubmitting || archiveMutation.isSubmitting) {
+      return;
+    }
     
     if (!canEdit) {
       alert('You cannot edit inherited session templates. Please create a new template instead.');
@@ -274,12 +279,10 @@ export default function DrillTemplateFormPage() {
         sessionCategory
       };
       
-      updateMutation.mutate(updateRequest).then(() => {
-        if (updateMutation.data) {
-          // Navigate back on success
-          navigateBack();
-        }
-      });
+      const updated = await updateMutation.mutate(updateRequest);
+      if (updated) {
+        navigateBack();
+      }
     } else {
       // Create new template
       const createRequest: CreateDrillTemplateRequest = {
@@ -295,12 +298,10 @@ export default function DrillTemplateFormPage() {
         }
       };
       
-      createMutation.mutate(createRequest).then(() => {
-        if (createMutation.data) {
-          // Navigate back on success
-          navigateBack();
-        }
-      });
+      const created = await createMutation.mutate(createRequest);
+      if (created) {
+        navigateBack();
+      }
     }
   };
 

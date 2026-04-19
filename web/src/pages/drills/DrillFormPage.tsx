@@ -7,6 +7,8 @@ import { detectLinkProvider } from '@utils/linkProviders';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import DrillDiagramEditor from '@components/training/DrillDiagramEditor';
+import EquipmentSummary from '@components/training/EquipmentSummary';
+import { extractEquipmentFromDiagram } from '@utils/equipmentFromDiagram';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
   useDrill,
@@ -609,7 +611,7 @@ export default function DrillFormPage() {
             <div className="card">
               <h3 className="text-lg font-semibold mb-2">Drill Diagram</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Draw your setup directly on the pitch. Add multiple frames and edit each frame from the slide list.
+                Draw your setup directly on the pitch. Add players, cones, balls, markers, mannequins, and more across multiple frames, with canvas resizing behaviour preserved for those drill items.
               </p>
               <DrillDiagramEditor
                 value={drillDiagramConfig}
@@ -617,6 +619,9 @@ export default function DrillFormPage() {
                 disabled={isInherited}
               />
             </div>
+
+            {/* Equipment Summary (derived from diagram objects) */}
+            <EquipmentSummary equipment={extractEquipmentFromDiagram(drillDiagramConfig)} />
 
             {/* Links (Optional) */}
             <div className="card">

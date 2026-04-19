@@ -936,6 +936,7 @@ export interface SessionDrillDetailDto {
   source: string;
   templateId?: string;
   order: number;
+  equipment: string[];
 }
 
 export interface SessionAttendanceDetailDto {

@@ -10,6 +10,8 @@ import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { Drill, SessionDrill } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import EquipmentSummary from '@components/training/EquipmentSummary';
+import { aggregateEquipmentStrings } from '@utils/equipmentFromDiagram';
 
 export default function AddEditTrainingSessionPage() {
   usePageTitle(['Add Edit Training Session']);
@@ -828,6 +830,16 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                   </div>
                 </div>
               )}
+
+              {/* Aggregated Equipment Summary */}
+              <EquipmentSummary
+                equipment={aggregateEquipmentStrings(
+                  sessionDrills
+                    .filter((sd) => sd.equipment && sd.equipment.length > 0)
+                    .map((sd) => sd.equipment!)
+                )}
+                title="Equipment Needed (All Drills)"
+              />
 
               {selectedDrills.length > 0 ? (
                 <div className="space-y-2">

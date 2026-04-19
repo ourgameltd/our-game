@@ -164,7 +164,7 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
 
         try
         {
-            return JsonSerializer.Deserialize<DrillDiagramConfigDto>(json);
+            return JsonSerializer.Deserialize<DrillDiagramConfigDto>(json, new JsonSerializerOptions { PropertyNamingPolicy = JsonNamingPolicy.CamelCase });
         }
         catch
         {

@@ -808,13 +808,13 @@ export function useDrillTemplateById(templateId: string | undefined): UseApiStat
  * with validation details preserved for field-level error mapping.
  */
 export function useCreateDrillTemplate(): UseMutationState<DrillTemplateDetailDto> & {
-  mutate: (request: CreateDrillTemplateRequest) => Promise<void>;
+  mutate: (request: CreateDrillTemplateRequest) => Promise<boolean>;
 } {
   const [data, setData] = useState<DrillTemplateDetailDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const mutate = useCallback(async (request: CreateDrillTemplateRequest): Promise<void> => {
+  const mutate = useCallback(async (request: CreateDrillTemplateRequest): Promise<boolean> => {
     setIsSubmitting(true);
     setError(null);
     setData(null);
@@ -822,17 +822,20 @@ export function useCreateDrillTemplate(): UseMutationState<DrillTemplateDetailDt
       const response: ApiResponse<DrillTemplateDetailDto> = await apiClient.drillTemplates.create(request);
       if (response.success && response.data) {
         setData(response.data);
+        return true;
       } else {
         setError({
           message: response.error?.message || 'Failed to create drill template',
           statusCode: response.error?.statusCode,
           validationErrors: response.error?.validationErrors,
         });
+        return false;
       }
     } catch (err) {
       setError({
         message: err instanceof Error ? err.message : 'An unexpected error occurred',
       });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -847,13 +850,13 @@ export function useCreateDrillTemplate(): UseMutationState<DrillTemplateDetailDt
  * with validation details preserved for field-level error mapping.
  */
 export function useUpdateDrillTemplate(templateId: string): UseMutationState<DrillTemplateDetailDto> & {
-  mutate: (request: UpdateDrillTemplateRequest) => Promise<void>;
+  mutate: (request: UpdateDrillTemplateRequest) => Promise<boolean>;
 } {
   const [data, setData] = useState<DrillTemplateDetailDto | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const mutate = useCallback(async (request: UpdateDrillTemplateRequest): Promise<void> => {
+  const mutate = useCallback(async (request: UpdateDrillTemplateRequest): Promise<boolean> => {
     setIsSubmitting(true);
     setError(null);
     setData(null);
@@ -861,17 +864,20 @@ export function useUpdateDrillTemplate(templateId: string): UseMutationState<Dri
       const response: ApiResponse<DrillTemplateDetailDto> = await apiClient.drillTemplates.update(templateId, request);
       if (response.success && response.data) {
         setData(response.data);
+        return true;
       } else {
         setError({
           message: response.error?.message || 'Failed to update drill template',
           statusCode: response.error?.statusCode,
           validationErrors: response.error?.validationErrors,
         });
+        return false;
       }
     } catch (err) {
       setError({
         message: err instanceof Error ? err.message : 'An unexpected error occurred',
       });
+      return false;
     } finally {
       setIsSubmitting(false);
     }
@@ -1816,7 +1822,8 @@ function mapTrainingSessionDetailToUi(dto: TrainingSessionDetailDto): TrainingSe
       drillId: d.drillId,
       source: (d.source === 'template' ? 'template' : 'adhoc') as 'template' | 'adhoc',
       templateId: d.templateId || undefined,
-      order: d.order
+      order: d.order,
+      equipment: d.equipment || []
     })),
     appliedTemplates: (dto.appliedTemplates || []).map(t => ({
       templateId: t.templateId,

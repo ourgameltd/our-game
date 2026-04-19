@@ -64,7 +64,8 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
                 d.Category,
                 sd.Source,
                 sd.TemplateId,
-                sd.DrillOrder
+                sd.DrillOrder,
+                d.DrillDiagramConfig
             FROM SessionDrills sd
             INNER JOIN Drills d ON sd.DrillId = d.Id
             WHERE sd.SessionId = {0}
@@ -153,7 +154,8 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
                 Category = MapDrillCategoryToString(d.Category),
                 Source = d.Source ?? string.Empty,
                 TemplateId = d.TemplateId,
-                Order = d.DrillOrder
+                Order = d.DrillOrder,
+                Equipment = ExtractEquipmentFromDiagram(d.DrillDiagramConfig)
             }).ToList(),
             Attendance = attendance.Select(a => new SessionAttendanceDto
             {
@@ -253,6 +255,55 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
             return [];
         }
     }
+
+    private static readonly Dictionary<string, string> EquipmentTypeMap = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["cone"] = "Cones",
+        ["ball"] = "Balls",
+        ["marker"] = "Markers",
+        ["mannequin"] = "Mannequins",
+        ["goal"] = "Goals"
+    };
+
+    private static List<string> ExtractEquipmentFromDiagram(string? diagramConfigJson)
+    {
+        if (string.IsNullOrWhiteSpace(diagramConfigJson))
+        {
+            return [];
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(diagramConfigJson);
+            var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+
+            if (doc.RootElement.TryGetProperty("frames", out var frames))
+            {
+                foreach (var frame in frames.EnumerateArray())
+                {
+                    if (!frame.TryGetProperty("objects", out var objects)) continue;
+                    foreach (var obj in objects.EnumerateArray())
+                    {
+                        if (!obj.TryGetProperty("type", out var typeProp)) continue;
+                        var type = typeProp.GetString();
+                        if (type != null && EquipmentTypeMap.ContainsKey(type))
+                        {
+                            counts[type] = counts.GetValueOrDefault(type) + 1;
+                        }
+                    }
+                }
+            }
+
+            return counts
+                .Where(kv => kv.Value > 0)
+                .Select(kv => $"{kv.Value}x {EquipmentTypeMap[kv.Key]}")
+                .ToList();
+        }
+        catch (JsonException)
+        {
+            return [];
+        }
+    }
 }
 
 #region Raw SQL DTOs
@@ -288,6 +339,7 @@ public class SessionDrillRaw
     public string? Source { get; set; }
     public Guid? TemplateId { get; set; }
     public int DrillOrder { get; set; }
+    public string? DrillDiagramConfig { get; set; }
 }
 
 public class SessionAttendanceRaw
