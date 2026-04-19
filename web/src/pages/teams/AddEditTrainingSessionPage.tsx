@@ -1,14 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, CirclePlay, Camera, Globe, BookOpen, FileText } from 'lucide-react';
-import { sampleDrills, sampleDrillTemplates } from '@/data/training';
-import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById } from '@/api/hooks';
-import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest } from '@/api/client';
+import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, CirclePlay, Camera, Globe, BookOpen, FileText, Loader2, ChevronUp, Package, Eye } from 'lucide-react';
+import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById, useDrillsByScope, useDrillTemplatesByScope } from '@/api/hooks';
+import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest, DrillListDto, DrillTemplateListDto } from '@/api/client';
 import { sessionDurations } from '@/data/referenceData';
 import { drillCategories, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
-import { Drill, SessionDrill } from '@/types';
+import { SessionDrill } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import EquipmentSummary from '@components/training/EquipmentSummary';
 import { aggregateEquipmentStrings } from '@utils/equipmentFromDiagram';
@@ -26,6 +25,34 @@ export default function AddEditTrainingSessionPage() {
   const { data: playersData, isLoading: playersLoading } = useTeamPlayers(teamId);
   const { data: coachesData, isLoading: coachesLoading } = useTeamCoaches(teamId);
   const { data: club, isLoading: clubLoading } = useClubById(clubId);
+
+  // Fetch drills and templates from API
+  const { data: drillsData, isLoading: drillsLoading } = useDrillsByScope(clubId, ageGroupId, teamId);
+  const { data: templatesData, isLoading: templatesLoading } = useDrillTemplatesByScope(clubId, ageGroupId, teamId);
+
+  // Combine scope + inherited drills/templates into flat arrays
+  const allDrills: DrillListDto[] = useMemo(() => {
+    if (!drillsData) return [];
+    return [...drillsData.drills, ...drillsData.inheritedDrills];
+  }, [drillsData]);
+
+  const allTemplates: DrillTemplateListDto[] = useMemo(() => {
+    if (!templatesData) return [];
+    return [...templatesData.templates, ...templatesData.inheritedTemplates];
+  }, [templatesData]);
+
+  // Lookup maps for quick access by ID
+  const drillMap = useMemo(() => {
+    const map = new Map<string, DrillListDto>();
+    allDrills.forEach(d => map.set(d.id, d));
+    return map;
+  }, [allDrills]);
+
+  const templateMap = useMemo(() => {
+    const map = new Map<string, DrillTemplateListDto>();
+    allTemplates.forEach(t => map.set(t.id, t));
+    return map;
+  }, [allTemplates]);
 
   const team = overview?.team ?? null;
   const teamPlayers = playersData ?? [];
@@ -58,16 +85,17 @@ export default function AddEditTrainingSessionPage() {
   const [showDrillModal, setShowDrillModal] = useState(false);
   const [drillSearchTerm, setDrillSearchTerm] = useState('');
   const [drillCategoryFilter, setDrillCategoryFilter] = useState<string>('all');
-  const [previewDrill, setPreviewDrill] = useState<Drill | null>(null);
+  const [previewDrill, setPreviewDrill] = useState<DrillListDto | null>(null);
+  const [expandedDrillIds, setExpandedDrillIds] = useState<Set<string>>(new Set());
   
   // Template selection modal
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templateSearchTerm, setTemplateSearchTerm] = useState('');
-
+  const [templatePreviewDrill, setTemplatePreviewDrill] = useState<DrillListDto | null>(null);
   const [activeTab, setActiveTab] = useState<'details' | 'drills' | 'attendance'>('details');
   
   // Attendance state
-  const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>([]);
+  const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'pending'; notes?: string }[]>([]);
 
   // Populate form state when existing session data loads
   useEffect(() => {
@@ -99,12 +127,8 @@ export default function AddEditTrainingSessionPage() {
     }
   }, [existingSession]);
 
-  // Initialize attendance from team players when players load (for new sessions or when no existing attendance)
-  useEffect(() => {
-    if (teamPlayers.length > 0 && attendance.length === 0 && !existingSession?.attendance) {
-      setAttendance(teamPlayers.map(p => ({ playerId: p.id, status: 'pending' as const })));
-    }
-  }, [teamPlayers, attendance.length, existingSession?.attendance]);
+  // No auto-population of attendance for new sessions — attendance starts empty
+  // Coaches explicitly set each player's status via the attendance tab
 
   // Legacy: keep selectedDrillIds for backward compatibility (computed from sessionDrills)
   const selectedDrillIds = sessionDrills.map(sd => sd.drillId);
@@ -236,16 +260,26 @@ export default function AddEditTrainingSessionPage() {
     );
   };
 
-  const handleSetAttendanceStatus = (playerId: string, status: 'confirmed' | 'declined' | 'maybe' | 'pending') => {
-    setAttendance(attendance.map(a => 
-      a.playerId === playerId ? { ...a, status } : a
-    ));
+  const handleSetAttendanceStatus = (playerId: string, status: 'confirmed' | 'declined' | 'pending') => {
+    const exists = attendance.some(a => a.playerId === playerId);
+    if (exists) {
+      setAttendance(attendance.map(a => 
+        a.playerId === playerId ? { ...a, status } : a
+      ));
+    } else {
+      setAttendance([...attendance, { playerId, status }]);
+    }
   };
 
   const handleSetAttendanceNote = (playerId: string, note: string) => {
-    setAttendance(attendance.map(a => 
-      a.playerId === playerId ? { ...a, notes: note || undefined } : a
-    ));
+    const exists = attendance.some(a => a.playerId === playerId);
+    if (exists) {
+      setAttendance(attendance.map(a => 
+        a.playerId === playerId ? { ...a, notes: note || undefined } : a
+      ));
+    } else {
+      setAttendance([...attendance, { playerId, status: 'pending', notes: note || undefined }]);
+    }
   };
 
   const handleToggleLock = () => {
@@ -352,7 +386,7 @@ export default function AddEditTrainingSessionPage() {
   };
 
   // Filter drills for modal
-  const filteredDrills = sampleDrills.filter(drill => {
+  const filteredDrills = allDrills.filter(drill => {
     if (drillSearchTerm) {
       const searchLower = drillSearchTerm.toLowerCase();
       if (!drill.name.toLowerCase().includes(searchLower) && 
@@ -366,7 +400,7 @@ export default function AddEditTrainingSessionPage() {
     return true;
   });
 
-  const selectedDrills = sampleDrills.filter(d => selectedDrillIds.includes(d.id));
+  const selectedDrills = allDrills.filter(d => selectedDrillIds.includes(d.id));
   const totalDrillDuration = selectedDrills.reduce((acc, d) => acc + d.duration, 0);
 
   const getLinkIcon = (type: string) => {
@@ -379,8 +413,20 @@ export default function AddEditTrainingSessionPage() {
     }
   };
 
+  const toggleDrillExpanded = (drillId: string) => {
+    setExpandedDrillIds(prev => {
+      const next = new Set(prev);
+      if (next.has(drillId)) {
+        next.delete(drillId);
+      } else {
+        next.add(drillId);
+      }
+      return next;
+    });
+  };
+
   const handleApplyTemplate = (templateId: string, replaceAll: boolean = false) => {
-    const template = sampleDrillTemplates.find(t => t.id === templateId);
+    const template = templateMap.get(templateId);
     if (template) {
       if (replaceAll) {
         // Replace all existing drills with template drills
@@ -431,7 +477,7 @@ export default function AddEditTrainingSessionPage() {
         
         // Update duration if template adds significant time
         const templateDuration = template.drillIds
-          .map(id => sampleDrills.find(d => d.id === id)?.duration || 0)
+          .map(id => drillMap.get(id)?.duration || 0)
           .reduce((a, b) => a + b, 0);
         const currentDuration = parseInt(duration) || 60;
         if (templateDuration + totalDrillDuration > currentDuration) {
@@ -443,7 +489,7 @@ export default function AddEditTrainingSessionPage() {
   };
 
   // Filter templates
-  const filteredTemplates = sampleDrillTemplates.filter(template => {
+  const filteredTemplates = allTemplates.filter(template => {
     if (templateSearchTerm) {
       const searchLower = templateSearchTerm.toLowerCase();
       if (!template.name.toLowerCase().includes(searchLower) && 
@@ -813,7 +859,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                   </h4>
                   <div className="flex flex-wrap gap-2">
                     {appliedTemplates.map((at) => {
-                      const template = sampleDrillTemplates.find(t => t.id === at.templateId);
+                      const template = templateMap.get(at.templateId);
                       return template ? (
                         <span
                           key={at.templateId}
@@ -834,9 +880,17 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
               {/* Aggregated Equipment Summary */}
               <EquipmentSummary
                 equipment={aggregateEquipmentStrings(
-                  sessionDrills
-                    .filter((sd) => sd.equipment && sd.equipment.length > 0)
-                    .map((sd) => sd.equipment!)
+                  [
+                    // Equipment from session drill overrides
+                    ...sessionDrills
+                      .filter((sd) => sd.equipment && sd.equipment.length > 0)
+                      .map((sd) => sd.equipment!),
+                    // Equipment from drill DTOs (for drills without session-level overrides)
+                    ...sessionDrills
+                      .filter((sd) => !(sd.equipment && sd.equipment.length > 0))
+                      .map((sd) => drillMap.get(sd.drillId)?.equipment ?? [])
+                      .filter((eq) => eq.length > 0),
+                  ]
                 )}
                 title="Equipment Needed"
               />
@@ -844,86 +898,179 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
               {selectedDrills.length > 0 ? (
                 <div className="space-y-2">
                   {sessionDrills.map((sessionDrill, index) => {
-                    const drill = sampleDrills.find(d => d.id === sessionDrill.drillId);
+                    const drill = drillMap.get(sessionDrill.drillId);
                     if (!drill) return null;
                     
                     const sourceTemplate = sessionDrill.source === 'template' && sessionDrill.templateId
-                      ? sampleDrillTemplates.find(t => t.id === sessionDrill.templateId)
+                      ? templateMap.get(sessionDrill.templateId)
                       : null;
                     
+                    const isExpanded = expandedDrillIds.has(drill.id);
+                    
                     return (
-                    <div key={drill.id} className={`rounded-lg p-4 ${
+                    <div key={drill.id} className={`rounded-lg overflow-hidden ${
                       sessionDrill.source === 'template' 
                         ? 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800' 
-                        : 'bg-gray-50 dark:bg-gray-700'
+                        : 'bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600'
                     }`}>
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center flex-wrap gap-2 mb-2">
-                            <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
-                              {index + 1}.
-                            </span>
-                            <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
-                              {drill.name}
-                            </h4>
-                            <span className={`px-2 py-0.5 text-xs rounded-full ${getDrillCategoryColors(drill.category).bgColor} ${getDrillCategoryColors(drill.category).textColor}`}>
-                              {getDrillCategoryLabel(drill.category)}
-                            </span>
-                            <span className="text-sm text-gray-500 dark:text-gray-400">
-                              {drill.duration} mins
-                            </span>
-                            {/* Source badge */}
-                            {sessionDrill.source === 'template' ? (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300 rounded-full" title={sourceTemplate ? `From: ${sourceTemplate.name}` : 'From template'}>
-                                <BookOpen className="w-3 h-3" />
-                                Template
+                      {/* Drill Header — always visible */}
+                      <div className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center flex-wrap gap-2 mb-2">
+                              <span className="text-lg font-medium text-gray-500 dark:text-gray-400">
+                                {index + 1}.
                               </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-800/40 text-green-700 dark:text-green-300 rounded-full">
-                                <Plus className="w-3 h-3" />
-                                Ad-hoc
+                              <h4 className="text-lg font-semibold text-gray-900 dark:text-white">
+                                {drill.name}
+                              </h4>
+                              <span className={`px-2 py-0.5 text-xs rounded-full ${getDrillCategoryColors(drill.category).bgColor} ${getDrillCategoryColors(drill.category).textColor}`}>
+                                {getDrillCategoryLabel(drill.category)}
                               </span>
-                            )}
-                          </div>
-                          <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
-                            {drill.description}
-                          </p>
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {drill.attributes.map((skill: string, i: number) => (
-                              <span key={i} className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded">
-                                {skill}
+                              <span className="text-sm text-gray-500 dark:text-gray-400">
+                                {drill.duration} mins
                               </span>
-                            ))}
-                          </div>
-                          {drill.links && drill.links.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {drill.links.map((link, i) => (
-                                <a
-                                  key={i}
-                                  href={link.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                                  title={link.title}
-                                >
-                                  {getLinkIcon(link.type)}
-                                  <span className="max-w-37.5 truncate">{link.title}</span>
-                                </a>
+                              {sessionDrill.source === 'template' ? (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-800/40 text-blue-700 dark:text-blue-300 rounded-full" title={sourceTemplate ? `From: ${sourceTemplate.name}` : 'From template'}>
+                                  <BookOpen className="w-3 h-3" />
+                                  Template
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs bg-green-100 dark:bg-green-800/40 text-green-700 dark:text-green-300 rounded-full">
+                                  <Plus className="w-3 h-3" />
+                                  Ad-hoc
+                                </span>
+                              )}
+                              {drill.equipment && drill.equipment.length > 0 && (
+                                <span className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title={drill.equipment.join(', ')}>
+                                  <Package className="w-3 h-3" />
+                                  {drill.equipment.length} items
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
+                              {drill.description}
+                            </p>
+                            <div className="flex flex-wrap gap-1">
+                              {drill.attributes.map((skill: string, i: number) => (
+                                <span key={i} className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded">
+                                  {skill}
+                                </span>
                               ))}
                             </div>
-                          )}
+                          </div>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={() => toggleDrillExpanded(drill.id)}
+                              className="p-2 text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                              title={isExpanded ? 'Collapse drill details' : 'View drill details'}
+                            >
+                              {isExpanded ? <ChevronUp className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                            </button>
+                            {!isLocked && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveDrill(drill.id)}
+                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                                title="Remove drill"
+                              >
+                                <X className="w-5 h-5" />
+                              </button>
+                            )}
+                          </div>
                         </div>
-                        {!isLocked && (
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveDrill(drill.id)}
-                            className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                            title="Remove drill"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        )}
                       </div>
+
+                      {/* Expanded Drill Details — instructions, equipment, links, variations */}
+                      {isExpanded && (
+                        <div className="px-4 pb-4 pt-0 border-t border-gray-200 dark:border-gray-600 mt-0">
+                          <div className="pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Instructions */}
+                            {drill.instructions && drill.instructions.length > 0 && (
+                              <div className="md:col-span-2">
+                                <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                  <ClipboardList className="w-4 h-4" />
+                                  Instructions
+                                </h5>
+                                <ol className="list-decimal list-inside space-y-1.5 text-sm text-gray-600 dark:text-gray-400 bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                                  {drill.instructions.map((instruction, i) => (
+                                    <li key={i} className="leading-relaxed">{instruction}</li>
+                                  ))}
+                                </ol>
+                              </div>
+                            )}
+
+                            {/* Equipment */}
+                            {drill.equipment && drill.equipment.length > 0 && (
+                              <div>
+                                <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                  <Package className="w-4 h-4" />
+                                  Equipment Needed
+                                </h5>
+                                <div className="flex flex-wrap gap-2">
+                                  {drill.equipment.map((item: string, i: number) => (
+                                    <span key={i} className="inline-flex items-center px-3 py-1.5 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-700">
+                                      {item}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Variations */}
+                            {drill.variations && drill.variations.length > 0 && (
+                              <div>
+                                <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                                  Variations
+                                </h5>
+                                <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                                  {drill.variations.map((variation, i) => (
+                                    <li key={i} className="flex items-start gap-2">
+                                      <span className="text-primary-500 mt-0.5">•</span>
+                                      <span>{variation}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+
+                            {/* Reference Links */}
+                            {drill.links && drill.links.length > 0 && (
+                              <div className={drill.variations && drill.variations.length > 0 ? '' : 'md:col-span-2'}>
+                                <h5 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 flex items-center gap-2">
+                                  <LinkIcon className="w-4 h-4" />
+                                  Reference Links
+                                </h5>
+                                <div className="space-y-2">
+                                  {drill.links.map((link, i) => (
+                                    <a
+                                      key={i}
+                                      href={link.url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors group"
+                                    >
+                                      <div className="shrink-0 text-blue-600 dark:text-blue-400">
+                                        {getLinkIcon(link.type)}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                          {link.title}
+                                        </p>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
+                                          {link.url}
+                                        </p>
+                                      </div>
+                                      <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 shrink-0" />
+                                    </a>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
                     </div>
                     );
                   })}
@@ -959,7 +1106,6 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     switch (s) {
                       case 'confirmed': return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
                       case 'declined': return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
-                      case 'maybe': return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
                       default: return 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600';
                     }
                   };
@@ -968,7 +1114,6 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     switch (s) {
                       case 'confirmed': return '✓';
                       case 'declined': return '✕';
-                      case 'maybe': return '?';
                       default: return '•';
                     }
                   };
@@ -978,7 +1123,6 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     switch (s) {
                       case 'confirmed': return 'bg-green-600 text-white';
                       case 'declined': return 'bg-red-600 text-white';
-                      case 'maybe': return 'bg-yellow-500 text-white';
                       default: return 'bg-gray-400 text-white';
                     }
                   };
@@ -1019,22 +1163,9 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleSetAttendanceStatus(player.id, 'maybe')}
-                            disabled={isLocked}
-                            className={`px-3 py-1.5 text-sm font-medium border-l border-r border-gray-300 dark:border-gray-600 transition-colors ${
-                              status === 'maybe' 
-                                ? 'bg-yellow-500 text-white' 
-                                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/30'
-                            } disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title="Maybe"
-                          >
-                            ?
-                          </button>
-                          <button
-                            type="button"
                             onClick={() => handleSetAttendanceStatus(player.id, 'declined')}
                             disabled={isLocked}
-                            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                            className={`px-3 py-1.5 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors ${
                               status === 'declined' 
                                 ? 'bg-red-600 text-white' 
                                 : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30'
@@ -1069,12 +1200,6 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                   </p>
                   <p className="text-gray-600 dark:text-gray-400">
                     <span className="inline-flex items-center gap-1">
-                      <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                      <span className="font-medium">{attendance.filter(a => a.status === 'maybe').length}</span> Maybe
-                    </span>
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    <span className="inline-flex items-center gap-1">
                       <span className="w-3 h-3 bg-red-600 rounded-full"></span>
                       <span className="font-medium">{attendance.filter(a => a.status === 'declined').length}</span> Declined
                     </span>
@@ -1082,7 +1207,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                   <p className="text-gray-600 dark:text-gray-400">
                     <span className="inline-flex items-center gap-1">
                       <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
-                      <span className="font-medium">{attendance.filter(a => a.status === 'pending').length}</span> Pending
+                      <span className="font-medium">{teamPlayers.length - attendance.filter(a => a.status === 'confirmed' || a.status === 'declined').length}</span> No Response
                     </span>
                   </p>
                 </div>
@@ -1270,7 +1395,12 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
             <div className="flex-1 overflow-hidden flex">
               {/* Drills List */}
               <div className={`p-6 overflow-y-auto ${previewDrill ? 'w-1/2 border-r border-gray-200 dark:border-gray-700' : 'w-full'}`}>
-                {filteredDrills.length > 0 ? (
+                {drillsLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+                    <span className="ml-3 text-gray-500 dark:text-gray-400">Loading drills...</span>
+                  </div>
+                ) : filteredDrills.length > 0 ? (
                   <div className="space-y-2">
                     {filteredDrills.map((drill) => {
                       const isSelected = selectedDrillIds.includes(drill.id);
@@ -1304,6 +1434,12 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                                     🔗 {drill.links.length}
                                   </span>
                                 )}
+                                {drill.equipment && drill.equipment.length > 0 && (
+                                  <span className="inline-flex items-center gap-1 text-xs text-gray-500 dark:text-gray-400" title={drill.equipment.join(', ')}>
+                                    <Package className="w-3 h-3" />
+                                    {drill.equipment.length}
+                                  </span>
+                                )}
                               </div>
                               <p className="text-gray-600 dark:text-gray-400 text-sm line-clamp-2">
                                 {drill.description}
@@ -1331,6 +1467,12 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                         </div>
                       );
                     })}
+                  </div>
+                ) : allDrills.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <span className="text-4xl mb-2 block">⚽</span>
+                    <p className="font-medium">No drills available</p>
+                    <p className="text-sm mt-1">Create drills in the Drills section to use them in training sessions.</p>
                   </div>
                 ) : (
                   <p className="text-center py-8 text-gray-500 dark:text-gray-400">
@@ -1396,6 +1538,35 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                       </ol>
                     </div>
 
+                    {/* Equipment */}
+                    {previewDrill.equipment && previewDrill.equipment.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Equipment Needed</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {previewDrill.equipment.map((item: string, i: number) => (
+                            <span key={i} className="inline-flex items-center px-3 py-1.5 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-lg border border-gray-200 dark:border-gray-700">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Variations */}
+                    {previewDrill.variations && previewDrill.variations.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Variations</h4>
+                        <ul className="space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                          {previewDrill.variations.map((variation, i) => (
+                            <li key={i} className="flex items-start gap-2">
+                              <span className="text-primary-500 mt-0.5">•</span>
+                              <span>{variation}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+
                     {/* Reference Links */}
                     {previewDrill.links && previewDrill.links.length > 0 && (
                       <div>
@@ -1455,7 +1626,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
       {/* Template Selection Modal */}
       {showTemplateModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-1000">
-          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-lg max-w-5xl w-full max-h-[85vh] overflow-hidden flex flex-col">
             <div className="p-6 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
               <div>
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">Select Session Template</h2>
@@ -1463,7 +1634,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
               </div>
               <button
                 type="button"
-                onClick={() => setShowTemplateModal(false)}
+                onClick={() => { setShowTemplateModal(false); setTemplatePreviewDrill(null); }}
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 text-2xl"
               >
                 ✕
@@ -1481,104 +1652,223 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
               />
             </div>
             
-            <div className="p-6 overflow-y-auto max-h-[50vh]">
-              {filteredTemplates.length > 0 ? (
-                <div className="space-y-2">
-                  {filteredTemplates.map((template) => {
-                    const templateDrills = template.drillIds
-                      .map(id => sampleDrills.find(d => d.id === id))
-                      .filter(Boolean);
-                    
-                    return (
-                      <div
-                        key={template.id}
-                        className="p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-2">
-                              <h4 className="font-semibold text-gray-900 dark:text-white">
-                                {template.name}
-                              </h4>
-                              {template.category && (
-                                <span className={`px-2 py-0.5 text-xs rounded-full ${getDrillCategoryColors(template.category).bgColor} ${getDrillCategoryColors(template.category).textColor}`}>
-                                  {template.category}
+            <div className="flex-1 overflow-hidden flex">
+              {/* Templates List */}
+              <div className={`p-6 overflow-y-auto ${templatePreviewDrill ? 'w-1/2 border-r border-gray-200 dark:border-gray-700' : 'w-full'}`}>
+                {templatesLoading ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-primary-600" />
+                    <span className="ml-3 text-gray-500 dark:text-gray-400">Loading templates...</span>
+                  </div>
+                ) : filteredTemplates.length > 0 ? (
+                  <div className="space-y-2">
+                    {filteredTemplates.map((template) => {
+                      const templateDrills = template.drillIds
+                        .map(id => drillMap.get(id))
+                        .filter((d): d is DrillListDto => !!d);
+                      
+                      return (
+                        <div
+                          key={template.id}
+                          className="p-4 rounded-lg border border-gray-200 dark:border-gray-600 hover:border-blue-300 dark:hover:border-blue-700 transition-colors"
+                        >
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h4 className="font-semibold text-gray-900 dark:text-white">
+                                  {template.name}
+                                </h4>
+                                {template.category && (
+                                  <span className={`px-2 py-0.5 text-xs rounded-full ${getDrillCategoryColors(template.category).bgColor} ${getDrillCategoryColors(template.category).textColor}`}>
+                                    {template.category}
+                                  </span>
+                                )}
+                                <span className="text-sm text-gray-500 dark:text-gray-400">
+                                  {template.totalDuration} mins • {template.drillIds.length} drills
                                 </span>
-                              )}
-                              <span className="text-sm text-gray-500 dark:text-gray-400">
-                                {template.totalDuration} mins • {template.drillIds.length} drills
-                              </span>
-                            </div>
-                            <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
-                              {template.description}
-                            </p>
-                            
-                            {/* Drills List */}
-                            <div className="mb-2">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Drills:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {templateDrills.map((drill, i) => {
-                                  const alreadyInSession = selectedDrillIds.includes(drill?.id || '');
-                                  return (
-                                    <span 
-                                      key={i} 
-                                      className={`px-2 py-0.5 text-xs rounded ${
-                                        alreadyInSession 
-                                          ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300' 
-                                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
-                                      }`}
-                                      title={alreadyInSession ? 'Already in session' : ''}
-                                    >
-                                      {drill?.name}
-                                      {alreadyInSession && ' ✓'}
+                              </div>
+                              <p className="text-gray-600 dark:text-gray-400 text-sm mb-2">
+                                {template.description}
+                              </p>
+                              
+                              {/* Drills List — clickable for preview */}
+                              <div className="mb-2">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 font-medium mb-1">Drills:</p>
+                                <div className="flex flex-wrap gap-1">
+                                  {templateDrills.map((drill, i) => {
+                                    const alreadyInSession = selectedDrillIds.includes(drill.id);
+                                    const isPreviewed = templatePreviewDrill?.id === drill.id;
+                                    return (
+                                      <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => setTemplatePreviewDrill(isPreviewed ? null : drill)}
+                                        className={`px-2 py-0.5 text-xs rounded cursor-pointer transition-colors ${
+                                          isPreviewed
+                                            ? 'bg-blue-200 dark:bg-blue-800 text-blue-800 dark:text-blue-200 ring-1 ring-blue-400'
+                                            : alreadyInSession 
+                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 hover:bg-green-200 dark:hover:bg-green-900/50' 
+                                            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                                        }`}
+                                        title={alreadyInSession ? 'Already in session — click to preview' : 'Click to preview drill'}
+                                      >
+                                        {drill.name}
+                                        {alreadyInSession && ' ✓'}
+                                      </button>
+                                    );
+                                  })}
+                                  {/* Show unresolved drill IDs */}
+                                  {template.drillIds.filter(drillId => !drillMap.has(drillId)).map((_, i) => (
+                                    <span key={`missing-${i}`} className="px-2 py-0.5 text-xs rounded bg-gray-100 dark:bg-gray-700 text-gray-400 italic">
+                                      Unknown drill
                                     </span>
-                                  );
-                                })}
+                                  ))}
+                                </div>
+                              </div>
+                              
+                              {/* Focus Areas */}
+                              <div className="flex flex-wrap gap-1">
+                                {template.attributes.map((area: string, i: number) => (
+                                  <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded">
+                                    {area}
+                                  </span>
+                                ))}
                               </div>
                             </div>
-                            
-                            {/* Focus Areas */}
-                            <div className="flex flex-wrap gap-1">
-                              {template.attributes.map((area: string, i: number) => (
-                                <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded">
-                                  {area}
-                                </span>
-                              ))}
-                            </div>
-                          </div>
-                          <div className="flex flex-col gap-2">
-                            <button
-                              type="button"
-                              onClick={() => handleApplyTemplate(template.id, false)}
-                              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap text-sm"
-                              title="Add template drills to your existing session"
-                            >
-                              Add to Session
-                            </button>
-                            {sessionDrills.length > 0 && (
+                            <div className="flex flex-col gap-2">
                               <button
                                 type="button"
-                                onClick={() => {
-                                  if (window.confirm('This will replace all existing drills with the template drills. Continue?')) {
-                                    handleApplyTemplate(template.id, true);
-                                  }
-                                }}
-                                className="px-4 py-2 border border-orange-500 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors whitespace-nowrap text-sm"
-                                title="Replace all existing drills with template drills"
+                                onClick={() => handleApplyTemplate(template.id, false)}
+                                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors whitespace-nowrap text-sm"
+                                title="Add template drills to your existing session"
                               >
-                                Replace All
+                                Add to Session
                               </button>
-                            )}
+                              {sessionDrills.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (window.confirm('This will replace all existing drills with the template drills. Continue?')) {
+                                      handleApplyTemplate(template.id, true);
+                                    }
+                                  }}
+                                  className="px-4 py-2 border border-orange-500 text-orange-600 dark:text-orange-400 rounded-lg hover:bg-orange-50 dark:hover:bg-orange-900/20 transition-colors whitespace-nowrap text-sm"
+                                  title="Replace all existing drills with template drills"
+                                >
+                                  Replace All
+                                </button>
+                              )}
+                            </div>
                           </div>
                         </div>
+                      );
+                    })}
+                  </div>
+                ) : allTemplates.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <span className="text-4xl mb-2 block">📋</span>
+                    <p className="font-medium">No templates available</p>
+                    <p className="text-sm mt-1">Create drill templates in the Templates section to use them here.</p>
+                  </div>
+                ) : (
+                  <p className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No templates found matching your search.
+                  </p>
+                )}
+              </div>
+
+              {/* Drill Preview Panel */}
+              {templatePreviewDrill && (
+                <div className="w-1/2 p-6 overflow-y-auto bg-gray-50 dark:bg-gray-900">
+                  <div className="mb-4 flex items-start justify-between">
+                    <div>
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
+                        {templatePreviewDrill.name}
+                      </h3>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className={`px-2 py-1 text-xs rounded-full ${getDrillCategoryColors(templatePreviewDrill.category).bgColor} ${getDrillCategoryColors(templatePreviewDrill.category).textColor}`}>
+                          {getDrillCategoryLabel(templatePreviewDrill.category)}
+                        </span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">
+                          ⏱️ {templatePreviewDrill.duration} minutes
+                        </span>
                       </div>
-                    );
-                  })}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setTemplatePreviewDrill(null)}
+                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">Description</h4>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">{templatePreviewDrill.description}</p>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Skills Focused</h4>
+                      <div className="flex flex-wrap gap-1">
+                        {templatePreviewDrill.attributes.map((skill: string, i: number) => (
+                          <span key={i} className="px-2 py-1 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700">
+                            {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Instructions</h4>
+                      <ol className="list-decimal list-inside space-y-1 text-sm text-gray-600 dark:text-gray-400">
+                        {templatePreviewDrill.instructions.map((instruction, i) => (
+                          <li key={i}>{instruction}</li>
+                        ))}
+                      </ol>
+                    </div>
+
+                    {templatePreviewDrill.links && templatePreviewDrill.links.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Reference Links</h4>
+                        <div className="space-y-2">
+                          {templatePreviewDrill.links.map((link, i) => (
+                            <a
+                              key={i}
+                              href={link.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-700 transition-colors group"
+                            >
+                              <div className="shrink-0 text-blue-600 dark:text-blue-400">
+                                {getLinkIcon(link.type)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-gray-900 dark:text-white truncate">{link.title}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{link.url}</p>
+                              </div>
+                              <ExternalLink className="w-4 h-4 text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 shrink-0" />
+                            </a>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {templatePreviewDrill.equipment && templatePreviewDrill.equipment.length > 0 && (
+                      <div>
+                        <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Equipment</h4>
+                        <div className="flex flex-wrap gap-1">
+                          {templatePreviewDrill.equipment.map((item: string, i: number) => (
+                            <span key={i} className="px-2 py-1 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700">
+                              {item}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              ) : (
-                <p className="text-center py-8 text-gray-500 dark:text-gray-400">
-                  No templates found matching your search.
-                </p>
               )}
             </div>
             
@@ -1591,7 +1881,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                 </p>
                 <button
                   type="button"
-                  onClick={() => setShowTemplateModal(false)}
+                  onClick={() => { setShowTemplateModal(false); setTemplatePreviewDrill(null); }}
                   className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 >
                   Cancel

@@ -13,7 +13,7 @@ public partial class SessionAttendance
 
     public Guid PlayerId { get; set; }
 
-    public bool Present { get; set; }
+    public bool? Present { get; set; }
 
     public string Notes { get; set; }
 

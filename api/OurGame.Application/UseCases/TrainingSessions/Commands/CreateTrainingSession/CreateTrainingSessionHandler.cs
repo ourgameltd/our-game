@@ -127,15 +127,15 @@ public class CreateTrainingSessionHandler : IRequestHandler<CreateTrainingSessio
     }
 
     /// <summary>
-    /// Maps attendance status string to boolean Present value:
-    /// "confirmed" → true, "declined" → false, anything else → null
+    /// Maps attendance status string to nullable boolean Present value:
+    /// "confirmed" → true, "declined" → false, anything else (pending) → null
     /// </summary>
     private static bool? MapAttendanceStatus(string? status) =>
-        (status?.ToLower()) switch
+        status?.ToLowerInvariant() switch
         {
             "confirmed" => true,
             "declined" => false,
-            _ => null // pending, maybe, or any other value
+            _ => null
         };
 
     private static int ParseStatus(string? status) =>

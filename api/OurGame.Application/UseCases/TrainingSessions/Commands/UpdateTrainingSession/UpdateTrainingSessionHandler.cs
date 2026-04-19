@@ -135,11 +135,11 @@ public class UpdateTrainingSessionHandler : IRequestHandler<UpdateTrainingSessio
     }
 
     /// <summary>
-    /// Maps attendance status string to boolean Present value:
-    /// "confirmed" → true, "declined" → false, anything else → null
+    /// Maps attendance status string to nullable boolean Present value:
+    /// "confirmed" → true, "declined" → false, anything else (pending) → null
     /// </summary>
     private static bool? MapAttendanceStatus(string? status) =>
-        (status?.ToLower()) switch
+        status?.ToLowerInvariant() switch
         {
             "confirmed" => true,
             "declined" => false,

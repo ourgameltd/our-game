@@ -323,6 +323,53 @@ try
         await context.SaveChangesAsync();
     }
     
+    // Seed drill scope link tables (no DbSet — use raw SQL)
+    {
+        var drillClubCount = await context.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM DrillClubs").FirstOrDefaultAsync();
+        if (drillClubCount == 0)
+        {
+            Console.WriteLine("  🔗 Seeding drill-club links...");
+            var drillClubs = OurGame.Persistence.Data.SeedData.DrillClubSeedData.GetDrillClubs();
+            foreach (var (id, drillId, clubId) in drillClubs)
+            {
+                await context.Database.ExecuteSqlAsync($"INSERT INTO DrillClubs (Id, DrillId, ClubId, SharedAt) VALUES ({id}, {drillId}, {clubId}, GETUTCDATE())");
+            }
+        }
+
+        var drillAgeGroupCount = await context.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM DrillAgeGroups").FirstOrDefaultAsync();
+        if (drillAgeGroupCount == 0)
+        {
+            Console.WriteLine("  🔗 Seeding drill-age group links...");
+            var drillAgeGroups = OurGame.Persistence.Data.SeedData.DrillAgeGroupSeedData.GetDrillAgeGroups();
+            foreach (var (id, drillId, ageGroupId) in drillAgeGroups)
+            {
+                await context.Database.ExecuteSqlAsync($"INSERT INTO DrillAgeGroups (Id, DrillId, AgeGroupId, SharedAt) VALUES ({id}, {drillId}, {ageGroupId}, GETUTCDATE())");
+            }
+        }
+
+        var dtClubCount = await context.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM DrillTemplateClubs").FirstOrDefaultAsync();
+        if (dtClubCount == 0)
+        {
+            Console.WriteLine("  🔗 Seeding drill template-club links...");
+            var dtClubs = OurGame.Persistence.Data.SeedData.DrillTemplateClubSeedData.GetDrillTemplateClubs();
+            foreach (var (id, drillTemplateId, clubId) in dtClubs)
+            {
+                await context.Database.ExecuteSqlAsync($"INSERT INTO DrillTemplateClubs (Id, DrillTemplateId, ClubId, SharedAt) VALUES ({id}, {drillTemplateId}, {clubId}, GETUTCDATE())");
+            }
+        }
+
+        var dtAgeGroupCount = await context.Database.SqlQueryRaw<int>("SELECT COUNT(*) AS [Value] FROM DrillTemplateAgeGroups").FirstOrDefaultAsync();
+        if (dtAgeGroupCount == 0)
+        {
+            Console.WriteLine("  🔗 Seeding drill template-age group links...");
+            var dtAgeGroups = OurGame.Persistence.Data.SeedData.DrillTemplateAgeGroupSeedData.GetDrillTemplateAgeGroups();
+            foreach (var (id, drillTemplateId, ageGroupId) in dtAgeGroups)
+            {
+                await context.Database.ExecuteSqlAsync($"INSERT INTO DrillTemplateAgeGroups (Id, DrillTemplateId, AgeGroupId, SharedAt) VALUES ({id}, {drillTemplateId}, {ageGroupId}, GETUTCDATE())");
+            }
+        }
+    }
+    
     if (!await context.TrainingSessions.AnyAsync())
     {
         Console.WriteLine("  📅 Seeding training sessions...");

@@ -121,4 +121,48 @@ public class CreateTrainingSessionHandlerTests
         Assert.Single(result.Attendance);
         Assert.Equal("confirmed", result.Attendance[0].Status);
     }
+
+    [Fact]
+    public async Task Handle_WithDeclinedAttendance_MapsToDeclined()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var playerId = await db.SeedPlayerAsync(clubId: clubId);
+
+        var handler = new CreateTrainingSessionHandler(db.Context);
+        var dto = ValidDto(teamId) with
+        {
+            Attendance = new List<CreateSessionAttendanceDto>
+            {
+                new() { PlayerId = playerId, Status = "declined", Notes = "" }
+            }
+        };
+
+        var result = await handler.Handle(new CreateTrainingSessionCommand(dto), CancellationToken.None);
+
+        Assert.Single(result.Attendance);
+        Assert.Equal("declined", result.Attendance[0].Status);
+    }
+
+    [Fact]
+    public async Task Handle_WithPendingAttendance_MapsToPending()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var playerId = await db.SeedPlayerAsync(clubId: clubId);
+
+        var handler = new CreateTrainingSessionHandler(db.Context);
+        var dto = ValidDto(teamId) with
+        {
+            Attendance = new List<CreateSessionAttendanceDto>
+            {
+                new() { PlayerId = playerId, Status = "pending", Notes = "" }
+            }
+        };
+
+        var result = await handler.Handle(new CreateTrainingSessionCommand(dto), CancellationToken.None);
+
+        Assert.Single(result.Attendance);
+        Assert.Equal("pending", result.Attendance[0].Status);
+    }
 }

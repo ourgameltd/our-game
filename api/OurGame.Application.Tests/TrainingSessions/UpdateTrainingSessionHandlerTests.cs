@@ -111,4 +111,28 @@ public class UpdateTrainingSessionHandlerTests
         Assert.Contains("confirmed", statuses);
         Assert.Contains("declined", statuses);
     }
+
+    [Fact]
+    public async Task Handle_WithPendingAttendance_MapsToPending()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var sessionId = await db.SeedTrainingSessionAsync(teamId: teamId);
+        var playerId = await db.SeedPlayerAsync(clubId: clubId);
+
+        var handler = new UpdateTrainingSessionHandler(db.Context);
+        var dto = ValidDto(teamId) with
+        {
+            Attendance = new List<UpdateSessionAttendanceRequest>
+            {
+                new() { PlayerId = playerId, Status = "pending" }
+            }
+        };
+
+        var result = await handler.Handle(
+            new UpdateTrainingSessionCommand(sessionId, dto), CancellationToken.None);
+
+        Assert.Single(result.Attendance);
+        Assert.Equal("pending", result.Attendance[0].Status);
+    }
 }
