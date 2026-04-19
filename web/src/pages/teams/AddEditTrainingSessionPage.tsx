@@ -123,7 +123,11 @@ export default function AddEditTrainingSessionPage() {
     }
     
     if (existingSession.attendance) {
-      setAttendance(existingSession.attendance);
+      setAttendance(existingSession.attendance.map(a => ({
+        playerId: a.playerId,
+        status: a.status === 'maybe' ? 'pending' as const : a.status as 'confirmed' | 'declined' | 'pending',
+        notes: a.notes
+      })));
     }
   }, [existingSession]);
 

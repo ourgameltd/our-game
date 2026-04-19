@@ -384,7 +384,7 @@ export default function AddEditMatchPage() {
   const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>([]);
   const [showCoachModal, setShowCoachModal] = useState(false);
   // Attendance state - derive from team players, not from DTO (attendance not in MatchDetailDto)
-  const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'maybe' | 'pending'; notes?: string }[]>([]);
+  const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'pending'; notes?: string }[]>([]);
 
   const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report' | 'attendance'>('details');
   
@@ -640,7 +640,7 @@ export default function AddEditMatchPage() {
     if (isEditing && existingMatch && existingMatch.attendance && existingMatch.attendance.length > 0) {
       setAttendance(existingMatch.attendance.map(a => ({
         playerId: a.playerId,
-        status: a.status as 'confirmed' | 'declined' | 'maybe' | 'pending',
+        status: a.status === 'maybe' ? 'pending' as const : a.status as 'confirmed' | 'declined' | 'pending',
         notes: a.notes
       })));
     } else {
@@ -1305,7 +1305,7 @@ export default function AddEditMatchPage() {
     return ratings.find(r => r.playerId === playerId)?.rating || 0;
   };
 
-  const handleSetAttendanceStatus = (playerId: string, status: 'confirmed' | 'declined' | 'maybe' | 'pending') => {
+  const handleSetAttendanceStatus = (playerId: string, status: 'confirmed' | 'declined' | 'pending') => {
     if (!invitedPlayerIdSet.has(playerId)) {
       return;
     }
@@ -2892,7 +2892,6 @@ export default function AddEditMatchPage() {
                     switch (s) {
                       case 'confirmed': return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
                       case 'declined': return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
-                      case 'maybe': return 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800';
                       default: return 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600';
                     }
                   };
@@ -2901,7 +2900,6 @@ export default function AddEditMatchPage() {
                     switch (s) {
                       case 'confirmed': return '✓';
                       case 'declined': return '✕';
-                      case 'maybe': return '?';
                       default: return '•';
                     }
                   };
@@ -2911,7 +2909,6 @@ export default function AddEditMatchPage() {
                     switch (s) {
                       case 'confirmed': return 'bg-green-600 text-white';
                       case 'declined': return 'bg-red-600 text-white';
-                      case 'maybe': return 'bg-yellow-500 text-white';
                       default: return 'bg-gray-400 text-white';
                     }
                   };
@@ -2952,22 +2949,9 @@ export default function AddEditMatchPage() {
                           </button>
                           <button
                             type="button"
-                            onClick={() => handleSetAttendanceStatus(player.id, 'maybe')}
-                            disabled={isLocked}
-                            className={`px-3 py-1.5 text-sm font-medium border-l border-r border-gray-300 dark:border-gray-600 transition-colors ${
-                              status === 'maybe' 
-                                ? 'bg-yellow-500 text-white' 
-                                : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-yellow-50 dark:hover:bg-yellow-900/30'
-                            } disabled:opacity-50 disabled:cursor-not-allowed`}
-                            title="Maybe"
-                          >
-                            ?
-                          </button>
-                          <button
-                            type="button"
                             onClick={() => handleSetAttendanceStatus(player.id, 'declined')}
                             disabled={isLocked}
-                            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                            className={`px-3 py-1.5 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors ${
                               status === 'declined' 
                                 ? 'bg-red-600 text-white' 
                                 : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30'
@@ -3002,12 +2986,6 @@ export default function AddEditMatchPage() {
                   </p>
                   <p className="text-gray-600 dark:text-gray-400">
                     <span className="inline-flex items-center gap-1">
-                      <span className="w-3 h-3 bg-yellow-500 rounded-full"></span>
-                      <span className="font-medium">{attendance.filter(a => a.status === 'maybe').length}</span> Maybe
-                    </span>
-                  </p>
-                  <p className="text-gray-600 dark:text-gray-400">
-                    <span className="inline-flex items-center gap-1">
                       <span className="w-3 h-3 bg-red-600 rounded-full"></span>
                       <span className="font-medium">{attendance.filter(a => a.status === 'declined').length}</span> Declined
                     </span>
@@ -3015,7 +2993,7 @@ export default function AddEditMatchPage() {
                   <p className="text-gray-600 dark:text-gray-400">
                     <span className="inline-flex items-center gap-1">
                       <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
-                      <span className="font-medium">{attendance.filter(a => a.status === 'pending').length}</span> Pending
+                      <span className="font-medium">{attendance.filter(a => a.status === 'pending').length}</span> No Response
                     </span>
                   </p>
                 </div>
