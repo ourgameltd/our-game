@@ -275,12 +275,13 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
         try
         {
             using var doc = JsonDocument.Parse(diagramConfigJson);
-            var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+            var maxCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
 
             if (doc.RootElement.TryGetProperty("frames", out var frames))
             {
                 foreach (var frame in frames.EnumerateArray())
                 {
+                    var frameCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
                     if (!frame.TryGetProperty("objects", out var objects)) continue;
                     foreach (var obj in objects.EnumerateArray())
                     {
@@ -288,13 +289,18 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
                         var type = typeProp.GetString();
                         if (type != null && EquipmentTypeMap.ContainsKey(type))
                         {
-                            counts[type] = counts.GetValueOrDefault(type) + 1;
+                            frameCounts[type] = frameCounts.GetValueOrDefault(type) + 1;
                         }
+                    }
+
+                    foreach (var (type, count) in frameCounts)
+                    {
+                        maxCounts[type] = Math.Max(maxCounts.GetValueOrDefault(type), count);
                     }
                 }
             }
 
-            return counts
+            return maxCounts
                 .Where(kv => kv.Value > 0)
                 .Select(kv => $"{kv.Value}x {EquipmentTypeMap[kv.Key]}")
                 .ToList();

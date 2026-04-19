@@ -23,32 +23,38 @@ const LABEL_TO_TYPE: Record<string, string> = Object.fromEntries(
 );
 
 /**
- * Extracts equipment counts from a drill diagram config by counting
- * placed objects of each equipment type across all frames.
+ * Extracts equipment counts from a drill diagram config by taking the
+ * highest count of each equipment type across all frames. Frames represent
+ * the same physical items in different positions, not additional equipment.
  */
 export function extractEquipmentFromDiagram(
   config: DrillDiagramConfigDto | undefined,
 ): EquipmentItem[] {
   if (!config?.frames?.length) return [];
 
-  const counts = new Map<string, number>();
+  const maxCounts = new Map<string, number>();
 
   for (const frame of config.frames) {
-    if (!frame.objects?.length) continue;
-    for (const obj of frame.objects) {
-      const type = String(obj.type ?? '').toLowerCase();
-      if (type in EQUIPMENT_TYPES) {
-        counts.set(type, (counts.get(type) ?? 0) + 1);
+    const frameCounts = new Map<string, number>();
+    if (frame.objects?.length) {
+      for (const obj of frame.objects) {
+        const type = String(obj.type ?? '').toLowerCase();
+        if (type in EQUIPMENT_TYPES) {
+          frameCounts.set(type, (frameCounts.get(type) ?? 0) + 1);
+        }
       }
+    }
+    for (const [type, count] of frameCounts) {
+      maxCounts.set(type, Math.max(maxCounts.get(type) ?? 0, count));
     }
   }
 
   return TYPE_ORDER
-    .filter((t) => counts.has(t))
+    .filter((t) => maxCounts.has(t))
     .map((t) => ({
       type: t,
       label: EQUIPMENT_TYPES[t],
-      count: counts.get(t)!,
+      count: maxCounts.get(t)!,
     }));
 }
 

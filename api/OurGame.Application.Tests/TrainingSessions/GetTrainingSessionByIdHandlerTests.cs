@@ -247,4 +247,63 @@ public class GetTrainingSessionByIdHandlerTests
         Assert.Single(result.Drills);
         Assert.Empty(result.Drills[0].Equipment);
     }
+
+    [Fact]
+    public async Task Handle_EquipmentUsesMaxCountAcrossFrames()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var sessionId = await db.SeedTrainingSessionAsync(teamId: teamId);
+        var drillId = await db.SeedDrillAsync();
+
+        // Frame 1: 2 cones, 1 ball. Frame 2: 3 cones, 1 ball. Max should be 3 cones, 1 ball.
+        var drill = await db.Context.Drills.FindAsync(drillId);
+        Assert.NotNull(drill);
+        drill!.DrillDiagramConfig = """
+        {
+            "schemaVersion": 1,
+            "frames": [
+                {
+                    "id": "frame-1",
+                    "objects": [
+                        { "id": "c1", "type": "cone", "x": 10, "y": 20 },
+                        { "id": "c2", "type": "cone", "x": 15, "y": 25 },
+                        { "id": "b1", "type": "ball", "x": 30, "y": 40 }
+                    ]
+                },
+                {
+                    "id": "frame-2",
+                    "objects": [
+                        { "id": "c1", "type": "cone", "x": 12, "y": 22 },
+                        { "id": "c2", "type": "cone", "x": 17, "y": 27 },
+                        { "id": "c3", "type": "cone", "x": 20, "y": 30 },
+                        { "id": "b1", "type": "ball", "x": 32, "y": 42 }
+                    ]
+                }
+            ]
+        }
+        """;
+        await db.Context.SaveChangesAsync();
+
+        db.Context.SessionDrills.Add(new OurGame.Persistence.Models.SessionDrill
+        {
+            Id = Guid.NewGuid(),
+            SessionId = sessionId,
+            DrillId = drillId,
+            Source = "manual",
+            DrillOrder = 0
+        });
+        await db.Context.SaveChangesAsync();
+
+        var handler = new GetTrainingSessionByIdHandler(db.Context);
+        var result = await handler.Handle(new GetTrainingSessionByIdQuery(sessionId), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Single(result.Drills);
+        var equipment = result.Drills[0].Equipment;
+        Assert.Contains("3x Cones", equipment);
+        Assert.Contains("1x Balls", equipment);
+        // Should NOT be 5x Cones (accumulated) — should be 3x (max across frames)
+        Assert.DoesNotContain("5x Cones", equipment);
+    }
 }
