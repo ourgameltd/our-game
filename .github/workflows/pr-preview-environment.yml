@@ -103,13 +103,37 @@ jobs:
         CALLBACK_URI="${PREVIEW_BASE_URL}/.auth/login/${{ env.B2C_PROVIDER_NAME }}/callback"
         echo "Using callback URI: $CALLBACK_URI"
 
-        CURRENT_URIS_JSON=$(az ad app show --id "$APP_ID" --query "web.redirectUris" -o json)
+        set +e
+        CURRENT_URIS_JSON=$(az ad app show --id "$APP_ID" --query "web.redirectUris" -o json 2>&1)
+        SHOW_EXIT_CODE=$?
+        set -e
+        if [ $SHOW_EXIT_CODE -ne 0 ]; then
+          echo "::warning::Unable to read app registration redirect URIs. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
+          echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Preview URL: ${PREVIEW_BASE_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI update skipped due to missing Microsoft Graph permissions." >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
 
         mapfile -t CURRENT_URIS < <(echo "$CURRENT_URIS_JSON" | jq -r '.[]?')
         CURRENT_URIS+=("$CALLBACK_URI")
         mapfile -t UNIQUE_URIS < <(printf "%s\n" "${CURRENT_URIS[@]}" | awk 'NF && !seen[$0]++')
 
-        az ad app update --id "$APP_ID" --web-redirect-uris "${UNIQUE_URIS[@]}"
+        set +e
+        UPDATE_OUTPUT=$(az ad app update --id "$APP_ID" --web-redirect-uris "${UNIQUE_URIS[@]}" 2>&1)
+        UPDATE_EXIT_CODE=$?
+        set -e
+        if [ $UPDATE_EXIT_CODE -ne 0 ]; then
+          echo "::warning::Unable to update app registration redirect URIs. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $UPDATE_OUTPUT"
+          echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Preview URL: ${PREVIEW_BASE_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI update skipped due to missing Microsoft Graph permissions." >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
 
         echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -176,7 +200,19 @@ jobs:
           exit 1
         fi
 
-        CURRENT_URIS_JSON=$(az ad app show --id "$APP_ID" --query "web.redirectUris" -o json)
+        set +e
+        CURRENT_URIS_JSON=$(az ad app show --id "$APP_ID" --query "web.redirectUris" -o json 2>&1)
+        SHOW_EXIT_CODE=$?
+        set -e
+        if [ $SHOW_EXIT_CODE -ne 0 ]; then
+          echo "::warning::Unable to read app registration redirect URIs for cleanup. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
+          echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Preview URL: ${{ steps.preview_uri.outputs.previewUrl }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI cleanup skipped due to missing Microsoft Graph permissions." >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
         mapfile -t FILTERED_URIS < <(echo "$CURRENT_URIS_JSON" | jq -r --arg remove "$CALLBACK_URI_TO_REMOVE" '.[] | select(. != $remove)')
 
         if [ ${#FILTERED_URIS[@]} -eq 0 ]; then
@@ -184,7 +220,19 @@ jobs:
           exit 0
         fi
 
-        az ad app update --id "$APP_ID" --web-redirect-uris "${FILTERED_URIS[@]}"
+        set +e
+        UPDATE_OUTPUT=$(az ad app update --id "$APP_ID" --web-redirect-uris "${FILTERED_URIS[@]}" 2>&1)
+        UPDATE_EXIT_CODE=$?
+        set -e
+        if [ $UPDATE_EXIT_CODE -ne 0 ]; then
+          echo "::warning::Unable to remove callback URI from app registration. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $UPDATE_OUTPUT"
+          echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Preview URL: ${{ steps.preview_uri.outputs.previewUrl }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI cleanup skipped due to missing Microsoft Graph permissions." >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
 
         echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY

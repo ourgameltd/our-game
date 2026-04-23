@@ -51,7 +51,7 @@ Runs six sequential jobs:
 - Adds `/.auth/login/btoc/callback` preview URI to the B2C app registration (`B2C_CLIENT_ID`)
 - On PR close, closes the SWA preview environment and removes that preview callback URI from the app registration
 
-> This workflow requires the service principal used by `AZURE_CREDENTIALS` to have Microsoft Graph application update permissions for the app registration (for example `Application.ReadWrite.All` with admin consent).
+> This workflow requires the service principal used by `AZURE_CREDENTIALS` to have Microsoft Graph app role `Application.ReadWrite.All` (with admin consent) and an Entra directory role that can manage app registrations (for example `Application Administrator` or `Cloud Application Administrator`).
 
 ## Required Secrets & Variables
 
