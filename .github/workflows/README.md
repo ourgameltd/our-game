@@ -18,6 +18,7 @@ CI/CD pipelines for building, testing, and deploying the OurGame platform.
 | Workflow | File | Trigger | Purpose |
 |---|---|---|---|
 | **PR Build** | `pr-build.yml` | PRs to `main`/`develop`, manual | Build, unit test with coverage, publish artifacts |
+| **PR Preview Environment** | `pr-preview-environment.yml` | PR open/update/reopen/close to `main`/`develop` | Deploy/close SWA PR preview environments and update B2C app redirect URIs |
 | **Tag Release** | `tag-release.yml` | Git tag `v*.*.*`, manual | Full deployment: infra → database → Functions → SWA |
 | **Deploy SWA** | `deploy-swa.yml` | Manual | Re-deploy frontend only to Azure Static Web Apps |
 | **Reset Database** | `reset-database.yml` | Manual | Re-seed Azure SQL with optional `--clean` flag |
@@ -42,6 +43,15 @@ Runs six sequential jobs:
 4. **provision-database** — Temporary firewall rule → run Seeder (migrations + seed) → remove rule
 5. **deploy-function-app** — Deploy to Azure Function App
 6. **deploy-static-web-app** — Deploy frontend, configure B2C auth settings
+
+## PR Preview Environment Pipeline
+
+- Builds frontend on PR open/synchronize/reopen
+- Deploys PR preview environment to Azure Static Web Apps
+- Adds `/.auth/login/btoc/callback` preview URI to the B2C app registration (`B2C_CLIENT_ID`)
+- On PR close, closes the SWA preview environment and removes that preview callback URI from the app registration
+
+> This workflow requires the service principal used by `AZURE_CREDENTIALS` to have Microsoft Graph application update permissions for the app registration (for example `Application.ReadWrite.All` with admin consent).
 
 ## Required Secrets & Variables
 
