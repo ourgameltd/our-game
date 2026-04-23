@@ -83,7 +83,7 @@ export default function DrillTemplatesListPage() {
   }, [searchTerm]);
 
   // Fetch club info for context name
-  const { data: club, isLoading: isLoadingClub } = useClubById(clubId);
+  const { isLoading: isLoadingClub } = useClubById(clubId);
 
   // Fetch drill templates from API
   const { data: templatesData, isLoading: isLoadingTemplates, error } = useDrillTemplatesByScope(
@@ -355,7 +355,11 @@ export default function DrillTemplatesListPage() {
                             <ListOrdered className="w-4 h-4" />
                             {template.drillIds.length}
                           </span>
-                          {template.isPublic && <Globe2 className="w-4 h-4" title="Shared session" aria-label="Shared session" />}
+                          {template.isPublic && (
+                            <span title="Shared session" aria-label="Shared session">
+                              <Globe2 className="w-4 h-4" />
+                            </span>
+                          )}
                         </div>
 
                         {/* Attributes - desktop only */}
@@ -457,7 +461,11 @@ export default function DrillTemplatesListPage() {
                               <ListOrdered className="w-4 h-4" />
                               {template.drillIds.length}
                             </span>
-                            {template.isPublic && <Globe2 className="w-4 h-4" title="Shared session" aria-label="Shared session" />}
+                            {template.isPublic && (
+                              <span title="Shared session" aria-label="Shared session">
+                                <Globe2 className="w-4 h-4" />
+                              </span>
+                            )}
                           </div>
 
                           {/* Attributes - desktop only */}

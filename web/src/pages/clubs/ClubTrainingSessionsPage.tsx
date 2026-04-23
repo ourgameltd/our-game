@@ -213,9 +213,9 @@ export default function ClubTrainingSessionsPage() {
             {session.focusAreas && session.focusAreas.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-2">
                 <span
-                  className={`px-2 py-1 text-xs rounded-full ${getSessionCategoryColors(normalizeSessionCategory(session.category)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(session.category)).textColor}`}
+                  className={`px-2 py-1 text-xs rounded-full ${getSessionCategoryColors(normalizeSessionCategory()).bgColor} ${getSessionCategoryColors(normalizeSessionCategory()).textColor}`}
                 >
-                  {normalizeSessionCategory(session.category)}
+                  {normalizeSessionCategory()}
                 </span>
                 {session.focusAreas.map((area: string, idx: number) => (
                   <span
@@ -231,9 +231,9 @@ export default function ClubTrainingSessionsPage() {
             {(!session.focusAreas || session.focusAreas.length === 0) && (
               <div className="mb-2">
                 <span
-                  className={`px-2 py-1 text-xs rounded-full ${getSessionCategoryColors(normalizeSessionCategory(session.category)).bgColor} ${getSessionCategoryColors(normalizeSessionCategory(session.category)).textColor}`}
+                  className={`px-2 py-1 text-xs rounded-full ${getSessionCategoryColors(normalizeSessionCategory()).bgColor} ${getSessionCategoryColors(normalizeSessionCategory()).textColor}`}
                 >
-                  {normalizeSessionCategory(session.category)}
+                  {normalizeSessionCategory()}
                 </span>
               </div>
             )}
