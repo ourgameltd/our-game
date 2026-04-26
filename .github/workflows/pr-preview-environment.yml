@@ -116,8 +116,25 @@ jobs:
         CALLBACK_URI="${PREVIEW_BASE_URL}/.auth/login/${{ env.B2C_PROVIDER_NAME }}/callback"
         echo "Using callback URI: $CALLBACK_URI"
 
+        ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "unknown")
+
         set +e
-        CURRENT_URIS_JSON=$(az ad app show --id "$APP_ID" --query "web.redirectUris" -o json 2>&1)
+        APP_OBJECT_ID=$(az ad app list --filter "appId eq '$APP_ID'" --query "[0].id" -o tsv 2>&1)
+        APP_LOOKUP_EXIT_CODE=$?
+        set -e
+
+        if [ $APP_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
+          echo "::warning::Unable to resolve app registration for appId '$APP_ID' in tenant '$ACTIVE_TENANT' using B2C_CREDENTIALS. Azure CLI output: $APP_OBJECT_ID"
+          echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Preview URL: ${PREVIEW_BASE_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI update skipped because the app registration could not be resolved in tenant ${ACTIVE_TENANT}." >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
+
+        set +e
+        CURRENT_URIS_JSON=$(az ad app show --id "$APP_OBJECT_ID" --query "web.redirectUris" -o json 2>&1)
         SHOW_EXIT_CODE=$?
         set -e
         if [ $SHOW_EXIT_CODE -ne 0 ]; then
@@ -139,7 +156,7 @@ jobs:
         mapfile -t UNIQUE_URIS < <(printf "%s\n" "${CURRENT_URIS[@]}" | awk 'NF && !seen[$0]++')
 
         set +e
-        UPDATE_OUTPUT=$(az ad app update --id "$APP_ID" --web-redirect-uris "${UNIQUE_URIS[@]}" 2>&1)
+        UPDATE_OUTPUT=$(az ad app update --id "$APP_OBJECT_ID" --web-redirect-uris "${UNIQUE_URIS[@]}" 2>&1)
         UPDATE_EXIT_CODE=$?
         set -e
         if [ $UPDATE_EXIT_CODE -ne 0 ]; then
@@ -223,8 +240,25 @@ jobs:
           exit 1
         fi
 
+        ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "unknown")
+
         set +e
-        CURRENT_URIS_JSON=$(az ad app show --id "$APP_ID" --query "web.redirectUris" -o json 2>&1)
+        APP_OBJECT_ID=$(az ad app list --filter "appId eq '$APP_ID'" --query "[0].id" -o tsv 2>&1)
+        APP_LOOKUP_EXIT_CODE=$?
+        set -e
+
+        if [ $APP_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
+          echo "::warning::Unable to resolve app registration for appId '$APP_ID' in tenant '$ACTIVE_TENANT' using B2C_CREDENTIALS. Azure CLI output: $APP_OBJECT_ID"
+          echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Preview URL: ${{ steps.preview_uri.outputs.previewUrl }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI cleanup skipped because the app registration could not be resolved in tenant ${ACTIVE_TENANT}." >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
+
+        set +e
+        CURRENT_URIS_JSON=$(az ad app show --id "$APP_OBJECT_ID" --query "web.redirectUris" -o json 2>&1)
         SHOW_EXIT_CODE=$?
         set -e
         
@@ -249,7 +283,7 @@ jobs:
         fi
 
         set +e
-        UPDATE_OUTPUT=$(az ad app update --id "$APP_ID" --web-redirect-uris "${FILTERED_URIS[@]}" 2>&1)
+        UPDATE_OUTPUT=$(az ad app update --id "$APP_OBJECT_ID" --web-redirect-uris "${FILTERED_URIS[@]}" 2>&1)
         UPDATE_EXIT_CODE=$?
         set -e
         if [ $UPDATE_EXIT_CODE -ne 0 ]; then
