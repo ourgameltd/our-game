@@ -51,14 +51,16 @@ Runs six sequential jobs:
 - Adds `/.auth/login/btoc/callback` preview URI to the B2C app registration (`B2C_CLIENT_ID`)
 - On PR close, closes the SWA preview environment and removes that preview callback URI from the app registration
 
-> This workflow requires the service principal used by `AZURE_CREDENTIALS` to have Microsoft Graph app role `Application.ReadWrite.All` (with admin consent) and an Entra directory role that can manage app registrations (for example `Application Administrator` or `Cloud Application Administrator`).
-> Also ensure `B2C_CLIENT_ID` is the **Application (client) ID** of an app registration that exists in the same Entra tenant used by `AZURE_CREDENTIALS`.
+> **Cross-tenant setup (B2C tenant is separate from main Entra tenant):** The B2C app registration typically lives in a dedicated Azure AD B2C tenant, while `AZURE_CREDENTIALS` is a service principal in the main Entra tenant. Because `az ad app` commands only see app registrations in the logged-in tenant, you must set the optional `B2C_CREDENTIALS` secret to a service principal **in the B2C tenant** with `Application.ReadWrite.All` (Microsoft Graph, admin consent) and a directory role such as `Application Administrator`. When `B2C_CREDENTIALS` is present, the workflow will re-login to the B2C tenant before updating redirect URIs.
+>
+> If `B2C_CREDENTIALS` is not set, the app-registration update step is skipped with a warning and the preview deployment itself still succeeds.
 
 ## Required Secrets & Variables
 
 | Name | Type | Purpose |
 |---|---|---|
-| `AZURE_CREDENTIALS` | Secret | Azure Service Principal (JSON) |
+| `AZURE_CREDENTIALS` | Secret | Azure Service Principal (JSON) for main Entra tenant (SWA, Functions, SQL) |
+| `B2C_CREDENTIALS` | Secret | Azure Service Principal (JSON) in the B2C tenant — required for automated redirect URI management. Must have `Application.ReadWrite.All` (admin consent) and `Application Administrator` directory role in the B2C tenant. |
 | `SQL_ADMIN_PASSWORD` | Secret | Azure SQL admin password |
 | `VAPID_PRIVATE_KEY` | Secret | Web Push VAPID private key used by the Function App |
 | `B2C_CLIENT_SECRET` | Secret | Azure AD B2C client secret |
