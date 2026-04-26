@@ -1,4 +1,4 @@
-name: PR Preview Environment
+name: "PR Preview Environment"
 
 on:
   pull_request:
