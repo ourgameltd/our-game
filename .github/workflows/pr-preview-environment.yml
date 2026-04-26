@@ -111,12 +111,16 @@ jobs:
         SHOW_EXIT_CODE=$?
         set -e
         if [ $SHOW_EXIT_CODE -ne 0 ]; then
-          echo "::warning::Unable to read app registration redirect URIs. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
+          if echo "$CURRENT_URIS_JSON" | grep -qi "does not exist"; then
+            echo "::warning::Unable to find app registration '$APP_ID' in the tenant used by AZURE_CREDENTIALS. Ensure B2C_CLIENT_ID is the Application (client) ID of the B2C app registration in that same tenant. Azure CLI error: $CURRENT_URIS_JSON"
+          else
+            echo "::warning::Unable to read app registration redirect URIs. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
+          fi
           echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
           echo "- Preview URL: ${PREVIEW_BASE_URL}" >> $GITHUB_STEP_SUMMARY
-          echo "- Callback URI update skipped due to missing Microsoft Graph permissions." >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI update skipped because the app registration could not be read." >> $GITHUB_STEP_SUMMARY
           exit 0
         fi
 
@@ -208,12 +212,16 @@ jobs:
         SHOW_EXIT_CODE=$?
         set -e
         if [ $SHOW_EXIT_CODE -ne 0 ]; then
-          echo "::warning::Unable to read app registration redirect URIs for cleanup. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
+          if echo "$CURRENT_URIS_JSON" | grep -qi "does not exist"; then
+            echo "::warning::Unable to find app registration '$APP_ID' in the tenant used by AZURE_CREDENTIALS. Ensure B2C_CLIENT_ID is the Application (client) ID of the B2C app registration in that same tenant. Azure CLI error: $CURRENT_URIS_JSON"
+          else
+            echo "::warning::Unable to read app registration redirect URIs for cleanup. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
+          fi
           echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
           echo "- Preview URL: ${{ steps.preview_uri.outputs.previewUrl }}" >> $GITHUB_STEP_SUMMARY
-          echo "- Callback URI cleanup skipped due to missing Microsoft Graph permissions." >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI cleanup skipped because the app registration could not be read." >> $GITHUB_STEP_SUMMARY
           exit 0
         fi
         mapfile -t FILTERED_URIS < <(echo "$CURRENT_URIS_JSON" | jq -r --arg remove "$CALLBACK_URI_TO_REMOVE" '.[] | select(. != $remove)')

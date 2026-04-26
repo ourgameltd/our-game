@@ -52,6 +52,7 @@ Runs six sequential jobs:
 - On PR close, closes the SWA preview environment and removes that preview callback URI from the app registration
 
 > This workflow requires the service principal used by `AZURE_CREDENTIALS` to have Microsoft Graph app role `Application.ReadWrite.All` (with admin consent) and an Entra directory role that can manage app registrations (for example `Application Administrator` or `Cloud Application Administrator`).
+> Also ensure `B2C_CLIENT_ID` is the **Application (client) ID** of an app registration that exists in the same Entra tenant used by `AZURE_CREDENTIALS`.
 
 ## Required Secrets & Variables
 
