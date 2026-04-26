@@ -1,4 +1,4 @@
-name: Test: Mutation Testing (Stryker)
+name: "Test: Mutation Testing (Stryker)"
 
 permissions:
   contents: read

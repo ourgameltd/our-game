@@ -1,4 +1,4 @@
-name: Deploy: Full Stack Release
+name: "Deploy: Full Stack Release"
 
 on:
   push:
@@ -121,10 +121,13 @@ jobs:
           exit 1
         fi
 
-    - name: Resolve VAPID deployment parameters
+    - name: Resolve VAPID subject and public key deployment parameters
       id: deploy_params
       shell: bash
       run: |
+        # Resolve the non-secret VAPID deployment settings required by the Bicep deployment.
+        # Email-related parameters were intentionally removed because deployments now use
+        # VAPID_SUBJECT for contact metadata instead of a separate email setting.
         VAPID_SUBJECT="${{ vars.VAPID_SUBJECT }}"
         VAPID_PUBLIC_KEY="${{ vars.VAPID_PUBLIC_KEY }}"
 
