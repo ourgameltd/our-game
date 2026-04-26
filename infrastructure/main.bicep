@@ -26,16 +26,7 @@ param vapidPublicKey string = ''
 @secure()
 param vapidPrivateKey string = ''
 
-@description('Data location for Azure Communication Services (e.g. Europe, United States, Asia Pacific, Australia)')
-param acsDataLocation string = 'Europe'
-
-@description('Local-part for ACS sender email address (left side of @).')
-param emailSenderLocalPart string = 'DoNotReply'
-
-@description('Custom sender domain for ACS email (for example, isourgame.com). Leave empty to use the Azure-managed domain.')
-param emailSenderCustomDomain string = ''
-
-@description('Frontend base URL used in transactional emails (e.g. invite links). Defaults to the Static Web App URL.')
+@description('Frontend base URL exposed to the Function App (used for building absolute links). Defaults to the Static Web App URL.')
 param frontendBaseUrl string = ''
 
 @description('Static Web App custom domain host name (for example, football.isourgame.com). Leave empty to skip custom domain setup.')
@@ -70,12 +61,7 @@ var logAnalyticsName = '${baseName}-log-${environmentName}'
 var appInsightsName = '${baseName}-ai-${environmentName}'
 var sqlServerName = '${baseName}-sql-${environmentName}'
 var sqlDatabaseName = 'OurGame'
-var communicationServiceName = '${baseName}-acs-${environmentName}'
-var emailServiceName = '${baseName}-email-${environmentName}'
 var storageConnectionString = 'DefaultEndpointsProtocol=https;AccountName=${storageAccountName};EndpointSuffix=${environment().suffixes.storage};AccountKey='
-var emailSenderAddress = empty(emailSenderCustomDomain)
-  ? '${emailSenderLocalPart}@${emailDomain.properties.fromSenderDomain}'
-  : '${emailSenderLocalPart}@${emailSenderCustomDomain}'
 var shouldConfigureStaticWebCustomDomain = !empty(staticWebCustomDomainHostName)
 var shouldConfigureStaticWebCustomDomainDns = shouldConfigureStaticWebCustomDomain && !empty(staticWebCustomDomainDnsZoneName) && !empty(staticWebCustomDomainDnsRecordSetName)
 
@@ -236,14 +222,6 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
           value: vapidPrivateKey
         }
         {
-          name: 'AzureCommunicationServices__ConnectionString'
-          value: communicationService.listKeys().primaryConnectionString
-        }
-        {
-          name: 'AzureCommunicationServices__SenderAddress'
-          value: emailSenderAddress
-        }
-        {
           name: 'App__FrontendBaseUrl'
           value: empty(frontendBaseUrl) ? 'https://${staticWebApp.properties.defaultHostname}' : frontendBaseUrl
         }
@@ -294,38 +272,6 @@ resource sqlFirewallAllowAzure 'Microsoft.Sql/servers/firewallRules@2023-08-01-p
   properties: {
     startIpAddress: '0.0.0.0'
     endIpAddress: '0.0.0.0'
-  }
-}
-
-// Azure Communication Services - Email Service
-resource emailService 'Microsoft.Communication/emailServices@2023-04-01' = {
-  name: emailServiceName
-  location: 'global'
-  properties: {
-    dataLocation: acsDataLocation
-  }
-}
-
-// Azure-managed email domain (provides DoNotReply@<guid>.azurecomm.net sender)
-resource emailDomain 'Microsoft.Communication/emailServices/domains@2023-04-01' = {
-  parent: emailService
-  name: 'AzureManagedDomain'
-  location: 'global'
-  properties: {
-    domainManagement: 'AzureManaged'
-    userEngagementTracking: 'Disabled'
-  }
-}
-
-// Azure Communication Services (linked to email domain)
-resource communicationService 'Microsoft.Communication/communicationServices@2023-04-01' = {
-  name: communicationServiceName
-  location: 'global'
-  properties: {
-    dataLocation: acsDataLocation
-    linkedDomains: [
-      emailDomain.id
-    ]
   }
 }
 
@@ -388,4 +334,3 @@ output functionAppUrl string = 'https://${functionApp.properties.defaultHostName
 output sqlServerName string = sqlServer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output sqlAdminUsername string = sqlAdminUsername
-output communicationServiceName string = communicationService.name

@@ -29,7 +29,6 @@ Azure Bicep Infrastructure as Code (IaC) templates for provisioning all cloud re
 | Storage Account | StorageV2, TLS 1.2 | Function App storage |
 | Application Insights | — | Telemetry and diagnostics |
 | Log Analytics Workspace | — | 30-day log retention |
-| Azure Communication Services | — | Email via managed domain |
 
 ## Deployment
 

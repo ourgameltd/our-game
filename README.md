@@ -20,7 +20,7 @@ Cause just now Scottish football is an underfunded shambles.
 | **Infrastructure** | Azure Bicep (subscription-level) |
 | **Deployment** | GitHub Actions (tag-based releases) |
 | **Local Dev** | Docker Compose (SQL Server + Azurite) + SWA CLI |
-| **Messaging** | Azure Communication Services (email) + Web Push |
+| **Messaging** | Web Push (VAPID) |
 | **Monitoring** | Application Insights + Log Analytics |
 
 ## Prerequisites
@@ -138,7 +138,6 @@ Infrastructure is managed with Azure Bicep at the subscription level. The `main-
 - Azure SQL Server Serverless (GP_S_Gen5, auto-pause 60 min)
 - Storage Account (StorageV2, TLS 1.2)
 - Application Insights + Log Analytics
-- Azure Communication Services (email)
 - Custom domain support (optional)
 
 **Manual deployment:**

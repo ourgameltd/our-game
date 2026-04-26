@@ -11,7 +11,6 @@ namespace OurGame.Application
         {
             services.AddPersistenceDependencies(configuration);
             services.AddScoped<IPushNotificationService, PushNotificationService>();
-            services.AddScoped<IEmailService, AcsEmailService>();
             services.AddScoped<IBlobStorageService, BlobStorageService>();
         }
     }

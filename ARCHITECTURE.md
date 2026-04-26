@@ -31,7 +31,7 @@ This file serves as a master table of contents for all directory-level README fi
 | [api/OurGame.Application/README.md](api/OurGame.Application/README.md) | Business logic (MediatR, FluentValidation, Polly) |
 | [api/OurGame.Application/Abstractions/README.md](api/OurGame.Application/Abstractions/README.md) | Interfaces, exceptions, response types |
 | [api/OurGame.Application/Extensions/README.md](api/OurGame.Application/Extensions/README.md) | Utility extension methods |
-| [api/OurGame.Application/Services/README.md](api/OurGame.Application/Services/README.md) | Email (ACS) and push notification services |
+| [api/OurGame.Application/Services/README.md](api/OurGame.Application/Services/README.md) | Web Push notification services |
 | [api/OurGame.Application/UseCases/README.md](api/OurGame.Application/UseCases/README.md) | CQRS use cases across 17 domains |
 | [api/OurGame.Application/UseCases/Drills/DTOs/README.md](api/OurGame.Application/UseCases/Drills/DTOs/README.md) | Shared drill diagram JSON contract DTOs |
 | [api/OurGame.Persistence/README.md](api/OurGame.Persistence/README.md) | Data access layer (EF Core 9) |

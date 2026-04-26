@@ -22,7 +22,7 @@ OurGame is a comprehensive, responsive, mobile-first web portal for football clu
 - **Versioning**: Header-based versioning using `api-version` header (e.g., `api-version: 1.0`)
 - **Resilience**: Polly for retry policies and circuit breakers
 - **Validation**: FluentValidation for request validation
-- **Notifications**: Azure Communication Services (email) + Web Push (VAPID)
+- **Notifications**: Web Push (VAPID)
 - **Projects**:
   - `OurGame.Api` - Azure Functions HTTP triggers
   - `OurGame.Application` - Business logic, use cases, services (MediatR handlers, FluentValidation, Polly)
@@ -45,7 +45,6 @@ OurGame is a comprehensive, responsive, mobile-first web portal for football clu
   - Azure SQL Server Serverless (GP_S_Gen5, auto-pause 60 min) with SQL Database
   - Application Insights and Log Analytics (30-day retention)
   - Storage Account (StorageV2, TLS 1.2)
-  - Azure Communication Services with managed email domain
   - Custom domain support (optional, CNAME-based)
 
 ### Development Tools
@@ -218,8 +217,8 @@ When work changes backend behavior, API contracts, validation, authorization, se
 ### Bicep Infrastructure
 - **Entry Point**: `/infrastructure/main-subscription.bicep` (subscription-level deployment)
 - **Resources**: `/infrastructure/main.bicep` (resource group-level)
-- **All Resources Deployed**: Static Web App, Azure Functions, Storage Account, App Insights, Log Analytics, Azure SQL Server Serverless + Database, Azure Communication Services (email), custom domain support
-- **Connection Strings**: Configured in Function App app settings via Bicep (SQL, ACS, VAPID keys)
+- **All Resources Deployed**: Static Web App, Azure Functions, Storage Account, App Insights, Log Analytics, Azure SQL Server Serverless + Database, custom domain support
+- **Connection Strings**: Configured in Function App app settings via Bicep (SQL, VAPID keys)
 - **Environment**: Single production environment (future: dev, staging, prod)
 
 ### CI/CD Pipelines (GitHub Actions)

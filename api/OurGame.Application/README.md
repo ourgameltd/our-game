@@ -19,7 +19,7 @@ Business logic layer implementing CQRS with MediatR. Contains use case handlers,
 | `UseCases/` | MediatR command and query handlers organised by domain (17 domains) |
 | `Abstractions/` | Interfaces (`ICommand`, `IQuery`), exceptions, and response types |
 | `Extensions/` | Utility extension methods (HTTP status codes, Polly policies, preconditions, string helpers) |
-| `Services/` | Service implementations for email (ACS) and push notifications (VAPID) |
+| `Services/` | Service implementations for push notifications (VAPID) |
 
 ## Key Files
 

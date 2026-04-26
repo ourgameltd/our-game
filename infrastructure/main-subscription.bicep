@@ -22,14 +22,8 @@ param sqlAdminUsername string
 @secure()
 param sqlAdminPassword string
 
-@description('Frontend base URL used in transactional emails. Defaults to the Static Web App URL.')
+@description('Frontend base URL exposed to the Function App. Defaults to the Static Web App URL.')
 param frontendBaseUrl string = ''
-
-@description('Local-part for ACS sender email address (left side of @).')
-param emailSenderLocalPart string = 'DoNotReply'
-
-@description('Custom sender domain for ACS email (for example, isourgame.com). Leave empty to use the Azure-managed domain.')
-param emailSenderCustomDomain string = ''
 
 @description('Static Web App custom domain host name (for example, football.isourgame.com). Leave empty to skip custom domain setup.')
 param staticWebCustomDomainHostName string = ''
@@ -67,8 +61,6 @@ module infrastructure 'main.bicep' = {
     sqlAdminUsername: sqlAdminUsername
     sqlAdminPassword: sqlAdminPassword
     frontendBaseUrl: frontendBaseUrl
-    emailSenderLocalPart: emailSenderLocalPart
-    emailSenderCustomDomain: emailSenderCustomDomain
     staticWebCustomDomainHostName: staticWebCustomDomainHostName
     staticWebCustomDomainDnsZoneName: staticWebCustomDomainDnsZoneName
     staticWebCustomDomainDnsRecordSetName: staticWebCustomDomainDnsRecordSetName
@@ -87,4 +79,3 @@ output functionAppUrl string = infrastructure.outputs.functionAppUrl
 output sqlServerName string = infrastructure.outputs.sqlServerName
 output sqlServerFqdn string = infrastructure.outputs.sqlServerFqdn
 output sqlAdminUsername string = infrastructure.outputs.sqlAdminUsername
-output communicationServiceName string = infrastructure.outputs.communicationServiceName

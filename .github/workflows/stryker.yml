@@ -1,4 +1,4 @@
-name: Stryker Mutation Testing
+name: Test: Mutation Testing (Stryker)
 
 permissions:
   contents: read

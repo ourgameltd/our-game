@@ -13,15 +13,27 @@ related:
 
 CI/CD pipelines for building, testing, and deploying the OurGame platform.
 
+## Naming Convention
+
+Workflow display names use the format `Type: Purpose` so they group together in the GitHub Actions UI.
+
+| Type | Used for | Choose this type when... |
+|---|---|---|
+| `Build` | Compiling, unit testing, and packaging artifacts | The workflow primarily validates code or produces build artifacts for later stages. |
+| `Deploy` | Pushing artifacts or infrastructure to an environment | The workflow's main goal is releasing or updating an environment, even if it also runs database migrations or seed steps as part of that deployment. |
+| `Database` | Schema or seed-data operations against a deployed database | The workflow's main goal is changing, resetting, migrating, or reseeding a database independently of a wider application deployment. |
+| `Test` | Long-running or specialised test suites (for example mutation testing) | The workflow primarily executes an extended or non-standard test pass rather than a normal build validation. |
+
+Use the type that best matches the workflow's primary outcome, not every step it performs. For example, `tag-release.yml` remains a `Deploy` workflow because its purpose is a full release, while `reset-database.yml` is a `Database` workflow because the database operation is the whole point of the run.
 ## Workflows
 
 | Workflow | File | Trigger | Purpose |
 |---|---|---|---|
-| **PR Build** | `pr-build.yml` | PRs to `main`/`develop`, manual | Build, unit test with coverage, publish artifacts |
-| **Tag Release** | `tag-release.yml` | Git tag `v*.*.*`, manual | Full deployment: infra → database → Functions → SWA |
-| **Deploy SWA** | `deploy-swa.yml` | Manual | Re-deploy frontend only to Azure Static Web Apps |
-| **Reset Database** | `reset-database.yml` | Manual | Re-seed Azure SQL with optional `--clean` flag |
-| **Stryker** | `stryker.yml` | Manual | Mutation testing for Application and API layers (parallel jobs) |
+| **Build: PR Tests & Coverage** | `pr-build.yml` | PRs to `main`/`develop`, manual | Build, unit test with coverage, publish artifacts |
+| **Deploy: Full Stack Release** | `tag-release.yml` | Git tag `v*.*.*`, manual | Full deployment: infra → database → Functions → SWA |
+| **Deploy: Static Web App Frontend** | `deploy-swa.yml` | Manual | Re-deploy frontend only to Azure Static Web Apps |
+| **Database: Reset & Reseed** | `reset-database.yml` | Manual | Re-seed Azure SQL with optional `--clean` flag |
+| **Test: Mutation Testing (Stryker)** | `stryker.yml` | Manual | Mutation testing for Application and API layers (parallel jobs) |
 
 ## PR Build Pipeline
 
@@ -55,6 +67,3 @@ Runs six sequential jobs:
 | `B2C_CLIENT_ID` | Variable | Azure AD B2C client ID |
 | `VAPID_PUBLIC_KEY` | Variable | Web Push VAPID public key exposed to clients |
 | `VAPID_SUBJECT` | Variable | VAPID subject (default: `mailto:admin@ourgame.app`) |
-| `ACS_DATA_LOCATION` | Variable | ACS data location (default: `Europe`) |
-| `EMAIL_SENDER_LOCAL_PART` | Variable | Sender local part (default: `DoNotReply`) |
-| `EMAIL_SENDER_CUSTOM_DOMAIN` | Variable | Sender domain override (default: empty for Azure-managed domain) |
