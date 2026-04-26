@@ -18,7 +18,7 @@ CI/CD pipelines for building, testing, and deploying the OurGame platform.
 | Workflow | File | Trigger | Purpose |
 |---|---|---|---|
 | **PR Build** | `pr-build.yml` | PRs to `main`/`develop`, manual | Build, unit test with coverage, publish artifacts |
-| **PR Preview Environment** | `pr-preview-environment.yml` | PR open/update/reopen/close to `main`/`develop` | Deploy/close SWA PR preview environments and update B2C app redirect URIs |
+| **PR Preview Environment** | `pr-preview-environment.yml` | PR open/update/reopen/close to `main`/`master`/`develop` | Deploy/close SWA PR preview environments and update B2C app redirect URIs |
 | **Tag Release** | `tag-release.yml` | Git tag `v*.*.*`, manual | Full deployment: infra → database → Functions → SWA |
 | **Deploy SWA** | `deploy-swa.yml` | Manual | Re-deploy frontend only to Azure Static Web Apps |
 | **Reset Database** | `reset-database.yml` | Manual | Re-seed Azure SQL with optional `--clean` flag |
