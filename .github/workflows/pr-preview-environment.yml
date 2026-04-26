@@ -14,6 +14,9 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
+  deployments: write
+  statuses: write
 
 env:
   NODE_VERSION: '20.x'
