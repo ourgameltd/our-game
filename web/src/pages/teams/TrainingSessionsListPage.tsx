@@ -83,7 +83,6 @@ export default function TrainingSessionsListPage() {
   }
 
   const team = data.team;
-  const club = data.club;
   const sessions = data.sessions.map((s: TeamTrainingSessionDto) => ({
     ...mapApiSessionToUiSession(s),
     teamId: team.id

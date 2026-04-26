@@ -18,6 +18,7 @@ CI/CD pipelines for building, testing, and deploying the OurGame platform.
 | Workflow | File | Trigger | Purpose |
 |---|---|---|---|
 | **PR Build** | `pr-build.yml` | PRs to `main`/`develop`, manual | Build, unit test with coverage, publish artifacts |
+| **PR Preview Environment** | `pr-preview-environment.yml` | PR open/update/reopen/close to `main`/`master`/`develop` | Deploy/close SWA PR preview environments and update B2C app redirect URIs |
 | **Tag Release** | `tag-release.yml` | Git tag `v*.*.*`, manual | Full deployment: infra → database → Functions → SWA |
 | **Deploy SWA** | `deploy-swa.yml` | Manual | Re-deploy frontend only to Azure Static Web Apps |
 | **Reset Database** | `reset-database.yml` | Manual | Re-seed Azure SQL with optional `--clean` flag |
@@ -43,11 +44,23 @@ Runs six sequential jobs:
 5. **deploy-function-app** — Deploy to Azure Function App
 6. **deploy-static-web-app** — Deploy frontend, configure B2C auth settings
 
+## PR Preview Environment Pipeline
+
+- Builds frontend on PR open/synchronize/reopen
+- Deploys PR preview environment to Azure Static Web Apps
+- Adds `/.auth/login/btoc/callback` preview URI to the B2C app registration (`B2C_CLIENT_ID`)
+- On PR close, closes the SWA preview environment and removes that preview callback URI from the app registration
+
+> **Cross-tenant setup (B2C tenant is separate from main Entra tenant):** The B2C app registration typically lives in a dedicated Azure AD B2C tenant, while `AZURE_CREDENTIALS` is a service principal in the main Entra tenant. Because `az ad app` commands only see app registrations in the logged-in tenant, you must set the optional `B2C_CREDENTIALS` secret to a service principal **in the B2C tenant** with `Application.ReadWrite.All` (Microsoft Graph, admin consent) and a directory role such as `Application Administrator`. When `B2C_CREDENTIALS` is present, the workflow will re-login to the B2C tenant before updating redirect URIs.
+>
+> If `B2C_CREDENTIALS` is not set, the app-registration update step is skipped with a warning and the preview deployment itself still succeeds.
+
 ## Required Secrets & Variables
 
 | Name | Type | Purpose |
 |---|---|---|
-| `AZURE_CREDENTIALS` | Secret | Azure Service Principal (JSON) |
+| `AZURE_CREDENTIALS` | Secret | Azure Service Principal (JSON) for main Entra tenant (SWA, Functions, SQL) |
+| `B2C_CREDENTIALS` | Secret | Azure Service Principal (JSON) in the B2C tenant — required for automated redirect URI management. Must have `Application.ReadWrite.All` (admin consent) and `Application Administrator` directory role in the B2C tenant. |
 | `SQL_ADMIN_PASSWORD` | Secret | Azure SQL admin password |
 | `VAPID_PRIVATE_KEY` | Secret | Web Push VAPID private key used by the Function App |
 | `B2C_CLIENT_SECRET` | Secret | Azure AD B2C client secret |
