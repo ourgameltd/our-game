@@ -25,6 +25,16 @@ param sqlAdminPassword string
 @description('Frontend base URL exposed to the Function App. Defaults to the Static Web App URL.')
 param frontendBaseUrl string = ''
 
+@description('VAPID subject for Web Push notifications (e.g. mailto:michael@michaellaw.me)')
+param vapidSubject string = 'mailto:michael@michaellaw.me'
+
+@description('VAPID public key for Web Push notifications (base64url-encoded).')
+param vapidPublicKey string = ''
+
+@description('VAPID private key for Web Push notifications (base64url-encoded).')
+@secure()
+param vapidPrivateKey string = ''
+
 @description('Static Web App custom domain host name (for example, football.isourgame.com). Leave empty to skip custom domain setup.')
 param staticWebCustomDomainHostName string = ''
 
@@ -60,6 +70,9 @@ module infrastructure 'main.bicep' = {
     storageAccountSku: storageAccountSku
     sqlAdminUsername: sqlAdminUsername
     sqlAdminPassword: sqlAdminPassword
+    vapidSubject: vapidSubject
+    vapidPublicKey: vapidPublicKey
+    vapidPrivateKey: vapidPrivateKey
     frontendBaseUrl: frontendBaseUrl
     staticWebCustomDomainHostName: staticWebCustomDomainHostName
     staticWebCustomDomainDnsZoneName: staticWebCustomDomainDnsZoneName

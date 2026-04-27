@@ -16,8 +16,8 @@ param storageAccountSku string = 'Standard_LRS'
 @allowed(['Allow', 'Deny'])
 param storageDefaultAction string = 'Deny'
 
-@description('VAPID subject for Web Push notifications (e.g. mailto:admin@yourdomain.com)')
-param vapidSubject string = 'mailto:admin@ourgame.app'
+@description('VAPID subject for Web Push notifications (e.g. mailto:michael@michaellaw.me)')
+param vapidSubject string = 'mailto:michael@michaellaw.me'
 
 @description('VAPID public key for Web Push notifications (base64url-encoded). Generate with: npx web-push generate-vapid-keys')
 param vapidPublicKey string = ''
