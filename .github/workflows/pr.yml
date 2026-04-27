@@ -170,10 +170,6 @@ jobs:
         working-directory: ./api
         run: dotnet build --configuration Release --no-restore
 
-      - name: Prepare database (migrations + seed)
-        working-directory: ./api
-        run: dotnet run --project OurGame.Seeder/OurGame.Seeder.csproj --configuration Release --no-build
-
       - name: Run tests with coverage
         working-directory: ./api
         run: |
