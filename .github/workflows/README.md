@@ -29,7 +29,7 @@ Use the type that best matches the workflow's primary outcome, not every step it
 
 | Workflow | File | Trigger | Purpose |
 |---|---|---|---|
-| **PR Build, Test & Preview** | `pr.yml` | PR open/update/reopen/close to `main`/`master`/`develop`, manual | Always validates (build, unit test with coverage, publish artifacts). For functional, non-Dependabot, same-repo PRs touching `infrastructure/`, `api/`, or `web/`, also deploys an Azure Static Web Apps native PR preview environment under the production SWA and adds the PR's B2C redirect URI. On PR close, closes the SWA preview environment and removes the PR's B2C redirect URI. |
+| **PR Build, Test & Preview** | `pr.yml` | PR open/update/reopen/close to `main`/`master`/`develop`, manual | Always validates (build, unit test with coverage, publish artifacts). For functional, non-Dependabot, same-repo PRs touching `infrastructure/`, `api/`, or `web/`, also deploys the full stack to the shared environment (infra → database → Functions) and then deploys an Azure Static Web Apps native PR preview environment, adding the PR's B2C redirect URI. On PR close, closes the SWA preview environment and removes the PR's B2C redirect URI. |
 | **Tag Release** | `tag-release.yml` | Git tag `v*.*.*`, manual | Full deployment: infra → database → Functions → SWA |
 | **Deploy SWA** | `deploy-swa.yml` | Manual | Re-deploy frontend only to Azure Static Web Apps |
 | **Reset Database** | `reset-database.yml` | Manual | Re-seed Azure SQL with optional `--clean` flag |
@@ -37,7 +37,7 @@ Use the type that best matches the workflow's primary outcome, not every step it
 
 ## PR Build, Test & Preview Pipeline
 
-`pr.yml` merges the previous `pr-build.yml` and `pr-preview-environment.yml` workflows into one pipeline with three job tiers:
+`pr.yml` merges the previous `pr-build.yml` and `pr-preview-environment.yml` workflows into one pipeline with five job tiers:
 
 ### 1. `changes` — change detection (always for non-closed PRs)
 
@@ -54,7 +54,26 @@ Use the type that best matches the workflow's primary outcome, not every step it
 - Publishes API artifact (`api-package`) for downstream deployment
 - Builds React frontend and publishes `frontend-package` artifact
 
-### 3. `deploy-preview` — conditional preview deployment
+### 3. `deploy-infrastructure` — conditional infrastructure deployment
+
+Runs only for functional, non-Dependabot, same-repo PRs (same conditions as preview deployment):
+
+- Logs into Azure with `AZURE_CREDENTIALS`
+- Deploys subscription-level Bicep (`infrastructure/main-subscription.bicep`) into the shared environment
+- Captures resource outputs (resource group, SWA name, Function App name, SQL server details) for downstream jobs
+
+### 4. `deploy-database` — conditional database migration + seed
+
+- Adds a temporary SQL firewall rule for the GitHub runner IP
+- Runs `OurGame.Seeder` against Azure SQL (migrations + seed data)
+- Always removes the temporary firewall rule
+
+### 5. `deploy-function-app` — conditional API deployment
+
+- Downloads the validated `api-package` artifact
+- Deploys it to the Function App using `Azure/functions-action@v1`
+
+### 6. `deploy-preview` — conditional preview deployment
 
 Runs only when **all** of these are true:
 
@@ -63,16 +82,14 @@ Runs only when **all** of these are true:
 - PR is not from Dependabot
 - PR head is in the same repository (no forks)
 
-When those conditions are met, the job:
+When those conditions are met (and after infra/database/API jobs succeed), the job:
 
-- Retrieves the production Static Web App deployment token from `ourgame-swa-prod`
+- Retrieves the deployment token from the Static Web App output by the infra deployment
 - Uses `Azure/static-web-apps-deploy@v1` with `action: upload` and the validated `frontend-package` artifact, which makes Azure SWA automatically create or update a native **PR preview environment** under the production SWA's DNS (e.g. `<env-name>.<region>.<n>.azurestaticapps.net`)
 - Logs into the B2C tenant (when `B2C_CREDENTIALS` is set) and adds the preview's `/.auth/login/btoc/callback` redirect URI to the B2C app registration
 - Uses GitHub environment `live` with the SWA preview URL as the deployment URL
 
-> **Backend note:** SWA PR preview environments share the linked Function App backend of the production SWA. The PR validation still publishes API artifacts, but the API itself is deployed only by the Tag Release pipeline. If you need a per-PR Function App/database, run the `Tag Release` workflow against a feature branch instead.
-
-### 4. `close-preview` — always-on cleanup on PR close
+### 7. `close-preview` — always-on cleanup on PR close
 
 Runs on every PR `closed` event regardless of changed paths or actor:
 

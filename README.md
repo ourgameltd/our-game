@@ -157,7 +157,7 @@ az deployment sub create \
 
 | Workflow | Trigger | Purpose |
 |---|---|---|
-| **PR Build, Test & Preview** (`pr.yml`) | Pull requests to `main` / `master` / `develop` | Always builds, tests with coverage, and publishes artifacts. For functional, non-Dependabot, same-repo PRs (touching `infrastructure/`, `api/`, or `web/`) also deploys an Azure Static Web Apps native PR preview environment under the production SWA and updates B2C redirect URIs. On PR close, closes the SWA preview environment and removes the PR's B2C redirect URI. |
+| **PR Build, Test & Preview** (`pr.yml`) | Pull requests to `main` / `master` / `develop` | Always builds, tests with coverage, and publishes artifacts. For functional, non-Dependabot, same-repo PRs (touching `infrastructure/`, `api/`, or `web/`) also deploys infra + database + API to the shared environment, then deploys an Azure Static Web Apps native PR preview environment and updates B2C redirect URIs. On PR close, closes the SWA preview environment and removes the PR's B2C redirect URI. |
 | **Tag Release** (`tag-release.yml`) | Git tag `v*.*.*` or manual | Full deployment: infra → database → Functions → SWA |
 | **Deploy SWA** (`deploy-swa.yml`) | Manual | Re-deploy frontend only |
 | **Reset Database** (`reset-database.yml`) | Manual | Re-seed Azure SQL (with optional `--clean` flag) |
@@ -167,7 +167,7 @@ az deployment sub create \
 
 Runs on every pull request. Always validates: spins up a SQL Server 2022 service container, builds the full .NET solution, runs all unit tests with code coverage (XPlat Code Coverage), generates a coverage report (excluding `OurGame.Persistence`), builds the React frontend, and publishes the API. Coverage summaries are posted to the GitHub Actions step summary. Validation artifacts (`api-package`, `frontend-package`) are uploaded for downstream deployment.
 
-For functional, non-Dependabot pull requests from the same repository touching `infrastructure/`, `api/`, or `web/`, the workflow then deploys the validated `frontend-package` to the **production Azure Static Web App as a native PR preview environment**. SWA automatically generates a per-PR preview hostname under its own DNS, and the workflow adds that preview's `/.auth/login/btoc/callback` redirect URI to the B2C app registration. SWA PR preview environments share the linked Function App backend of the production SWA; the API itself is only deployed by the Tag Release pipeline.
+For functional, non-Dependabot pull requests from the same repository touching `infrastructure/`, `api/`, or `web/`, the workflow then deploys the shared environment stack in sequence: subscription-level Bicep infrastructure, Azure SQL migrations + seed data via `OurGame.Seeder`, and the API artifact to the linked Function App. After that, it deploys the validated `frontend-package` to the **production Azure Static Web App as a native PR preview environment**. SWA automatically generates a per-PR preview hostname under its own DNS, and the workflow adds that preview's `/.auth/login/btoc/callback` redirect URI to the B2C app registration.
 
 On PR close the workflow always runs a cleanup job that closes the SWA preview environment and removes the PR's B2C redirect URI.
 

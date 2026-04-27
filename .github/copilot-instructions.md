@@ -225,7 +225,7 @@ When work changes backend behavior, API contracts, validation, authorization, se
 
 | Workflow | File | Trigger | Purpose |
 |---|---|---|---|
-| **PR Build, Test & Preview** | `pr.yml` | PRs to `main`/`master`/`develop` | Always builds + tests with coverage. For functional non-Dependabot PRs touching `infrastructure/`, `api/`, or `web/`, also deploys a Static Web Apps native PR preview environment under the production SWA and updates B2C redirect URIs. Closes the preview and removes the B2C URI on PR close. |
+| **PR Build, Test & Preview** | `pr.yml` | PRs to `main`/`master`/`develop` | Always builds + tests with coverage. For functional non-Dependabot PRs touching `infrastructure/`, `api/`, or `web/`, also deploys infra + database + API to the shared environment, then deploys a Static Web Apps native PR preview environment under the production SWA and updates B2C redirect URIs. Closes the preview and removes the B2C URI on PR close. |
 | **Tag Release** | `tag-release.yml` | Git tag `v*.*.*` or manual | Full deployment: infra → database → Functions → SWA |
 | **Deploy SWA** | `deploy-swa.yml` | Manual | Re-deploy frontend only |
 | **Reset Database** | `reset-database.yml` | Manual | Re-seed Azure SQL (with optional `--clean` flag) |

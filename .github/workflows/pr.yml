@@ -28,6 +28,7 @@ concurrency:
 env:
   DOTNET_VERSION: '8.0.x'
   NODE_VERSION: '20.x'
+  AZURE_REGION: 'westeurope'
   AZURE_RESOURCE_GROUP: 'rgourgame'
   STATIC_WEB_APP_NAME: 'ourgame-swa-prod'
   B2C_PROVIDER_NAME: 'btoc'
@@ -169,6 +170,10 @@ jobs:
         working-directory: ./api
         run: dotnet build --configuration Release --no-restore
 
+      - name: Prepare database (migrations + seed)
+        working-directory: ./api
+        run: dotnet run --project OurGame.Seeder/OurGame.Seeder.csproj --configuration Release --no-build
+
       - name: Run tests with coverage
         working-directory: ./api
         run: |
@@ -225,10 +230,189 @@ jobs:
           retention-days: 7
 
   # ---------------------------------------------------------------------------
+  # Conditional full-stack deploy for functional PRs into the shared environment.
+  # This updates infra, database, and API together before publishing the SWA PR
+  # preview environment.
+  # ---------------------------------------------------------------------------
+  deploy-infrastructure:
+    if: |
+      github.event.action != 'closed' &&
+      needs.changes.outputs.functional == 'true' &&
+      needs.changes.outputs.isDependabot != 'true' &&
+      needs.changes.outputs.isFork != 'true'
+    needs: [changes, build]
+    runs-on: ubuntu-latest
+    environment: live
+    outputs:
+      resourceGroupName: ${{ steps.deploy.outputs.resourceGroupName }}
+      functionAppName: ${{ steps.deploy.outputs.functionAppName }}
+      staticWebAppName: ${{ steps.deploy.outputs.staticWebAppName }}
+      staticWebAppUrl: ${{ steps.deploy.outputs.staticWebAppUrl }}
+      sqlServerName: ${{ steps.deploy.outputs.sqlServerName }}
+      sqlServerFqdn: ${{ steps.deploy.outputs.sqlServerFqdn }}
+      sqlAdminUsername: ${{ steps.deploy.outputs.sqlAdminUsername }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Azure Login
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Resolve SQL admin username
+        id: sql_admin
+        shell: bash
+        run: |
+          SQL_ADMIN_USERNAME="${{ vars.SQL_ADMIN_USERNAME }}"
+
+          if [ -z "$SQL_ADMIN_USERNAME" ]; then
+            SQL_ADMIN_USERNAME="ourgame_sql_admin"
+          fi
+
+          if [[ ! "$SQL_ADMIN_USERNAME" =~ ^[A-Za-z][A-Za-z0-9_]{2,127}$ ]]; then
+            echo "Invalid SQL admin username: '$SQL_ADMIN_USERNAME'"
+            echo "Expected pattern: starts with a letter, then letters/numbers/underscore, length 3-128"
+            exit 1
+          fi
+
+          echo "sqlAdminUsername=$SQL_ADMIN_USERNAME" >> "$GITHUB_OUTPUT"
+
+      - name: Validate SQL admin password secret
+        shell: bash
+        run: |
+          if [ -z "${{ secrets.SQL_ADMIN_PASSWORD }}" ]; then
+            echo "GitHub secret SQL_ADMIN_PASSWORD is required and must not be empty"
+            exit 1
+          fi
+
+      - name: Resolve VAPID deployment parameters
+        id: deploy_params
+        shell: bash
+        run: |
+          VAPID_SUBJECT="${{ vars.VAPID_SUBJECT }}"
+          VAPID_PUBLIC_KEY="${{ vars.VAPID_PUBLIC_KEY }}"
+
+          echo "vapidSubject=$VAPID_SUBJECT" >> "$GITHUB_OUTPUT"
+          echo "vapidPublicKey=$VAPID_PUBLIC_KEY" >> "$GITHUB_OUTPUT"
+
+      - name: Deploy Bicep template at subscription level
+        id: deploy
+        shell: bash
+        run: |
+          LOCATION="${{ env.AZURE_REGION }}"
+          RESOURCE_GROUP="${{ env.AZURE_RESOURCE_GROUP }}"
+
+          DEPLOYMENT_OUTPUT=$(az deployment sub create \
+            --location "$LOCATION" \
+            --template-file infrastructure/main-subscription.bicep \
+            --parameters resourceGroupName="$RESOURCE_GROUP" \
+            --parameters location="$LOCATION" \
+            --parameters environmentName=prod \
+            --parameters baseName=ourgame \
+            --parameters storageAccountSku=Standard_LRS \
+            --parameters sqlAdminUsername="${{ steps.sql_admin.outputs.sqlAdminUsername }}" \
+            --parameters sqlAdminPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
+            --parameters vapidSubject="${{ steps.deploy_params.outputs.vapidSubject }}" \
+            --parameters vapidPublicKey="${{ steps.deploy_params.outputs.vapidPublicKey }}" \
+            --parameters vapidPrivateKey="${{ secrets.VAPID_PRIVATE_KEY }}" \
+            --query 'properties.outputs' \
+            --output json)
+
+          echo "resourceGroupName=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.resourceGroupName.value')" >> "$GITHUB_OUTPUT"
+          echo "staticWebAppName=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.staticWebAppName.value')" >> "$GITHUB_OUTPUT"
+          echo "staticWebAppUrl=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.staticWebAppUrl.value')" >> "$GITHUB_OUTPUT"
+          echo "functionAppName=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.functionAppName.value')" >> "$GITHUB_OUTPUT"
+          echo "sqlServerName=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.sqlServerName.value')" >> "$GITHUB_OUTPUT"
+          echo "sqlServerFqdn=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.sqlServerFqdn.value')" >> "$GITHUB_OUTPUT"
+          echo "sqlAdminUsername=$(echo "$DEPLOYMENT_OUTPUT" | jq -r '.sqlAdminUsername.value')" >> "$GITHUB_OUTPUT"
+
+  deploy-database:
+    if: |
+      github.event.action != 'closed' &&
+      needs.changes.outputs.functional == 'true' &&
+      needs.changes.outputs.isDependabot != 'true' &&
+      needs.changes.outputs.isFork != 'true'
+    needs: [changes, deploy-infrastructure]
+    runs-on: ubuntu-latest
+    environment: live
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Azure Login
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Add runner IP to SQL Server firewall
+        shell: bash
+        run: |
+          RUNNER_IP=$(curl -s https://api.ipify.org)
+          az sql server firewall-rule create \
+            --resource-group "${{ needs.deploy-infrastructure.outputs.resourceGroupName }}" \
+            --server "${{ needs.deploy-infrastructure.outputs.sqlServerName }}" \
+            --name GitHubActionsRunner \
+            --start-ip-address "$RUNNER_IP" \
+            --end-ip-address "$RUNNER_IP"
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Run database seeder (migrations + seed data)
+        shell: bash
+        run: |
+          SQL_SERVER="${{ needs.deploy-infrastructure.outputs.sqlServerFqdn }}"
+          SQL_ADMIN_USERNAME="${{ needs.deploy-infrastructure.outputs.sqlAdminUsername }}"
+          export ConnectionStrings__DefaultConnection="Server=tcp:${SQL_SERVER},1433;Database=OurGame;User ID=${SQL_ADMIN_USERNAME};Password=${{ secrets.SQL_ADMIN_PASSWORD }};Encrypt=True;TrustServerCertificate=False;"
+          dotnet run --project api/OurGame.Seeder
+
+      - name: Remove runner IP from SQL Server firewall
+        if: always()
+        shell: bash
+        run: |
+          az sql server firewall-rule delete \
+            --resource-group "${{ needs.deploy-infrastructure.outputs.resourceGroupName }}" \
+            --server "${{ needs.deploy-infrastructure.outputs.sqlServerName }}" \
+            --name GitHubActionsRunner \
+            --yes 2>/dev/null || true
+
+  deploy-function-app:
+    if: |
+      github.event.action != 'closed' &&
+      needs.changes.outputs.functional == 'true' &&
+      needs.changes.outputs.isDependabot != 'true' &&
+      needs.changes.outputs.isFork != 'true'
+    needs: [changes, build, deploy-infrastructure, deploy-database]
+    runs-on: ubuntu-latest
+    environment: live
+
+    steps:
+      - name: Download API artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: api-package
+          path: ./api-output
+
+      - name: Azure Login
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Function App
+        uses: Azure/functions-action@ac2abfb0e49d12ed5d273a3cb39f01bdd1654c43 # v1.5.5
+        with:
+          app-name: ${{ needs.deploy-infrastructure.outputs.functionAppName }}
+          package: ./api-output
+
+  # ---------------------------------------------------------------------------
   # Conditional preview deploy using Azure Static Web Apps native PR preview
-  # environments. Deploys the validated frontend artifact to the production SWA
-  # which automatically creates/updates a per-PR preview environment under the
-  # SWA's own DNS, then registers the preview callback URI in B2C.
+  # environments. This runs after infra/database/API deployment so each PR
+  # preview reflects the complete shared-environment stack updates.
   # ---------------------------------------------------------------------------
   deploy-preview:
     if: |
@@ -236,7 +420,7 @@ jobs:
       needs.changes.outputs.functional == 'true' &&
       needs.changes.outputs.isDependabot != 'true' &&
       needs.changes.outputs.isFork != 'true'
-    needs: [changes, build]
+    needs: [changes, build, deploy-infrastructure, deploy-database, deploy-function-app]
     runs-on: ubuntu-latest
     environment:
       name: live
@@ -264,8 +448,8 @@ jobs:
         shell: bash
         run: |
           TOKEN=$(az staticwebapp secrets list \
-            --name "${{ env.STATIC_WEB_APP_NAME }}" \
-            --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+            --name "${{ needs.deploy-infrastructure.outputs.staticWebAppName }}" \
+            --resource-group "${{ needs.deploy-infrastructure.outputs.resourceGroupName }}" \
             --query "properties.apiKey" -o tsv)
           echo "::add-mask::$TOKEN"
           echo "deployment_token=$TOKEN" >> "$GITHUB_OUTPUT"
@@ -330,8 +514,8 @@ jobs:
 
           if [ -z "$PREVIEW_BASE_URL" ]; then
             PREVIEW_HOSTNAME=$(az staticwebapp environment list \
-              --name "${{ env.STATIC_WEB_APP_NAME }}" \
-              --resource-group "${{ env.AZURE_RESOURCE_GROUP }}" \
+              --name "${{ needs.deploy-infrastructure.outputs.staticWebAppName }}" \
+              --resource-group "${{ needs.deploy-infrastructure.outputs.resourceGroupName }}" \
               --query "[?contains(name, '${HEAD_REF}') || contains(hostname, '-${PR_NUMBER}.')].hostname | [0]" \
               -o tsv)
 
@@ -403,7 +587,7 @@ jobs:
             echo "## PR Preview Environment"
             echo ""
             echo "- PR: #${PR_NUMBER}"
-            echo "- Static Web App: ${{ env.STATIC_WEB_APP_NAME }}"
+            echo "- Static Web App: ${{ needs.deploy-infrastructure.outputs.staticWebAppName }}"
             echo "- Preview URL: ${PREVIEW_BASE_URL}"
             echo "- Added callback URI: ${CALLBACK_URI}"
           } >> "$GITHUB_STEP_SUMMARY"
