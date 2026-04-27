@@ -5,7 +5,7 @@ categories: [Unit Tests, API Testing, Contract Testing]
 related:
   - api/OurGame.Api/Functions/
   - api/OurGame.Application/UseCases/
-  - .github/workflows/pr-build.yml
+  - .github/workflows/pr.yml
   - api/stryker-config.json
 ---
 

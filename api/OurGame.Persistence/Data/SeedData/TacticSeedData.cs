@@ -6,8 +6,8 @@ namespace OurGame.Persistence.Data.SeedData;
 public static class TacticSeedData
 {
     // Tactic IDs (tactics are formations with parentFormationId)
-    public static readonly Guid Tactic1_Balanced_Id = Guid.Parse("t1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6");
-    public static readonly Guid Tactic2_Attacking_Id = Guid.Parse("t2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7");
+    public static readonly Guid Tactic1_Balanced_Id = Guid.Parse("f1a2b3c4-d5e6-f7a8-b9c0-d1e2f3a4b5c6");
+    public static readonly Guid Tactic2_Attacking_Id = Guid.Parse("f2b3c4d5-e6f7-a8b9-c0d1-e2f3a4b5c6d7");
 
     public static List<Formation> GetTactics()
     {

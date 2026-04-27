@@ -16,8 +16,8 @@ param storageAccountSku string = 'Standard_LRS'
 @allowed(['Allow', 'Deny'])
 param storageDefaultAction string = 'Deny'
 
-@description('VAPID subject for Web Push notifications (e.g. mailto:admin@yourdomain.com)')
-param vapidSubject string = 'mailto:admin@ourgame.app'
+@description('VAPID subject for Web Push notifications (e.g. mailto:michael@michaellaw.me)')
+param vapidSubject string = 'mailto:michael@michaellaw.me'
 
 @description('VAPID public key for Web Push notifications (base64url-encoded). Generate with: npx web-push generate-vapid-keys')
 param vapidPublicKey string = ''
@@ -76,7 +76,7 @@ resource storageAccount 'Microsoft.Storage/storageAccounts@2023-05-01' = {
   properties: {
     supportsHttpsTrafficOnly: true
     minimumTlsVersion: 'TLS1_2'
-    allowBlobPublicAccess: false
+    allowBlobPublicAccess: true
     networkAcls: {
       defaultAction: storageDefaultAction
     }
@@ -96,22 +96,6 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
 }
 
 // Blob Containers for image uploads
-resource playerPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobService
-  name: 'player-photos'
-  properties: {
-    publicAccess: 'Blob'
-  }
-}
-
-resource coachPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
-  parent: blobService
-  name: 'coach-photos'
-  properties: {
-    publicAccess: 'Blob'
-  }
-}
-
 resource clubLogosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobService
   name: 'club-logos'
@@ -120,11 +104,27 @@ resource clubLogosContainer 'Microsoft.Storage/storageAccounts/blobServices/cont
   }
 }
 
+resource playerPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'player-photos'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
+resource coachPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'coach-photos'
+  properties: {
+    publicAccess: 'None'
+  }
+}
+
 resource playerAlbumContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
   parent: blobService
   name: 'player-album'
   properties: {
-    publicAccess: 'Blob'
+    publicAccess: 'None'
   }
 }
 
@@ -132,7 +132,7 @@ resource userPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/con
   parent: blobService
   name: 'user-photos'
   properties: {
-    publicAccess: 'Blob'
+    publicAccess: 'None'
   }
 }
 

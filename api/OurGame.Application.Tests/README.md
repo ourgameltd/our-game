@@ -5,7 +5,7 @@ categories: [Unit Tests, Business Logic Testing, CQRS Testing]
 related:
   - api/OurGame.Application/UseCases/
   - api/OurGame.Application/Services/
-  - .github/workflows/pr-build.yml
+  - .github/workflows/pr.yml
   - api/stryker-config.json
 ---
 

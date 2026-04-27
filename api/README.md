@@ -4,7 +4,7 @@ technology: [.NET 8, Azure Functions v4, EF Core 9, MediatR, FluentValidation]
 categories: [API, Business Logic, Data Access, Testing]
 related:
   - api/OurGame.Api.sln
-  - .github/workflows/pr-build.yml
+  - .github/workflows/pr.yml
   - .github/workflows/tag-release.yml
   - infrastructure/main.bicep
 ---
