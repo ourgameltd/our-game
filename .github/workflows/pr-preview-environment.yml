@@ -1,4 +1,4 @@
-name: PR Preview Environment
+name: "PR Preview Environment"
 
 on:
   pull_request:
@@ -78,10 +78,39 @@ jobs:
         skip_app_build: true
 
     - name: Azure Login (B2C tenant)
-      if: ${{ secrets.B2C_CREDENTIALS != '' }}
-      uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
-      with:
-        creds: ${{ secrets.B2C_CREDENTIALS }}
+      shell: bash
+      env:
+        B2C_CREDENTIALS: ${{ secrets.B2C_CREDENTIALS }}
+      run: |
+        if [ -z "$B2C_CREDENTIALS" ]; then
+          echo "::warning::B2C_CREDENTIALS is empty; skipping B2C login and callback URI update."
+          exit 0
+        fi
+
+        B2C_CLIENT_ID=$(echo "$B2C_CREDENTIALS" | jq -r '.clientId // empty')
+        B2C_CLIENT_SECRET=$(echo "$B2C_CREDENTIALS" | jq -r '.clientSecret // empty')
+        B2C_TENANT_ID=$(echo "$B2C_CREDENTIALS" | jq -r '.tenantId // empty')
+
+        if [ -z "$B2C_CLIENT_ID" ] || [ -z "$B2C_CLIENT_SECRET" ] || [ -z "$B2C_TENANT_ID" ]; then
+          echo "::warning::B2C_CREDENTIALS must include clientId, clientSecret, and tenantId."
+          exit 0
+        fi
+
+        az account clear || true
+        az logout || true
+
+        az login \
+          --service-principal \
+          --username "$B2C_CLIENT_ID" \
+          --password "$B2C_CLIENT_SECRET" \
+          --tenant "$B2C_TENANT_ID" \
+          --allow-no-subscriptions 1>/dev/null
+
+        ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "")
+        if [ "$ACTIVE_TENANT" != "$B2C_TENANT_ID" ]; then
+          echo "::warning::B2C login succeeded but active tenant '$ACTIVE_TENANT' does not match expected '$B2C_TENANT_ID'."
+          exit 0
+        fi
 
     - name: Add preview callback URI to app registration
       shell: bash
@@ -116,15 +145,44 @@ jobs:
         CALLBACK_URI="${PREVIEW_BASE_URL}/.auth/login/${{ env.B2C_PROVIDER_NAME }}/callback"
         echo "Using callback URI: $CALLBACK_URI"
 
+        ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "unknown")
+        SIGNED_IN_IDENTITY=$(az account show --query user.name -o tsv 2>/dev/null || echo "unknown")
+
         set +e
-        CURRENT_URIS_JSON=$(az ad app show --id "$APP_ID" --query "web.redirectUris" -o json 2>&1)
+        APP_OBJECT_ID=$(az ad app show --id "$APP_ID" --query "id" -o tsv 2>&1)
+        SHOW_LOOKUP_EXIT_CODE=$?
+        set -e
+
+        if [ $SHOW_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
+          set +e
+          APP_OBJECT_ID=$(az ad app list --filter "appId eq '$APP_ID'" --query "[0].id" -o tsv 2>&1)
+          APP_LOOKUP_EXIT_CODE=$?
+          set -e
+        else
+          APP_LOOKUP_EXIT_CODE=0
+        fi
+
+        if [ $APP_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
+          echo "::warning::Unable to resolve app registration for appId '$APP_ID' in tenant '$ACTIVE_TENANT' using B2C_CREDENTIALS. Signed-in identity: '$SIGNED_IN_IDENTITY'. Azure CLI output: $APP_OBJECT_ID"
+          echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Preview URL: ${PREVIEW_BASE_URL}" >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI update skipped because the app registration could not be resolved in tenant ${ACTIVE_TENANT}." >> $GITHUB_STEP_SUMMARY
+          echo "- Signed-in identity: ${SIGNED_IN_IDENTITY}." >> $GITHUB_STEP_SUMMARY
+          echo "- Check that B2C_CREDENTIALS points to the same tenant as the app registration and has Graph visibility (Application.Read.All/Application.ReadWrite.All with admin consent)." >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
+
+        set +e
+        CURRENT_URIS_JSON=$(az ad app show --id "$APP_OBJECT_ID" --query "web.redirectUris" -o json 2>&1)
         SHOW_EXIT_CODE=$?
         set -e
         if [ $SHOW_EXIT_CODE -ne 0 ]; then
           if echo "$CURRENT_URIS_JSON" | grep -qi "does not exist"; then
-            echo "::warning::Unable to find app registration '$APP_ID' in the tenant used by AZURE_CREDENTIALS. Ensure B2C_CLIENT_ID is the Application (client) ID of the B2C app registration in that same tenant. Azure CLI error: $CURRENT_URIS_JSON"
+            echo "::warning::Unable to find app registration '$APP_ID' in the tenant used by B2C_CREDENTIALS. Ensure B2C_CLIENT_ID is the Application (client) ID of the B2C app registration in that same tenant. Azure CLI error: $CURRENT_URIS_JSON"
           else
-            echo "::warning::Unable to read app registration redirect URIs. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
+            echo "::warning::Unable to read app registration redirect URIs. Grant the B2C_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
           fi
           echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -139,11 +197,11 @@ jobs:
         mapfile -t UNIQUE_URIS < <(printf "%s\n" "${CURRENT_URIS[@]}" | awk 'NF && !seen[$0]++')
 
         set +e
-        UPDATE_OUTPUT=$(az ad app update --id "$APP_ID" --web-redirect-uris "${UNIQUE_URIS[@]}" 2>&1)
+        UPDATE_OUTPUT=$(az ad app update --id "$APP_OBJECT_ID" --web-redirect-uris "${UNIQUE_URIS[@]}" 2>&1)
         UPDATE_EXIT_CODE=$?
         set -e
         if [ $UPDATE_EXIT_CODE -ne 0 ]; then
-          echo "::warning::Unable to update app registration redirect URIs. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $UPDATE_OUTPUT"
+          echo "::warning::Unable to update app registration redirect URIs. Grant the B2C_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $UPDATE_OUTPUT"
           echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
@@ -206,10 +264,39 @@ jobs:
         action: "close"
 
     - name: Azure Login (B2C tenant)
-      if: ${{ secrets.B2C_CREDENTIALS != '' }}
-      uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
-      with:
-        creds: ${{ secrets.B2C_CREDENTIALS }}
+      shell: bash
+      env:
+        B2C_CREDENTIALS: ${{ secrets.B2C_CREDENTIALS }}
+      run: |
+        if [ -z "$B2C_CREDENTIALS" ]; then
+          echo "::warning::B2C_CREDENTIALS is empty; skipping B2C login and callback URI cleanup."
+          exit 0
+        fi
+
+        B2C_CLIENT_ID=$(echo "$B2C_CREDENTIALS" | jq -r '.clientId // empty')
+        B2C_CLIENT_SECRET=$(echo "$B2C_CREDENTIALS" | jq -r '.clientSecret // empty')
+        B2C_TENANT_ID=$(echo "$B2C_CREDENTIALS" | jq -r '.tenantId // empty')
+
+        if [ -z "$B2C_CLIENT_ID" ] || [ -z "$B2C_CLIENT_SECRET" ] || [ -z "$B2C_TENANT_ID" ]; then
+          echo "::warning::B2C_CREDENTIALS must include clientId, clientSecret, and tenantId."
+          exit 0
+        fi
+
+        az account clear || true
+        az logout || true
+
+        az login \
+          --service-principal \
+          --username "$B2C_CLIENT_ID" \
+          --password "$B2C_CLIENT_SECRET" \
+          --tenant "$B2C_TENANT_ID" \
+          --allow-no-subscriptions 1>/dev/null
+
+        ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "")
+        if [ "$ACTIVE_TENANT" != "$B2C_TENANT_ID" ]; then
+          echo "::warning::B2C login succeeded but active tenant '$ACTIVE_TENANT' does not match expected '$B2C_TENANT_ID'."
+          exit 0
+        fi
 
     - name: Remove preview callback URI from app registration
       if: steps.preview_uri.outputs.callbackUri != ''
@@ -223,16 +310,45 @@ jobs:
           exit 1
         fi
 
+        ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "unknown")
+        SIGNED_IN_IDENTITY=$(az account show --query user.name -o tsv 2>/dev/null || echo "unknown")
+
         set +e
-        CURRENT_URIS_JSON=$(az ad app show --id "$APP_ID" --query "web.redirectUris" -o json 2>&1)
+        APP_OBJECT_ID=$(az ad app show --id "$APP_ID" --query "id" -o tsv 2>&1)
+        SHOW_LOOKUP_EXIT_CODE=$?
+        set -e
+
+        if [ $SHOW_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
+          set +e
+          APP_OBJECT_ID=$(az ad app list --filter "appId eq '$APP_ID'" --query "[0].id" -o tsv 2>&1)
+          APP_LOOKUP_EXIT_CODE=$?
+          set -e
+        else
+          APP_LOOKUP_EXIT_CODE=0
+        fi
+
+        if [ $APP_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
+          echo "::warning::Unable to resolve app registration for appId '$APP_ID' in tenant '$ACTIVE_TENANT' using B2C_CREDENTIALS. Signed-in identity: '$SIGNED_IN_IDENTITY'. Azure CLI output: $APP_OBJECT_ID"
+          echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Preview URL: ${{ steps.preview_uri.outputs.previewUrl }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Callback URI cleanup skipped because the app registration could not be resolved in tenant ${ACTIVE_TENANT}." >> $GITHUB_STEP_SUMMARY
+          echo "- Signed-in identity: ${SIGNED_IN_IDENTITY}." >> $GITHUB_STEP_SUMMARY
+          echo "- Check that B2C_CREDENTIALS points to the same tenant as the app registration and has Graph visibility (Application.Read.All/Application.ReadWrite.All with admin consent)." >> $GITHUB_STEP_SUMMARY
+          exit 0
+        fi
+
+        set +e
+        CURRENT_URIS_JSON=$(az ad app show --id "$APP_OBJECT_ID" --query "web.redirectUris" -o json 2>&1)
         SHOW_EXIT_CODE=$?
         set -e
         
         if [ $SHOW_EXIT_CODE -ne 0 ]; then
           if echo "$CURRENT_URIS_JSON" | grep -qi "does not exist"; then
-            echo "::warning::Unable to find app registration '$APP_ID' in the tenant used by AZURE_CREDENTIALS. Ensure B2C_CLIENT_ID is the Application (client) ID of the B2C app registration in that same tenant. Azure CLI error: $CURRENT_URIS_JSON"
+            echo "::warning::Unable to find app registration '$APP_ID' in the tenant used by B2C_CREDENTIALS. Ensure B2C_CLIENT_ID is the Application (client) ID of the B2C app registration in that same tenant. Azure CLI error: $CURRENT_URIS_JSON"
           else
-            echo "::warning::Unable to read app registration redirect URIs for cleanup. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
+            echo "::warning::Unable to read app registration redirect URIs for cleanup. Grant the B2C_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $CURRENT_URIS_JSON"
           fi
           echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -249,11 +365,11 @@ jobs:
         fi
 
         set +e
-        UPDATE_OUTPUT=$(az ad app update --id "$APP_ID" --web-redirect-uris "${FILTERED_URIS[@]}" 2>&1)
+        UPDATE_OUTPUT=$(az ad app update --id "$APP_OBJECT_ID" --web-redirect-uris "${FILTERED_URIS[@]}" 2>&1)
         UPDATE_EXIT_CODE=$?
         set -e
         if [ $UPDATE_EXIT_CODE -ne 0 ]; then
-          echo "::warning::Unable to remove callback URI from app registration. Grant the AZURE_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $UPDATE_OUTPUT"
+          echo "::warning::Unable to remove callback URI from app registration. Grant the B2C_CREDENTIALS service principal Microsoft Graph app role Application.ReadWrite.All (admin consent) and a directory role such as Application Administrator or Cloud Application Administrator. Azure CLI error: $UPDATE_OUTPUT"
           echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY

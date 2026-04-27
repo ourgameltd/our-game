@@ -1,4 +1,4 @@
-name: Deploy Static Web App
+name: "Deploy: Static Web App Frontend"
 
 on:
   workflow_dispatch:

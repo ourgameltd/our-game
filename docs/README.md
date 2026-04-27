@@ -15,6 +15,5 @@ Project documentation including runbooks, architecture decisions, and analysis.
 
 | File | Purpose |
 |---|---|
-| `azure-custom-domain-and-acs-runbook.md` | Runbook for configuring custom domains and Azure Communication Services |
 | `invite-linking-flow.md` | Technical documentation of the invite redemption and user linking flow |
 | `market-competitive-analysis.md` | Market and competitive analysis for the OurGame platform |

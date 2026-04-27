@@ -1,4 +1,4 @@
-name: Reset & Reseed Database
+name: "Database: Reset & Reseed"
 
 on:
   workflow_dispatch:

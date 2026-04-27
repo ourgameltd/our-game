@@ -1,8 +1,5 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Abstractions;
 using OurGame.Application.Abstractions.Exceptions;
-using OurGame.Application.Services;
 using OurGame.Application.Tests.TestInfrastructure;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite;
 using OurGame.Application.UseCases.Invites.Commands.CreateInvite.DTOs;
@@ -13,15 +10,9 @@ namespace OurGame.Application.Tests.Invites;
 
 public class CreateInviteHandlerTests
 {
-    private static CreateInviteHandler BuildHandler(
-        OurGameContext db,
-        IEmailService? emailService = null,
-        ILogger<CreateInviteHandler>? logger = null)
+    private static CreateInviteHandler BuildHandler(OurGameContext db)
     {
-        return new CreateInviteHandler(
-            db,
-            emailService ?? new StubEmailService(true),
-            logger ?? NullLogger<CreateInviteHandler>.Instance);
+        return new CreateInviteHandler(db);
     }
 
     // ──────────────────────────────────────────────
@@ -29,7 +20,7 @@ public class CreateInviteHandlerTests
     // ──────────────────────────────────────────────
 
     [Fact]
-    public async Task CreateInvite_ForCoach_PersistsInviteAndSendsEmail()
+    public async Task CreateInvite_ForCoach_PersistsInvite()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var (clubId, _, _) = await db.SeedClubWithTeamAsync();
@@ -52,8 +43,7 @@ public class CreateInviteHandlerTests
         // Create the sending user
         await db.SeedUserAsync("sender-auth");
 
-        var emailService = new StubEmailService(true);
-        var handler = BuildHandler(db.Context, emailService);
+        var handler = BuildHandler(db.Context);
 
         var command = new CreateInviteCommand("sender-auth", new CreateInviteRequestDto
         {
@@ -76,11 +66,6 @@ public class CreateInviteHandlerTests
         var dbInvite = await db.Context.Invites.SingleAsync(i => i.Id == result.Id);
         Assert.Equal("coach@example.com", dbInvite.Email);
         Assert.Equal(InviteStatus.Pending, dbInvite.Status);
-
-        // Verify email was dispatched
-        Assert.Single(emailService.SentEmails);
-        Assert.Equal("coach@example.com", emailService.SentEmails[0].RecipientEmail);
-        Assert.Equal("Coach", emailService.SentEmails[0].RoleName);
     }
 
     [Fact]
@@ -92,8 +77,7 @@ public class CreateInviteHandlerTests
 
         await db.SeedUserAsync("sender-auth");
 
-        var emailService = new StubEmailService(true);
-        var handler = BuildHandler(db.Context, emailService);
+        var handler = BuildHandler(db.Context);
 
         var command = new CreateInviteCommand("sender-auth", new CreateInviteRequestDto
         {
@@ -107,8 +91,6 @@ public class CreateInviteHandlerTests
 
         Assert.Equal(InviteType.Player, result.Type);
         Assert.Equal(playerId, result.EntityId);
-        Assert.Single(emailService.SentEmails);
-        Assert.Equal("Player", emailService.SentEmails[0].RoleName);
     }
 
     [Fact]
@@ -120,8 +102,7 @@ public class CreateInviteHandlerTests
 
         await db.SeedUserAsync("sender-auth");
 
-        var emailService = new StubEmailService(true);
-        var handler = BuildHandler(db.Context, emailService);
+        var handler = BuildHandler(db.Context);
 
         var command = new CreateInviteCommand("sender-auth", new CreateInviteRequestDto
         {
@@ -134,8 +115,6 @@ public class CreateInviteHandlerTests
         var result = await handler.Handle(command, CancellationToken.None);
 
         Assert.Equal(InviteType.Parent, result.Type);
-        Assert.Single(emailService.SentEmails);
-        Assert.Equal("Guardian", emailService.SentEmails[0].RoleName);
     }
 
     [Fact]
@@ -145,8 +124,7 @@ public class CreateInviteHandlerTests
         var (clubId, ageGroupId, _) = await db.SeedClubWithTeamAsync();
         await db.SeedUserAsync("sender-auth");
 
-        var emailService = new StubEmailService(true);
-        var handler = BuildHandler(db.Context, emailService);
+        var handler = BuildHandler(db.Context);
 
         var command = new CreateInviteCommand("sender-auth", new CreateInviteRequestDto
         {
@@ -171,55 +149,6 @@ public class CreateInviteHandlerTests
         });
 
         await Assert.ThrowsAsync<ValidationException>(() => handler.Handle(duplicate, CancellationToken.None));
-    }
-
-    // ──────────────────────────────────────────────
-    //  Email failure resilience
-    // ──────────────────────────────────────────────
-
-    [Fact]
-    public async Task CreateInvite_WhenEmailFails_StillPersistsInvite()
-    {
-        await using var db = await TestDatabaseFactory.CreateAsync();
-        var (clubId, _, _) = await db.SeedClubWithTeamAsync();
-
-        var coachId = Guid.NewGuid();
-        db.Context.Coaches.Add(new Coach
-        {
-            Id = coachId,
-            ClubId = clubId,
-            UserId = null,
-            FirstName = "Fail",
-            LastName = "Email",
-            Role = CoachRole.AssistantCoach,
-            CreatedAt = DateTime.UtcNow,
-            UpdatedAt = DateTime.UtcNow
-        });
-        await db.Context.SaveChangesAsync();
-
-        await db.SeedUserAsync("sender-auth");
-
-        // Email service returns false (delivery failure)
-        var emailService = new StubEmailService(false);
-        var handler = BuildHandler(db.Context, emailService);
-
-        var command = new CreateInviteCommand("sender-auth", new CreateInviteRequestDto
-        {
-            Email = "fail@example.com",
-            Type = InviteType.Coach,
-            EntityId = coachId,
-            ClubId = clubId
-        });
-
-        var result = await handler.Handle(command, CancellationToken.None);
-
-        // Invite persisted despite email failure
-        var dbInvite = await db.Context.Invites.SingleAsync(i => i.Id == result.Id);
-        Assert.Equal(InviteStatus.Pending, dbInvite.Status);
-        Assert.Equal("fail@example.com", dbInvite.Email);
-
-        // Email was attempted
-        Assert.Single(emailService.SentEmails);
     }
 
     // ──────────────────────────────────────────────
@@ -370,32 +299,5 @@ public class CreateInviteHandlerTests
 
         await Assert.ThrowsAsync<NotFoundException>(
             () => handler.Handle(command, CancellationToken.None));
-    }
-
-    // ──────────────────────────────────────────────
-    //  Stub email service for testing
-    // ──────────────────────────────────────────────
-
-    private sealed class StubEmailService : IEmailService
-    {
-        private readonly bool _succeeds;
-
-        public List<SentEmail> SentEmails { get; } = new();
-
-        public StubEmailService(bool succeeds) => _succeeds = succeeds;
-
-        public Task<bool> SendInviteEmailAsync(
-            string recipientEmail,
-            string recipientName,
-            string clubName,
-            string roleName,
-            string inviteCode,
-            CancellationToken cancellationToken = default)
-        {
-            SentEmails.Add(new SentEmail(recipientEmail, recipientName, clubName, roleName, inviteCode));
-            return Task.FromResult(_succeeds);
-        }
-
-        public record SentEmail(string RecipientEmail, string RecipientName, string ClubName, string RoleName, string InviteCode);
     }
 }

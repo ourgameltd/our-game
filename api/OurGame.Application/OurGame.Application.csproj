@@ -27,7 +27,6 @@
     <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.3" />
     <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="10.0.3" />
-    <PackageReference Include="Azure.Communication.Email" Version="1.1.0" />
     <PackageReference Include="WebPush" Version="1.0.12" />
   </ItemGroup>
 
