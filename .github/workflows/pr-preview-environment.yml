@@ -117,19 +117,31 @@ jobs:
         echo "Using callback URI: $CALLBACK_URI"
 
         ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "unknown")
+        SIGNED_IN_IDENTITY=$(az account show --query user.name -o tsv 2>/dev/null || echo "unknown")
 
         set +e
-        APP_OBJECT_ID=$(az ad app list --filter "appId eq '$APP_ID'" --query "[0].id" -o tsv 2>&1)
-        APP_LOOKUP_EXIT_CODE=$?
+        APP_OBJECT_ID=$(az ad app show --id "$APP_ID" --query "id" -o tsv 2>&1)
+        SHOW_LOOKUP_EXIT_CODE=$?
         set -e
 
+        if [ $SHOW_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
+          set +e
+          APP_OBJECT_ID=$(az ad app list --filter "appId eq '$APP_ID'" --query "[0].id" -o tsv 2>&1)
+          APP_LOOKUP_EXIT_CODE=$?
+          set -e
+        else
+          APP_LOOKUP_EXIT_CODE=0
+        fi
+
         if [ $APP_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
-          echo "::warning::Unable to resolve app registration for appId '$APP_ID' in tenant '$ACTIVE_TENANT' using B2C_CREDENTIALS. Azure CLI output: $APP_OBJECT_ID"
+          echo "::warning::Unable to resolve app registration for appId '$APP_ID' in tenant '$ACTIVE_TENANT' using B2C_CREDENTIALS. Signed-in identity: '$SIGNED_IN_IDENTITY'. Azure CLI output: $APP_OBJECT_ID"
           echo "## PR Preview Environment" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
           echo "- Preview URL: ${PREVIEW_BASE_URL}" >> $GITHUB_STEP_SUMMARY
           echo "- Callback URI update skipped because the app registration could not be resolved in tenant ${ACTIVE_TENANT}." >> $GITHUB_STEP_SUMMARY
+          echo "- Signed-in identity: ${SIGNED_IN_IDENTITY}." >> $GITHUB_STEP_SUMMARY
+          echo "- Check that B2C_CREDENTIALS points to the same tenant as the app registration and has Graph visibility (Application.Read.All/Application.ReadWrite.All with admin consent)." >> $GITHUB_STEP_SUMMARY
           exit 0
         fi
 
@@ -241,19 +253,31 @@ jobs:
         fi
 
         ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "unknown")
+        SIGNED_IN_IDENTITY=$(az account show --query user.name -o tsv 2>/dev/null || echo "unknown")
 
         set +e
-        APP_OBJECT_ID=$(az ad app list --filter "appId eq '$APP_ID'" --query "[0].id" -o tsv 2>&1)
-        APP_LOOKUP_EXIT_CODE=$?
+        APP_OBJECT_ID=$(az ad app show --id "$APP_ID" --query "id" -o tsv 2>&1)
+        SHOW_LOOKUP_EXIT_CODE=$?
         set -e
 
+        if [ $SHOW_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
+          set +e
+          APP_OBJECT_ID=$(az ad app list --filter "appId eq '$APP_ID'" --query "[0].id" -o tsv 2>&1)
+          APP_LOOKUP_EXIT_CODE=$?
+          set -e
+        else
+          APP_LOOKUP_EXIT_CODE=0
+        fi
+
         if [ $APP_LOOKUP_EXIT_CODE -ne 0 ] || [ -z "$APP_OBJECT_ID" ] || [ "$APP_OBJECT_ID" = "null" ]; then
-          echo "::warning::Unable to resolve app registration for appId '$APP_ID' in tenant '$ACTIVE_TENANT' using B2C_CREDENTIALS. Azure CLI output: $APP_OBJECT_ID"
+          echo "::warning::Unable to resolve app registration for appId '$APP_ID' in tenant '$ACTIVE_TENANT' using B2C_CREDENTIALS. Signed-in identity: '$SIGNED_IN_IDENTITY'. Azure CLI output: $APP_OBJECT_ID"
           echo "## PR Preview Environment Closed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- PR: #${{ github.event.pull_request.number }}" >> $GITHUB_STEP_SUMMARY
           echo "- Preview URL: ${{ steps.preview_uri.outputs.previewUrl }}" >> $GITHUB_STEP_SUMMARY
           echo "- Callback URI cleanup skipped because the app registration could not be resolved in tenant ${ACTIVE_TENANT}." >> $GITHUB_STEP_SUMMARY
+          echo "- Signed-in identity: ${SIGNED_IN_IDENTITY}." >> $GITHUB_STEP_SUMMARY
+          echo "- Check that B2C_CREDENTIALS points to the same tenant as the app registration and has Graph visibility (Application.Read.All/Application.ReadWrite.All with admin consent)." >> $GITHUB_STEP_SUMMARY
           exit 0
         fi
 
