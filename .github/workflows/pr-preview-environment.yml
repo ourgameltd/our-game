@@ -78,10 +78,39 @@ jobs:
         skip_app_build: true
 
     - name: Azure Login (B2C tenant)
-      uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
-      with:
-        creds: ${{ secrets.B2C_CREDENTIALS }}
-        allow-no-subscriptions: true
+      shell: bash
+      env:
+        B2C_CREDENTIALS: ${{ secrets.B2C_CREDENTIALS }}
+      run: |
+        if [ -z "$B2C_CREDENTIALS" ]; then
+          echo "::warning::B2C_CREDENTIALS is empty; skipping B2C login and callback URI update."
+          exit 0
+        fi
+
+        B2C_CLIENT_ID=$(echo "$B2C_CREDENTIALS" | jq -r '.clientId // empty')
+        B2C_CLIENT_SECRET=$(echo "$B2C_CREDENTIALS" | jq -r '.clientSecret // empty')
+        B2C_TENANT_ID=$(echo "$B2C_CREDENTIALS" | jq -r '.tenantId // empty')
+
+        if [ -z "$B2C_CLIENT_ID" ] || [ -z "$B2C_CLIENT_SECRET" ] || [ -z "$B2C_TENANT_ID" ]; then
+          echo "::warning::B2C_CREDENTIALS must include clientId, clientSecret, and tenantId."
+          exit 0
+        fi
+
+        az account clear || true
+        az logout || true
+
+        az login \
+          --service-principal \
+          --username "$B2C_CLIENT_ID" \
+          --password "$B2C_CLIENT_SECRET" \
+          --tenant "$B2C_TENANT_ID" \
+          --allow-no-subscriptions 1>/dev/null
+
+        ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "")
+        if [ "$ACTIVE_TENANT" != "$B2C_TENANT_ID" ]; then
+          echo "::warning::B2C login succeeded but active tenant '$ACTIVE_TENANT' does not match expected '$B2C_TENANT_ID'."
+          exit 0
+        fi
 
     - name: Add preview callback URI to app registration
       shell: bash
@@ -235,10 +264,39 @@ jobs:
         action: "close"
 
     - name: Azure Login (B2C tenant)
-      uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
-      with:
-        creds: ${{ secrets.B2C_CREDENTIALS }}
-        allow-no-subscriptions: true
+      shell: bash
+      env:
+        B2C_CREDENTIALS: ${{ secrets.B2C_CREDENTIALS }}
+      run: |
+        if [ -z "$B2C_CREDENTIALS" ]; then
+          echo "::warning::B2C_CREDENTIALS is empty; skipping B2C login and callback URI cleanup."
+          exit 0
+        fi
+
+        B2C_CLIENT_ID=$(echo "$B2C_CREDENTIALS" | jq -r '.clientId // empty')
+        B2C_CLIENT_SECRET=$(echo "$B2C_CREDENTIALS" | jq -r '.clientSecret // empty')
+        B2C_TENANT_ID=$(echo "$B2C_CREDENTIALS" | jq -r '.tenantId // empty')
+
+        if [ -z "$B2C_CLIENT_ID" ] || [ -z "$B2C_CLIENT_SECRET" ] || [ -z "$B2C_TENANT_ID" ]; then
+          echo "::warning::B2C_CREDENTIALS must include clientId, clientSecret, and tenantId."
+          exit 0
+        fi
+
+        az account clear || true
+        az logout || true
+
+        az login \
+          --service-principal \
+          --username "$B2C_CLIENT_ID" \
+          --password "$B2C_CLIENT_SECRET" \
+          --tenant "$B2C_TENANT_ID" \
+          --allow-no-subscriptions 1>/dev/null
+
+        ACTIVE_TENANT=$(az account show --query tenantId -o tsv 2>/dev/null || echo "")
+        if [ "$ACTIVE_TENANT" != "$B2C_TENANT_ID" ]; then
+          echo "::warning::B2C login succeeded but active tenant '$ACTIVE_TENANT' does not match expected '$B2C_TENANT_ID'."
+          exit 0
+        fi
 
     - name: Remove preview callback URI from app registration
       if: steps.preview_uri.outputs.callbackUri != ''
