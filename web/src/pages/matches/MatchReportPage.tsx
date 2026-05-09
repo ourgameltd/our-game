@@ -119,8 +119,6 @@ export default function MatchReportPage() {
   const isUpcoming = new Date(match.matchDate) > new Date();
   const homeTeam = match.isHome ? match.teamName : match.opposition;
   const awayTeam = match.isHome ? match.opposition : match.teamName;
-  const isLocked = match.isLocked;
-
   // Group cards by player
   const playerCards = match.report?.cards?.reduce((acc, card) => {
     const playerId = card.playerId;
@@ -193,7 +191,6 @@ export default function MatchReportPage() {
             title="Settings"
           >
             <Settings className="w-5 h-5" />
-            {isLocked && <span>🔒</span>}
           </button>
         </div>
 
@@ -485,23 +482,6 @@ export default function MatchReportPage() {
                       No match summary available yet.
                     </p>
                   )}
-                </div>
-              </div>
-            )}
-
-            {/* Lock Status Indicator */}
-            {isLocked && (
-              <div className="card bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-                <div className="flex items-center gap-3">
-                  <span className="text-2xl">🔒</span>
-                  <div>
-                    <p className="text-amber-800 dark:text-amber-300 font-medium">
-                      This match is locked
-                    </p>
-                    <p className="text-sm text-amber-700 dark:text-amber-400">
-                      Match data is locked and cannot be edited. Contact an administrator to unlock this match if changes are needed.
-                    </p>
-                  </div>
                 </div>
               </div>
             )}

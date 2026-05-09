@@ -1,5 +1,5 @@
 import { Plus } from 'lucide-react';
-import { Tactic, PlayerDirection, TacticPrinciple } from '@/types';
+import { Tactic, PlayerDirection, TacticPrinciple, TacticalPositionOverride } from '@/types';
 import { ResolvedPosition } from '@/data/tactics';
 
 interface SelectedPlayer {
@@ -17,6 +17,8 @@ interface TacticDisplayProps {
   selectedPositionId?: string | null;
   selectedPositionIndex?: number | null;
   highlightedPositionIndices?: number[]; // For principle highlighting
+  principlePositionOverrides?: Record<number, TacticalPositionOverride>;
+  onDeselect?: () => void;
   className?: string;
   compact?: boolean;
   // Player assignment props (optional - for match lineup display)
@@ -70,6 +72,8 @@ export default function TacticDisplay({
   selectedPositionId,
   selectedPositionIndex,
   highlightedPositionIndices = [],
+  principlePositionOverrides,
+  onDeselect,
   className = '',
   compact = false,
   // Player assignment props
@@ -111,7 +115,16 @@ export default function TacticDisplay({
   return (
     <div className={`bg-white dark:bg-gray-800 ${compact ? '' : 'rounded-lg border border-gray-200 dark:border-gray-700'} overflow-hidden h-full ${className}`}>
       {/* Football Pitch */}
-      <div className="relative w-full h-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-700 dark:to-green-800" style={compact ? {} : { paddingBottom: '140%' }}>
+      <div
+        className="relative w-full h-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-700 dark:to-green-800"
+        style={compact ? {} : { paddingBottom: '140%' }}
+        onClick={(e) => {
+          if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'svg') {
+            if (onResolvedPositionClick) onResolvedPositionClick(null);
+            onDeselect?.();
+          }
+        }}
+      >
         {/* Pitch markings SVG */}
         <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 140" preserveAspectRatio="none">
           {/* Outer boundary */}
@@ -153,6 +166,10 @@ export default function TacticDisplay({
           const isPrincipleHighlighted = highlightedPositionIndices.includes(positionIndex);
           const hasOverrides = showInheritance && pos.overriddenBy && pos.overriddenBy.length > 0;
           const hasPrinciples = hasSpecificPrinciples(tactic.principles || [], positionIndex);
+          const principleOverride = principlePositionOverrides?.[positionIndex];
+          const displayX = principleOverride?.x ?? pos.x;
+          const displayY = principleOverride?.y ?? pos.y;
+          const displayDirection = principleOverride?.direction ?? pos.direction;
           
           // Player assignment support
           const player = selectedPlayers.find(selectedPlayer => selectedPlayer.positionIndex === positionIndex);
@@ -187,8 +204,8 @@ export default function TacticDisplay({
                 onPositionClick || onResolvedPositionClick || interactive ? 'cursor-pointer hover:scale-110' : ''
               } transition-all duration-200 group hover:z-50 ${isDimmed ? 'opacity-40' : ''}`}
               style={{
-                left: `${pos.x}%`,
-                top: `${pos.y}%`,
+                left: `${displayX}%`,
+                top: `${displayY}%`,
               }}
               onClick={handleClick}
               title={hasOverrides ? `Overridden by: ${pos.overriddenBy?.join(', ')}` : undefined}
@@ -260,8 +277,8 @@ export default function TacticDisplay({
                 )}
 
                 {/* Direction arrow with line - positioned outside the circle, hidden in compact mode */}
-                {!compact && showDirections && pos.direction && (() => {
-                  const dirStyle = getDirectionStyle(pos.direction);
+                {!compact && showDirections && displayDirection && (() => {
+                  const dirStyle = getDirectionStyle(displayDirection);
                   if (!dirStyle) return null;
                   
                   // Calculate line and arrow positioning based on direction

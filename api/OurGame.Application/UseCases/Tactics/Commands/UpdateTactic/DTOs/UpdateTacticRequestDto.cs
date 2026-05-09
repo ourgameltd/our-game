@@ -104,4 +104,22 @@ public record UpdateTacticPrincipleDto
     /// Indices of positions this principle applies to
     /// </summary>
     public List<int> PositionIndices { get; init; } = new();
+
+    /// <summary>
+    /// Per-position coordinate/direction overrides specific to this principle
+    /// </summary>
+    public List<UpdatePrinciplePositionOverrideDto> PositionOverrides { get; init; } = new();
+}
+
+/// <summary>
+/// A position override scoped to a specific tactical principle
+/// </summary>
+public record UpdatePrinciplePositionOverrideDto
+{
+    [Required]
+    public int PositionIndex { get; init; }
+    public decimal? XCoord { get; init; }
+    public decimal? YCoord { get; init; }
+    [StringLength(50)]
+    public string? Direction { get; init; }
 }

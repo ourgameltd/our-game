@@ -25,7 +25,6 @@ function mapClubMatchToMatch(dto: ClubMatchDto): Match {
       ? { home: dto.homeScore, away: dto.awayScore }
       : undefined,
     status: dto.status as Match['status'],
-    isLocked: dto.isLocked,
     weather: dto.weatherCondition
       ? { condition: dto.weatherCondition, temperature: dto.weatherTemperature ?? 0 }
       : undefined,

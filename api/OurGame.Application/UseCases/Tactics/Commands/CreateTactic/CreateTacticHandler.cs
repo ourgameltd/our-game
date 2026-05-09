@@ -134,7 +134,7 @@ public class CreateTacticHandler : IRequestHandler<CreateTacticCommand, TacticDe
             ", cancellationToken);
         }
 
-        // Insert tactic principles
+        // Insert tactic principles (and their per-principle position overrides)
         foreach (var p in dto.Principles)
         {
             var principleId = Guid.NewGuid();
@@ -147,6 +147,15 @@ public class CreateTacticHandler : IRequestHandler<CreateTacticCommand, TacticDe
                 INSERT INTO TacticPrinciples (Id, FormationId, Title, Description, PositionIndices)
                 VALUES ({principleId}, {tacticId}, {p.Title}, {description}, {positionIndicesCsv})
             ", cancellationToken);
+
+            foreach (var po in p.PositionOverrides)
+            {
+                var poId = Guid.NewGuid();
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO TacticPrinciplePositionOverrides (Id, TacticPrincipleId, PositionIndex, XCoord, YCoord, Direction)
+                    VALUES ({poId}, {principleId}, {po.PositionIndex}, {po.XCoord}, {po.YCoord}, {po.Direction})
+                ", cancellationToken);
+            }
         }
 
         // Re-query and return the created tactic using GetTacticByIdHandler

@@ -19,6 +19,7 @@ interface PrinciplePanelProps {
   onResolvedPositionClick?: (positionId: string | null) => void;
   selectedPrincipleId?: string | null;
   onPrincipleClick?: (principleId: string | null) => void;
+  onPrincipleSelect?: (principleId: string | null) => void;
   readOnly?: boolean;
 }
 
@@ -37,6 +38,7 @@ export default function PrinciplePanel({
   onResolvedPositionClick,
   selectedPrincipleId,
   onPrincipleClick,
+  onPrincipleSelect,
   readOnly = false,
 }: PrinciplePanelProps) {
   const [expandedPrinciple, setExpandedPrinciple] = useState<string | null>(null);
@@ -123,11 +125,12 @@ export default function PrinciplePanel({
   const handlePrincipleCardClick = (principle: TacticPrinciple) => {
     // Toggle expand state
     setExpandedPrinciple(expandedPrinciple === principle.id ? null : principle.id);
-    
-    // If in read-only mode with onPrincipleClick, toggle principle selection
+
     if (readOnly && onPrincipleClick) {
-      // Toggle: if already selected, deselect; otherwise select
       onPrincipleClick(selectedPrincipleId === principle.id ? null : principle.id);
+    } else if (!readOnly && onPrincipleSelect) {
+      // In edit mode: toggle principle as the active pitch-editing target
+      onPrincipleSelect(selectedPrincipleId === principle.id ? null : principle.id);
     }
   };
 
@@ -137,7 +140,15 @@ export default function PrinciplePanel({
     const isPrincipleSelected = selectedPrincipleId === principle.id;
     
     // Determine color scheme based on state
+    const isEditModeActive = !readOnly && selectedPrincipleId === principle.id;
+
     const getColorScheme = () => {
+      if (isEditModeActive) {
+        return {
+          border: 'border-green-500 dark:border-green-400 ring-2 ring-green-500/50',
+          header: 'bg-green-50 dark:bg-green-900/20',
+        };
+      }
       if (isPrincipleSelected) {
         return {
           border: 'border-yellow-500 dark:border-yellow-400 ring-2 ring-yellow-500/50',
@@ -226,6 +237,14 @@ export default function PrinciplePanel({
         {/* Expanded Content */}
         {isExpanded && (
           <div className="p-3 space-y-2 border-t border-gray-200 dark:border-gray-700">
+            {/* Edit-mode active hint */}
+            {isEditModeActive && (
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs text-green-700 dark:text-green-400">
+                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shrink-0" />
+                Drag players on the pitch to set positions for this principle
+              </div>
+            )}
+
             {/* Description */}
             <div>
               <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">

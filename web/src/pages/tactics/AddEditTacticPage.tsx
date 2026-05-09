@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback, KeyboardEvent } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 import { Routes } from '@/utils/routes';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
@@ -37,12 +37,23 @@ function mapDtoToFormState(dto: TacticDetailDto): Tactic {
   }
 
   // Map TacticPrincipleDto[] → TacticPrinciple[]
-  const principles: TacticPrinciple[] = dto.principles.map(p => ({
-    id: p.id,
-    title: p.title,
-    description: p.description || '',
-    positionIndices: p.positionIndices,
-  }));
+  const principles: TacticPrinciple[] = dto.principles.map(p => {
+    const principlePositionOverrides: Record<number, TacticalPositionOverride> = {};
+    for (const po of p.positionOverrides ?? []) {
+      const override: TacticalPositionOverride = {};
+      if (po.xCoord !== undefined) override.x = po.xCoord;
+      if (po.yCoord !== undefined) override.y = po.yCoord;
+      if (po.direction) override.direction = po.direction as PlayerDirection;
+      principlePositionOverrides[po.positionIndex] = override;
+    }
+    return {
+      id: p.id,
+      title: p.title,
+      description: p.description || '',
+      positionIndices: p.positionIndices,
+      positionOverrides: Object.keys(principlePositionOverrides).length > 0 ? principlePositionOverrides : undefined,
+    };
+  });
 
   // Derive FormationScope from TacticDetailScopeDto
   const scope: FormationScope =
@@ -83,7 +94,95 @@ function buildPrinciplesPayload(principles: TacticPrinciple[] | undefined) {
     title: p.title,
     description: p.description || undefined,
     positionIndices: p.positionIndices,
+    positionOverrides: p.positionOverrides
+      ? Object.entries(p.positionOverrides).map(([indexStr, o]) => ({
+          positionIndex: parseInt(indexStr, 10),
+          xCoord: o.x,
+          yCoord: o.y,
+          direction: o.direction,
+        }))
+      : [],
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Tag Input Component
+// ---------------------------------------------------------------------------
+
+interface TagInputProps {
+  tags: string[];
+  onChange: (tags: string[]) => void;
+}
+
+function TagInput({ tags, onChange }: TagInputProps) {
+  const [inputValue, setInputValue] = useState('');
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const addTag = (raw: string) => {
+    const value = raw.trim();
+    if (value && !tags.includes(value)) {
+      onChange([...tags, value]);
+    }
+    setInputValue('');
+  };
+
+  const removeTag = (index: number) => {
+    onChange(tags.filter((_, i) => i !== index));
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      addTag(inputValue);
+    } else if (e.key === 'Backspace' && inputValue === '' && tags.length > 0) {
+      removeTag(tags.length - 1);
+    }
+  };
+
+  const handleBlur = () => {
+    if (inputValue.trim()) {
+      addTag(inputValue);
+    }
+  };
+
+  return (
+    <div className="md:col-span-2">
+      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Tags
+      </label>
+      <div
+        className="min-h-10.5 flex flex-wrap gap-1.5 px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus-within:ring-2 focus-within:ring-blue-500 cursor-text"
+        onClick={() => inputRef.current?.focus()}
+      >
+        {tags.map((tag, i) => (
+          <span
+            key={i}
+            className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 dark:bg-blue-900/40 text-blue-800 dark:text-blue-200 text-sm rounded-md"
+          >
+            {tag}
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); removeTag(i); }}
+              className="text-blue-500 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-200 focus:outline-none"
+              aria-label={`Remove tag ${tag}`}
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </span>
+        ))}
+        <input
+          ref={inputRef}
+          type="text"
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyDown={handleKeyDown}
+          onBlur={handleBlur}
+          className="flex-1 min-w-30 bg-transparent outline-none text-sm text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500"
+          placeholder={tags.length === 0 ? 'Type a tag and press Enter or comma…' : 'Add another…'}
+        />
+      </div>
+    </div>
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -287,6 +386,7 @@ export default function AddEditTacticPage() {
   // ---- Local form state ----------------------------------------------------
   const [tactic, setTactic] = useState<Tactic>(() => createDefaultTactic(clubId, ageGroupId, teamId));
   const [selectedPosition, setSelectedPosition] = useState<number | null>(null);
+  const [selectedPrincipleId, setSelectedPrincipleId] = useState<string | null>(null);
   const formInitialized = useRef(false);
   const submitInFlightRef = useRef(false);
 
@@ -335,6 +435,19 @@ export default function AddEditTacticPage() {
     });
   }, [isEditing, firstAvailableFormation]);
 
+  // Escape key deselects active principle
+  const handleDeselectPrinciple = useCallback(() => setSelectedPrincipleId(null), []);
+
+  useEffect(() => {
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape' && selectedPrincipleId) {
+        setSelectedPrincipleId(null);
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [selectedPrincipleId]);
+
   // Navigate to detail page on successful save
   useEffect(() => {
     const savedTactic = createData || updateData;
@@ -366,6 +479,11 @@ export default function AddEditTacticPage() {
     [formation],
   );
 
+  const activePrincipleOverrides = useMemo(() => {
+    if (!selectedPrincipleId) return undefined;
+    return (tactic.principles || []).find(p => p.id === selectedPrincipleId)?.positionOverrides;
+  }, [selectedPrincipleId, tactic.principles]);
+
   const hasSystemFormationCatalog = systemFormations.length > 0;
   const isBlockingSystemFormationState = !isLoadingSystemFormations && (!!systemFormationsError || !hasSystemFormationCatalog);
   const isBlockingEditState = isEditing && !isLoading && (!hasValidEditTacticId || !!fetchError || !tacticDetail);
@@ -392,6 +510,34 @@ export default function AddEditTacticPage() {
 
   // ---- Event handlers ------------------------------------------------------
   const handlePositionChange = (index: number, override: Partial<TacticalPositionOverride>) => {
+    if (selectedPrincipleId) {
+      // Route the change into the active principle's positionOverrides
+      setTactic(prev => ({
+        ...prev,
+        principles: (prev.principles || []).map(p => {
+          if (p.id !== selectedPrincipleId) return p;
+          const existingOverride = p.positionOverrides?.[index] || {};
+          const newOverride = { ...existingOverride };
+          for (const [key, value] of Object.entries(override)) {
+            if (value === undefined) {
+              delete newOverride[key as keyof TacticalPositionOverride];
+            } else {
+              (newOverride as Record<string, unknown>)[key] = value;
+            }
+          }
+          const newOverrides = { ...(p.positionOverrides || {}) };
+          if (Object.keys(newOverride).length === 0) {
+            delete newOverrides[index];
+          } else {
+            newOverrides[index] = newOverride;
+          }
+          return { ...p, positionOverrides: newOverrides };
+        }),
+        updatedAt: new Date().toISOString(),
+      }));
+      return;
+    }
+
     setTactic(prev => {
       const existingOverride = prev.positionOverrides?.[index] || {};
 
@@ -605,6 +751,9 @@ export default function AddEditTacticPage() {
                 gridSize={5}
                 onPositionSelect={setSelectedPosition}
                 selectedPositionIndex={selectedPosition}
+                principlePositionOverrides={activePrincipleOverrides}
+                activePrincipleTitle={(tactic.principles || []).find(p => p.id === selectedPrincipleId)?.title}
+                onDeselect={handleDeselectPrinciple}
               />
             )}
           </div>
@@ -662,21 +811,10 @@ export default function AddEditTacticPage() {
                 </div>
 
                 {/* Tags */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Tags (comma separated)
-                  </label>
-                  <input
-                    type="text"
-                    value={tactic.tags?.join(', ') || ''}
-                    onChange={(e) => setTactic(prev => ({
-                      ...prev,
-                      tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean)
-                    }))}
-                    className="w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., pressing, attacking, 4-4-2"
-                  />
-                </div>
+                <TagInput
+                  tags={tactic.tags || []}
+                  onChange={(tags) => setTactic(prev => ({ ...prev, tags }))}
+                />
               </div>
 
               {/* Summary */}
@@ -701,6 +839,8 @@ export default function AddEditTacticPage() {
               onPrinciplesChange={handlePrinciplesChange}
               selectedPositionIndex={selectedPosition}
               onPositionClick={(index) => setSelectedPosition(index)}
+              selectedPrincipleId={selectedPrincipleId}
+              onPrincipleSelect={setSelectedPrincipleId}
             />
           </div>
         </div>

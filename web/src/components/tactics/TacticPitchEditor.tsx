@@ -11,6 +11,9 @@ interface TacticPitchEditorProps {
   className?: string;
   onPositionSelect?: (index: number | null) => void;
   selectedPositionIndex?: number | null;
+  principlePositionOverrides?: Record<number, TacticalPositionOverride>;
+  activePrincipleTitle?: string;
+  onDeselect?: () => void;
 }
 
 // Direction button configuration
@@ -56,6 +59,9 @@ export default function TacticPitchEditor({
   className = '',
   onPositionSelect,
   selectedPositionIndex = null,
+  principlePositionOverrides,
+  activePrincipleTitle,
+  onDeselect,
 }: TacticPitchEditorProps) {
   const pitchRef = useRef<HTMLDivElement>(null);
   const [hoverPositionIndex, setHoverPositionIndex] = useState<number | null>(null);
@@ -72,20 +78,30 @@ export default function TacticPitchEditor({
     [snapToGrid, gridSize]
   );
 
-  // Get merged position (parent + override) - not memoized to ensure fresh data on every render
+  // Get merged position (parent + tactic override + principle override)
   const getMergedPosition = (index: number) => {
     const parentPos = parentFormation.positions?.[index];
-    const override = tactic.positionOverrides?.[index];
-    
-    const result = {
+    const tacticOverride = tactic.positionOverrides?.[index];
+    const principleOverride = principlePositionOverrides?.[index];
+
+    const baseX = tacticOverride?.x !== undefined ? tacticOverride.x : (parentPos?.x ?? 50);
+    const baseY = tacticOverride?.y !== undefined ? tacticOverride.y : (parentPos?.y ?? 50);
+    const baseDir = tacticOverride?.direction || parentPos?.direction;
+    const hasTacticOverride = !!tacticOverride && (tacticOverride.x !== undefined || tacticOverride.y !== undefined || tacticOverride.direction !== undefined);
+
+    const x = principleOverride?.x !== undefined ? principleOverride.x : baseX;
+    const y = principleOverride?.y !== undefined ? principleOverride.y : baseY;
+    const direction = principleOverride?.direction || baseDir;
+    const hasPrincipleOverride = !!principleOverride && (principleOverride.x !== undefined || principleOverride.y !== undefined || principleOverride.direction !== undefined);
+
+    return {
       position: parentPos?.position || '',
-      x: override?.x !== undefined ? override.x : (parentPos?.x ?? 50),
-      y: override?.y !== undefined ? override.y : (parentPos?.y ?? 50),
-      direction: override?.direction || parentPos?.direction,
-      isOverridden: !!override && (override.x !== undefined || override.y !== undefined || override.direction !== undefined),
+      x,
+      y,
+      direction,
+      isOverridden: hasTacticOverride,
+      isPrincipleOverridden: hasPrincipleOverride,
     };
-    
-    return result;
   };
 
   // Handle drag start
@@ -205,13 +221,24 @@ export default function TacticPitchEditor({
         if (onPositionSelect) {
           onPositionSelect(null);
         }
+        onDeselect?.();
       }
     },
-    [onPositionSelect]
+    [onPositionSelect, onDeselect]
   );
 
+  const inPrincipleMode = !!principlePositionOverrides;
+
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 rounded-lg border overflow-hidden ${inPrincipleMode ? 'border-green-400 dark:border-green-600 ring-2 ring-green-400/40' : 'border-gray-200 dark:border-gray-700'} ${className}`}>
+      {/* Principle mode banner */}
+      {inPrincipleMode && activePrincipleTitle && (
+        <div className="px-3 py-1.5 bg-green-500 dark:bg-green-700 text-white text-xs font-medium flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
+          Editing positions for: <span className="font-bold">{activePrincipleTitle}</span>
+        </div>
+      )}
+
       {/* Pitch */}
       <div
         ref={pitchRef}
@@ -258,7 +285,7 @@ export default function TacticPitchEditor({
           const isSelected = selectedPositionIndex === index;
           const isHovered = hoverPositionIndex === index;
           const isDragging = draggingIndex === index;
-          
+
           // Use preview position if this marker is being dragged
           const displayX = isDragging && dragPreviewPos ? dragPreviewPos.x : mergedPos.x;
           const displayY = isDragging && dragPreviewPos ? dragPreviewPos.y : mergedPos.y;
@@ -268,10 +295,10 @@ export default function TacticPitchEditor({
               key={index}
               draggable
               className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-200 cursor-move ${
-                showDirectionFlyout === index 
-                  ? 'z-[90]' 
+                showDirectionFlyout === index
+                  ? 'z-[90]'
                   : isDragging
-                  ? 'z-50 scale-110' 
+                  ? 'z-50 scale-110'
                   : 'z-10'
               }`}
               style={{
@@ -290,6 +317,8 @@ export default function TacticPitchEditor({
                   className={`w-12 h-12 rounded-full flex items-center justify-center border-2 shadow-lg transition-all ${
                     isSelected
                       ? 'bg-yellow-500 dark:bg-yellow-600 border-yellow-300 dark:border-yellow-400 ring-4 ring-yellow-400/50'
+                      : mergedPos.isPrincipleOverridden
+                      ? 'bg-green-600 dark:bg-green-700 border-green-400 dark:border-green-500 ring-4 ring-green-400/50'
                       : mergedPos.isOverridden
                       ? 'bg-blue-600 dark:bg-blue-700 border-blue-400 dark:border-blue-500 ring-4 ring-blue-400/50'
                       : 'bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 opacity-50'
@@ -297,7 +326,7 @@ export default function TacticPitchEditor({
                 >
                   <span
                     className={`text-sm font-bold ${
-                      isSelected || mergedPos.isOverridden
+                      isSelected || mergedPos.isOverridden || mergedPos.isPrincipleOverridden
                         ? 'text-white'
                         : 'text-gray-700 dark:text-gray-300'
                     }`}
@@ -307,7 +336,10 @@ export default function TacticPitchEditor({
                 </div>
 
                 {/* Override indicator */}
-                {mergedPos.isOverridden && !isSelected && (
+                {mergedPos.isPrincipleOverridden && !isSelected && (
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white dark:border-gray-800" />
+                )}
+                {mergedPos.isOverridden && !mergedPos.isPrincipleOverridden && !isSelected && (
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full border-2 border-white dark:border-gray-800" />
                 )}
 
@@ -432,6 +464,12 @@ export default function TacticPitchEditor({
               <div className="w-3 h-3 rounded-full bg-blue-600 border-2 border-blue-400 ring-2 ring-blue-400/50" />
               <span className="text-gray-600 dark:text-gray-400">Overridden</span>
             </div>
+            {inPrincipleMode && (
+              <div className="flex items-center gap-2">
+                <div className="w-3 h-3 rounded-full bg-green-600 border-2 border-green-400 ring-2 ring-green-400/50" />
+                <span className="text-gray-600 dark:text-gray-400">Principle</span>
+              </div>
+            )}
           </div>
           <div className="text-gray-600 dark:text-gray-400">
             {snapToGrid ? `Grid: ${gridSize}%` : 'Free positioning'}

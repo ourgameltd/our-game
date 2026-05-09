@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Markdown from 'react-markdown';
 import { useTactic } from '@/api/hooks';
@@ -24,12 +24,25 @@ function mapDtoToTactic(dto: TacticDetailDto): Tactic {
     positionOverrides[po.positionIndex] = override;
   }
 
-  const principles: TacticPrinciple[] = dto.principles.map(p => ({
-    id: p.id,
-    title: p.title,
-    description: p.description || '',
-    positionIndices: p.positionIndices,
-  }));
+  const principles: TacticPrinciple[] = dto.principles.map(p => {
+    const principlePositionOverrides: Record<number, TacticalPositionOverride> = {};
+    for (const po of p.positionOverrides ?? []) {
+      const override: TacticalPositionOverride = {};
+      if (po.xCoord !== undefined) override.x = po.xCoord;
+      if (po.yCoord !== undefined) override.y = po.yCoord;
+      if (po.direction) override.direction = po.direction as PlayerDirection;
+      principlePositionOverrides[po.positionIndex] = override;
+    }
+    return {
+      id: p.id,
+      title: p.title,
+      description: p.description || '',
+      positionIndices: p.positionIndices,
+      positionOverrides: Object.keys(principlePositionOverrides).length > 0
+        ? principlePositionOverrides
+        : undefined,
+    };
+  });
 
   const scope: FormationScope =
     dto.scope.teamIds.length > 0
@@ -90,6 +103,27 @@ export default function TacticDetailPage() {
   const highlightedPositionIndices = selectedPrincipleId
     ? (tactic?.principles?.find(p => p.id === selectedPrincipleId)?.positionIndices || [])
     : [];
+
+  const activePrincipleOverrides = useMemo(() => {
+    if (!selectedPrincipleId || !tactic) return undefined;
+    return tactic.principles?.find(p => p.id === selectedPrincipleId)?.positionOverrides;
+  }, [selectedPrincipleId, tactic]);
+
+  // Escape key clears both principle and position selection
+  const handleDeselect = useCallback(() => {
+    setSelectedPrincipleId(null);
+    setSelectedPositionId(null);
+  }, []);
+
+  useEffect(() => {
+    const onKeyDown = (e: globalThis.KeyboardEvent) => {
+      if (e.key === 'Escape' && (selectedPrincipleId || selectedPositionId)) {
+        handleDeselect();
+      }
+    };
+    document.addEventListener('keydown', onKeyDown);
+    return () => document.removeEventListener('keydown', onKeyDown);
+  }, [selectedPrincipleId, selectedPositionId, handleDeselect]);
 
   // Handle position click - clear principle selection when position is clicked
   const handlePositionClick = (positionId: string | null) => {
@@ -256,6 +290,8 @@ export default function TacticDetailPage() {
             selectedPositionId={selectedPositionId}
             selectedPositionIndex={selectedPositionIndex}
             highlightedPositionIndices={highlightedPositionIndices}
+            principlePositionOverrides={activePrincipleOverrides}
+            onDeselect={handleDeselect}
           />
         </div>
 

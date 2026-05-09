@@ -1837,8 +1837,7 @@ function mapTrainingSessionDetailToUi(dto: TrainingSessionDetailDto): TrainingSe
       notes: att.notes || undefined
     })),
     notes: dto.notes || undefined,
-    status: dto.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled',
-    isLocked: dto.isLocked || false
+    status: dto.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled'
   };
 }
 

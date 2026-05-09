@@ -290,7 +290,6 @@ export interface Match {
     temperature: number;
   };
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  isLocked?: boolean; // Whether the match is locked from editing
   coachIds?: string[]; // Coaches assigned to this match
   notes?: string; // Additional notes/details about the match
   attendance?: {
@@ -366,7 +365,6 @@ export interface TrainingSession {
   }[];
   notes?: string; // Free text area for session plan and additional details
   status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
-  isLocked?: boolean; // Whether the session is locked from editing
 }
 
 export interface Drill {
@@ -463,6 +461,8 @@ export interface TacticPrinciple {
   description: string;
   /** Position indices that this principle applies to (empty = all players) */
   positionIndices: number[];
+  /** Per-position coordinate/direction overrides specific to this principle */
+  positionOverrides?: Record<number, TacticalPositionOverride>;
 }
 
 /**

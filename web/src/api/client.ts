@@ -712,7 +712,6 @@ export interface TeamTrainingSessionDto {
   drillIds: string[];
   attendance: AttendanceDto[];
   status: string;
-  isLocked: boolean;
   drillCount: number;
   attendanceCount: number;
 }
@@ -894,7 +893,6 @@ export interface ClubTrainingSessionDto {
     notes?: string;
   }[];
   status: string;
-  isLocked: boolean;
 }
 
 export interface ClubTrainingSessionsDto {
@@ -917,7 +915,6 @@ export interface TrainingSessionDetailDto {
   templateId?: string;
   notes?: string;
   status: string;
-  isLocked: boolean;
   createdAt: string;
   updatedAt: string;
   drills: SessionDrillDetailDto[];
@@ -973,7 +970,6 @@ export interface CreateTrainingSessionRequest {
   focusAreas: string[];
   notes?: string;
   status: string;
-  isLocked: boolean;
   sessionDrills: CreateSessionDrillRequest[];
   assignedCoachIds: string[];
   attendance: CreateSessionAttendanceRequest[];
@@ -1009,7 +1005,6 @@ export interface UpdateTrainingSessionRequest {
   templateId?: string;
   notes?: string;
   status: string;
-  isLocked: boolean;
   drills: UpdateSessionDrillRequest[];
   coachIds: string[];
   attendance: UpdateSessionAttendanceRequest[];
@@ -1052,7 +1047,6 @@ export interface ClubMatchDto {
   homeScore?: number;
   awayScore?: number;
   status: string;
-  isLocked: boolean;
   weatherCondition?: string;
   weatherTemperature?: number;
 }
@@ -1336,6 +1330,12 @@ export interface TacticPrincipleDto {
   title: string;
   description?: string;
   positionIndices: number[];
+  positionOverrides?: Array<{
+    positionIndex: number;
+    xCoord?: number;
+    yCoord?: number;
+    direction?: string;
+  }>;
 }
 
 export interface TacticDetailDto {
@@ -1377,6 +1377,12 @@ export interface CreateTacticRequest {
     title: string;
     description?: string;
     positionIndices: number[];
+    positionOverrides?: Array<{
+      positionIndex: number;
+      xCoord?: number;
+      yCoord?: number;
+      direction?: string;
+    }>;
   }[];
 }
 
@@ -1395,6 +1401,12 @@ export interface UpdateTacticRequest {
     title: string;
     description?: string;
     positionIndices: number[];
+    positionOverrides?: Array<{
+      positionIndex: number;
+      xCoord?: number;
+      yCoord?: number;
+      direction?: string;
+    }>;
   }[];
 }
 
@@ -2174,7 +2186,6 @@ export interface MatchDetailDto {
   homeScore?: number;
   awayScore?: number;
   status: string;
-  isLocked: boolean;
   notes?: string;
   weatherCondition?: string;
   weatherTemperature?: number;
@@ -2429,7 +2440,6 @@ export interface UpdateMatchRequest {
   homeScore?: number;
   awayScore?: number;
   status: string;
-  isLocked: boolean;
   notes?: string;
   weatherCondition?: string;
   weatherTemperature?: number;

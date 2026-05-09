@@ -151,6 +151,58 @@ public class GetTacticByIdHandlerTests
         Assert.Single(result.Principles);
         Assert.Equal("Press High", result.Principles[0].Title);
         Assert.Equal(new List<int> { 9, 10 }, result.Principles[0].PositionIndices);
+        Assert.Empty(result.Principles[0].PositionOverrides);
+    }
+
+    [Fact]
+    public async Task Handle_IncludesPrinciplePositionOverrides()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var formationId = await db.SeedSystemFormationAsync();
+        var tacticId = await db.SeedTacticAsync(formationId);
+        var clubId = await db.SeedClubAsync();
+
+        db.Context.FormationClubs.Add(new FormationClub
+        {
+            Id = Guid.NewGuid(),
+            FormationId = tacticId,
+            ClubId = clubId,
+            SharedAt = DateTime.UtcNow
+        });
+
+        var principleId = Guid.NewGuid();
+        db.Context.TacticPrinciples.Add(new TacticPrinciple
+        {
+            Id = principleId,
+            FormationId = tacticId,
+            Title = "High Line",
+            Description = "Push up",
+            PositionIndices = "3,4"
+        });
+        await db.Context.SaveChangesAsync();
+
+        db.Context.TacticPrinciplePositionOverrides.Add(new TacticPrinciplePositionOverride
+        {
+            Id = Guid.NewGuid(),
+            TacticPrincipleId = principleId,
+            PositionIndex = 3,
+            XCoord = 25m,
+            YCoord = 30m,
+            Direction = "N"
+        });
+        await db.Context.SaveChangesAsync();
+
+        var handler = new GetTacticByIdHandler(db.Context);
+        var result = await handler.Handle(new GetTacticByIdQuery(tacticId), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Single(result.Principles);
+        var principle = result.Principles[0];
+        Assert.Single(principle.PositionOverrides);
+        Assert.Equal(3, principle.PositionOverrides[0].PositionIndex);
+        Assert.Equal(25.0, principle.PositionOverrides[0].XCoord);
+        Assert.Equal(30.0, principle.PositionOverrides[0].YCoord);
+        Assert.Equal("N", principle.PositionOverrides[0].Direction);
     }
 
     [Fact]

@@ -132,4 +132,65 @@ public class UpdateTacticHandlerTests
         Assert.Equal("Compact Shape", result.Principles[0].Title);
         Assert.Equal(new List<int> { 4, 5, 6 }, result.Principles[0].PositionIndices);
     }
+
+    [Fact]
+    public async Task Handle_ReplacesPrinciplePositionOverrides()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var formationId = await db.SeedSystemFormationAsync();
+        var tacticId = await db.SeedTacticAsync(formationId);
+        var clubId = await db.SeedClubAsync();
+        db.Context.FormationClubs.Add(new OurGame.Persistence.Models.FormationClub
+        {
+            Id = Guid.NewGuid(),
+            FormationId = tacticId,
+            ClubId = clubId,
+            SharedAt = DateTime.UtcNow
+        });
+        await db.Context.SaveChangesAsync();
+
+        var handler = new UpdateTacticHandler(db.Context);
+
+        // First save: principle with one position override
+        var dto1 = ValidDto() with
+        {
+            Principles = new List<UpdateTacticPrincipleDto>
+            {
+                new()
+                {
+                    Title = "High Line",
+                    PositionIndices = new List<int> { 3 },
+                    PositionOverrides = new List<UpdatePrinciplePositionOverrideDto>
+                    {
+                        new() { PositionIndex = 3, XCoord = 25m, YCoord = 30m, Direction = "N" }
+                    }
+                }
+            }
+        };
+        await handler.Handle(new UpdateTacticCommand(tacticId, dto1), CancellationToken.None);
+
+        // Second save: replace principle with different position overrides
+        var dto2 = ValidDto() with
+        {
+            Principles = new List<UpdateTacticPrincipleDto>
+            {
+                new()
+                {
+                    Title = "Hold Shape",
+                    PositionIndices = new List<int> { 4 },
+                    PositionOverrides = new List<UpdatePrinciplePositionOverrideDto>
+                    {
+                        new() { PositionIndex = 4, XCoord = 50m, YCoord = 50m }
+                    }
+                }
+            }
+        };
+        var result = await handler.Handle(new UpdateTacticCommand(tacticId, dto2), CancellationToken.None);
+
+        Assert.Single(result.Principles);
+        Assert.Equal("Hold Shape", result.Principles[0].Title);
+        Assert.Single(result.Principles[0].PositionOverrides);
+        Assert.Equal(4, result.Principles[0].PositionOverrides[0].PositionIndex);
+        Assert.Equal(50.0, result.Principles[0].PositionOverrides[0].XCoord);
+    }
 }

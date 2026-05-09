@@ -70,7 +70,7 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
 
         // 3. Fetch tactic principles
         var principlesSql = @"
-            SELECT 
+            SELECT
                 tp.Id,
                 tp.Title,
                 tp.Description,
@@ -81,6 +81,26 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
         var principles = await _db.Database
             .SqlQueryRaw<TacticPrincipleRaw>(principlesSql, query.TacticId)
             .ToListAsync(cancellationToken);
+
+        // 3a. Fetch principle position overrides for all principles in one batch
+        Dictionary<Guid, List<TacticPrinciplePositionOverrideRaw>> principleOverridesByPrincipleId = new();
+        if (principles.Any())
+        {
+            var principleIds = principles.Select(p => p.Id).ToList();
+            var principleIdsParam = string.Join(",", principleIds.Select(id => $"'{id}'"));
+            var principleOverridesSql = $@"
+                SELECT TacticPrincipleId, PositionIndex, XCoord, YCoord, Direction
+                FROM TacticPrinciplePositionOverrides
+                WHERE TacticPrincipleId IN ({principleIdsParam})";
+
+            var principleOverrides = await _db.Database
+                .SqlQueryRaw<TacticPrinciplePositionOverrideRaw>(principleOverridesSql)
+                .ToListAsync(cancellationToken);
+
+            principleOverridesByPrincipleId = principleOverrides
+                .GroupBy(o => o.TacticPrincipleId)
+                .ToDictionary(g => g.Key, g => g.ToList());
+        }
 
         // 4. Fetch scope link data
         var clubIdsSql = @"SELECT fc.ClubId FROM FormationClubs fc WHERE fc.FormationId = {0}";
@@ -199,12 +219,23 @@ public class GetTacticByIdHandler : IRequestHandler<GetTacticByIdQuery, TacticDe
                 YCoord = o.YCoord,
                 Direction = o.Direction
             }).ToList(),
-            Principles = principles.Select(p => new TacticPrincipleDto
+            Principles = principles.Select(p =>
             {
-                Id = p.Id,
-                Title = p.Title ?? string.Empty,
-                Description = p.Description,
-                PositionIndices = ParsePositionIndices(p.PositionIndices)
+                principleOverridesByPrincipleId.TryGetValue(p.Id, out var overrides);
+                return new TacticPrincipleDto
+                {
+                    Id = p.Id,
+                    Title = p.Title ?? string.Empty,
+                    Description = p.Description,
+                    PositionIndices = ParsePositionIndices(p.PositionIndices),
+                    PositionOverrides = (overrides ?? new()).Select(o => new PrinciplePositionOverrideDto
+                    {
+                        PositionIndex = o.PositionIndex,
+                        XCoord = o.XCoord.HasValue ? (double?)o.XCoord.Value : null,
+                        YCoord = o.YCoord.HasValue ? (double?)o.YCoord.Value : null,
+                        Direction = o.Direction
+                    }).ToList()
+                };
             }).ToList(),
             ResolvedPositions = resolvedPositions,
             CreatedAt = tactic.CreatedAt,
@@ -371,6 +402,15 @@ public class TacticPrincipleRaw
     public string? Title { get; set; }
     public string? Description { get; set; }
     public string? PositionIndices { get; set; }
+}
+
+public class TacticPrinciplePositionOverrideRaw
+{
+    public Guid TacticPrincipleId { get; set; }
+    public int PositionIndex { get; set; }
+    public decimal? XCoord { get; set; }
+    public decimal? YCoord { get; set; }
+    public string? Direction { get; set; }
 }
 
 public class FormationPositionRaw

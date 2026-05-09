@@ -334,7 +334,6 @@ Highlights:
 
 Next session: Focus on defensive transition`,
     status: 'completed',
-    isLocked: true
   },
   {
     id: 's5e6f7a8-b9c0-d1e2-f3a4-b5c6d7e8f9a0',
@@ -358,7 +357,6 @@ Next session: Focus on defensive transition`,
 
 Players responding well to possession drills - keeping the ball much better under pressure.`,
     status: 'completed',
-    isLocked: true
   },
   {
     id: 's6f7a8b9-c0d1-e2f3-a4b5-c6d7e8f9a0b1',
@@ -378,7 +376,6 @@ Players responding well to possession drills - keeping the ball much better unde
     ],
     notes: 'All players showed great attitude. Ethan particularly impressive with ball control. Need more work on weak foot.',
     status: 'completed',
-    isLocked: true
   },
   {
     id: 's7a8b9c0-d1e2-f3a4-b5c6-d7e8f9a0b1c2',
@@ -405,8 +402,7 @@ Worked on:
 - Free kick wall positioning
 
 Players very engaged - good tactical understanding developing.`,
-    status: 'completed',
-    isLocked: true
+    status: 'completed'
   }
 ];
 

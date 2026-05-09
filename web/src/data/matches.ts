@@ -210,7 +210,6 @@ export const sampleMatches: Match[] = [
       condition: 'Clear',
       temperature: 10
     },
-    isLocked: true
   },
   {
     id: 'm4d5e6f7-a8b9-c0d1-e2f3-a4b5c6d7e8f9',

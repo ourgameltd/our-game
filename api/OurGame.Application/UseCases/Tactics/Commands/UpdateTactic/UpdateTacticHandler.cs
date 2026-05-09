@@ -86,7 +86,12 @@ public class UpdateTacticHandler : IRequestHandler<UpdateTacticCommand, TacticDe
             ", cancellationToken);
         }
 
-        // Replace TacticPrinciples: DELETE existing + INSERT new set
+        // Replace TacticPrinciples: must delete TacticPrinciplePositionOverrides first (FK is RESTRICT)
+        await _db.Database.ExecuteSqlInterpolatedAsync($@"
+            DELETE FROM TacticPrinciplePositionOverrides
+            WHERE TacticPrincipleId IN (SELECT Id FROM TacticPrinciples WHERE FormationId = {tacticId})
+        ", cancellationToken);
+
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
             DELETE FROM TacticPrinciples WHERE FormationId = {tacticId}
         ", cancellationToken);
@@ -103,6 +108,15 @@ public class UpdateTacticHandler : IRequestHandler<UpdateTacticCommand, TacticDe
                 INSERT INTO TacticPrinciples (Id, FormationId, Title, Description, PositionIndices)
                 VALUES ({principleId}, {tacticId}, {principle.Title}, {description}, {positionIndicesCsv})
             ", cancellationToken);
+
+            foreach (var po in principle.PositionOverrides)
+            {
+                var poId = Guid.NewGuid();
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO TacticPrinciplePositionOverrides (Id, TacticPrincipleId, PositionIndex, XCoord, YCoord, Direction)
+                    VALUES ({poId}, {principleId}, {po.PositionIndex}, {po.XCoord}, {po.YCoord}, {po.Direction})
+                ", cancellationToken);
+            }
         }
 
         // Requery the updated tactic using the existing GetTacticById handler

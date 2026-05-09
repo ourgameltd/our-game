@@ -9,4 +9,5 @@ public class TacticPrincipleDto
     public string Title { get; set; } = string.Empty;
     public string? Description { get; set; }
     public List<int> PositionIndices { get; set; } = new();
+    public List<PrinciplePositionOverrideDto> PositionOverrides { get; set; } = new();
 }

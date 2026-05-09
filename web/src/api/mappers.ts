@@ -26,8 +26,7 @@ export function mapClubTrainingSessionToTrainingSession(dto: ClubTrainingSession
       status: a.status as 'confirmed' | 'declined' | 'maybe' | 'pending',
       notes: a.notes
     })),
-    status: dto.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled',
-    isLocked: dto.isLocked
+    status: dto.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled'
   };
 }
 

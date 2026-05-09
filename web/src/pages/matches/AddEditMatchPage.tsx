@@ -377,7 +377,6 @@ export default function AddEditMatchPage() {
   const [ratings, setRatings] = useState<{ playerId: string; rating: number }[]>([]);
   const [playerOfTheMatch, setPlayerOfTheMatch] = useState('');
   const [captainId, setCaptainId] = useState('');
-  const [isLocked, setIsLocked] = useState(false);
   const [notes, setNotes] = useState('');
   
   // Coach assignment state - filter out undefined IDs from TeamCoachDto
@@ -595,7 +594,6 @@ export default function AddEditMatchPage() {
       );
       setPlayerOfTheMatch(existingMatch.report?.playerOfMatchId || '');
       setCaptainId(existingMatch.report?.captainId || '');
-      setIsLocked(existingMatch.isLocked || false);
       setNotes(existingMatch.notes || '');
       setAssignedCoachIds(
         (existingMatch.coaches || []).map(c => c.coachId).filter((id): id is string => id !== undefined)
@@ -631,7 +629,6 @@ export default function AddEditMatchPage() {
       setRatings([]);
       setPlayerOfTheMatch('');
       setCaptainId('');
-      setIsLocked(false);
       setNotes('');
       setAssignedCoachIds([]);
     }
@@ -1258,16 +1255,11 @@ export default function AddEditMatchPage() {
   };
 
   const handleTogglePlayerOfTheMatch = (playerId: string) => {
-    if (isLocked) {
-      return;
-    }
-
     setPlayerOfTheMatch(current => current === playerId ? '' : playerId);
   };
 
   const handlePlayerClickForSwap = (playerIndex: number) => {
-    if (isLocked) return;
-    
+
     const clickedPlayer = startingPlayers.find(player => player.positionIndex === playerIndex);
     
     if (selectedPlayerIndexForSwap === null) {
@@ -1364,12 +1356,6 @@ export default function AddEditMatchPage() {
   };
 
   const handleSave = async () => {
-    // Check if match is locked
-    if (isLocked) {
-      alert('This match is locked and cannot be edited.');
-      return;
-    }
-
     // Validate required fields
     if (!opposition || !kickOffTime || !location || !competition || !kit) {
       alert('Please fill in all required fields');
@@ -1492,10 +1478,7 @@ export default function AddEditMatchPage() {
     };
 
     const response = isEditing
-      ? await updateMatch({
-          ...(matchData as Omit<UpdateMatchRequest, 'isLocked'>),
-          isLocked,
-        })
+      ? await updateMatch(matchData as UpdateMatchRequest)
       : await createMatch(matchData as CreateMatchRequest);
 
     if (response.success && response.data) {
@@ -1524,12 +1507,7 @@ export default function AddEditMatchPage() {
             </div>
             {isEditing && (
               <div className="flex items-center gap-3">
-                {isLocked && (
-                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-lg font-medium">
-                    🔒 Locked
-                  </span>
-                )}
-                {!isLocked && existingMatch?.status === 'completed' && (
+                {existingMatch?.status === 'completed' && (
                   <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg font-medium">
                     ✓ Completed
                   </span>
@@ -1634,7 +1612,6 @@ export default function AddEditMatchPage() {
                     type="text"
                     value={opposition}
                     onChange={(e) => setOpposition(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="Enter opposition team name"
                   />
@@ -1647,7 +1624,6 @@ export default function AddEditMatchPage() {
                   <select
                     value={seasonId}
                     onChange={(e) => setSeasonId(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {availableSeasons.length === 0 ? (
@@ -1669,7 +1645,6 @@ export default function AddEditMatchPage() {
                   <select
                     value={squadSize}
                     onChange={(e) => handleSquadSizeChange(parseInt(e.target.value) as SquadSize)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {squadSizes.map(size => (
@@ -1691,7 +1666,6 @@ export default function AddEditMatchPage() {
                     type="datetime-local"
                     value={kickOffTime}
                     onChange={(e) => setKickOffTime(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
@@ -1704,7 +1678,6 @@ export default function AddEditMatchPage() {
                     type="datetime-local"
                     value={meetTime}
                     onChange={(e) => setMeetTime(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="Optional: Team meeting time before kick off"
                   />
@@ -1719,8 +1692,7 @@ export default function AddEditMatchPage() {
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      disabled={isLocked}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="Enter match location or pick from map"
                     />
                     <button
@@ -1729,8 +1701,7 @@ export default function AddEditMatchPage() {
                         const searchQuery = location || 'football pitch near me';
                         window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`, '_blank');
                       }}
-                      disabled={isLocked}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       title="Open Google Maps to find location"
                     >
                       <MapPin className="w-4 h-4" />
@@ -1752,8 +1723,7 @@ export default function AddEditMatchPage() {
                         type="radio"
                         checked={isHome}
                         onChange={() => setIsHome(true)}
-                        disabled={isLocked}
-                        className="mr-2"
+                            className="mr-2"
                       />
                       <span className="text-gray-900 dark:text-white">Home</span>
                     </label>
@@ -1762,8 +1732,7 @@ export default function AddEditMatchPage() {
                         type="radio"
                         checked={!isHome}
                         onChange={() => setIsHome(false)}
-                        disabled={isLocked}
-                        className="mr-2"
+                            className="mr-2"
                       />
                       <span className="text-gray-900 dark:text-white">Away</span>
                     </label>
@@ -1778,7 +1747,6 @@ export default function AddEditMatchPage() {
                     type="text"
                     value={competition}
                     onChange={(e) => setCompetition(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="e.g., County League Division 1"
                   />
@@ -1791,7 +1759,6 @@ export default function AddEditMatchPage() {
                   <select
                     value={kit}
                     onChange={(e) => setKit(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Select a team or club kit</option>
@@ -1844,7 +1811,6 @@ export default function AddEditMatchPage() {
                   <select
                     value={goalkeeperKit}
                     onChange={(e) => setGoalkeeperKit(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Select a team or club goalkeeper kit (optional)</option>
@@ -1897,7 +1863,6 @@ export default function AddEditMatchPage() {
                   <select
                     value={weather}
                     onChange={(e) => setWeather(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Select weather</option>
@@ -1915,7 +1880,6 @@ export default function AddEditMatchPage() {
                     type="number"
                     value={temperature}
                     onChange={(e) => setTemperature(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="e.g., 15"
                   />
@@ -1932,7 +1896,6 @@ export default function AddEditMatchPage() {
                     min="0"
                     value={homeScore}
                     onChange={(e) => setHomeScore(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="0"
                   />
@@ -1947,7 +1910,6 @@ export default function AddEditMatchPage() {
                     min="0"
                     value={awayScore}
                     onChange={(e) => setAwayScore(e.target.value)}
-                    disabled={isLocked}
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="0"
                   />
@@ -1965,7 +1927,7 @@ export default function AddEditMatchPage() {
                       Coaches assigned to this match. Team coaches are automatically assigned.
                     </p>
                   </div>
-                  {!isLocked && availableCoachesForMatch.length > 0 && (
+                  {availableCoachesForMatch.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setShowCoachModal(true)}
@@ -2007,16 +1969,14 @@ export default function AddEditMatchPage() {
                               </span>
                             )}
                           </div>
-                          {!isLocked && (
-                            <button
-                              type="button"
-                              onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coach.id))}
-                              className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                              title="Remove coach"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coach.id))}
+                            className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                            title="Remove coach"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
                         </div>
                       );
                     })}
@@ -2025,7 +1985,7 @@ export default function AddEditMatchPage() {
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <span className="text-4xl mb-2 block">👨‍🏫</span>
                     <p>No coaches assigned to this match.</p>
-                    {!isLocked && availableCoachesForMatch.length > 0 && (
+                    {availableCoachesForMatch.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setShowCoachModal(true)}
@@ -2052,9 +2012,8 @@ export default function AddEditMatchPage() {
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  disabled={isLocked}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed resize-y"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y"
                   placeholder="e.g., Car pooling arrangements, bring packed lunch, meet at school gates, wear appropriate footwear..."
                 />
               </div>
@@ -2078,7 +2037,6 @@ export default function AddEditMatchPage() {
                   <select
                     value={getSelectionValue()}
                     onChange={(e) => handleSelectionChange(e.target.value)}
-                    disabled={isLocked}
                     className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Select formation or tactic</option>
@@ -2172,24 +2130,16 @@ export default function AddEditMatchPage() {
                       return (
                         <div key={player.playerId} className={`flex items-center justify-between p-3 rounded-lg ${isCaptain ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700' : 'bg-gray-50 dark:bg-gray-700'}`}>
                           <div className="flex items-center gap-3">
-                            {isLocked ? (
-                              player.squadNumber !== undefined && (
-                                <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
-                                  {player.squadNumber}
-                                </span>
-                              )
-                            ) : (
-                              <input
-                                type="number"
-                                min="1"
-                                max="99"
-                                value={player.squadNumber ?? ''}
-                                onChange={(e) => handleUpdateStartingPlayerSquadNumber(player.playerId, e.target.value)}
-                                placeholder="#"
-                                className="w-10 h-7 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                                title="Squad number for this match (can differ from team default)"
-                              />
-                            )}
+                            <input
+                              type="number"
+                              min="1"
+                              max="99"
+                              value={player.squadNumber ?? ''}
+                              onChange={(e) => handleUpdateStartingPlayerSquadNumber(player.playerId, e.target.value)}
+                              placeholder="#"
+                              className="w-10 h-7 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              title="Squad number for this match (can differ from team default)"
+                            />
                             <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
                               {getPositionLabelForSlot(player.positionIndex, player.positionLabel)}
                             </span>
@@ -2211,21 +2161,18 @@ export default function AddEditMatchPage() {
                             )}
                           </div>
                           <div className="flex items-center gap-2">
-                            {!isLocked && (
-                              <button
-                                type="button"
-                                onClick={() => setCaptainId(isCaptain ? '' : player.playerId)}
-                                className={`px-2 py-1 rounded text-xs font-medium transition-colors ${isCaptain ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30'}`}
-                                title={isCaptain ? 'Remove as captain' : 'Set as captain'}
-                              >
-                                {isCaptain ? '© Captain' : 'Captain'}
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => setCaptainId(isCaptain ? '' : player.playerId)}
+                              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${isCaptain ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30'}`}
+                              title={isCaptain ? 'Remove as captain' : 'Set as captain'}
+                            >
+                              {isCaptain ? '© Captain' : 'Captain'}
+                            </button>
                             <button
                               type="button"
                               onClick={() => handleRemoveStartingPlayer(player.playerId)}
-                              disabled={isLocked}
-                              className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               Remove
                             </button>
@@ -2236,7 +2183,7 @@ export default function AddEditMatchPage() {
                   })()}
                 </div>
 
-                {startingPlayers.length < squadSize && !isLocked && (
+                {startingPlayers.length < squadSize && (
                   <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-gray-900 dark:text-white">Add Starting Player</h4>
@@ -2305,24 +2252,16 @@ export default function AddEditMatchPage() {
                     return (
                       <div key={sub.playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                         <div className="flex items-center gap-3">
-                          {isLocked ? (
-                            sub.squadNumber !== undefined && (
-                              <span className="w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold">
-                                {sub.squadNumber}
-                              </span>
-                            )
-                          ) : (
-                            <input
-                              type="number"
-                              min="1"
-                              max="99"
-                              value={sub.squadNumber ?? ''}
-                              onChange={(e) => handleUpdateSubstituteSquadNumber(sub.playerId, e.target.value)}
-                              placeholder="#"
-                              className="w-10 h-7 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                              title="Squad number for this match (can differ from team default)"
-                            />
-                          )}
+                          <input
+                            type="number"
+                            min="1"
+                            max="99"
+                            value={sub.squadNumber ?? ''}
+                            onChange={(e) => handleUpdateSubstituteSquadNumber(sub.playerId, e.target.value)}
+                            placeholder="#"
+                            className="w-10 h-7 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            title="Squad number for this match (can differ from team default)"
+                          />
                           {playerData?.photoUrl && (
                             <img 
                               src={playerData.photoUrl} 
@@ -2342,8 +2281,7 @@ export default function AddEditMatchPage() {
                         <button
                           type="button"
                           onClick={() => handleRemoveSubstitute(sub.playerId)}
-                          disabled={isLocked}
-                          className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Remove
                         </button>
@@ -2352,8 +2290,7 @@ export default function AddEditMatchPage() {
                   })}
                 </div>
 
-                {!isLocked && (
-                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="font-semibold text-gray-900 dark:text-white">Add Substitute</h4>
                       <button
@@ -2399,7 +2336,6 @@ export default function AddEditMatchPage() {
                       </p>
                     )}
                   </div>
-                )}
               </div>
                 </div>
 
@@ -2430,7 +2366,7 @@ export default function AddEditMatchPage() {
                         selectedPlayers={startingPlayers}
                         getPlayerName={getPlayerName}
                         showPlayerNames={true}
-                        interactive={!isLocked}
+                        interactive={true}
                         onPositionClick={handlePlayerClickForSwap}
                         highlightedPlayerIndex={selectedPlayerIndexForSwap}
                       />
@@ -2457,7 +2393,7 @@ export default function AddEditMatchPage() {
                         selectedPlayers={startingPlayers}
                         getPlayerName={getPlayerName}
                         showPlayerNames={true}
-                        interactive={!isLocked}
+                        interactive={true}
                         onPositionClick={handlePlayerClickForSwap}
                         highlightedPlayerIndex={selectedPlayerIndexForSwap}
                       />
@@ -2495,7 +2431,6 @@ export default function AddEditMatchPage() {
                   FabProps={{
                     size: 'small',
                     color: 'success',
-                    disabled: isLocked,
                   }}
                   sx={{
                     position: 'absolute',
@@ -2510,7 +2445,7 @@ export default function AddEditMatchPage() {
                   }}
                   open={isEventSpeedDialOpen}
                   onOpen={(_, reason) => {
-                    if (!isLocked && reason === 'toggle') {
+                    if (reason === 'toggle') {
                       setIsEventSpeedDialOpen(true);
                     }
                   }}
@@ -2577,8 +2512,8 @@ export default function AddEditMatchPage() {
                                     )}
                                   </div>
                                   <div className="flex items-center gap-3 shrink-0">
-                                    <button type="button" onClick={() => handleOpenEditEventModal('goal', event.index)} disabled={isLocked} className="text-blue-600 disabled:opacity-50">Edit</button>
-                                    <button type="button" onClick={() => handleDeleteTimelineEvent('goal', event.index)} disabled={isLocked} className="text-red-600 disabled:opacity-50">Delete</button>
+                                    <button type="button" onClick={() => handleOpenEditEventModal('goal', event.index)} className="text-blue-600">Edit</button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('goal', event.index)} className="text-red-600">Delete</button>
                                   </div>
                                 </div>
                               </TimelineHeader>
@@ -2606,8 +2541,8 @@ export default function AddEditMatchPage() {
                                     )}
                                   </div>
                                   <div className="flex items-center gap-3 shrink-0">
-                                    <button type="button" onClick={() => handleOpenEditEventModal('card', event.index)} disabled={isLocked} className="text-blue-600 disabled:opacity-50">Edit</button>
-                                    <button type="button" onClick={() => handleDeleteTimelineEvent('card', event.index)} disabled={isLocked} className="text-red-600 disabled:opacity-50">Delete</button>
+                                    <button type="button" onClick={() => handleOpenEditEventModal('card', event.index)} className="text-blue-600">Edit</button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('card', event.index)} className="text-red-600">Delete</button>
                                   </div>
                                 </div>
                               </TimelineHeader>
@@ -2635,8 +2570,8 @@ export default function AddEditMatchPage() {
                                     )}
                                   </div>
                                   <div className="flex items-center gap-3 shrink-0">
-                                    <button type="button" onClick={() => handleOpenEditEventModal('injury', event.index)} disabled={isLocked} className="text-blue-600 disabled:opacity-50">Edit</button>
-                                    <button type="button" onClick={() => handleDeleteTimelineEvent('injury', event.index)} disabled={isLocked} className="text-red-600 disabled:opacity-50">Delete</button>
+                                    <button type="button" onClick={() => handleOpenEditEventModal('injury', event.index)} className="text-blue-600">Edit</button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('injury', event.index)} className="text-red-600">Delete</button>
                                   </div>
                                 </div>
                               </TimelineHeader>
@@ -2661,8 +2596,8 @@ export default function AddEditMatchPage() {
                                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{getPlayerName(substitution.playerOut)} → {getPlayerName(substitution.playerIn)}</p>
                                 </div>
                                 <div className="flex items-center gap-3 shrink-0">
-                                  <button type="button" onClick={() => handleOpenEditEventModal('substitution', event.index)} disabled={isLocked} className="text-blue-600 disabled:opacity-50">Edit</button>
-                                  <button type="button" onClick={() => handleDeleteTimelineEvent('substitution', event.index)} disabled={isLocked} className="text-red-600 disabled:opacity-50">Delete</button>
+                                  <button type="button" onClick={() => handleOpenEditEventModal('substitution', event.index)} className="text-blue-600">Edit</button>
+                                  <button type="button" onClick={() => handleDeleteTimelineEvent('substitution', event.index)} className="text-red-600">Delete</button>
                                 </div>
                               </div>
                             </TimelineHeader>
@@ -2799,9 +2734,8 @@ export default function AddEditMatchPage() {
                 <textarea
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
-                  disabled={isLocked}
                   rows={5}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Write a summary of the match..."
                 />
               </div>
@@ -2830,8 +2764,7 @@ export default function AddEditMatchPage() {
                             <button
                               type="button"
                               onClick={() => handleTogglePlayerOfTheMatch(playerId)}
-                              disabled={isLocked}
-                              className={`px-2 py-0.5 rounded text-xs border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                                        className={`px-2 py-0.5 rounded text-xs border transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
                                 isPlayerOfTheMatch
                                   ? 'bg-amber-100 dark:bg-amber-900/40 border-amber-400 dark:border-amber-500 text-amber-900 dark:text-amber-100'
                                   : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600'
@@ -2849,8 +2782,7 @@ export default function AddEditMatchPage() {
                               step="0.1"
                               value={rating || ''}
                               onChange={(e) => handleSetRating(playerId, parseFloat(e.target.value) || 0)}
-                              disabled={isLocked}
-                              className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-center disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="w-20 px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-center disabled:opacity-50 disabled:cursor-not-allowed"
                               placeholder="0.0"
                             />
                             <div className="w-32 bg-gray-200 dark:bg-gray-600 rounded-full h-2">
@@ -2937,8 +2869,7 @@ export default function AddEditMatchPage() {
                           <button
                             type="button"
                             onClick={() => handleSetAttendanceStatus(player.id, 'confirmed')}
-                            disabled={isLocked}
-                            className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                                    className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                               status === 'confirmed' 
                                 ? 'bg-green-600 text-white' 
                                 : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30'
@@ -2950,8 +2881,7 @@ export default function AddEditMatchPage() {
                           <button
                             type="button"
                             onClick={() => handleSetAttendanceStatus(player.id, 'declined')}
-                            disabled={isLocked}
-                            className={`px-3 py-1.5 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors ${
+                                    className={`px-3 py-1.5 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors ${
                               status === 'declined' 
                                 ? 'bg-red-600 text-white' 
                                 : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30'
@@ -2966,8 +2896,7 @@ export default function AddEditMatchPage() {
                           type="text"
                           value={playerAttendance?.notes || ''}
                           onChange={(e) => handleSetAttendanceNote(player.id, e.target.value)}
-                          disabled={isLocked}
-                          className="w-32 sm:w-48 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-32 sm:w-48 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                           placeholder="Notes (optional)"
                         />
                       </div>
@@ -3001,14 +2930,6 @@ export default function AddEditMatchPage() {
             </div>
           )}
 
-        {isLocked && (
-            <div className="mt-4 pt-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-              <p className="text-amber-800 dark:text-amber-300 font-medium">
-                🔒 This match is locked and cannot be edited.
-              </p>
-            </div>
-          )}
-
           {/* Action Buttons */}
           <div className="mt-4">
             <div className="flex justify-end">
@@ -3023,7 +2944,7 @@ export default function AddEditMatchPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={isLocked || isSaving}
+                  disabled={isSaving}
                   className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
                 >
                   {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Match'}

@@ -199,4 +199,47 @@ public class CreateTacticHandlerTests
         Assert.Single(result.Principles);
         Assert.Equal("Press High", result.Principles[0].Title);
     }
+
+    [Fact]
+    public async Task Handle_WhenPrincipleHasPositionOverrides_PersistsAndReturnsOverrides()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var formationId = await db.SeedSystemFormationAsync();
+        var clubId = await db.SeedClubAsync();
+
+        var handler = new CreateTacticHandler(db.Context);
+        var dto = new CreateTacticRequestDto
+        {
+            Name = "Overrides Tactic",
+            ParentFormationId = formationId,
+            Scope = new CreateTacticScopeDto { Type = "club", ClubId = clubId },
+            Principles = new List<CreateTacticPrincipleDto>
+            {
+                new()
+                {
+                    Title = "Press High",
+                    PositionIndices = new List<int> { 9, 10 },
+                    PositionOverrides = new List<CreatePrinciplePositionOverrideDto>
+                    {
+                        new() { PositionIndex = 9, XCoord = 30m, YCoord = 20m, Direction = "N" },
+                        new() { PositionIndex = 10, XCoord = 70m, YCoord = 20m }
+                    }
+                }
+            }
+        };
+
+        var result = await handler.Handle(new CreateTacticCommand(dto), CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Single(result.Principles);
+        var principle = result.Principles[0];
+        Assert.Equal(2, principle.PositionOverrides.Count);
+        var po9 = principle.PositionOverrides.Single(o => o.PositionIndex == 9);
+        Assert.Equal(30.0, po9.XCoord);
+        Assert.Equal(20.0, po9.YCoord);
+        Assert.Equal("N", po9.Direction);
+        var po10 = principle.PositionOverrides.Single(o => o.PositionIndex == 10);
+        Assert.Equal(70.0, po10.XCoord);
+        Assert.Null(po10.Direction);
+    }
 }

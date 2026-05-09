@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ClipboardList, Users, Plus, MapPin, X, Lock, Unlock, Link as LinkIcon, Clock, Calendar, ExternalLink, CirclePlay, Camera, Globe, BookOpen, FileText, Loader2, ChevronUp, Package, Eye } from 'lucide-react';
+import { ClipboardList, Users, Plus, MapPin, X, Link as LinkIcon, Clock, Calendar, ExternalLink, CirclePlay, Camera, Globe, BookOpen, FileText, Loader2, ChevronUp, Package, Eye } from 'lucide-react';
 import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById, useDrillsByScope, useDrillTemplatesByScope } from '@/api/hooks';
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest, DrillListDto, DrillTemplateListDto } from '@/api/client';
 import { sessionDurations } from '@/data/referenceData';
@@ -74,7 +74,6 @@ export default function AddEditTrainingSessionPage() {
   const [sessionDrills, setSessionDrills] = useState<SessionDrill[]>([]);
   const [appliedTemplates, setAppliedTemplates] = useState<{ templateId: string; appliedAt: Date; drillIds: string[] }[]>([]);
   const [notes, setNotes] = useState('');
-  const [isLocked, setIsLocked] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   
   // Coach assignment state
@@ -107,7 +106,6 @@ export default function AddEditTrainingSessionPage() {
     setLocation(existingSession.location || '');
     setFocusAreas(existingSession.focusAreas || []);
     setNotes(existingSession.notes || '');
-    setIsLocked(existingSession.isLocked || false);
     setAssignedCoachIds(existingSession.coachIds || []);
     setAppliedTemplates(existingSession.appliedTemplates || []);
     
@@ -286,31 +284,7 @@ export default function AddEditTrainingSessionPage() {
     }
   };
 
-  const handleToggleLock = () => {
-    if (isLocked) {
-      const confirmUnlock = window.confirm(
-        'Are you sure you want to unlock this training session? This will allow editing of all session details.'
-      );
-      if (confirmUnlock) {
-        setIsLocked(false);
-      }
-    } else {
-      const confirmLock = window.confirm(
-        'Are you sure you want to lock this training session? This will prevent any further edits until unlocked.'
-      );
-      if (confirmLock) {
-        setIsLocked(true);
-      }
-    }
-  };
-
   const handleSave = async () => {
-    // Check if session is locked
-    if (isLocked) {
-      alert('This training session is locked and cannot be edited. Please unlock it first.');
-      return;
-    }
-
     // Validate required fields
     if (!sessionDate || !location) {
       alert('Please fill in all required fields (Date/Time and Location)');
@@ -330,7 +304,6 @@ export default function AddEditTrainingSessionPage() {
           focusAreas,
           notes: notes || undefined,
           status: existingSession?.status || 'scheduled',
-          isLocked,
           drills: sessionDrills.map(sd => ({
             drillId: sd.drillId,
             source: sd.source,
@@ -359,7 +332,6 @@ export default function AddEditTrainingSessionPage() {
           focusAreas,
           notes: notes || undefined,
           status: 'scheduled',
-          isLocked,
           sessionDrills: sessionDrills.map(sd => ({
             drillId: sd.drillId,
             source: sd.source,
@@ -520,15 +492,6 @@ export default function AddEditTrainingSessionPage() {
                 {team.name} - {club.name}
               </p>
             </div>
-            {isEditing && (
-              <div className="flex items-center gap-3">
-                {isLocked && (
-                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 rounded-lg font-medium">
-                    🔒 Locked
-                  </span>
-                )}
-              </div>
-            )}
           </div>
         </div>
 
@@ -586,8 +549,7 @@ export default function AddEditTrainingSessionPage() {
                     type="datetime-local"
                     value={sessionDate}
                     onChange={(e) => setSessionDate(e.target.value)}
-                    disabled={isLocked}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                 </div>
 
@@ -600,8 +562,7 @@ export default function AddEditTrainingSessionPage() {
                     type="datetime-local"
                     value={meetTime}
                     onChange={(e) => setMeetTime(e.target.value)}
-                    disabled={isLocked}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Optional: When players should arrive before the session
@@ -615,8 +576,7 @@ export default function AddEditTrainingSessionPage() {
                   <select
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    disabled={isLocked}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   >
                     {sessionDurations.map(d => (
                       <option key={d.value} value={d.value.toString()}>{d.label}</option>
@@ -634,8 +594,7 @@ export default function AddEditTrainingSessionPage() {
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
-                      disabled={isLocked}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                       placeholder="Enter training location"
                     />
                     <button
@@ -644,8 +603,7 @@ export default function AddEditTrainingSessionPage() {
                         const searchQuery = location || 'football pitch near me';
                         window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`, '_blank');
                       }}
-                      disabled={isLocked}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
                       title="Open Google Maps to find location"
                     >
                       <MapPin className="w-4 h-4" />
@@ -670,43 +628,39 @@ export default function AddEditTrainingSessionPage() {
                       className="inline-flex items-center gap-1 px-3 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded-full text-sm"
                     >
                       {area}
-                      {!isLocked && (
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveFocusArea(area)}
-                          className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200"
-                        >
-                          <X className="w-4 h-4" />
-                        </button>
-                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFocusArea(area)}
+                        className="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                     </span>
                   ))}
                 </div>
-                {!isLocked && (
-                  <div className="flex gap-2">
-                    <input
-                      type="text"
-                      value={focusAreaInput}
-                      onChange={(e) => setFocusAreaInput(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddFocusArea();
-                        }
-                      }}
-                      className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="e.g., Passing, Shooting, Defending..."
-                    />
-                    <button
-                      type="button"
-                      onClick={handleAddFocusArea}
-                      className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2"
-                    >
-                      <Plus className="w-4 h-4" />
-                      Add
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={focusAreaInput}
+                    onChange={(e) => setFocusAreaInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleAddFocusArea();
+                      }
+                    }}
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="e.g., Passing, Shooting, Defending..."
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddFocusArea}
+                    className="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <Plus className="w-4 h-4" />
+                    Add
+                  </button>
+                </div>
               </div>
 
               {/* Coaching Staff Assignment */}
@@ -720,7 +674,7 @@ export default function AddEditTrainingSessionPage() {
                       Coaches running this training session. Team coaches are automatically assigned.
                     </p>
                   </div>
-                  {!isLocked && availableCoachesForSession.length > 0 && (
+                  {availableCoachesForSession.length > 0 && (
                     <button
                       type="button"
                       onClick={() => setShowCoachModal(true)}
@@ -762,16 +716,14 @@ export default function AddEditTrainingSessionPage() {
                               </span>
                             )}
                           </div>
-                          {!isLocked && (
-                            <button
-                              type="button"
-                              onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coach.id))}
-                              className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                              title="Remove coach"
-                            >
-                              <X className="w-5 h-5" />
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coach.id))}
+                            className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                            title="Remove coach"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
                         </div>
                       );
                     })}
@@ -780,7 +732,7 @@ export default function AddEditTrainingSessionPage() {
                   <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                     <span className="text-4xl mb-2 block">👨‍🏫</span>
                     <p>No coaches assigned to this session.</p>
-                    {!isLocked && availableCoachesForSession.length > 0 && (
+                    {availableCoachesForSession.length > 0 && (
                       <button
                         type="button"
                         onClick={() => setShowCoachModal(true)}
@@ -807,9 +759,8 @@ export default function AddEditTrainingSessionPage() {
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  disabled={isLocked}
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed resize-y"
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y"
                   placeholder={`Session Plan:
 - Warm up (10 mins): Light jog, dynamic stretches
 - Main session (40 mins): Passing drills, small-sided games
@@ -833,25 +784,23 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     Use a template or build manually. Total drill time: {totalDrillDuration} mins
                   </p>
                 </div>
-                {!isLocked && (
-                  <div className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowTemplateModal(true)}
-                      className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-                    >
-                      <BookOpen className="w-5 h-5" />
-                      <span className="hidden sm:inline">Use Template</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setShowDrillModal(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowTemplateModal(true)}
+                    className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <BookOpen className="w-5 h-5" />
+                    <span className="hidden sm:inline">Use Template</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowDrillModal(true)}
+                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                  >
+                    <Plus className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
 
               {/* Applied Templates Summary */}
@@ -972,16 +921,14 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                             >
                               {isExpanded ? <ChevronUp className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                             </button>
-                            {!isLocked && (
-                              <button
-                                type="button"
-                                onClick={() => handleRemoveDrill(drill.id)}
-                                className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                                title="Remove drill"
-                              >
-                                <X className="w-5 h-5" />
-                              </button>
-                            )}
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveDrill(drill.id)}
+                              className="p-2 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                              title="Remove drill"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
                           </div>
                         </div>
                       </div>
@@ -1155,7 +1102,6 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                           <button
                             type="button"
                             onClick={() => handleSetAttendanceStatus(player.id, 'confirmed')}
-                            disabled={isLocked}
                             className={`px-3 py-1.5 text-sm font-medium transition-colors ${
                               status === 'confirmed' 
                                 ? 'bg-green-600 text-white' 
@@ -1168,12 +1114,11 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                           <button
                             type="button"
                             onClick={() => handleSetAttendanceStatus(player.id, 'declined')}
-                            disabled={isLocked}
                             className={`px-3 py-1.5 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors ${
-                              status === 'declined' 
-                                ? 'bg-red-600 text-white' 
+                              status === 'declined'
+                                ? 'bg-red-600 text-white'
                                 : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30'
-                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            }`}
                             title="Declined"
                           >
                             ✕
@@ -1184,8 +1129,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                           type="text"
                           value={playerAttendance?.notes || ''}
                           onChange={(e) => handleSetAttendanceNote(player.id, e.target.value)}
-                          disabled={isLocked}
-                          className="w-32 sm:w-48 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="w-32 sm:w-48 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                           placeholder="Notes (optional)"
                         />
                       </div>
@@ -1219,44 +1163,9 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
             </div>
           )}
 
-          {isLocked && (
-            <div className="mt-4 pt-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
-              <p className="text-amber-800 dark:text-amber-300 font-medium">
-                🔒 This training session is locked. Unlock it to make changes.
-              </p>
-            </div>
-          )}
-
           {/* Action Buttons */}
           <div className="mt-4">
             <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
-              {/* Left side - Session-specific controls */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
-                {isEditing && (
-                  <button
-                    type="button"
-                    onClick={handleToggleLock}
-                    className={`flex items-center justify-center gap-2 px-4 sm:px-6 py-2 text-sm sm:text-base rounded-lg font-medium ${
-                      isLocked
-                        ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                        : 'bg-gray-600 hover:bg-gray-700 text-white'
-                    }`}
-                  >
-                    {isLocked ? (
-                      <>
-                        <Unlock className="w-5 h-5" />
-                        <span>Unlock Session</span>
-                      </>
-                    ) : (
-                      <>
-                        <Lock className="w-5 h-5" />
-                        <span>Lock Session</span>
-                      </>
-                    )}
-                  </button>
-                )}
-              </div>
-              
               {/* Right side - Standard form actions */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                 <button
@@ -1268,7 +1177,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                 </button>
                 <button
                   type="submit"
-                  disabled={isLocked || isSaving}
+                  disabled={isSaving}
                   className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
                 >
                   {isSaving ? 'Saving...' : (isEditing ? 'Save Changes' : 'Create Session')}
