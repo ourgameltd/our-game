@@ -1,7 +1,11 @@
-import { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { AlertCircle, ClipboardList, Users, Activity, FileText, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
-import { Timeline, TimelineItem, TimelineHeader, TimelineIcon, TimelineBody } from '@material-tailwind/react';
+const Timeline = ({ className, children }: { className?: string; children?: React.ReactNode }) => <ul className={className}>{children}</ul>;
+const TimelineItem = ({ className, children }: { className?: string; children?: React.ReactNode }) => <li className={className}>{children}</li>;
+const TimelineHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`flex items-center ${className ?? ''}`}>{children}</div>;
+const TimelineIcon = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`shrink-0 rounded-full ${className ?? ''}`}>{children}</div>;
+const TimelineBody = ({ className }: { className?: string }) => <div className={className} />;
 import { SpeedDial, SpeedDialAction, SpeedDialIcon } from '@mui/material';
 import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
 import StyleIcon from '@mui/icons-material/Style';
