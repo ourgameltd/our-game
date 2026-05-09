@@ -1165,7 +1165,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
 
           {/* Action Buttons */}
           <div className="mt-4">
-            <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:justify-end gap-4">
               {/* Right side - Standard form actions */}
               <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
                 <button
