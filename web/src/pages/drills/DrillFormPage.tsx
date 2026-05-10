@@ -221,20 +221,12 @@ export default function DrillFormPage() {
     }
   }, [isEditMode, drillData]);
 
-  // Navigate to list on successful save
   useEffect(() => {
     const savedDrill = createData || updateData;
     if (savedDrill) {
       addToast('success', isEditMode ? 'Drill updated successfully' : 'Drill created successfully');
-      if (team) {
-        navigate(Routes.teamDrills(clubId!, ageGroupId!, teamId!));
-      } else if (ageGroup) {
-        navigate(Routes.ageGroupDrills(clubId!, ageGroupId!));
-      } else {
-        navigate(Routes.drills(clubId!));
-      }
     }
-  }, [createData, updateData, clubId, ageGroupId, teamId, team, ageGroup, navigate, addToast, isEditMode]);
+  }, [createData, updateData, addToast, isEditMode]);
 
   useEffect(() => {
     const error = createError || updateError;

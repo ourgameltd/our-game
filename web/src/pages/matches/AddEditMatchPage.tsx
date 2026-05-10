@@ -1515,7 +1515,6 @@ export default function AddEditMatchPage() {
 
     if (response.success && response.data) {
       addToast('success', isEditing ? 'Match updated successfully' : 'Match created successfully');
-      navigate(Routes.matches(clubId!, ageGroupId!, teamId!));
     }
   };
 

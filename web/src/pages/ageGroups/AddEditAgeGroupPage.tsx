@@ -280,7 +280,6 @@ const AddEditAgeGroupPage: React.FC = () => {
 
       if (response.success && response.data) {
         addToast('success', isEditing ? 'Age group updated successfully' : 'Age group created successfully');
-        navigate(Routes.ageGroup(clubId!, response.data.id));
       } else {
         const errorMessage = response.error?.message || 'Failed to save age group';
         addToast('error', errorMessage);

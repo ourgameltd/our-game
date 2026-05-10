@@ -6,11 +6,13 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 const CreateClubPage: React.FC = () => {
   const navigate = useNavigate();
   const { isAdmin } = useAuth();
   const { createClub, isSubmitting } = useCreateClub();
+  const { addToast } = useToast();
 
   usePageTitle(['Create Club']);
 
@@ -97,7 +99,7 @@ const CreateClubPage: React.FC = () => {
     });
 
     if (success) {
-      navigate(Routes.clubs());
+      addToast('success', 'Club created successfully');
     } else {
       setSubmitError('Failed to create club. Please check the form and try again.');
     }

@@ -9,12 +9,14 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function AgeGroupSettingsPage() {
   usePageTitle(['Age Group Settings']);
 
   const { clubId, ageGroupId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   // API data fetching
   const { data: ageGroup, isLoading, error: loadError } = useAgeGroupById(ageGroupId);
@@ -40,7 +42,6 @@ export default function AgeGroupSettingsPage() {
   // Validation & submission state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Hydrate form once when age group data loads
   useEffect(() => {
@@ -91,12 +92,9 @@ export default function AgeGroupSettingsPage() {
   // Handle update success
   useEffect(() => {
     if (updatedData) {
-      setSuccessMessage('Age group settings updated successfully!');
-      // Clear success message after a few seconds
-      const timeout = setTimeout(() => setSuccessMessage(null), 4000);
-      return () => clearTimeout(timeout);
+      addToast('success', 'Age group settings updated successfully');
     }
-  }, [updatedData]);
+  }, [updatedData, addToast]);
 
   // Handle update errors
   useEffect(() => {
@@ -314,13 +312,6 @@ export default function AgeGroupSettingsPage() {
             <p className="text-sm text-orange-800 dark:text-orange-300">
               ⚠️ This age group is archived. You cannot modify its settings while it is archived. Unarchive it to make changes.
             </p>
-          </div>
-        )}
-
-        {/* Success message */}
-        {successMessage && (
-          <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <p className="text-sm text-green-800 dark:text-green-300">{successMessage}</p>
           </div>
         )}
 

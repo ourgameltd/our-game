@@ -449,21 +449,12 @@ export default function AddEditTacticPage() {
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [selectedPrincipleId]);
 
-  // Navigate to detail page on successful save
   useEffect(() => {
     const savedTactic = createData || updateData;
     if (savedTactic) {
       addToast('success', isEditing ? 'Tactic updated successfully' : 'Tactic created successfully');
-      const id = savedTactic.id;
-      if (teamId && ageGroupId && clubId) {
-        navigate(Routes.teamTacticDetail(clubId, ageGroupId, teamId, id));
-      } else if (ageGroupId && clubId) {
-        navigate(Routes.ageGroupTacticDetail(clubId, ageGroupId, id));
-      } else if (clubId) {
-        navigate(Routes.clubTacticDetail(clubId, id));
-      }
     }
-  }, [createData, updateData, clubId, ageGroupId, teamId, navigate, addToast, isEditing]);
+  }, [createData, updateData, addToast, isEditing]);
 
   useEffect(() => {
     const error = createError || updateError;

@@ -5,12 +5,14 @@ import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function AddEditReportCardPage() {
   usePageTitle(['Add Edit Report Card']);
 
   const { clubId, playerId, ageGroupId, teamId, reportId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   
   const [isLoading, setIsLoading] = useState(true);
   const [player, setPlayer] = useState<any>(null);
@@ -182,9 +184,9 @@ export default function AddEditReportCardPage() {
         };
         
         const response = await apiClient.reports.update(reportId, updateRequest);
-        
+
         if (response.success) {
-          navigate(backLink);
+          addToast('success', 'Report card updated successfully');
         } else {
           setError(response.error?.message || 'Failed to update report card');
         }
@@ -206,11 +208,11 @@ export default function AddEditReportCardPage() {
             reason: sp.reason
           }))
         };
-        
+
         const response = await apiClient.reports.create(createRequest);
-        
+
         if (response.success) {
-          navigate(backLink);
+          addToast('success', 'Report card created successfully');
         } else {
           setError(response.error?.message || 'Failed to create report card');
         }

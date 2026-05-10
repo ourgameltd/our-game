@@ -7,6 +7,7 @@ import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 interface Goal {
   id?: string;
@@ -40,6 +41,7 @@ export default function AddEditDevelopmentPlanPage() {
 
   const { clubId, playerId, ageGroupId, teamId, planId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   // Player state
   const [player, setPlayer] = useState<PlayerDto | null>(null);
@@ -309,7 +311,7 @@ export default function AddEditDevelopmentPlanPage() {
       }
 
       if (response.success && response.data) {
-        navigate(backLink);
+        addToast('success', isEditMode ? 'Development plan updated successfully' : 'Development plan created successfully');
       } else {
         const errorMessage = response.error?.message || 'Failed to save development plan';
         setSubmitError(errorMessage);

@@ -10,6 +10,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
 import { calculateAge } from '@/utils/dateOfBirth';
+import { useToast } from '@/contexts/ToastContext';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -92,6 +93,7 @@ export default function PlayerSettingsPage() {
 
   const { clubId, ageGroupId, teamId, playerId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isNewPlayer = playerId === 'new';
   const { isAdmin } = useAuth();
   const { profile } = useAccessProfile(isAdmin);
@@ -382,9 +384,8 @@ export default function PlayerSettingsPage() {
 
     await updatePlayer(request);
 
-    // Navigate back on success (submitError will be null)
     if (!submitError) {
-      navigate(Routes.player(clubId!, ageGroupId!, playerId!));
+      addToast('success', 'Player settings saved successfully');
     }
   };
 

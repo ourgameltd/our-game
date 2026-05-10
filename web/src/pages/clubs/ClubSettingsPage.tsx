@@ -5,6 +5,7 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 type MediaLinkForm = {
   id: string;
@@ -76,6 +77,7 @@ export default function ClubSettingsPage() {
 
   const { clubId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   // API hooks
   const { data: club, isLoading, error } = useClubById(clubId);
@@ -213,9 +215,8 @@ export default function ClubSettingsPage() {
 
     await updateClub(request);
 
-    // Only navigate on success (submitError remains null)
     if (!submitError) {
-      navigate(Routes.clubOverview(clubId!));
+      addToast('success', 'Club settings saved successfully');
     }
   };
 

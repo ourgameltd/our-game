@@ -11,6 +11,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { UserCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
+import { useToast } from '@/contexts/ToastContext';
 
 // Skeleton for the page title area
 function PageTitleSkeleton() {
@@ -83,6 +84,7 @@ export default function CoachSettingsPage() {
 
   const { clubId, coachId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isNewCoach = coachId === 'new';
   const { isAdmin } = useAuth();
   const { profile } = useAccessProfile(isAdmin);
@@ -243,9 +245,8 @@ export default function CoachSettingsPage() {
 
     await updateCoach(request);
 
-    // Navigate back on success (submitError will be null)
     if (!submitError) {
-      navigate(getBackRoute());
+      addToast('success', 'Coach settings saved successfully');
     }
   };
 

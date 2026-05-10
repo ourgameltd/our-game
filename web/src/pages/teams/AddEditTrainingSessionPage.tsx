@@ -355,7 +355,6 @@ export default function AddEditTrainingSessionPage() {
       }
 
       addToast('success', isEditing ? 'Training session updated successfully' : 'Training session created successfully');
-      navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!));
     } catch (error) {
       console.error('Error saving training session:', error);
       addToast('error', 'Failed to save training session. Please try again.');

@@ -14,12 +14,14 @@ import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { PlayerPosition } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function ClubPlayerSettingsPage() {
   usePageTitle(['Club Player Settings']);
 
   const { clubId, playerId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isNewPlayer = playerId === 'new';
 
   // API hooks
@@ -220,7 +222,7 @@ export default function ClubPlayerSettingsPage() {
       const created = await createPlayer(createRequest);
 
       if (created) {
-        navigate(Routes.clubPlayers(clubId!));
+        addToast('success', 'Player created successfully');
       }
       return;
     }
@@ -238,10 +240,8 @@ export default function ClubPlayerSettingsPage() {
 
     await updatePlayer(request);
 
-    // submitError will be set by the hook if the call failed;
-    // only navigate on success (submitError remains null)
     if (!submitError) {
-      navigate(Routes.clubPlayers(clubId!));
+      addToast('success', 'Player saved successfully');
     }
   };
 

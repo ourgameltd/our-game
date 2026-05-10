@@ -288,7 +288,6 @@ const AddEditTeamPage: React.FC = () => {
       }
 
       addToast('success', isEditing ? 'Team updated successfully' : 'Team created successfully');
-      navigate(Routes.ageGroup(clubId!, ageGroupId!));
     } catch {
       // Errors are captured by mutation hooks and shown via useEffect
     }

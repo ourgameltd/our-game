@@ -7,12 +7,14 @@ import { Routes } from '@/utils/routes';
 import { useTeamOverview, useTeamPlayers, useUpdateTeam, useUpdateTeamSquadNumbers, useArchiveTeam, useAgeGroupById } from '@/api/hooks';
 import type { SquadNumberAssignment } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 export default function TeamSettingsPage() {
   usePageTitle(['Team Settings']);
 
   const { clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   
   // Fetch team data
 
@@ -163,9 +165,8 @@ export default function TeamSettingsPage() {
         assignments: squadNumbers
       });
 
-      // Refetch team data and navigate back
       await refetchPlayers();
-      navigate(Routes.team(clubId!, ageGroupId!, teamId!));
+      addToast('success', 'Team settings saved successfully');
     } catch (err) {
       console.error('Failed to update team settings:', err);
     }

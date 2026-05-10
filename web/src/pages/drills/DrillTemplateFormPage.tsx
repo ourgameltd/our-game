@@ -291,7 +291,6 @@ export default function DrillTemplateFormPage() {
       const updated = await updateMutation.mutate(updateRequest);
       if (updated) {
         addToast('success', 'Session template updated successfully');
-        navigateBack();
       }
     } else {
       // Create new template
@@ -311,7 +310,6 @@ export default function DrillTemplateFormPage() {
       const created = await createMutation.mutate(createRequest);
       if (created) {
         addToast('success', 'Session template created successfully');
-        navigateBack();
       }
     }
   };
