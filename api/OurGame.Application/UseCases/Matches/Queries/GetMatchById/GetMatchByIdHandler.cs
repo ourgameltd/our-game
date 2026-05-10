@@ -565,7 +565,7 @@ public class GoalRaw
     public Guid Id { get; set; }
     public Guid PlayerId { get; set; }
     public string? ScorerName { get; set; }
-    public int Minute { get; set; }
+    public int? Minute { get; set; }
     public string? Period { get; set; }
     public int? AddedTimeMinutes { get; set; }
     public bool IsExtraTime { get; set; }

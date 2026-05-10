@@ -13,7 +13,7 @@ public partial class Goal
 
     public Guid PlayerId { get; set; }
 
-    public int Minute { get; set; }
+    public int? Minute { get; set; }
 
     public string Period { get; set; }
 

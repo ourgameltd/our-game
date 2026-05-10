@@ -98,7 +98,7 @@ public record GoalDetailDto
     public Guid Id { get; init; }
     public Guid PlayerId { get; init; }
     public string ScorerName { get; init; } = string.Empty;
-    public int Minute { get; init; }
+    public int? Minute { get; init; }
     public string Period { get; init; } = string.Empty;
     public int? AddedTimeMinutes { get; init; }
     public bool IsExtraTime { get; init; }

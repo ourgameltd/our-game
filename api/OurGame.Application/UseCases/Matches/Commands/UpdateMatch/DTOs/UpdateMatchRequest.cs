@@ -144,8 +144,7 @@ public record UpdateGoalRequest
     [Required]
     public Guid PlayerId { get; init; }
 
-    [Required]
-    public int Minute { get; init; }
+    public int? Minute { get; init; }
 
     [Required]
     [StringLength(20)]

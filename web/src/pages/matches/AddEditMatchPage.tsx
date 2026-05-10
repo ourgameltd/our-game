@@ -563,7 +563,7 @@ export default function AddEditMatchPage() {
       setGoals(
         (existingMatch.report?.goals || []).map(g => ({
           playerId: g.playerId,
-          minute: g.minute,
+          minute: g.minute && g.minute > 0 ? g.minute : undefined,
           period: parseTimelinePeriod(g.period) || 'first',
           addedTimeMinutes: g.addedTimeMinutes,
           isExtraTime: g.isExtraTime,
@@ -1434,7 +1434,7 @@ export default function AddEditMatchPage() {
           .filter(goal => goal.playerId)
           .map(goal => ({
             playerId: goal.playerId,
-            minute: goal.minute ?? 0,
+            minute: goal.minute,
             period: goal.period,
             addedTimeMinutes: goal.addedTimeMinutes && goal.addedTimeMinutes > 0 ? goal.addedTimeMinutes : undefined,
             isExtraTime: goal.isExtraTime,

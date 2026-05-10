@@ -390,7 +390,7 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
 
         var invalidGoalIndexes = goals
             .Select((goal, index) => new { goal, index })
-            .Where(item => item.goal.Minute < 0 || string.IsNullOrWhiteSpace(item.goal.Period))
+            .Where(item => (item.goal.Minute.HasValue && item.goal.Minute.Value < 1) || string.IsNullOrWhiteSpace(item.goal.Period))
             .Select(item => item.index + 1)
             .ToList();
 
