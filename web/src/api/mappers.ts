@@ -6,6 +6,7 @@
 
 import type { ClubTrainingSessionDto, CoachDetailDto } from './client';
 import type { TrainingSession } from '@/types';
+import { parseApiDate } from '@/utils/dateOfBirth';
 
 /**
  * Map ClubTrainingSessionDto to TrainingSession
@@ -15,8 +16,8 @@ export function mapClubTrainingSessionToTrainingSession(dto: ClubTrainingSession
   return {
     id: dto.id,
     teamId: dto.teamId,
-    date: new Date(dto.date),
-    meetTime: dto.meetTime ? new Date(dto.meetTime) : undefined,
+    date: parseApiDate(dto.date) ?? new Date(),
+    meetTime: parseApiDate(dto.meetTime),
     duration: dto.durationMinutes ?? 60, // Default to 60 minutes if not specified
     location: dto.location,
     focusAreas: dto.focusAreas,

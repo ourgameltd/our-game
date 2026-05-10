@@ -5,6 +5,7 @@ import type { Match } from '@/types';
 import PageTitle from '@components/common/PageTitle';
 import MatchesListContent from '@/components/matches/MatchesListContent';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { parseApiDate } from '@/utils/dateOfBirth';
 
 /**
  * Maps a ClubMatchDto from the API to the Match type used by MatchesListContent
@@ -15,9 +16,9 @@ function mapClubMatchToMatch(dto: ClubMatchDto): Match {
     teamId: dto.teamId,
     squadSize: dto.squadSize as Match['squadSize'],
     opposition: dto.opposition,
-    date: new Date(dto.date),
-    meetTime: dto.meetTime ? new Date(dto.meetTime) : undefined,
-    kickOffTime: new Date(dto.kickOffTime),
+    date: parseApiDate(dto.date) ?? new Date(),
+    meetTime: parseApiDate(dto.meetTime),
+    kickOffTime: parseApiDate(dto.kickOffTime) ?? new Date(),
     location: dto.location,
     isHome: dto.isHome,
     competition: dto.competition,

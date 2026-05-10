@@ -6,13 +6,14 @@ import { useTeamTrainingSessions } from '@/api/hooks';
 import { TeamTrainingSessionDto } from '@/api/client';
 import { TrainingSession } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { parseApiDate } from '@/utils/dateOfBirth';
 
 // Helper function to map API DTO to UI model
 const mapApiSessionToUiSession = (dto: TeamTrainingSessionDto): TrainingSession => ({
   id: dto.id,
   teamId: '', // Will be set from context
-  date: new Date(dto.date),
-  meetTime: dto.meetTime ? new Date(dto.meetTime) : undefined,
+  date: parseApiDate(dto.date) ?? new Date(),
+  meetTime: parseApiDate(dto.meetTime),
   duration: dto.durationMinutes || 90,
   location: dto.location,
   focusAreas: dto.focusAreas,

@@ -1,3 +1,16 @@
+/**
+ * Parse a UTC datetime string from the API into a local Date.
+ * Dapper returns DateTime with Kind=Unspecified so System.Text.Json omits the Z.
+ * We append Z when no timezone indicator is present so the browser treats the
+ * value as UTC rather than local time.
+ */
+export function parseApiDate(value: string | null | undefined): Date | undefined {
+  if (!value) return undefined;
+  const normalized = /Z$|[+-]\d{2}:\d{2}$/.test(value) ? value : value + 'Z';
+  const d = new Date(normalized);
+  return Number.isNaN(d.getTime()) ? undefined : d;
+}
+
 export function parseDateOfBirth(value: string | Date | null | undefined): Date | undefined {
   if (!value) {
     return undefined;

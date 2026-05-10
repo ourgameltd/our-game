@@ -27,6 +27,15 @@ function isSupportedSquadSize(value: number): value is SquadSize {
   return supportedSquadSizes.includes(value as SquadSize);
 }
 
+function utcIsoToLocalDatetimeInput(utcIso: string): string {
+  // Dapper returns DateTime with Kind=Unspecified → serialized without Z.
+  // Append Z so new Date() always parses as UTC, not local time.
+  const normalized = /Z$|[+-]\d{2}:\d{2}$/.test(utcIso) ? utcIso : utcIso + 'Z';
+  const d = new Date(normalized);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
 // Match edit displays defenders at the top and attackers at the bottom,
 // so mirror horizontal coordinates to keep left/right position labels intuitive.
 function mirrorPitchXForMatchEdit(x: number): number {
@@ -507,10 +516,10 @@ export default function AddEditMatchPage() {
       setSquadSize(initialSquadSize);
       setOpposition(existingMatch.opposition || '');
       setKickOffTime(
-        existingMatch.kickOffTime ? existingMatch.kickOffTime.slice(0, 16) : 
-        existingMatch.matchDate ? existingMatch.matchDate.slice(0, 16) : ''
+        existingMatch.kickOffTime ? utcIsoToLocalDatetimeInput(existingMatch.kickOffTime) :
+        existingMatch.matchDate ? utcIsoToLocalDatetimeInput(existingMatch.matchDate) : ''
       );
-      setMeetTime(existingMatch.meetTime ? existingMatch.meetTime.slice(0, 16) : '');
+      setMeetTime(existingMatch.meetTime ? utcIsoToLocalDatetimeInput(existingMatch.meetTime) : '');
       setLocation(existingMatch.location || '');
       setIsHome(existingMatch.isHome ?? true);
       setCompetition(existingMatch.competition || '');
@@ -520,9 +529,6 @@ export default function AddEditMatchPage() {
       setTacticId(existingMatch.lineup?.tacticId || '');
       setWeather(existingMatch.weatherCondition || '');
       setTemperature(existingMatch.weatherTemperature?.toString() || '');
-      if (existingMatch.weatherCondition || existingMatch.weatherTemperature) {
-        setShowWeatherSection(true);
-      }
       setHomeScore(existingMatch.homeScore?.toString() || '');
       setAwayScore(existingMatch.awayScore?.toString() || '');
       setSummary(existingMatch.report?.summary || '');
@@ -1696,21 +1702,30 @@ export default function AddEditMatchPage() {
                     <div className="flex gap-1">
                       <button
                         type="button"
-                        onClick={() => applyMeetTimeOffset(105)}
-                        disabled={!kickOffTime}
-                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-                        title="Set meet time to 1h 45m before kickoff"
-                      >
-                        -1h 45m
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => applyMeetTimeOffset(30)}
                         disabled={!kickOffTime}
                         className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         title="Set meet time to 30m before kickoff"
                       >
                         -30m
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyMeetTimeOffset(45)}
+                        disabled={!kickOffTime}
+                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Set meet time to 45m before kickoff"
+                      >
+                        45m
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyMeetTimeOffset(60)}
+                        disabled={!kickOffTime}
+                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Set meet time to 1h before kickoff"
+                      >
+                        -1h
                       </button>
                     </div>
                   </div>
@@ -1896,7 +1911,55 @@ export default function AddEditMatchPage() {
                   )}
                 </div>
 
-                <div className="col-span-full">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Home Score
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={homeScore}
+                    onChange={(e) => setHomeScore(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="0"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Away Score
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={awayScore}
+                    onChange={(e) => setAwayScore(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {/* Additional Notes */}
+              <div className="pt-6">
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>📝</span> Additional Notes
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                    Add any extra information about the match such as travel arrangements, special instructions, or other details.
+                  </p>
+                </div>
+                <textarea
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y"
+                  placeholder="e.g., Car pooling arrangements, bring packed lunch, meet at school gates, wear appropriate footwear..."
+                />
+              </div>
+
+              <div className="col-span-full">
                   <button
                     type="button"
                     onClick={() => setShowWeatherSection(v => !v)}
@@ -1904,9 +1967,6 @@ export default function AddEditMatchPage() {
                   >
                     <ChevronDown className={`w-4 h-4 transition-transform ${showWeatherSection ? 'rotate-180' : ''}`} />
                     Weather &amp; Temperature
-                    {(weather || temperature) && (
-                      <span className="text-xs text-gray-400 dark:text-gray-500">(filled)</span>
-                    )}
                   </button>
                   {showWeatherSection && (
                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1940,56 +2000,6 @@ export default function AddEditMatchPage() {
                     </div>
                   )}
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Home Score
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={homeScore}
-                    onChange={(e) => setHomeScore(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="0"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Away Score
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={awayScore}
-                    onChange={(e) => setAwayScore(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              {/* Additional Notes */}
-              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="mb-4">
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                    <span>📝</span> Additional Notes
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                    Add any extra information about the match such as travel arrangements, special instructions, or other details.
-                  </p>
-                </div>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y"
-                  placeholder="e.g., Car pooling arrangements, bring packed lunch, meet at school gates, wear appropriate footwear..."
-                />
-              </div>
             </div>
           )}
 

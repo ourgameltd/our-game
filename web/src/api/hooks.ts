@@ -88,6 +88,7 @@ import {
 } from './client';
 import { TrainingSession, PlayerImage } from '@/types';
 import { normalizeCoachDetail } from './mappers';
+import { parseApiDate } from '@/utils/dateOfBirth';
 
 /**
  * Validates if an ID is valid for API calls.
@@ -1812,8 +1813,8 @@ function mapTrainingSessionDetailToUi(dto: TrainingSessionDetailDto): TrainingSe
   return {
     id: dto.id,
     teamId: dto.teamId,
-    date: new Date(dto.sessionDate),
-    meetTime: dto.meetTime ? new Date(dto.meetTime) : undefined,
+    date: parseApiDate(dto.sessionDate) ?? new Date(),
+    meetTime: parseApiDate(dto.meetTime),
     duration: dto.durationMinutes || 0,
     location: dto.location || '',
     focusAreas: dto.focusAreas || [],
