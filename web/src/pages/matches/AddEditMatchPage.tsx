@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { AlertCircle, ClipboardList, Users, Activity, FileText, Plus, MapPin, X, ExternalLink, CheckSquare } from 'lucide-react';
+import { AlertCircle, ClipboardList, Users, Activity, FileText, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown } from 'lucide-react';
 const Timeline = ({ className, children }: { className?: string; children?: React.ReactNode }) => <ul className={className}>{children}</ul>;
 const TimelineItem = ({ className, children }: { className?: string; children?: React.ReactNode }) => <li className={className}>{children}</li>;
 const TimelineHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`flex items-center ${className ?? ''}`}>{children}</div>;
@@ -390,6 +390,7 @@ export default function AddEditMatchPage() {
   const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'pending'; notes?: string }[]>([]);
 
   const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report' | 'attendance'>('details');
+  const [showWeatherSection, setShowWeatherSection] = useState(false);
   
   // Position swap state - tracks the lineup slot index for precise swapping
   const [selectedPlayerIndexForSwap, setSelectedPlayerIndexForSwap] = useState<number | null>(null);
@@ -519,6 +520,9 @@ export default function AddEditMatchPage() {
       setTacticId(existingMatch.lineup?.tacticId || '');
       setWeather(existingMatch.weatherCondition || '');
       setTemperature(existingMatch.weatherTemperature?.toString() || '');
+      if (existingMatch.weatherCondition || existingMatch.weatherTemperature) {
+        setShowWeatherSection(true);
+      }
       setHomeScore(existingMatch.homeScore?.toString() || '');
       setAwayScore(existingMatch.awayScore?.toString() || '');
       setSummary(existingMatch.report?.summary || '');
@@ -1301,6 +1305,16 @@ export default function AddEditMatchPage() {
     return ratings.find(r => r.playerId === playerId)?.rating || 0;
   };
 
+  const applyMeetTimeOffset = (minutesBefore: number) => {
+    if (!kickOffTime) return;
+    const date = new Date(kickOffTime);
+    date.setMinutes(date.getMinutes() - minutesBefore);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    setMeetTime(
+      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+    );
+  };
+
   const handleSetAttendanceStatus = (playerId: string, status: 'confirmed' | 'declined' | 'pending') => {
     if (!invitedPlayerIdSet.has(playerId)) {
       return;
@@ -1675,9 +1689,31 @@ export default function AddEditMatchPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Meet Time
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Meet Time
+                    </label>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => applyMeetTimeOffset(105)}
+                        disabled={!kickOffTime}
+                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Set meet time to 1h 45m before kickoff"
+                      >
+                        -1h 45m
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyMeetTimeOffset(30)}
+                        disabled={!kickOffTime}
+                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Set meet time to 30m before kickoff"
+                      >
+                        -30m
+                      </button>
+                    </div>
+                  </div>
                   <input
                     type="datetime-local"
                     value={meetTime}
@@ -1860,33 +1896,49 @@ export default function AddEditMatchPage() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Weather Condition
-                  </label>
-                  <select
-                    value={weather}
-                    onChange={(e) => setWeather(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                <div className="col-span-full">
+                  <button
+                    type="button"
+                    onClick={() => setShowWeatherSection(v => !v)}
+                    className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
                   >
-                    <option value="">Select weather</option>
-                    {weatherConditions.map(w => (
-                      <option key={w.value} value={w.label}>{w.label}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Temperature (°C)
-                  </label>
-                  <input
-                    type="number"
-                    value={temperature}
-                    onChange={(e) => setTemperature(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="e.g., 15"
-                  />
+                    <ChevronDown className={`w-4 h-4 transition-transform ${showWeatherSection ? 'rotate-180' : ''}`} />
+                    Weather &amp; Temperature
+                    {(weather || temperature) && (
+                      <span className="text-xs text-gray-400 dark:text-gray-500">(filled)</span>
+                    )}
+                  </button>
+                  {showWeatherSection && (
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Weather Condition
+                        </label>
+                        <select
+                          value={weather}
+                          onChange={(e) => setWeather(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        >
+                          <option value="">Select weather</option>
+                          {weatherConditions.map(w => (
+                            <option key={w.value} value={w.label}>{w.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Temperature (°C)
+                        </label>
+                        <input
+                          type="number"
+                          value={temperature}
+                          onChange={(e) => setTemperature(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          placeholder="e.g., 15"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1918,89 +1970,6 @@ export default function AddEditMatchPage() {
                     placeholder="0"
                   />
                 </div>
-              </div>
-
-              {/* Coaching Staff Assignment */}
-              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <span>👨‍🏫</span> Coaching Staff
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Coaches assigned to this match. Team coaches are automatically assigned.
-                    </p>
-                  </div>
-                  {availableCoachesForMatch.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowCoachModal(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-                      title="Add Coach"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-                
-                {assignedCoaches.length > 0 ? (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {assignedCoaches.map((coach) => {
-                      const isTeamCoach = (teamCoaches || []).some(tc => tc.id === coach.id);
-                      return (
-                        <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          {coach.photoUrl ? (
-                            <img 
-                              src={coach.photoUrl} 
-                              alt={`${coach.firstName || ''} ${coach.lastName || ''}`}
-                              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
-                              {(coach.firstName || '?')[0]}{(coach.lastName || '?')[0]}
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 dark:text-white truncate">
-                              {coach.firstName || ''} {coach.lastName || ''}
-                            </p>
-                            <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                              {coach.role ? coachRoleDisplay[coach.role] : 'Coach'}
-                            </p>
-                            {isTeamCoach && (
-                              <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
-                                Team Coach
-                              </span>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coach.id))}
-                            className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                            title="Remove coach"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <span className="text-4xl mb-2 block">👨‍🏫</span>
-                    <p>No coaches assigned to this match.</p>
-                    {availableCoachesForMatch.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowCoachModal(true)}
-                        className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 mx-auto"
-                        title="Add Coach"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Additional Notes */}
@@ -2810,6 +2779,90 @@ export default function AddEditMatchPage() {
           {/* Attendance Tab */}
           {activeTab === 'attendance' && (
             <div className="mt-4 space-y-2">
+
+              {/* Coaching Staff Assignment */}
+              <div className="pb-6 mb-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <span>👨‍🏫</span> Coaching Staff
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Coaches assigned to this match. Team coaches are automatically assigned.
+                    </p>
+                  </div>
+                  {availableCoachesForMatch.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCoachModal(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                      title="Add Coach"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+
+                {assignedCoaches.length > 0 ? (
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {assignedCoaches.map((coach) => {
+                      const isTeamCoach = (teamCoaches || []).some(tc => tc.id === coach.id);
+                      return (
+                        <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          {coach.photoUrl ? (
+                            <img
+                              src={coach.photoUrl}
+                              alt={`${coach.firstName || ''} ${coach.lastName || ''}`}
+                              className="w-12 h-12 rounded-full object-cover flex-shrink-0"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold flex-shrink-0">
+                              {(coach.firstName || '?')[0]}{(coach.lastName || '?')[0]}
+                            </div>
+                          )}
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-gray-900 dark:text-white truncate">
+                              {coach.firstName || ''} {coach.lastName || ''}
+                            </p>
+                            <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                              {coach.role ? coachRoleDisplay[coach.role] : 'Coach'}
+                            </p>
+                            {isTeamCoach && (
+                              <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                                Team Coach
+                              </span>
+                            )}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coach.id))}
+                            className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                            title="Remove coach"
+                          >
+                            <X className="w-5 h-5" />
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <span className="text-4xl mb-2 block">👨‍🏫</span>
+                    <p>No coaches assigned to this match.</p>
+                    {availableCoachesForMatch.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowCoachModal(true)}
+                        className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 mx-auto"
+                        title="Add Coach"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <span>📋</span> Player Attendance
