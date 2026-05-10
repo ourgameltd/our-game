@@ -5,6 +5,7 @@ import { UserPreferencesProvider } from '@/contexts/UserPreferencesContext';
 import { NavigationProvider, useNavigation } from '@/contexts/NavigationContext';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { PageTitleProvider, usePageTitleFallback } from '@/contexts/PageTitleContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 import { getRouteFallbackTitle } from '@/utils/pageTitles';
 import HomePage from '@pages/HomePage';
 import LoginPage from '@pages/auth/LoginPage';
@@ -306,12 +307,14 @@ function App() {
         <NavigationProvider>
           <AuthProvider>
             <PageTitleProvider>
+              <ToastProvider>
               <Router
                 basename={import.meta.env.BASE_URL}
                 future={{ v7_startTransition: true, v7_relativeSplatPath: true }}
               >
                 <AppContent />
               </Router>
+              </ToastProvider>
             </PageTitleProvider>
           </AuthProvider>
         </NavigationProvider>

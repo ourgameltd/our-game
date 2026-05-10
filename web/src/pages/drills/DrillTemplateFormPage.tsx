@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown, AlertCircle } from 'lucide-react';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 import { 
   useDrillTemplateById, 
   useDrillsByScope, 
@@ -63,6 +64,7 @@ export default function DrillTemplateFormPage() {
 
   const { clubId, ageGroupId, teamId, templateId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isEditMode = !!templateId;
   
   // Fetch data
@@ -120,6 +122,11 @@ export default function DrillTemplateFormPage() {
       setSessionCategory(normalizeSessionCategory(template.sessionCategory));
     }
   }, [template]);
+
+  useEffect(() => {
+    const error = createMutation.error || updateMutation.error || archiveMutation.error;
+    if (error) addToast('error', error.message || 'Failed to save session template');
+  }, [createMutation.error, updateMutation.error, archiveMutation.error, addToast]);
 
   // Calculate aggregated data from selected drills
   const getAggregatedData = () => {
@@ -283,6 +290,7 @@ export default function DrillTemplateFormPage() {
       
       const updated = await updateMutation.mutate(updateRequest);
       if (updated) {
+        addToast('success', 'Session template updated successfully');
         navigateBack();
       }
     } else {
@@ -299,9 +307,10 @@ export default function DrillTemplateFormPage() {
           teamId
         }
       };
-      
+
       const created = await createMutation.mutate(createRequest);
       if (created) {
+        addToast('success', 'Session template created successfully');
         navigateBack();
       }
     }
@@ -335,6 +344,7 @@ export default function DrillTemplateFormPage() {
 
     const updated = await archiveMutation.mutate(!isCurrentlyArchived);
     if (updated) {
+      addToast('success', isCurrentlyArchived ? 'Session template unarchived' : 'Session template archived');
       navigateBack();
     }
   };
@@ -361,7 +371,6 @@ export default function DrillTemplateFormPage() {
 
   const contextName = club.name;
   const isSubmitting = createMutation.isSubmitting || updateMutation.isSubmitting || archiveMutation.isSubmitting;
-  const mutationError = createMutation.error || updateMutation.error || archiveMutation.error;
   const backLink = teamId
     ? Routes.teamDrillTemplates(clubId!, ageGroupId!, teamId)
     : ageGroupId
@@ -382,12 +391,6 @@ export default function DrillTemplateFormPage() {
           </div>
         </div>
 
-        {mutationError && (
-          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
-            <p className="text-red-700 dark:text-red-300">{mutationError.message}</p>
-          </div>
-        )}
 
         {isInherited && (
           <div className="card mb-4 bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800">

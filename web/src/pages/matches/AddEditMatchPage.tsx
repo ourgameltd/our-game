@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { AlertCircle, ClipboardList, Users, Activity, FileText, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown } from 'lucide-react';
+import { ClipboardList, Users, Activity, FileText, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown } from 'lucide-react';
 const Timeline = ({ className, children }: { className?: string; children?: React.ReactNode }) => <ul className={className}>{children}</ul>;
 const TimelineItem = ({ className, children }: { className?: string; children?: React.ReactNode }) => <li className={className}>{children}</li>;
 const TimelineHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`flex items-center ${className ?? ''}`}>{children}</div>;
@@ -20,6 +20,7 @@ import TacticDisplay from '@/components/tactics/TacticDisplay';
 import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic } from '@/api/hooks';
 import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 const supportedSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
 
@@ -269,6 +270,7 @@ export default function AddEditMatchPage() {
 
   const { clubId, ageGroupId, teamId, matchId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isEditing = matchId && matchId !== 'new';
 
   // Fetch data from API
@@ -313,8 +315,14 @@ export default function AddEditMatchPage() {
   // Loading and error states
   const isLoading = teamLoading || ageGroupLoading || (isEditing && matchLoading) || playersLoading || coachesLoading || formationsLoading || tacticsLoading || kitsLoading || clubKitsLoading;
   const hasError = teamError || formationsError;
-  const mutationError = createError || updateError;
   const isSaving = isCreating || isUpdating;
+
+  useEffect(() => {
+    const error = createError || updateError;
+    if (error && !error.validationErrors) {
+      addToast('error', error.message || 'Failed to save match');
+    }
+  }, [createError, updateError, addToast]);
 
   const systemFormations = useMemo(
     () => (systemFormationDtos ?? [])
@@ -1506,6 +1514,7 @@ export default function AddEditMatchPage() {
       : await createMatch(matchData as CreateMatchRequest);
 
     if (response.success && response.data) {
+      addToast('success', isEditing ? 'Match updated successfully' : 'Match created successfully');
       navigate(Routes.matches(clubId!, ageGroupId!, teamId!));
     }
   };
@@ -1541,23 +1550,6 @@ export default function AddEditMatchPage() {
           </div>
         </div>
 
-        {mutationError && (
-          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-red-700 dark:text-red-300">{mutationError.message}</p>
-              {mutationError.validationErrors && (
-                <ul className="mt-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside">
-                  {Object.entries(mutationError.validationErrors).map(([field, messages]) =>
-                    messages.map((message, index) => (
-                      <li key={`${field}-${index}`}>{field}: {message}</li>
-                    ))
-                  )}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
 
         {/* Tabs */}
         <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="card mb-4">

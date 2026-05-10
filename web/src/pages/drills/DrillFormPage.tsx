@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, AlertCircle, ExternalLink, Globe, GitBranch, Play, Trash2, X } from 'lucide-react';
+import { Plus, ExternalLink, Globe, GitBranch, Play, Trash2, X } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
 import { drillCategories, normalizeDrillCategory, playerAttributes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import { detectLinkProvider } from '@utils/linkProviders';
@@ -149,6 +150,7 @@ export default function DrillFormPage() {
 
   const { clubId, ageGroupId, teamId, drillId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isEditMode = !!drillId;
   
   // API Hooks
@@ -160,7 +162,6 @@ export default function DrillFormPage() {
   const { data: teams } = useClubTeams(clubId);
   
   const isSubmitting = isCreating || isUpdating;
-  const mutationError = createError || updateError;
   
   // Find context data
   const ageGroup = ageGroupId && ageGroups ? ageGroups.find(ag => ag.id === ageGroupId) : undefined;
@@ -224,6 +225,7 @@ export default function DrillFormPage() {
   useEffect(() => {
     const savedDrill = createData || updateData;
     if (savedDrill) {
+      addToast('success', isEditMode ? 'Drill updated successfully' : 'Drill created successfully');
       if (team) {
         navigate(Routes.teamDrills(clubId!, ageGroupId!, teamId!));
       } else if (ageGroup) {
@@ -232,7 +234,14 @@ export default function DrillFormPage() {
         navigate(Routes.drills(clubId!));
       }
     }
-  }, [createData, updateData, clubId, ageGroupId, teamId, team, ageGroup, navigate]);
+  }, [createData, updateData, clubId, ageGroupId, teamId, team, ageGroup, navigate, addToast, isEditMode]);
+
+  useEffect(() => {
+    const error = createError || updateError;
+    if (error && !error.validationErrors) {
+      addToast('error', error.message || 'Failed to save drill');
+    }
+  }, [createError, updateError, addToast]);
 
   // Group attributes by category
   const attributesByCategory: Record<string, Array<{key: string; label: string}>> = {
@@ -495,26 +504,6 @@ export default function DrillFormPage() {
           />
         </div>
 
-        {/* Mutation error panel */}
-        {mutationError && (
-          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
-            <div>
-              <p className="text-red-700 dark:text-red-300">
-                {mutationError.message}
-              </p>
-              {mutationError.validationErrors && (
-                <ul className="mt-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside">
-                  {Object.entries(mutationError.validationErrors).map(([field, messages]) =>
-                    messages.map((msg, i) => (
-                      <li key={`${field}-${i}`}>{field}: {msg}</li>
-                    ))
-                  )}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit}>
           <div className="space-y-2">

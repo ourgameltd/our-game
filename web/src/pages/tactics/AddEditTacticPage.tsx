@@ -8,6 +8,7 @@ import TacticPitchEditor from '@/components/tactics/TacticPitchEditor';
 import PrinciplePanel from '@/components/tactics/PrinciplePanel';
 import { Tactic, TacticalPositionOverride, TacticPrinciple, Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 import {
   useTactic,
   useSystemFormations,
@@ -367,6 +368,7 @@ export default function AddEditTacticPage() {
 
   const { clubId, ageGroupId, teamId, tacticId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isEditing = !!tacticId;
   const hasValidEditTacticId = !isEditing || isValidTacticId(tacticId);
 
@@ -381,7 +383,6 @@ export default function AddEditTacticPage() {
   const { updateTactic, isSubmitting: isUpdating, data: updateData, error: updateError } = useUpdateTactic(tacticId || '');
 
   const isSubmitting = isCreating || isUpdating;
-  const mutationError = createError || updateError;
 
   // ---- Local form state ----------------------------------------------------
   const [tactic, setTactic] = useState<Tactic>(() => createDefaultTactic(clubId, ageGroupId, teamId));
@@ -452,6 +453,7 @@ export default function AddEditTacticPage() {
   useEffect(() => {
     const savedTactic = createData || updateData;
     if (savedTactic) {
+      addToast('success', isEditing ? 'Tactic updated successfully' : 'Tactic created successfully');
       const id = savedTactic.id;
       if (teamId && ageGroupId && clubId) {
         navigate(Routes.teamTacticDetail(clubId, ageGroupId, teamId, id));
@@ -461,7 +463,14 @@ export default function AddEditTacticPage() {
         navigate(Routes.clubTacticDetail(clubId, id));
       }
     }
-  }, [createData, updateData, clubId, ageGroupId, teamId, navigate]);
+  }, [createData, updateData, clubId, ageGroupId, teamId, navigate, addToast, isEditing]);
+
+  useEffect(() => {
+    const error = createError || updateError;
+    if (error && !error.validationErrors) {
+      addToast('error', error.message || 'Failed to save tactic');
+    }
+  }, [createError, updateError, addToast]);
 
   // ---- Derived data (client-side) ------------------------------------------
   const formation = useMemo(
@@ -716,26 +725,6 @@ export default function AddEditTacticPage() {
           />
         </div>
 
-        {/* Mutation error panel */}
-        {mutationError && (
-          <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
-            <AlertCircle className="w-5 h-5 text-red-500 dark:text-red-400 shrink-0" />
-            <div>
-              <p className="text-red-700 dark:text-red-300">
-                {mutationError.message}
-              </p>
-              {mutationError.validationErrors && (
-                <ul className="mt-1 text-sm text-red-600 dark:text-red-400 list-disc list-inside">
-                  {Object.entries(mutationError.validationErrors).map(([field, messages]) =>
-                    messages.map((msg, i) => (
-                      <li key={`${field}-${i}`}>{field}: {msg}</li>
-                    ))
-                  )}
-                </ul>
-              )}
-            </div>
-          </div>
-        )}
 
         <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
         <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">

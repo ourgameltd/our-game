@@ -7,10 +7,12 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 const AddEditTeamPage: React.FC = () => {
   const { clubId, ageGroupId, teamId } = useParams<{ clubId: string; ageGroupId: string; teamId?: string }>();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isEditing = !!teamId;
 
   usePageTitle(['Club', 'Age Group', isEditing ? 'Edit Team' : 'Add Edit Team']);
@@ -101,6 +103,14 @@ const AddEditTeamPage: React.FC = () => {
     }
     setErrors(prev => ({ ...prev, ...mapped }));
   }, [createError, updateError]);
+
+  useEffect(() => {
+    const error = createError || updateError;
+    if (!error) return;
+    if (!error.validationErrors) {
+      addToast('error', error.message || 'Failed to save team');
+    }
+  }, [createError, updateError, addToast]);
 
   // Loading skeleton
   if (isLoading) {
@@ -277,18 +287,16 @@ const AddEditTeamPage: React.FC = () => {
         await createTeam(request);
       }
 
-      // Navigate back on success (errors are handled by the useEffect above)
+      addToast('success', isEditing ? 'Team updated successfully' : 'Team created successfully');
       navigate(Routes.ageGroup(clubId!, ageGroupId!));
     } catch {
-      // Errors are captured by mutation hooks and mapped via useEffect
+      // Errors are captured by mutation hooks and shown via useEffect
     }
   };
   
   const handleCancel = () => {
     navigate(Routes.ageGroup(clubId!, ageGroupId!));
   };
-
-  const mutationError = createError || updateError;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -298,15 +306,6 @@ const AddEditTeamPage: React.FC = () => {
           title={isEditing ? 'Edit Team' : 'Add New Team'}
           subtitle={`${club.name} - ${ageGroup.name}`}
         />
-
-        {/* API Error Banner */}
-        {mutationError && (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-red-700 dark:text-red-400 font-medium">
-              {mutationError.message}
-            </p>
-          </div>
-        )}
         
         {/* Form */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">

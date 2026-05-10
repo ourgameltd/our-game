@@ -7,10 +7,12 @@ import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
 import { Routes } from '@utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useToast } from '@/contexts/ToastContext';
 
 const AddEditAgeGroupPage: React.FC = () => {
   const { clubId, ageGroupId } = useParams<{ clubId: string; ageGroupId?: string }>();
   const navigate = useNavigate();
+  const { addToast } = useToast();
 
   // Club state
   const [club, setClub] = useState<ClubDetailDto | null>(null);
@@ -41,7 +43,6 @@ const AddEditAgeGroupPage: React.FC = () => {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitError, setSubmitError] = useState<string | null>(null);
 
   // Fetch club and age group data
   useEffect(() => {
@@ -255,8 +256,6 @@ const AddEditAgeGroupPage: React.FC = () => {
       return;
     }
 
-    // Clear any previous submission errors
-    setSubmitError(null);
     setIsSubmitting(true);
 
     try {
@@ -280,19 +279,16 @@ const AddEditAgeGroupPage: React.FC = () => {
       }
 
       if (response.success && response.data) {
-        // Success - navigate to the age group overview page
+        addToast('success', isEditing ? 'Age group updated successfully' : 'Age group created successfully');
         navigate(Routes.ageGroup(clubId!, response.data.id));
       } else {
-        // API returned error response
         const errorMessage = response.error?.message || 'Failed to save age group';
-        setSubmitError(errorMessage);
+        addToast('error', errorMessage);
 
-        // Check for validation errors and map them to form fields
         if (response.error?.validationErrors) {
           const fieldErrors: Record<string, string> = {};
           Object.entries(response.error.validationErrors).forEach(([field, messages]) => {
-            // Take the first error message for each field
-            const fieldName = field.charAt(0).toLowerCase() + field.slice(1); // Convert to camelCase
+            const fieldName = field.charAt(0).toLowerCase() + field.slice(1);
             fieldErrors[fieldName] = messages[0];
           });
           setErrors(fieldErrors);
@@ -300,7 +296,7 @@ const AddEditAgeGroupPage: React.FC = () => {
       }
     } catch (err) {
       console.error('Failed to save age group:', err);
-      setSubmitError('An unexpected error occurred while saving the age group');
+      addToast('error', 'An unexpected error occurred while saving the age group');
     } finally {
       setIsSubmitting(false);
     }
@@ -322,12 +318,6 @@ const AddEditAgeGroupPage: React.FC = () => {
         {/* Form */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6">
           <form onSubmit={handleSubmit} className="space-y-2">
-            {/* Submission Error Display */}
-            {submitError && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-4">
-                <p className="text-sm text-red-800 dark:text-red-300">{submitError}</p>
-              </div>
-            )}
 
             {/* Name */}
             <div>

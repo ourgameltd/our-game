@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useToast } from '@/contexts/ToastContext';
 import { ClipboardList, Users, Plus, MapPin, X, Link as LinkIcon, Clock, Calendar, ExternalLink, CirclePlay, Camera, Globe, BookOpen, FileText, Loader2, ChevronUp, Package, Eye } from 'lucide-react';
 import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById, useDrillsByScope, useDrillTemplatesByScope } from '@/api/hooks';
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest, DrillListDto, DrillTemplateListDto } from '@/api/client';
@@ -17,6 +18,7 @@ export default function AddEditTrainingSessionPage() {
 
   const { clubId, ageGroupId, teamId, sessionId } = useParams();
   const navigate = useNavigate();
+  const { addToast } = useToast();
   const isEditing = sessionId && sessionId !== 'new';
 
   // Fetch data from API
@@ -352,10 +354,11 @@ export default function AddEditTrainingSessionPage() {
         await apiClient.trainingSessions.create(createData);
       }
 
+      addToast('success', isEditing ? 'Training session updated successfully' : 'Training session created successfully');
       navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!));
     } catch (error) {
       console.error('Error saving training session:', error);
-      alert('Failed to save training session. Please try again.');
+      addToast('error', 'Failed to save training session. Please try again.');
     } finally {
       setIsSaving(false);
     }
