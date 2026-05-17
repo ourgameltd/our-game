@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, ExternalLink, Globe, GitBranch, Play, Trash2, X } from 'lucide-react';
+import { Plus, ExternalLink, Globe, GitBranch, Play, Trash2, X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 import { drillCategories, normalizeDrillCategory, playerAttributes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';

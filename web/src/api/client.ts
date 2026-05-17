@@ -2476,7 +2476,7 @@ export interface UpdateMatchReportRequest {
 
 export interface UpdateGoalRequest {
   playerId: string;
-  minute: number;
+  minute?: number;
   period: string;
   addedTimeMinutes?: number;
   isExtraTime: boolean;

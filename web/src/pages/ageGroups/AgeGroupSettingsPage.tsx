@@ -42,6 +42,7 @@ export default function AgeGroupSettingsPage() {
   // Validation & submission state
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Hydrate form once when age group data loads
   useEffect(() => {
@@ -319,6 +320,13 @@ export default function AgeGroupSettingsPage() {
         {submitError && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-sm text-red-800 dark:text-red-300">{submitError}</p>
+          </div>
+        )}
+
+        {/* Success message banner */}
+        {successMessage && (
+          <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-sm text-green-800 dark:text-green-300">{successMessage}</p>
           </div>
         )}
         
