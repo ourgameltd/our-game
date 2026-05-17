@@ -32,7 +32,7 @@ async function fetchVapidPublicKey(): Promise<string> {
     throw new Error('Failed to fetch VAPID public key');
   }
   const data = await response.json();
-  return data.publicKey as string;
+  return data.data.publicKey as string;
 }
 
 /**
