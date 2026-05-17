@@ -112,8 +112,12 @@ try
         
         // Disable all FK constraints, delete all data, re-enable constraints
         // This avoids needing to know the exact FK dependency order
-        await context.Database.ExecuteSqlRawAsync(
-            "EXEC sp_MSforeachtable 'ALTER TABLE ? NOCHECK CONSTRAINT ALL'");
+        await context.Database.ExecuteSqlRawAsync("""
+            DECLARE @sql NVARCHAR(MAX) = N'';
+            SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + ' NOCHECK CONSTRAINT ALL; '
+            FROM sys.foreign_keys;
+            EXEC sp_executesql @sql;
+            """);
         
         // Delete from all seeded tables (order doesn't matter with constraints disabled)
         string[] tablesToClean =
@@ -157,8 +161,12 @@ try
         }
         
         // Re-enable all FK constraints
-        await context.Database.ExecuteSqlRawAsync(
-            "EXEC sp_MSforeachtable 'ALTER TABLE ? WITH CHECK CHECK CONSTRAINT ALL'");
+        await context.Database.ExecuteSqlRawAsync("""
+            DECLARE @sql NVARCHAR(MAX) = N'';
+            SELECT @sql += 'ALTER TABLE ' + QUOTENAME(OBJECT_SCHEMA_NAME(parent_object_id)) + '.' + QUOTENAME(OBJECT_NAME(parent_object_id)) + ' WITH CHECK CHECK CONSTRAINT ALL; '
+            FROM sys.foreign_keys;
+            EXEC sp_executesql @sql;
+            """);
         
         Console.WriteLine("✅ Existing data cleaned");
         Console.WriteLine();
