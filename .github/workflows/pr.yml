@@ -39,7 +39,7 @@ jobs:
   # non-fork PRs trigger a preview deploy; everything else only validates.
   # ---------------------------------------------------------------------------
   changes:
-    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+    if: (github.event_name != 'pull_request' || github.event.action != 'closed') && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     outputs:
       infra: ${{ steps.filter.outputs.infra }}
@@ -594,7 +594,7 @@ jobs:
   # changed paths or actor (so Dependabot/closes without a deploy still tidy).
   # ---------------------------------------------------------------------------
   close-preview:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     environment:
       name: live
