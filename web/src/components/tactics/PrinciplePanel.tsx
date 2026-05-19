@@ -78,7 +78,11 @@ export default function PrinciplePanel({
     
     onPrinciplesChange([...principles, newPrinciple]);
     setEditingPrinciple(newPrinciple.id);
-    setExpandedPrinciple(newPrinciple.id);
+    if (readOnly) {
+      setExpandedPrinciple(newPrinciple.id);
+    } else {
+      onPrincipleSelect?.(newPrinciple.id);
+    }
   };
 
   const handleDeletePrinciple = (principleId: string) => {
@@ -123,19 +127,19 @@ export default function PrinciplePanel({
   };
 
   const handlePrincipleCardClick = (principle: TacticPrinciple) => {
-    // Toggle expand state
-    setExpandedPrinciple(expandedPrinciple === principle.id ? null : principle.id);
-
-    if (readOnly && onPrincipleClick) {
-      onPrincipleClick(selectedPrincipleId === principle.id ? null : principle.id);
-    } else if (!readOnly && onPrincipleSelect) {
-      // In edit mode: toggle principle as the active pitch-editing target
-      onPrincipleSelect(selectedPrincipleId === principle.id ? null : principle.id);
+    if (readOnly) {
+      setExpandedPrinciple(expandedPrinciple === principle.id ? null : principle.id);
+      onPrincipleClick?.(selectedPrincipleId === principle.id ? null : principle.id);
+    } else {
+      // In edit mode: expansion is derived from selectedPrincipleId, so only update parent
+      onPrincipleSelect?.(selectedPrincipleId === principle.id ? null : principle.id);
     }
   };
 
   const renderPrincipleCard = (principle: TacticPrinciple, isGlobal: boolean) => {
-    const isExpanded = expandedPrinciple === principle.id;
+    const isExpanded = readOnly
+      ? expandedPrinciple === principle.id
+      : selectedPrincipleId === principle.id;
     const isEditing = editingPrinciple === principle.id;
     const isPrincipleSelected = selectedPrincipleId === principle.id;
     
