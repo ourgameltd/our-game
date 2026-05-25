@@ -96,10 +96,28 @@ For complex queries, custom SQL is acceptable in the Persistence layer.
 
 ## Testing Conventions
 
-- **Backend**: xUnit + Moq. `OurGame.Api.Tests` tests HTTP endpoint behavior; `OurGame.Application.Tests` tests business logic and validators.
-- **No Playwright**: Do not add E2E browser tests. API endpoint unit coverage is the expected default for backend changes.
-- **Coverage**: `OurGame.Persistence` is excluded from coverage metrics.
-- When backend behavior, API contracts, validation, or authorization changes, add or extend tests in the relevant test project.
+**After implementing any backend feature, updating tests is not optional — it is the final step before the work is complete.**
+
+### Where tests live
+
+- `OurGame.Api.Tests` — HTTP endpoint behavior (status codes, request/response contracts, auth, serialization)
+- `OurGame.Application.Tests` — MediatR handlers, FluentValidation validators, business logic, Polly policies
+- `OurGame.Persistence` is excluded from coverage metrics — do not add tests there
+
+### What to cover after a backend change
+
+For every new or modified endpoint / handler, add or extend tests covering:
+1. **Success path** — valid input returns expected status code and response shape
+2. **Validation failures** — invalid/missing fields return 400 with RFC 7807 problem details
+3. **Authorization** — unauthorized requests return 401/403 as appropriate
+4. **Edge cases** — any conditional logic or branching introduced by the change
+
+### Rules
+
+- **No Playwright**: Do not add E2E browser tests. API unit coverage is the required default.
+- Prefer extending existing test classes over creating new files where the subject already has coverage.
+- Use xUnit + Moq. Mock dependencies at the handler boundary, not the EF Core layer.
+- Run `dotnet test --configuration Release` after writing tests to confirm they pass before considering the feature done.
 
 ## Directory Documentation System
 
