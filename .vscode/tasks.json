@@ -41,6 +41,35 @@
       "problemMatcher": []
     },
     {
+      "label": "API: Start Functions",
+      "type": "shell",
+      "command": "func",
+      "args": ["start"],
+      "options": {
+        "cwd": "${workspaceFolder}/api/OurGame.Api",
+        "env": {
+          "DOTNET_ROOT": "/opt/homebrew/opt/dotnet@8/libexec",
+          "PATH": "/opt/homebrew/opt/dotnet@8/bin:${env:PATH}"
+        }
+      },
+      "isBackground": true,
+      "problemMatcher": [
+        {
+          "pattern": [{ "regexp": "^.*$", "file": 1, "location": 2, "message": 3 }],
+          "background": {
+            "activeOnStart": true,
+            "beginsPattern": "^.*Azure Functions Core Tools.*$",
+            "endsPattern": "^.*Worker process started and initialized.*$"
+          }
+        }
+      ],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "api"
+      }
+    },
+    {
       "label": "Web: SWA CLI",
       "type": "shell",
       "command": "npx",
@@ -86,11 +115,21 @@
       "problemMatcher": []
     },
     {
+      "label": "Dev: Start (func + SWA)",
+      "dependsOrder": "sequence",
+      "dependsOn": [
+        "API: Start Functions",
+        "Web: SWA CLI"
+      ],
+      "problemMatcher": []
+    },
+    {
       "label": "Dev: Start Backend Containers + SWA",
       "dependsOrder": "sequence",
       "dependsOn": [
         "Infra: Start Local Stack",
         "DB: Seed",
+        "API: Start Functions",
         "Web: SWA CLI"
       ],
       "problemMatcher": []
