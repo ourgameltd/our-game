@@ -1,4 +1,4 @@
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Users, AlertCircle, LayoutGrid } from 'lucide-react';
 import { useTacticsByScope } from '@/api/hooks';
 import type { TacticListDto } from '@/api';
@@ -6,59 +6,13 @@ import { Routes } from '@/utils/routes';
 import PageTitle from '@/components/common/PageTitle';
 import EmptyState from '@/components/common/EmptyState';
 import { usePageTitle } from '@/hooks/usePageTitle';
-
-// Skeleton component for tactic row loading state
-function TacticRowSkeleton() {
-  return (
-    <div className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0 animate-pulse">
-      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-        {/* Name skeleton */}
-        <div className="md:w-64 md:shrink-0">
-          <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-        {/* Formation skeleton */}
-        <div className="md:w-48 md:shrink-0">
-          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-        {/* Summary skeleton */}
-        <div className="md:flex-1 md:min-w-0">
-          <div className="h-4 w-full max-w-md bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// Skeleton for section header
-function SectionHeaderSkeleton() {
-  return (
-    <div className="flex items-center gap-2 mb-4 animate-pulse">
-      <div className="w-5 h-5 bg-gray-200 dark:bg-gray-700 rounded" />
-      <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
-    </div>
-  );
-}
-
-// Skeleton for the tactics list section
-function TacticsListSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <div>
-      <SectionHeaderSkeleton />
-      <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-        {Array.from({ length: count }).map((_, index) => (
-          <TacticRowSkeleton key={index} />
-        ))}
-      </div>
-    </div>
-  );
-}
+import TacticCard, { TacticCardSkeleton } from '@/components/tactics/TacticCard';
 
 export default function TacticsListPage() {
   usePageTitle(['Tactics List']);
 
   const { clubId, ageGroupId, teamId } = useParams();
 
-  // Fetch tactics from API
   const { data: tacticsData, isLoading, error } = useTacticsByScope(clubId, ageGroupId, teamId);
 
   const getNewTacticUrl = () => {
@@ -83,6 +37,17 @@ export default function TacticsListPage() {
     return Routes.clubTacticDetail(clubId, tacticId);
   };
 
+  const getTacticEditUrl = (tacticId: string) => {
+    if (!clubId) return '#';
+    if (teamId && ageGroupId) {
+      return Routes.teamTacticEdit(clubId, ageGroupId, teamId, tacticId);
+    }
+    if (ageGroupId) {
+      return Routes.ageGroupTacticEdit(clubId, ageGroupId, tacticId);
+    }
+    return Routes.clubTacticEdit(clubId, tacticId);
+  };
+
   const getScopeLabel = () => {
     if (teamId) return 'Team';
     if (ageGroupId) return 'Age Group';
@@ -96,7 +61,7 @@ export default function TacticsListPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         <PageTitle
-          title="Tactics"
+          title="Formations"
           subtitle={`Manage tactical setups for your ${getScopeLabel().toLowerCase()}`}
           action={{
             label: 'New Tactic',
@@ -106,7 +71,7 @@ export default function TacticsListPage() {
           }}
         />
 
-        <div className="space-y-2">
+        <div className="space-y-6">
           {/* Error State */}
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-center gap-3">
@@ -119,10 +84,11 @@ export default function TacticsListPage() {
 
           {/* Loading State */}
           {isLoading && (
-            <>
-              <TacticsListSkeleton count={3} />
-              <TacticsListSkeleton count={2} />
-            </>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <TacticCardSkeleton key={i} />
+              ))}
+            </div>
           )}
 
           {/* Current Scope Tactics */}
@@ -135,32 +101,14 @@ export default function TacticsListPage() {
                   description="Create your first tactic to get started."
                 />
               ) : (
-                <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {tactics.map((tactic: TacticListDto) => (
-                    <Link
+                    <TacticCard
                       key={tactic.id}
-                      to={getTacticDetailUrl(tactic.id)}
-                      className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                        {/* Name */}
-                        <h3 className="font-semibold text-gray-900 dark:text-white text-base md:w-64 md:shrink-0 truncate">
-                          {tactic.name}
-                        </h3>
-                        
-                        {/* Formation */}
-                        <p className="text-sm text-gray-600 dark:text-gray-400 md:w-48 md:shrink-0 truncate">
-                          {tactic.parentFormationName || 'Unknown Formation'}
-                        </p>
-                        
-                        {/* Summary */}
-                        {tactic.summary && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 md:flex-1 md:min-w-0 truncate">
-                            {tactic.summary}
-                          </p>
-                        )}
-                      </div>
-                    </Link>
+                      tactic={tactic}
+                      href={getTacticDetailUrl(tactic.id)}
+                      editHref={getTacticEditUrl(tactic.id)}
+                    />
                   ))}
                 </div>
               )}
@@ -174,39 +122,17 @@ export default function TacticsListPage() {
                 <Users className="w-5 h-5" />
                 Inherited Tactics ({inheritedTactics.length})
               </h2>
-              <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {inheritedTactics.map((tactic: TacticListDto) => {
                   const scopeLabel = tactic.scope.type === 'club' ? 'Club' : 'Age Group';
-                  
                   return (
-                    <div
+                    <TacticCard
                       key={tactic.id}
-                      className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0 opacity-75"
-                    >
-                      <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
-                        {/* Name with scope badge */}
-                        <div className="flex items-center gap-2 md:w-64 md:shrink-0">
-                          <h3 className="font-semibold text-gray-900 dark:text-white text-base flex-1 truncate">
-                            {tactic.name}
-                          </h3>
-                          <span className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded shrink-0">
-                            {scopeLabel}
-                          </span>
-                        </div>
-                        
-                        {/* Formation */}
-                        <p className="text-sm text-gray-600 dark:text-gray-400 md:w-48 md:shrink-0 truncate">
-                          {tactic.parentFormationName || 'Unknown Formation'}
-                        </p>
-                        
-                        {/* Summary */}
-                        {tactic.summary && (
-                          <p className="text-sm text-gray-500 dark:text-gray-400 md:flex-1 md:min-w-0 truncate">
-                            {tactic.summary}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                      tactic={tactic}
+                      href={getTacticDetailUrl(tactic.id)}
+                      editHref={getTacticEditUrl(tactic.id)}
+                      inheritedFrom={scopeLabel}
+                    />
                   );
                 })}
               </div>

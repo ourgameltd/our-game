@@ -1,3 +1,5 @@
+using OurGame.Application.UseCases.Tactics.Queries.GetTacticById.DTOs;
+
 namespace OurGame.Application.UseCases.Tactics.Queries.GetTacticsByScope.DTOs;
 
 /// <summary>
@@ -14,6 +16,7 @@ public class TacticListDto
     public string? ParentFormationName { get; set; }
     public TacticScopeDto Scope { get; set; } = new();
     public List<string> Tags { get; set; } = new();
+    public List<ResolvedPositionDto> ResolvedPositions { get; set; } = new();
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
