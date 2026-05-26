@@ -149,7 +149,7 @@ public record PerformanceRatingDto
 }
 
 /// <summary>
-/// Coach assigned to the match
+/// Coach assigned to the match with attendance status
 /// </summary>
 public record MatchCoachDetailDto
 {
@@ -159,6 +159,8 @@ public record MatchCoachDetailDto
     public string LastName { get; init; } = string.Empty;
     public string? Photo { get; init; }
     public string Role { get; init; } = string.Empty;
+    public string Status { get; init; } = "pending";
+    public string? Notes { get; init; }
 }
 
 /// <summary>

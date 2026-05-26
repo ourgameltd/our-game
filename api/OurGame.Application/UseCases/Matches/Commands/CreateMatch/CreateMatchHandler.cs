@@ -92,12 +92,14 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
         }
 
         // Insert match coaches
-        foreach (var coachId in dto.CoachIds)
+        foreach (var coach in dto.Coaches)
         {
             var mcId = Guid.NewGuid();
+            var coachStatus = coach.Status ?? "pending";
+            var coachNotes = coach.Notes ?? string.Empty;
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO MatchCoaches (Id, MatchId, CoachId)
-                VALUES ({mcId}, {matchId}, {coachId})
+                INSERT INTO MatchCoaches (Id, MatchId, CoachId, Status, Notes)
+                VALUES ({mcId}, {matchId}, {coach.CoachId}, {coachStatus}, {coachNotes})
             ", cancellationToken);
         }
 

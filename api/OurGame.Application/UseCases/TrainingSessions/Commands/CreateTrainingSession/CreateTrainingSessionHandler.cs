@@ -77,12 +77,14 @@ public class CreateTrainingSessionHandler : IRequestHandler<CreateTrainingSessio
             }
 
             // Insert session coaches
-            foreach (var coachId in dto.AssignedCoachIds)
+            foreach (var coach in dto.Coaches)
             {
                 var sessionCoachId = Guid.NewGuid();
+                var coachStatus = coach.Status ?? "pending";
+                var coachNotes = coach.Notes ?? string.Empty;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO SessionCoaches (Id, SessionId, CoachId)
-                    VALUES ({sessionCoachId}, {sessionId}, {coachId})
+                    INSERT INTO SessionCoaches (Id, SessionId, CoachId, Status, Notes)
+                    VALUES ({sessionCoachId}, {sessionId}, {coach.CoachId}, {coachStatus}, {coachNotes})
                 ", cancellationToken);
             }
 

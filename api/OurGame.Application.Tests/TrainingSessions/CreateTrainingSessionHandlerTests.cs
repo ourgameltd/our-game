@@ -17,7 +17,7 @@ public class CreateTrainingSessionHandlerTests
         Status = "scheduled",
         IsLocked = false,
         SessionDrills = new List<CreateSessionDrillDto>(),
-        AssignedCoachIds = new List<Guid>(),
+        Coaches = new List<CreateTrainingSessionCoachRequest>(),
         Attendance = new List<CreateSessionAttendanceDto>(),
         AppliedTemplates = new List<CreateAppliedTemplateDto>()
     };
@@ -89,7 +89,10 @@ public class CreateTrainingSessionHandlerTests
             {
                 new() { DrillId = drillId, Source = "manual", Order = 0 }
             },
-            AssignedCoachIds = new List<Guid> { coachId }
+            Coaches = new List<CreateTrainingSessionCoachRequest>
+            {
+                new() { CoachId = coachId, Status = "confirmed", Notes = "Available" }
+            }
         };
 
         var result = await handler.Handle(new CreateTrainingSessionCommand(dto), CancellationToken.None);
@@ -98,6 +101,8 @@ public class CreateTrainingSessionHandlerTests
         Assert.Equal(drillId, result.Drills[0].DrillId);
         Assert.Single(result.Coaches);
         Assert.Equal(coachId, result.Coaches[0].CoachId);
+        Assert.Equal("confirmed", result.Coaches[0].Status);
+        Assert.Equal("Available", result.Coaches[0].Notes);
     }
 
     [Fact]

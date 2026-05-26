@@ -71,9 +71,9 @@ public record CreateMatchRequest
     public CreateMatchReportRequest? Report { get; init; }
 
     /// <summary>
-    /// Coaches assigned to the match
+    /// Coaches assigned to the match with attendance status
     /// </summary>
-    public List<Guid> CoachIds { get; init; } = new();
+    public List<CreateMatchCoachRequest> Coaches { get; init; } = new();
 
     /// <summary>
     /// Substitutions made during the match

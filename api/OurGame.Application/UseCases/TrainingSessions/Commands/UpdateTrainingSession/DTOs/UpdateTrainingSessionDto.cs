@@ -50,9 +50,9 @@ public record UpdateTrainingSessionRequest
     public List<UpdateSessionDrillRequest> Drills { get; init; } = new();
 
     /// <summary>
-    /// Coach IDs assigned to run this session. Replaced entirely on update.
+    /// Coaches assigned to run this session with attendance status. Replaced entirely on update.
     /// </summary>
-    public List<Guid> CoachIds { get; init; } = new();
+    public List<UpdateTrainingSessionCoachRequest> Coaches { get; init; } = new();
 
     /// <summary>
     /// Player attendance records. Replaced entirely on update.

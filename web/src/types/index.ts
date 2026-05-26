@@ -357,7 +357,8 @@ export interface TrainingSession {
     appliedAt: Date;
     drillIds: string[]; // Drills that were added from this template
   }[];
-  coachIds?: string[]; // Coaches assigned to this session
+  coachIds?: string[]; // Coaches assigned to this session (derived from coaches for backward compat)
+  coaches?: { coachId: string; status: 'confirmed' | 'declined' | 'pending'; notes?: string }[];
   attendance?: {
     playerId: string;
     status: 'confirmed' | 'declined' | 'maybe' | 'pending';

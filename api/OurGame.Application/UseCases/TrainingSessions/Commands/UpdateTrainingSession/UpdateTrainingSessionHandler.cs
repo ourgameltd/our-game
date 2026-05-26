@@ -2,6 +2,7 @@ using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateTrainingSession.DTOs;
 using OurGame.Application.UseCases.TrainingSessions.Queries.GetTrainingSessionById;
 using OurGame.Application.UseCases.TrainingSessions.Queries.GetTrainingSessionById.DTOs;
 using OurGame.Persistence.Enums;
@@ -85,12 +86,14 @@ public class UpdateTrainingSessionHandler : IRequestHandler<UpdateTrainingSessio
             }
 
             // Re-insert session coaches
-            foreach (var coachId in dto.CoachIds)
+            foreach (var coach in dto.Coaches)
             {
                 var scId = Guid.NewGuid();
+                var coachStatus = coach.Status ?? "pending";
+                var coachNotes = coach.Notes ?? string.Empty;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO SessionCoaches (Id, SessionId, CoachId)
-                    VALUES ({scId}, {sessionId}, {coachId})
+                    INSERT INTO SessionCoaches (Id, SessionId, CoachId, Status, Notes)
+                    VALUES ({scId}, {sessionId}, {coach.CoachId}, {coachStatus}, {coachNotes})
                 ", cancellationToken);
             }
 

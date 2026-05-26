@@ -13,6 +13,10 @@ public partial class MatchCoach
 
     public Guid CoachId { get; set; }
 
+    public string Status { get; set; }
+
+    public string Notes { get; set; }
+
     public virtual Coach Coach { get; set; }
 
     public virtual Match Match { get; set; }

@@ -80,6 +80,7 @@ export default function AddEditTrainingSessionPage() {
   
   // Coach assignment state
   const [assignedCoachIds, setAssignedCoachIds] = useState<string[]>([]);
+  const [coachAttendance, setCoachAttendance] = useState<{ coachId: string; status: 'confirmed' | 'declined' | 'pending'; notes?: string }[]>([]);
   const [showCoachModal, setShowCoachModal] = useState(false);
   
   // Drill selection modal
@@ -108,7 +109,17 @@ export default function AddEditTrainingSessionPage() {
     setLocation(existingSession.location || '');
     setFocusAreas(existingSession.focusAreas || []);
     setNotes(existingSession.notes || '');
-    setAssignedCoachIds(existingSession.coachIds || []);
+    const coachIds = existingSession.coachIds || [];
+    setAssignedCoachIds(coachIds);
+    if (existingSession.coaches && existingSession.coaches.length > 0) {
+      setCoachAttendance(existingSession.coaches.map(c => ({
+        coachId: c.coachId,
+        status: c.status,
+        notes: c.notes
+      })));
+    } else {
+      setCoachAttendance(coachIds.map(id => ({ coachId: id, status: 'pending' as const })));
+    }
     setAppliedTemplates(existingSession.appliedTemplates || []);
     
     // Initialize session drills (prefer sessionDrills, fallback to drillIds)
@@ -151,6 +162,40 @@ export default function AddEditTrainingSessionPage() {
       setAssignedCoachIds(teamCoaches.map(c => c.id).filter((id): id is string => !!id));
     }
   }, [isEditing, teamCoaches.length]);
+
+  // Keep coachAttendance in sync with assignedCoachIds
+  useEffect(() => {
+    setCoachAttendance(prev => {
+      const assignedSet = new Set(assignedCoachIds);
+      const filtered = prev.filter(item => assignedSet.has(item.coachId));
+      const existingIds = new Set(filtered.map(item => item.coachId));
+      let didChange = filtered.length !== prev.length;
+      const next = [...filtered];
+      assignedCoachIds.forEach(coachId => {
+        if (!existingIds.has(coachId)) {
+          next.push({ coachId, status: 'pending' });
+          didChange = true;
+        }
+      });
+      return didChange ? next : prev;
+    });
+  }, [assignedCoachIds]);
+
+  const handleSetCoachAttendanceStatus = (coachId: string, status: 'confirmed' | 'declined' | 'pending') => {
+    setCoachAttendance(prev => {
+      const index = prev.findIndex(item => item.coachId === coachId);
+      if (index === -1) return [...prev, { coachId, status }];
+      return prev.map(item => item.coachId === coachId ? { ...item, status } : item);
+    });
+  };
+
+  const handleSetCoachAttendanceNote = (coachId: string, note: string) => {
+    setCoachAttendance(prev => {
+      const index = prev.findIndex(item => item.coachId === coachId);
+      if (index === -1) return [...prev, { coachId, status: 'pending', notes: note || undefined }];
+      return prev.map(item => item.coachId === coachId ? { ...item, notes: note || undefined } : item);
+    });
+  };
 
   // --- Conditional returns AFTER all hooks ---
 
@@ -312,7 +357,11 @@ export default function AddEditTrainingSessionPage() {
             templateId: sd.templateId,
             order: sd.order
           })),
-          coachIds: assignedCoachIds,
+          coaches: coachAttendance.map(ca => ({
+            coachId: ca.coachId,
+            status: ca.status,
+            notes: ca.notes
+          })),
           attendance: attendance.map(a => ({
             playerId: a.playerId,
             status: a.status,
@@ -340,7 +389,11 @@ export default function AddEditTrainingSessionPage() {
             templateId: sd.templateId,
             order: sd.order
           })),
-          assignedCoachIds,
+          coaches: coachAttendance.map(ca => ({
+            coachId: ca.coachId,
+            status: ca.status,
+            notes: ca.notes
+          })),
           attendance: attendance.map(a => ({
             playerId: a.playerId,
             status: a.status,
@@ -665,89 +718,6 @@ export default function AddEditTrainingSessionPage() {
                 </div>
               </div>
 
-              {/* Coaching Staff Assignment */}
-              <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                      <span>👨‍🏫</span> Coaching Staff
-                    </h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                      Coaches running this training session. Team coaches are automatically assigned.
-                    </p>
-                  </div>
-                  {availableCoachesForSession.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowCoachModal(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
-                      title="Add Coach"
-                    >
-                      <Plus className="w-5 h-5" />
-                    </button>
-                  )}
-                </div>
-                
-                {assignedCoaches.length > 0 ? (
-                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {assignedCoaches.map((coach) => {
-                      const isTeamCoach = teamCoaches.some(tc => tc.id === coach.id);
-                      return (
-                        <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                          {coach.photoUrl ? (
-                            <img 
-                              src={coach.photoUrl} 
-                              alt={`${coach.firstName} ${coach.lastName}`}
-                              className="w-12 h-12 rounded-full object-cover shrink-0"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 bg-linear-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-lg font-bold shrink-0">
-                              {(coach.firstName || '')[0]}{(coach.lastName || '')[0]}
-                            </div>
-                          )}
-                          <div className="min-w-0 flex-1">
-                            <p className="font-medium text-gray-900 dark:text-white truncate">
-                              {coach.firstName} {coach.lastName}
-                            </p>
-                            <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                              {coachRoleDisplay[coach.role || '']}
-                            </p>
-                            {isTeamCoach && (
-                              <span className="inline-block mt-1 text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
-                                Team Coach
-                              </span>
-                            )}
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coach.id))}
-                            className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                            title="Remove coach"
-                          >
-                            <X className="w-5 h-5" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                    <span className="text-4xl mb-2 block">👨‍🏫</span>
-                    <p>No coaches assigned to this session.</p>
-                    {availableCoachesForSession.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => setShowCoachModal(true)}
-                        className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 mx-auto"
-                        title="Add Coach"
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
-                )}
-              </div>
-
               {/* Session Plan / Notes */}
               <div className="pt-6 border-t border-gray-200 dark:border-gray-700">
                 <div className="mb-4">
@@ -1041,6 +1011,181 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
           {/* Attendance Tab */}
           {activeTab === 'attendance' && (
             <div className="mt-4 space-y-2">
+
+              {/* Coaching Staff Attendance */}
+              <div className="pb-6 mb-4 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <span>👨‍🏫</span> Coaching Staff
+                    </h3>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                      Track coach availability for this session
+                    </p>
+                  </div>
+                  {availableCoachesForSession.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCoachModal(true)}
+                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                      title="Add Coach"
+                    >
+                      <Plus className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+
+                {assignedCoaches.length > 0 ? (
+                  <div className="space-y-2">
+                    {assignedCoaches.map((coach) => {
+                      const coachId = coach.id ?? '';
+                      const ca = coachAttendance.find(c => c.coachId === coachId);
+                      const status = ca?.status || 'pending';
+
+                      const getStatusColor = (s: string) => {
+                        switch (s) {
+                          case 'confirmed': return 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800';
+                          case 'declined': return 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800';
+                          default: return 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-600';
+                        }
+                      };
+
+                      const getStatusIcon = (s: string) => {
+                        switch (s) {
+                          case 'confirmed': return '✓';
+                          case 'declined': return '✕';
+                          default: return '•';
+                        }
+                      };
+
+                      const getStatusIconColor = (s: string) => {
+                        switch (s) {
+                          case 'confirmed': return 'bg-green-600 text-white';
+                          case 'declined': return 'bg-red-600 text-white';
+                          default: return 'bg-gray-400 text-white';
+                        }
+                      };
+
+                      return (
+                        <div
+                          key={coachId}
+                          className={`flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border transition-colors ${getStatusColor(status)}`}
+                        >
+                          <div className="flex items-center gap-3 flex-1 min-w-0">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center text-lg flex-shrink-0 ${getStatusIconColor(status)}`}>
+                              {getStatusIcon(status)}
+                            </div>
+                            {coach.photoUrl ? (
+                              <img
+                                src={coach.photoUrl}
+                                alt={`${coach.firstName || ''} ${coach.lastName || ''}`}
+                                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                              />
+                            ) : (
+                              <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                                {(coach.firstName || '?')[0]}{(coach.lastName || '?')[0]}
+                              </div>
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-gray-900 dark:text-white">
+                                {coach.firstName || ''} {coach.lastName || ''}
+                              </p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                                {coach.role ? coachRoleDisplay[coach.role] : 'Coach'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <div className="flex rounded-lg overflow-hidden border border-gray-300 dark:border-gray-600">
+                              <button
+                                type="button"
+                                onClick={() => handleSetCoachAttendanceStatus(coachId, 'confirmed')}
+                                className={`px-3 py-1.5 text-sm font-medium transition-colors ${
+                                  status === 'confirmed'
+                                    ? 'bg-green-600 text-white'
+                                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-green-50 dark:hover:bg-green-900/30'
+                                }`}
+                                title="Confirmed"
+                              >
+                                ✓
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleSetCoachAttendanceStatus(coachId, 'declined')}
+                                className={`px-3 py-1.5 text-sm font-medium border-l border-gray-300 dark:border-gray-600 transition-colors ${
+                                  status === 'declined'
+                                    ? 'bg-red-600 text-white'
+                                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/30'
+                                }`}
+                                title="Declined"
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            <input
+                              type="text"
+                              value={ca?.notes || ''}
+                              onChange={(e) => handleSetCoachAttendanceNote(coachId, e.target.value)}
+                              className="w-32 sm:w-48 px-2 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              placeholder="Notes (optional)"
+                            />
+
+                            <button
+                              type="button"
+                              onClick={() => setAssignedCoachIds(assignedCoachIds.filter(id => id !== coachId))}
+                              className="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                              title="Remove coach"
+                            >
+                              <X className="w-5 h-5" />
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <span className="text-4xl mb-2 block">👨‍🏫</span>
+                    <p>No coaches assigned to this session.</p>
+                    {availableCoachesForSession.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowCoachModal(true)}
+                        className="mt-4 bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2 mx-auto"
+                        title="Add Coach"
+                      >
+                        <Plus className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {assignedCoaches.length > 0 && (
+                  <div className="flex flex-wrap gap-4 text-sm mt-4">
+                    <p className="text-gray-600 dark:text-gray-400">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="w-3 h-3 bg-green-600 rounded-full"></span>
+                        <span className="font-medium">{coachAttendance.filter(c => c.status === 'confirmed').length}</span> Confirmed
+                      </span>
+                    </p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="w-3 h-3 bg-red-600 rounded-full"></span>
+                        <span className="font-medium">{coachAttendance.filter(c => c.status === 'declined').length}</span> Declined
+                      </span>
+                    </p>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      <span className="inline-flex items-center gap-1">
+                        <span className="w-3 h-3 bg-gray-400 rounded-full"></span>
+                        <span className="font-medium">{coachAttendance.filter(c => c.status === 'pending').length}</span> No Response
+                      </span>
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <span>📋</span> Player Attendance

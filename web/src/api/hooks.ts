@@ -1832,6 +1832,11 @@ function mapTrainingSessionDetailToUi(dto: TrainingSessionDetailDto): TrainingSe
       drillIds: [] // Drill IDs from applied templates are tracked in sessionDrills
     })),
     coachIds: (dto.coaches || []).map(c => c.coachId),
+    coaches: (dto.coaches || []).map(c => ({
+      coachId: c.coachId,
+      status: (c.status === 'confirmed' || c.status === 'declined') ? c.status as 'confirmed' | 'declined' : 'pending' as const,
+      notes: c.notes || undefined
+    })),
     attendance: (dto.attendance || []).map(att => ({
       playerId: att.playerId,
       status: att.status as 'confirmed' | 'declined' | 'maybe' | 'pending',

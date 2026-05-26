@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using OurGame.Persistence.Models;
 
@@ -11,9 +12,11 @@ using OurGame.Persistence.Models;
 namespace OurGame.Persistence.Migrations
 {
     [DbContext(typeof(OurGameContext))]
-    partial class OurGameContextModelSnapshot : ModelSnapshot
+    [Migration("20260526195921_AddCoachAttendanceToMatchCoaches")]
+    partial class AddCoachAttendanceToMatchCoaches
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2282,14 +2285,8 @@ namespace OurGame.Persistence.Migrations
                     b.Property<Guid>("CoachId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<Guid>("SessionId")
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 

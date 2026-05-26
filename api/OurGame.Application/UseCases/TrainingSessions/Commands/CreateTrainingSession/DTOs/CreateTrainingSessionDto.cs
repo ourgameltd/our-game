@@ -65,9 +65,9 @@ public record CreateTrainingSessionDto
     public List<CreateSessionDrillDto> SessionDrills { get; init; } = new();
 
     /// <summary>
-    /// Coach IDs assigned to run this session
+    /// Coaches assigned to run this session with attendance status
     /// </summary>
-    public List<Guid> AssignedCoachIds { get; init; } = new();
+    public List<CreateTrainingSessionCoachRequest> Coaches { get; init; } = new();
 
     /// <summary>
     /// Player attendance records for this session

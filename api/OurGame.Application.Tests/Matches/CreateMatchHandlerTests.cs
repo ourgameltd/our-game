@@ -115,4 +115,36 @@ public class CreateMatchHandlerTests
         Assert.NotNull(result);
         Assert.False(result.IsPublished);
     }
+
+    [Fact]
+    public async Task Handle_WithCoachAttendance_PersistsStatusAndNotes()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var (coachId, _) = await db.SeedCoachAsync(clubId);
+        var handler = new CreateMatchHandler(db.Context);
+
+        var dto = new CreateMatchRequest
+        {
+            TeamId = teamId,
+            SeasonId = "2025-26",
+            SquadSize = 11,
+            Opposition = "Rivals FC",
+            MatchDate = DateTime.UtcNow.AddDays(7),
+            IsHome = true,
+            Status = "scheduled",
+            Coaches = new List<CreateMatchCoachRequest>
+            {
+                new() { CoachId = coachId, Status = "confirmed", Notes = "Driving the minibus" }
+            }
+        };
+
+        var result = await handler.Handle(new CreateMatchCommand(dto), CancellationToken.None);
+
+        Assert.NotNull(result);
+        var coach = Assert.Single(result.Coaches);
+        Assert.Equal(coachId, coach.CoachId);
+        Assert.Equal("confirmed", coach.Status);
+        Assert.Equal("Driving the minibus", coach.Notes);
+    }
 }

@@ -70,9 +70,9 @@ public record UpdateMatchRequest
     public UpdateMatchReportRequest? Report { get; init; }
 
     /// <summary>
-    /// Coaches are replaced entirely on update
+    /// Coaches are replaced entirely on update, with attendance status
     /// </summary>
-    public List<Guid> CoachIds { get; init; } = new();
+    public List<UpdateMatchCoachRequest> Coaches { get; init; } = new();
 
     /// <summary>
     /// Substitutions are replaced entirely on update

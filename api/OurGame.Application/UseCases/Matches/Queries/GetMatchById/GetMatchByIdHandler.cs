@@ -127,13 +127,15 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
 
         // 4. Fetch match coaches
         var coachesSql = @"
-            SELECT 
+            SELECT
                 mc.Id,
                 mc.CoachId,
                 c.FirstName,
                 c.LastName,
                 c.Photo,
-                c.Role
+                c.Role,
+                mc.Status,
+                mc.Notes
             FROM MatchCoaches mc
             INNER JOIN Coaches c ON mc.CoachId = c.Id
             WHERE mc.MatchId = {0}";
@@ -397,7 +399,9 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 FirstName = c.FirstName ?? string.Empty,
                 LastName = c.LastName ?? string.Empty,
                 Photo = c.Photo,
-                Role = MapCoachRoleToString(c.Role)
+                Role = MapCoachRoleToString(c.Role),
+                Status = c.Status ?? "pending",
+                Notes = string.IsNullOrEmpty(c.Notes) ? null : c.Notes
             }).ToList(),
             Substitutions = substitutions.Select(s => new MatchSubstitutionDetailDto
             {
@@ -533,6 +537,8 @@ public class MatchCoachRaw
     public string? LastName { get; set; }
     public string? Photo { get; set; }
     public int Role { get; set; }
+    public string? Status { get; set; }
+    public string? Notes { get; set; }
 }
 
 public class SubstitutionRaw

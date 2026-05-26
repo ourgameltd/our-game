@@ -951,6 +951,8 @@ export interface SessionCoachDetailDto {
   firstName: string;
   lastName: string;
   role: string;
+  status: string;
+  notes?: string;
 }
 
 export interface AppliedTemplateDetailDto {
@@ -971,7 +973,7 @@ export interface CreateTrainingSessionRequest {
   notes?: string;
   status: string;
   sessionDrills: CreateSessionDrillRequest[];
-  assignedCoachIds: string[];
+  coaches: CreateTrainingSessionCoachRequest[];
   attendance: CreateSessionAttendanceRequest[];
   appliedTemplates: CreateAppliedTemplateRequest[];
 }
@@ -994,6 +996,18 @@ export interface CreateAppliedTemplateRequest {
   appliedAt: string;
 }
 
+export interface CreateTrainingSessionCoachRequest {
+  coachId: string;
+  status: string;
+  notes?: string;
+}
+
+export interface UpdateTrainingSessionCoachRequest {
+  coachId: string;
+  status: string;
+  notes?: string;
+}
+
 // Update Training Session Request
 export interface UpdateTrainingSessionRequest {
   teamId: string;
@@ -1006,7 +1020,7 @@ export interface UpdateTrainingSessionRequest {
   notes?: string;
   status: string;
   drills: UpdateSessionDrillRequest[];
-  coachIds: string[];
+  coaches: UpdateTrainingSessionCoachRequest[];
   attendance: UpdateSessionAttendanceRequest[];
   appliedTemplates: UpdateAppliedTemplateRequest[];
 }
@@ -2301,6 +2315,14 @@ export interface MatchCoachDetailDto {
   lastName: string;
   photo?: string;
   role: string;
+  status: string;
+  notes?: string;
+}
+
+export interface MatchCoachRequest {
+  coachId: string;
+  status: string;
+  notes?: string;
 }
 
 export interface MatchSubstitutionDetailDto {
@@ -2346,7 +2368,7 @@ export interface CreateMatchRequest {
   weatherTemperature?: number;
   lineup?: CreateMatchLineupRequest;
   report?: CreateMatchReportRequest;
-  coachIds: string[];
+  coaches: MatchCoachRequest[];
   substitutions: CreateMatchSubstitutionRequest[];
   attendance?: CreateMatchAttendanceRequest[];
 }
@@ -2445,7 +2467,7 @@ export interface UpdateMatchRequest {
   weatherTemperature?: number;
   lineup?: UpdateMatchLineupRequest;
   report?: UpdateMatchReportRequest;
-  coachIds: string[];
+  coaches: MatchCoachRequest[];
   substitutions: UpdateMatchSubstitutionRequest[];
   attendance?: UpdateMatchAttendanceRequest[];
 }

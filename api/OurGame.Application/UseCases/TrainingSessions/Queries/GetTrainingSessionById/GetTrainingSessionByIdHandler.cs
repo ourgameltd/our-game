@@ -93,14 +93,16 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
             .SqlQueryRaw<SessionAttendanceRaw>(attendanceSql, query.Id)
             .ToListAsync(cancellationToken);
 
-        // 4. Fetch session coaches with coach names and roles
+        // 4. Fetch session coaches with coach names, roles, and attendance
         var coachesSql = @"
             SELECT
                 sc.Id,
                 sc.CoachId,
                 c.FirstName AS CoachFirstName,
                 c.LastName AS CoachLastName,
-                c.Role AS CoachRole
+                c.Role AS CoachRole,
+                sc.Status AS CoachStatus,
+                sc.Notes AS CoachNotes
             FROM SessionCoaches sc
             INNER JOIN Coaches c ON sc.CoachId = c.Id
             WHERE sc.SessionId = {0}";
@@ -172,7 +174,9 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
                 CoachId = c.CoachId,
                 FirstName = c.CoachFirstName ?? string.Empty,
                 LastName = c.CoachLastName ?? string.Empty,
-                Role = MapCoachRoleToString(c.CoachRole)
+                Role = MapCoachRoleToString(c.CoachRole),
+                Status = c.CoachStatus ?? "pending",
+                Notes = c.CoachNotes
             }).ToList(),
             AppliedTemplates = appliedTemplates.Select(t => new AppliedTemplateDto
             {
@@ -365,6 +369,8 @@ public class SessionCoachRaw
     public string? CoachFirstName { get; set; }
     public string? CoachLastName { get; set; }
     public int CoachRole { get; set; }
+    public string? CoachStatus { get; set; }
+    public string? CoachNotes { get; set; }
 }
 
 public class AppliedTemplateRaw

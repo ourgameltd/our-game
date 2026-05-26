@@ -145,6 +145,12 @@ public record SessionCoachDto
 
     /// <summary>Coach role: head-coach, assistant-coach, goalkeeper-coach, fitness-coach, or technical-coach</summary>
     public string Role { get; init; } = string.Empty;
+
+    /// <summary>Attendance status: confirmed, declined, or pending</summary>
+    public string Status { get; init; } = "pending";
+
+    /// <summary>Optional notes about the coach's attendance</summary>
+    public string? Notes { get; init; }
 }
 
 /// <summary>

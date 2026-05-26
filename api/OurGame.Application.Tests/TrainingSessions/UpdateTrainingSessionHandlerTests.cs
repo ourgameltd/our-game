@@ -17,7 +17,7 @@ public class UpdateTrainingSessionHandlerTests
         Status = "scheduled",
         IsLocked = false,
         Drills = new List<UpdateSessionDrillRequest>(),
-        CoachIds = new List<Guid>(),
+        Coaches = new List<UpdateTrainingSessionCoachRequest>(),
         Attendance = new List<UpdateSessionAttendanceRequest>(),
         AppliedTemplates = new List<UpdateAppliedTemplateRequest>()
     };
@@ -110,6 +110,32 @@ public class UpdateTrainingSessionHandlerTests
         var statuses = result.Attendance.Select(a => a.Status).OrderBy(s => s).ToList();
         Assert.Contains("confirmed", statuses);
         Assert.Contains("declined", statuses);
+    }
+
+    [Fact]
+    public async Task Handle_WithCoaches_StoresAttendanceStatusAndNotes()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var sessionId = await db.SeedTrainingSessionAsync(teamId: teamId);
+        var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
+
+        var handler = new UpdateTrainingSessionHandler(db.Context);
+        var dto = ValidDto(teamId) with
+        {
+            Coaches = new List<UpdateTrainingSessionCoachRequest>
+            {
+                new() { CoachId = coachId, Status = "declined", Notes = "Travelling" }
+            }
+        };
+
+        var result = await handler.Handle(
+            new UpdateTrainingSessionCommand(sessionId, dto), CancellationToken.None);
+
+        Assert.Single(result.Coaches);
+        Assert.Equal(coachId, result.Coaches[0].CoachId);
+        Assert.Equal("declined", result.Coaches[0].Status);
+        Assert.Equal("Travelling", result.Coaches[0].Notes);
     }
 
     [Fact]
