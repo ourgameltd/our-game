@@ -53,6 +53,21 @@ public class GetTrainingSessionsByTeamIdHandlerTests
     }
 
     [Fact]
+    public async Task Handle_ReturnsSquadCount()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
+        await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
+        await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
+
+        var handler = new GetTrainingSessionsByTeamIdHandler(db.Context);
+        var result = await handler.Handle(new GetTrainingSessionsByTeamIdQuery(teamId), CancellationToken.None);
+
+        Assert.Equal(3, result.Team.SquadCount);
+    }
+
+    [Fact]
     public async Task Handle_AttendanceStatus_MapsPresenceBitCorrectly()
     {
         // Regression: SQL bit Present is cast to "0"/"1", not "True"/"False",

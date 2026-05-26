@@ -700,6 +700,7 @@ export interface TeamTrainingInfoDto {
   isArchived: boolean;
   ageGroupId: string;
   ageGroupName: string;
+  squadCount: number;
 }
 
 export interface TeamTrainingSessionDto {

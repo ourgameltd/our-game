@@ -129,6 +129,7 @@ export default function TrainingSessionsListPage() {
           clubId={clubId!}
           ageGroupId={ageGroupId!}
           teamId={teamId}
+          squadCount={data.team.squadCount}
         />
       </main>
     </div>

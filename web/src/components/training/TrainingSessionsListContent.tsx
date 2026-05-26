@@ -9,13 +9,15 @@ interface TrainingSessionsListContentProps {
   clubId: string;
   ageGroupId: string;
   teamId?: string;
+  squadCount?: number;
 }
 
 export default function TrainingSessionsListContent({
   sessions,
   clubId,
   ageGroupId,
-  teamId
+  teamId,
+  squadCount
 }: TrainingSessionsListContentProps) {
   const now = new Date();
   
@@ -31,17 +33,9 @@ export default function TrainingSessionsListContent({
   // Stats
   const completedCount = pastSessions.length;
   const totalAttendance = pastSessions.reduce((acc, s) => {
-    if (s.attendance) {
-      return acc + s.attendance.filter(a => a.status === 'confirmed').length;
-    }
-    return acc;
+    return acc + (s.attendance ?? []).filter(a => a.status === 'confirmed').length;
   }, 0);
-  const totalExpected = pastSessions.reduce((acc, s) => {
-    if (s.attendance) {
-      return acc + s.attendance.length;
-    }
-    return acc;
-  }, 0);
+  const totalExpected = (squadCount ?? 0) * pastSessions.length;
   const avgAttendance = totalExpected > 0 ? Math.round((totalAttendance / totalExpected) * 100) : 0;
 
   const SessionRow = ({ session }: { session: TrainingSession }) => {
@@ -124,9 +118,9 @@ export default function TrainingSessionsListContent({
 
           {/* Status/Attendance */}
           <div className="hidden md:flex md:order-5 md:flex-shrink-0 items-center gap-2 md:w-[120px] justify-end">
-            {isPast && session.attendance && session.attendance.length > 0 && (
+            {isPast && squadCount !== undefined && (
               <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded whitespace-nowrap">
-                {session.attendance.filter(a => a.status === 'confirmed').length}/{session.attendance.length}
+                {(session.attendance ?? []).filter(a => a.status === 'confirmed').length}/{squadCount}
               </span>
             )}
             {!isPast && (
@@ -139,9 +133,9 @@ export default function TrainingSessionsListContent({
           {/* Mobile-only: Status badge + edit button */}
           <div className="md:hidden -mx-4 px-4 -mb-1 border-t border-gray-100 dark:border-gray-700 pt-2 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {isPast && session.attendance && session.attendance.length > 0 && (
+              {isPast && squadCount !== undefined && (
                 <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded whitespace-nowrap">
-                  {session.attendance.filter(a => a.status === 'confirmed').length}/{session.attendance.length} attended
+                  {(session.attendance ?? []).filter(a => a.status === 'confirmed').length}/{squadCount} attended
                 </span>
               )}
               {!isPast && (

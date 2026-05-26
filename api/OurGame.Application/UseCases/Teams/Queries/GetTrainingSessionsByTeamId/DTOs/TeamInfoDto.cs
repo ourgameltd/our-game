@@ -29,4 +29,9 @@ public record TeamInfoDto
     /// Name of the age group
     /// </summary>
     public string AgeGroupName { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Total number of players currently in the squad
+    /// </summary>
+    public int SquadCount { get; init; }
 }

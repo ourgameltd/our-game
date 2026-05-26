@@ -32,14 +32,15 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
     {
         // 1. Validate team exists and get team/club/age group info
         var teamInfoSql = @"
-            SELECT 
+            SELECT
                 t.Id,
                 t.Name,
                 t.IsArchived,
                 t.AgeGroupId,
                 ag.Name AS AgeGroupName,
                 c.Id AS ClubId,
-                c.Name AS ClubName
+                c.Name AS ClubName,
+                (SELECT COUNT(*) FROM PlayerTeams pt WHERE pt.TeamId = t.Id) AS SquadCount
             FROM Teams t
             INNER JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
             INNER JOIN Clubs c ON ag.ClubId = c.Id
@@ -167,7 +168,8 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
                 Name = teamInfo.Name,
                 IsArchived = teamInfo.IsArchived,
                 AgeGroupId = teamInfo.AgeGroupId,
-                AgeGroupName = teamInfo.AgeGroupName
+                AgeGroupName = teamInfo.AgeGroupName,
+                SquadCount = teamInfo.SquadCount
             },
             Club = new ClubInfoDto
             {
@@ -266,6 +268,7 @@ public class TeamInfoRaw
     public string AgeGroupName { get; set; } = string.Empty;
     public Guid ClubId { get; set; }
     public string ClubName { get; set; } = string.Empty;
+    public int SquadCount { get; set; }
 }
 
 /// <summary>
