@@ -226,7 +226,7 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
             var parts = entry.Split('|');
             if (parts.Length >= 2 && Guid.TryParse(parts[0], out var playerId))
             {
-                var isPresent = bool.TryParse(parts[1], out var present) && present;
+                var isPresent = parts[1] == "1" || (bool.TryParse(parts[1], out var present) && present);
                 var notes = parts.Length > 2 ? parts[2] : null;
 
                 result.Add(new AttendanceDto
