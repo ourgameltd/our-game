@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { MapPin } from 'lucide-react';
+import { MapPin, Settings } from 'lucide-react';
 import { sampleDrills } from '@/data/training';
 import { Routes } from '@utils/routes';
 import { TrainingSession } from '@/types';
@@ -52,10 +52,7 @@ export default function TrainingSessionsListContent({
     const sessionTeamId = teamId || session.teamId;
 
     return (
-      <Link
-        to={Routes.teamTrainingSessionEdit(clubId, ageGroupId, sessionTeamId, session.id)}
-        className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b"
-      >
+      <div className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b">
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-4">
           {/* Date & Time */}
           <div className="flex items-center gap-3 md:flex-shrink-0 md:w-[130px] md:order-1">
@@ -139,21 +136,45 @@ export default function TrainingSessionsListContent({
             )}
           </div>
 
-          {/* Mobile-only: Status badge */}
-          <div className="md:hidden flex items-center gap-2">
-            {isPast && session.attendance && session.attendance.length > 0 && (
-              <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded whitespace-nowrap">
-                {session.attendance.filter(a => a.status === 'confirmed').length}/{session.attendance.length} attended
-              </span>
-            )}
-            {!isPast && (
-              <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded whitespace-nowrap">
-                Scheduled
-              </span>
-            )}
+          {/* Mobile-only: Status badge + edit button */}
+          <div className="md:hidden -mx-4 px-4 -mb-1 border-t border-gray-100 dark:border-gray-700 pt-2 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {isPast && session.attendance && session.attendance.length > 0 && (
+                <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded whitespace-nowrap">
+                  {session.attendance.filter(a => a.status === 'confirmed').length}/{session.attendance.length} attended
+                </span>
+              )}
+              {!isPast && (
+                <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded whitespace-nowrap">
+                  Scheduled
+                </span>
+              )}
+            </div>
+            <Link
+              to={Routes.teamTrainingSessionEdit(clubId, ageGroupId, sessionTeamId, session.id)}
+              onClick={e => e.stopPropagation()}
+              className="p-2 bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 rounded-lg transition-colors"
+              title="Edit session"
+              aria-label="Edit training session"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Desktop-only: Edit cog button */}
+          <div className="hidden md:flex md:order-6 md:flex-shrink-0 items-center gap-2 md:w-[60px] justify-end">
+            <Link
+              to={Routes.teamTrainingSessionEdit(clubId, ageGroupId, sessionTeamId, session.id)}
+              onClick={e => e.stopPropagation()}
+              className="p-1.5 bg-primary-600 dark:bg-primary-500 text-white hover:bg-primary-700 dark:hover:bg-primary-600 rounded-lg transition-colors"
+              title="Edit session"
+              aria-label="Edit training session"
+            >
+              <Settings className="w-4 h-4" />
+            </Link>
           </div>
         </div>
-      </Link>
+      </div>
     );
   };
 
