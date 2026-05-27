@@ -81,9 +81,11 @@ public class PushNotificationService : IPushNotificationService
 
         if (subscriptions.Count == 0)
         {
-            _logger.LogDebug("No push subscriptions found for user {UserId}", userId);
+            _logger.LogInformation("No push subscriptions found for user {UserId} – skipping push", userId);
             return;
         }
+
+        _logger.LogInformation("Sending push notification to {Count} subscription(s) for user {UserId}", subscriptions.Count, userId);
 
         var vapidDetails = new WebPushLib.VapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
         var webPushClient = new WebPushLib.WebPushClient();
@@ -105,17 +107,21 @@ public class PushNotificationService : IPushNotificationService
             {
                 var pushSubscription = new WebPushLib.PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
                 await webPushClient.SendNotificationAsync(pushSubscription, payloadJson, vapidDetails);
-                _logger.LogDebug("Push notification sent to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
+                _logger.LogInformation("Push notification sent successfully to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
             }
             catch (WebPushLib.WebPushException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Gone || ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                // Subscription has expired or been revoked by the browser
-                _logger.LogInformation("Removing stale push subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
+                _logger.LogInformation("Removing stale push subscription {SubscriptionId} for user {UserId} (HTTP {StatusCode})", sub.Id, userId, (int)ex.StatusCode);
                 staleSubscriptions.Add(sub);
+            }
+            catch (WebPushLib.WebPushException ex)
+            {
+                _logger.LogError(ex, "Push delivery failed for subscription {SubscriptionId} user {UserId} – HTTP {StatusCode}: {Message}",
+                    sub.Id, userId, (int)ex.StatusCode, ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to send push notification to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
+                _logger.LogError(ex, "Unexpected error sending push to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
             }
         }
 

@@ -2197,11 +2197,6 @@ export default function AddEditMatchPage() {
                               {getPlayerName(player.playerId)}
                               {isCaptain && <span className="ml-1 text-amber-500" title="Captain">©</span>}
                             </span>
-                            {playerData && (
-                              <span className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs font-bold" title="Overall Rating">
-                                {playerData.overallRating}
-                              </span>
-                            )}
                           </div>
                           <div className="flex items-center gap-2">
                             <button
@@ -2274,9 +2269,6 @@ export default function AddEditMatchPage() {
                           )}
                           <div className="flex-1 flex items-center gap-2">
                             <span>{player.firstName} {player.lastName}</span>
-                            <span className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs font-bold" title="Overall Rating">
-                              {player.overallRating}
-                            </span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">
                               ({player.preferredPositions?.join(', ') || 'N/A'})
                             </span>
@@ -2324,11 +2316,6 @@ export default function AddEditMatchPage() {
                           <span className="text-gray-900 dark:text-white font-medium">
                             {getPlayerName(sub.playerId)}
                           </span>
-                          {playerData && (
-                            <span className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs font-bold" title="Overall Rating">
-                              {playerData.overallRating}
-                            </span>
-                          )}
                         </div>
                         <div className="flex items-center gap-2">
                           <button
@@ -2387,9 +2374,6 @@ export default function AddEditMatchPage() {
                             />
                           )}
                           <span>{player.firstName} {player.lastName}</span>
-                          <span className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs font-bold" title="Overall Rating">
-                            {player.overallRating}
-                          </span>
                         </button>
                       ))}
                     </div>
@@ -3289,9 +3273,6 @@ export default function AddEditMatchPage() {
                           <div className="flex-1 min-w-0">
                             <div className="font-medium text-gray-900 dark:text-white flex items-center gap-2">
                               <span>{player.firstName} {player.lastName}</span>
-                              <span className="px-1.5 py-0.5 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-xs font-bold" title="Overall Rating">
-                                {player.overallRating}
-                              </span>
                             </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400 truncate">
                               {teamNames || 'No team'}
