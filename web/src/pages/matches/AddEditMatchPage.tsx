@@ -2205,7 +2205,7 @@ export default function AddEditMatchPage() {
                               className={`px-2 py-1 rounded text-xs font-medium transition-colors ${isCaptain ? 'bg-amber-500 text-white' : 'bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30'}`}
                               title={isCaptain ? 'Remove as captain' : 'Set as captain'}
                             >
-                              {isCaptain ? '© Captain' : 'Captain'}
+                              ©
                             </button>
                             <button
                               type="button"
