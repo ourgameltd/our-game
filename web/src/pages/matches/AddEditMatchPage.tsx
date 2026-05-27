@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell } from 'lucide-react';
+import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell, Pencil } from 'lucide-react';
 const Timeline = ({ className, children }: { className?: string; children?: React.ReactNode }) => <ul className={className}>{children}</ul>;
 const TimelineItem = ({ className, children }: { className?: string; children?: React.ReactNode }) => <li className={className}>{children}</li>;
 const TimelineHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`flex items-center ${className ?? ''}`}>{children}</div>;
@@ -2585,9 +2585,9 @@ export default function AddEditMatchPage() {
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Assist: {getPlayerName(goal.assistPlayerId)}</p>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-3 shrink-0">
-                                    <button type="button" onClick={() => handleOpenEditEventModal('goal', event.index)} className="text-blue-600">Edit</button>
-                                    <button type="button" onClick={() => handleDeleteTimelineEvent('goal', event.index)} className="text-red-600">Delete</button>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button type="button" onClick={() => handleOpenEditEventModal('goal', event.index)} className="p-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('goal', event.index)} className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                                   </div>
                                 </div>
                               </TimelineHeader>
@@ -2614,9 +2614,9 @@ export default function AddEditMatchPage() {
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{card.reason}</p>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-3 shrink-0">
-                                    <button type="button" onClick={() => handleOpenEditEventModal('card', event.index)} className="text-blue-600">Edit</button>
-                                    <button type="button" onClick={() => handleDeleteTimelineEvent('card', event.index)} className="text-red-600">Delete</button>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button type="button" onClick={() => handleOpenEditEventModal('card', event.index)} className="p-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('card', event.index)} className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                                   </div>
                                 </div>
                               </TimelineHeader>
@@ -2643,9 +2643,9 @@ export default function AddEditMatchPage() {
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{injury.description}</p>
                                     )}
                                   </div>
-                                  <div className="flex items-center gap-3 shrink-0">
-                                    <button type="button" onClick={() => handleOpenEditEventModal('injury', event.index)} className="text-blue-600">Edit</button>
-                                    <button type="button" onClick={() => handleDeleteTimelineEvent('injury', event.index)} className="text-red-600">Delete</button>
+                                  <div className="flex items-center gap-1 shrink-0">
+                                    <button type="button" onClick={() => handleOpenEditEventModal('injury', event.index)} className="p-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
+                                    <button type="button" onClick={() => handleDeleteTimelineEvent('injury', event.index)} className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                                   </div>
                                 </div>
                               </TimelineHeader>
@@ -2669,9 +2669,9 @@ export default function AddEditMatchPage() {
                                   <p className="text-lg font-semibold text-gray-900 dark:text-white">🔄 Substitution • {getPlayerName(substitution.playerOut)}</p>
                                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{getPlayerName(substitution.playerOut)} → {getPlayerName(substitution.playerIn)}</p>
                                 </div>
-                                <div className="flex items-center gap-3 shrink-0">
-                                  <button type="button" onClick={() => handleOpenEditEventModal('substitution', event.index)} className="text-blue-600">Edit</button>
-                                  <button type="button" onClick={() => handleDeleteTimelineEvent('substitution', event.index)} className="text-red-600">Delete</button>
+                                <div className="flex items-center gap-1 shrink-0">
+                                  <button type="button" onClick={() => handleOpenEditEventModal('substitution', event.index)} className="p-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
+                                  <button type="button" onClick={() => handleDeleteTimelineEvent('substitution', event.index)} className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                                 </div>
                               </div>
                             </TimelineHeader>
