@@ -272,6 +272,16 @@ export default function AddEditTrainingSessionPage() {
     );
   }
 
+  const applyMeetTimeOffset = (minutesBefore: number) => {
+    if (!sessionDate) return;
+    const date = new Date(sessionDate);
+    date.setMinutes(date.getMinutes() - minutesBefore);
+    const pad = (n: number) => String(n).padStart(2, '0');
+    setMeetTime(
+      `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+    );
+  };
+
   const handleAddFocusArea = () => {
     if (focusAreaInput.trim() && !focusAreas.includes(focusAreaInput.trim())) {
       setFocusAreas([...focusAreas, focusAreaInput.trim()]);
@@ -609,10 +619,50 @@ export default function AddEditTrainingSessionPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    <Clock className="w-4 h-4 inline mr-1" />
-                    Meet Time
-                  </label>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <Clock className="w-4 h-4 inline mr-1" />
+                      Meet Time
+                    </label>
+                    <div className="flex gap-1">
+                      <button
+                        type="button"
+                        onClick={() => applyMeetTimeOffset(15)}
+                        disabled={!sessionDate}
+                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Set meet time to 15m before session"
+                      >
+                        -15m
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyMeetTimeOffset(30)}
+                        disabled={!sessionDate}
+                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Set meet time to 30m before session"
+                      >
+                        -30m
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyMeetTimeOffset(45)}
+                        disabled={!sessionDate}
+                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Set meet time to 45m before session"
+                      >
+                        -45m
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => applyMeetTimeOffset(60)}
+                        disabled={!sessionDate}
+                        className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 hover:bg-blue-100 dark:hover:bg-blue-900/40 text-gray-700 dark:text-gray-300 rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                        title="Set meet time to 1h before session"
+                      >
+                        -1h
+                      </button>
+                    </div>
+                  </div>
                   <input
                     type="datetime-local"
                     value={meetTime}
