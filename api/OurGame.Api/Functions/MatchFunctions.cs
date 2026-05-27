@@ -14,6 +14,7 @@ using OurGame.Application.UseCases.Matches.Commands.UpdateMatch;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMatch.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport.DTOs;
+using OurGame.Application.UseCases.Matches.Commands.SendMatchNotification;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 using System.Net;
@@ -463,6 +464,66 @@ public class MatchFunctions
                 "An error occurred while updating the match",
                 (int)HttpStatusCode.InternalServerError));
             return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Send push notifications to all players and coaches assigned to a match.
+    /// </summary>
+    [Function("NotifyMatch")]
+    [OpenApiOperation(
+        operationId: "NotifyMatch",
+        tags: new[] { "Matches" },
+        Summary = "Notify match participants",
+        Description = "Sends a push notification to all players in the attendance list and assigned coaches for the match.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The match ID")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Notifications sent")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Match not found")]
+    public async Task<HttpResponseData> NotifyMatch(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/matches/{id}/notify")] HttpRequestData req,
+        string id,
+        CancellationToken ct = default)
+    {
+        var userId = req.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+        }
+
+        if (!Guid.TryParse(id, out var matchGuid))
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid match ID format", 400), ct);
+            return badRequest;
+        }
+
+        try
+        {
+            await _mediator.Send(new SendMatchNotificationCommand(matchGuid), ct);
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFound;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending match notifications for {MatchId}", matchGuid);
+            var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Failed to send notifications", 500), ct);
+            return error;
         }
     }
 

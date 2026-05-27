@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2 } from 'lucide-react';
+import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell } from 'lucide-react';
 const Timeline = ({ className, children }: { className?: string; children?: React.ReactNode }) => <ul className={className}>{children}</ul>;
 const TimelineItem = ({ className, children }: { className?: string; children?: React.ReactNode }) => <li className={className}>{children}</li>;
 const TimelineHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`flex items-center ${className ?? ''}`}>{children}</div>;
@@ -17,7 +17,7 @@ import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, Tactic, TacticalPositionOverride, TacticPrinciple } from '@/types';
 import { Routes } from '@utils/routes';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic } from '@/api/hooks';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch } from '@/api/hooks';
 import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
@@ -285,6 +285,7 @@ export default function AddEditMatchPage() {
   const { data: clubKits = [], isLoading: clubKitsLoading } = useClubKits(clubId);
   const { createMatch, isSubmitting: isCreating, error: createError } = useCreateMatch();
   const { updateMatch, isSubmitting: isUpdating, error: updateError } = useUpdateMatch(matchId || '');
+  const { notifyMatch, isSubmitting: isNotifying } = useNotifyMatch(matchId || '');
   
   // Get available seasons from age group
   const availableSeasons = ageGroup?.seasons || [];
@@ -1429,6 +1430,15 @@ export default function AddEditMatchPage() {
     }
   };
 
+  const handleNotify = async () => {
+    const response = await notifyMatch();
+    if (response.success) {
+      addToast('success', 'Notifications sent to players and coaches');
+    } else {
+      addToast('error', response.error?.message || 'Failed to send notifications');
+    }
+  };
+
   const handleSave = async () => {
     // Validate required fields
     if (!opposition || !kickOffTime || !location || !competition || !kit) {
@@ -1590,6 +1600,15 @@ export default function AddEditMatchPage() {
                     ✓ Completed
                   </span>
                 )}
+                <button
+                  type="button"
+                  onClick={handleNotify}
+                  disabled={isNotifying}
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Bell className="w-4 h-4" />
+                  <span className="hidden sm:inline">{isNotifying ? 'Sending...' : 'Notify'}</span>
+                </button>
               </div>
             )}
           </div>

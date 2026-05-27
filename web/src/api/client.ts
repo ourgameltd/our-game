@@ -3914,6 +3914,18 @@ export const apiClient = {
         return handleApiError(error);
       }
     },
+
+    /**
+     * Send push notifications to all players and coaches for a match
+     */
+    notify: async (matchId: string): Promise<ApiResponse<void>> => {
+      try {
+        await axiosInstance.post(`/v1/matches/${matchId}/notify`);
+        return { success: true, statusCode: 204 };
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
   },
 
   coaches: {

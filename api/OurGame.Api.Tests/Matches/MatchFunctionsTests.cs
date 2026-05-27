@@ -9,6 +9,7 @@ using OurGame.Application.UseCases.Matches.Commands.UpdateMatch;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMatch.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport.DTOs;
+using OurGame.Application.UseCases.Matches.Commands.SendMatchNotification;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 
@@ -527,6 +528,73 @@ public class MatchFunctionsTests
         Assert.NotNull(payload.Data);
         Assert.Equal(matchId, payload.Data!.Id);
         Assert.Equal("Rovers Updated", payload.Data.Opposition);
+    }
+
+    // ───────────────────────────────────────────────
+    // NotifyMatch
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task NotifyMatch_ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        var matchId = Guid.NewGuid();
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("POST", $"https://localhost/v1/matches/{matchId}/notify");
+
+        var response = await sut.NotifyMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task NotifyMatch_ReturnsBadRequest_WhenIdIsNotValidGuid()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var sut = BuildSut(new TestMediator());
+        var req = CreateAuthedRequest("POST", "https://localhost/v1/matches/not-a-guid/notify", authId);
+
+        var response = await sut.NotifyMatch(req, "not-a-guid");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<object>(response);
+        Assert.False(payload.Success);
+        Assert.Equal(400, payload.StatusCode);
+        Assert.Equal("Invalid match ID format", payload.Error?.Message);
+    }
+
+    [Fact]
+    public async Task NotifyMatch_ReturnsNotFound_WhenMatchNotFound()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<SendMatchNotificationCommand>((_, _) =>
+            throw new NotFoundException("Match", matchId));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/notify", authId);
+
+        var response = await sut.NotifyMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task NotifyMatch_ReturnsNoContent_WhenSuccessful()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<SendMatchNotificationCommand>((_, _) => Task.CompletedTask);
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/notify", authId);
+
+        var response = await sut.NotifyMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
     }
 
     // ───────────────────────────────────────────────

@@ -1640,6 +1640,38 @@ export function usePublishMatchReport(matchId: string): UseMutationState<void> &
   return { publishMatchReport, isSubmitting, data, error };
 }
 
+export function useNotifyMatch(matchId: string): {
+  notifyMatch: () => Promise<ApiResponse<void>>;
+  isSubmitting: boolean;
+  error: ApiError | null;
+} {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const notifyMatch = useCallback(async (): Promise<ApiResponse<void>> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.matches.notify(matchId);
+      if (!response.success) {
+        setError({
+          message: response.error?.message || 'Failed to send notifications',
+          statusCode: response.error?.statusCode,
+        });
+      }
+      return response;
+    } catch (err) {
+      const apiError = { message: err instanceof Error ? err.message : 'An unexpected error occurred' };
+      setError(apiError);
+      return { success: false, error: apiError };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [matchId]);
+
+  return { notifyMatch, isSubmitting, error };
+}
+
 // ============================================================
 // Tactic Mutation Hooks
 // ============================================================
