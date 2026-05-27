@@ -108,17 +108,32 @@ export function usePushNotifications(): PushSubscriptionState {
     setError(null);
 
     try {
-      // Request notification permission
-      const result = await Notification.requestPermission();
+      // Request notification permission (no-op if already granted/denied)
+      const currentPermission = Notification.permission;
+      let result: NotificationPermission;
+
+      if (currentPermission === 'granted') {
+        result = 'granted';
+      } else {
+        result = await Notification.requestPermission();
+      }
+
       setPermission(result as PushPermissionState);
 
       if (result !== 'granted') {
-        setError('Notification permission was not granted.');
+        setError('Notification permission was not granted. Check your browser settings for this site.');
         return;
       }
 
-      // Get service worker registration
-      const registration = await navigator.serviceWorker.ready;
+      // Wait for service worker with a timeout so the spinner doesn't hang forever
+      const swReady = Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('Service worker did not become ready in time. Try refreshing the page.')), 10000)
+        ),
+      ]);
+
+      const registration = await swReady;
 
       // Fetch VAPID public key from backend
       const vapidPublicKey = await fetchVapidPublicKey();
@@ -135,6 +150,7 @@ export function usePushNotifications(): PushSubscriptionState {
       setIsSubscribed(true);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to enable push notifications.';
+      console.error('[PushNotifications] subscribe failed:', err);
       setError(message);
     } finally {
       setIsLoading(false);

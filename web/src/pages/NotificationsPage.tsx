@@ -206,12 +206,14 @@ export default function NotificationsPage() {
                     Get push notifications
                   </p>
                   <p className="text-xs text-primary-700 dark:text-primary-300">
-                    Receive instant alerts on this device for matches, training, and club updates.
+                    {push.permission === 'granted'
+                      ? 'Permission already allowed — click to finish registering this device.'
+                      : 'Receive instant alerts on this device for matches, training, and club updates.'}
                   </p>
                 </div>
               </div>
               <button
-                onClick={push.subscribe}
+                onClick={() => void push.subscribe()}
                 disabled={push.isLoading}
                 className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60 flex-shrink-0"
               >
