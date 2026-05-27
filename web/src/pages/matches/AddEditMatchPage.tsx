@@ -2170,8 +2170,22 @@ export default function AddEditMatchPage() {
                     return sortedPlayers.map((player) => {
                       const playerData = allClubPlayers.find(p => p.id === player.playerId);
                       const isCaptain = captainId === player.playerId;
+                      const attendanceRecord = attendance.find(a => a.playerId === player.playerId);
+                      const statusRing =
+                        attendanceRecord?.status === 'declined'
+                          ? 'ring-2 ring-red-400 dark:ring-red-500'
+                          : attendanceRecord?.status === 'confirmed'
+                          ? 'ring-2 ring-green-400 dark:ring-green-500'
+                          : '';
+                      const bgClass = isCaptain
+                        ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700'
+                        : attendanceRecord?.status === 'declined'
+                        ? 'bg-red-50 dark:bg-red-900/20'
+                        : attendanceRecord?.status === 'confirmed'
+                        ? 'bg-green-50 dark:bg-green-900/20'
+                        : 'bg-gray-50 dark:bg-gray-700';
                       return (
-                        <div key={player.playerId} className={`flex items-center justify-between p-3 rounded-lg ${isCaptain ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700' : 'bg-gray-50 dark:bg-gray-700'}`}>
+                        <div key={player.playerId} className={`flex items-center justify-between p-3 rounded-lg ${bgClass} ${statusRing}`}>
                           <div className="flex items-center gap-3">
                             <input
                               type="number"
@@ -2293,8 +2307,21 @@ export default function AddEditMatchPage() {
                 <div className="space-y-2 mb-4">
                   {substitutes.map((sub) => {
                     const playerData = allClubPlayers.find(p => p.id === sub.playerId);
+                    const attendanceRecord = attendance.find(a => a.playerId === sub.playerId);
+                    const statusRing =
+                      attendanceRecord?.status === 'declined'
+                        ? 'ring-2 ring-red-400 dark:ring-red-500'
+                        : attendanceRecord?.status === 'confirmed'
+                        ? 'ring-2 ring-green-400 dark:ring-green-500'
+                        : '';
+                    const bgClass =
+                      attendanceRecord?.status === 'declined'
+                        ? 'bg-red-50 dark:bg-red-900/20'
+                        : attendanceRecord?.status === 'confirmed'
+                        ? 'bg-green-50 dark:bg-green-900/20'
+                        : 'bg-gray-50 dark:bg-gray-700';
                     return (
-                      <div key={sub.playerId} className="flex items-center justify-between bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                      <div key={sub.playerId} className={`flex items-center justify-between ${bgClass} p-3 rounded-lg ${statusRing}`}>
                         <div className="flex items-center gap-3">
                           <input
                             type="number"
