@@ -33,6 +33,7 @@ import { Routes, areAllParamsValid, isValidParam } from '@/utils/routes';
 import type { UserProfile } from '@/api/users';
 
 const USER_PROFILE_UPDATED_EVENT = 'ourgame:user-profile-updated';
+const NOTIFICATIONS_READ_EVENT = 'ourgame:notifications-read';
 
 export default function MobileNavigation() {
   const [isOpen, setIsOpen] = useState(false);
@@ -126,19 +127,27 @@ export default function MobileNavigation() {
   useEffect(() => {
     let cancelled = false;
     const loadUnread = async () => {
-      const response = await apiClient.notifications.getMyNotifications(true);
+      const response = await apiClient.notifications.getMyNotifications({ unreadOnly: true, pageSize: 50 });
       if (!cancelled && response.success && response.data) {
-        setUnreadNotificationCount(response.data.length);
+        setUnreadNotificationCount(response.data.totalCount);
       } else if (!cancelled && !response.success) {
         setUnreadNotificationCount(0);
       }
     };
     void loadUnread();
-    // Refresh when navigating (cheap way to pick up reads made on the notifications page)
     return () => {
       cancelled = true;
     };
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handleNotificationsRead = (e: Event) => {
+      const delta = (e as CustomEvent<{ delta: number }>).detail.delta;
+      setUnreadNotificationCount(prev => Math.max(0, prev - delta));
+    };
+    window.addEventListener(NOTIFICATIONS_READ_EVENT, handleNotificationsRead);
+    return () => window.removeEventListener(NOTIFICATIONS_READ_EVENT, handleNotificationsRead);
+  }, []);
 
   // Load current user profile for the nav avatar and refresh after profile updates.
   useEffect(() => {

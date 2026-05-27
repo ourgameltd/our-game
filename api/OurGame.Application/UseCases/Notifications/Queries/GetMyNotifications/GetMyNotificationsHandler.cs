@@ -1,12 +1,13 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Notifications.Queries.GetMyNotifications.DTOs;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.Notifications.Queries.GetMyNotifications;
 
-public class GetMyNotificationsHandler : IRequestHandler<GetMyNotificationsQuery, List<NotificationDto>>
+public class GetMyNotificationsHandler : IRequestHandler<GetMyNotificationsQuery, PagedResponse<NotificationDto>>
 {
     private readonly OurGameContext _db;
 
@@ -15,7 +16,7 @@ public class GetMyNotificationsHandler : IRequestHandler<GetMyNotificationsQuery
         _db = db;
     }
 
-    public async Task<List<NotificationDto>> Handle(GetMyNotificationsQuery query, CancellationToken cancellationToken)
+    public async Task<PagedResponse<NotificationDto>> Handle(GetMyNotificationsQuery query, CancellationToken cancellationToken)
     {
         var user = await _db.Users
             .AsNoTracking()
@@ -48,7 +49,17 @@ public class GetMyNotificationsHandler : IRequestHandler<GetMyNotificationsQuery
         {
             notificationsQuery = notificationsQuery.Where(n => !n.IsRead);
         }
+        else if (query.ReadOnly)
+        {
+            notificationsQuery = notificationsQuery.Where(n => n.IsRead);
+        }
 
-        return await notificationsQuery.ToListAsync(cancellationToken);
+        var totalCount = await notificationsQuery.CountAsync(cancellationToken);
+        var items = await notificationsQuery
+            .Skip((query.Page - 1) * query.PageSize)
+            .Take(query.PageSize)
+            .ToListAsync(cancellationToken);
+
+        return PagedResponse<NotificationDto>.Create(items, query.Page, query.PageSize, totalCount);
     }
 }

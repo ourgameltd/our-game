@@ -28,6 +28,16 @@ export interface NotificationDto {
   isRead: boolean;
 }
 
+export interface PagedResponse<T> {
+  items: T[];
+  pageNumber: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
+}
+
 // Team Players Request/Response Types
 export interface AddPlayerToTeamRequest {
   playerId: string;
@@ -4089,10 +4099,20 @@ export const apiClient = {
   },
 
   notifications: {
-    getMyNotifications: async (unreadOnly: boolean = false): Promise<ApiResponse<NotificationDto[]>> => {
+    getMyNotifications: async (params: {
+      unreadOnly?: boolean;
+      readOnly?: boolean;
+      page?: number;
+      pageSize?: number;
+    } = {}): Promise<ApiResponse<PagedResponse<NotificationDto>>> => {
       try {
-        const query = unreadOnly ? '?unreadOnly=true' : '';
-        const response = await axiosInstance.get<ApiResponse<NotificationDto[]>>(`/v1/notifications${query}`);
+        const qs = new URLSearchParams();
+        if (params.unreadOnly) qs.set('unreadOnly', 'true');
+        if (params.readOnly) qs.set('readOnly', 'true');
+        if (params.page) qs.set('page', String(params.page));
+        if (params.pageSize) qs.set('pageSize', String(params.pageSize));
+        const query = qs.toString() ? `?${qs.toString()}` : '';
+        const response = await axiosInstance.get<ApiResponse<PagedResponse<NotificationDto>>>(`/v1/notifications${query}`);
         return response.data;
       } catch (error) {
         return handleApiError(error);

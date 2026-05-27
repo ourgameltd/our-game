@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using OurGame.Api.Functions;
 using OurGame.Api.Tests.TestInfrastructure;
 using OurGame.Application.Abstractions.Exceptions;
+using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Notifications.Commands.MarkAllNotificationsAsRead;
 using OurGame.Application.UseCases.Notifications.Commands.MarkNotificationAsRead;
 using OurGame.Application.UseCases.Notifications.Queries.GetMyNotifications;
@@ -27,11 +28,12 @@ public class NotificationFunctionsTests
     {
         var authId = Guid.NewGuid().ToString("N");
         var mediator = new TestMediator();
-        mediator.Register<GetMyNotificationsQuery, List<NotificationDto>>((_, _) =>
-            Task.FromResult(new List<NotificationDto>
-            {
-                new() { Id = Guid.NewGuid(), Type = "announcement", Title = "t", Message = "m", CreatedAt = DateTime.UtcNow, IsRead = false }
-            }));
+        mediator.Register<GetMyNotificationsQuery, PagedResponse<NotificationDto>>((_, _) =>
+            Task.FromResult(PagedResponse<NotificationDto>.Create(
+                new List<NotificationDto>
+                {
+                    new() { Id = Guid.NewGuid(), Type = "announcement", Title = "t", Message = "m", CreatedAt = DateTime.UtcNow, IsRead = false }
+                }, 1, 20, 1)));
 
         var sut = BuildSut(mediator);
         var req = CreateAuthedRequest("GET", "https://localhost/v1/notifications?unreadOnly=true", authId);
@@ -39,6 +41,52 @@ public class NotificationFunctionsTests
         var response = await sut.GetMyNotifications(req);
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task GetMyNotifications_PassesReadOnly_WhenQueryParamSet()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        GetMyNotificationsQuery? capturedQuery = null;
+        var mediator = new TestMediator();
+        mediator.Register<GetMyNotificationsQuery, PagedResponse<NotificationDto>>((q, _) =>
+        {
+            capturedQuery = q;
+            return Task.FromResult(PagedResponse<NotificationDto>.Create(new List<NotificationDto>(), 1, 20, 0));
+        });
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("GET", "https://localhost/v1/notifications?readOnly=true", authId);
+
+        var response = await sut.GetMyNotifications(req);
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(capturedQuery);
+        Assert.True(capturedQuery!.ReadOnly);
+        Assert.False(capturedQuery.UnreadOnly);
+    }
+
+    [Fact]
+    public async Task GetMyNotifications_PassesPagination_WhenQueryParamsSet()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        GetMyNotificationsQuery? capturedQuery = null;
+        var mediator = new TestMediator();
+        mediator.Register<GetMyNotificationsQuery, PagedResponse<NotificationDto>>((q, _) =>
+        {
+            capturedQuery = q;
+            return Task.FromResult(PagedResponse<NotificationDto>.Create(new List<NotificationDto>(), 2, 10, 25));
+        });
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("GET", "https://localhost/v1/notifications?page=2&pageSize=10", authId);
+
+        var response = await sut.GetMyNotifications(req);
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(capturedQuery);
+        Assert.Equal(2, capturedQuery!.Page);
+        Assert.Equal(10, capturedQuery.PageSize);
     }
 
     [Fact]

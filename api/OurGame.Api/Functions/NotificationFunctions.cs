@@ -28,8 +28,11 @@ public class NotificationFunctions
 
     [Function("GetMyNotifications")]
     [OpenApiOperation(operationId: "GetMyNotifications", tags: new[] { "Notifications" }, Summary = "Get my notifications", Description = "Returns global and user-specific notifications for current user")]
-    [OpenApiParameter(name: "unreadOnly", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Set true to return unread notifications only")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<NotificationDto>>), Description = "Notifications retrieved")]
+    [OpenApiParameter(name: "unreadOnly", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Return unread notifications only")]
+    [OpenApiParameter(name: "readOnly", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Return read notifications only")]
+    [OpenApiParameter(name: "page", In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "Page number (1-based, default 1)")]
+    [OpenApiParameter(name: "pageSize", In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "Items per page (default 20, max 50)")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<NotificationDto>>), Description = "Notifications retrieved")]
     [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
     public async Task<HttpResponseData> GetMyNotifications(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/notifications")] HttpRequestData req,
@@ -41,13 +44,16 @@ public class NotificationFunctions
             return req.CreateResponse(HttpStatusCode.Unauthorized);
         }
 
-        var unreadOnly = bool.TryParse(req.GetQueryParam("unreadOnly"), out var parsed) && parsed;
+        var unreadOnly = bool.TryParse(req.GetQueryParam("unreadOnly"), out var unreadParsed) && unreadParsed;
+        var readOnly = bool.TryParse(req.GetQueryParam("readOnly"), out var readParsed) && readParsed;
+        var page = int.TryParse(req.GetQueryParam("page"), out var pageParsed) ? Math.Max(1, pageParsed) : 1;
+        var pageSize = int.TryParse(req.GetQueryParam("pageSize"), out var sizeParsed) ? Math.Clamp(sizeParsed, 1, 50) : 20;
 
         try
         {
-            var result = await _mediator.Send(new GetMyNotificationsQuery(authId, unreadOnly), ct);
+            var result = await _mediator.Send(new GetMyNotificationsQuery(authId, unreadOnly, readOnly, page, pageSize), ct);
             var response = req.CreateResponse(HttpStatusCode.OK);
-            await response.WriteAsJsonAsync(ApiResponse<List<NotificationDto>>.SuccessResponse(result), ct);
+            await response.WriteAsJsonAsync(ApiResponse<PagedResponse<NotificationDto>>.SuccessResponse(result), ct);
             return response;
         }
         catch (NotFoundException ex)
