@@ -94,9 +94,7 @@ public class BlobStorageService : IBlobStorageService
             ? $"{Guid.NewGuid()}{extension}"
             : $"{blobPrefix}/{Guid.NewGuid()}{extension}";
 
-        // Get or create container
         var containerClient = _blobServiceClient.GetBlobContainerClient(containerName);
-        await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob, cancellationToken: cancellationToken);
 
         // Upload
         var blobClient = containerClient.GetBlobClient(blobName);
