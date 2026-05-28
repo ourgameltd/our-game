@@ -2177,6 +2177,19 @@ export interface UpdateCoachRequest {
   unlinkCoachAccount?: boolean;
 }
 
+export interface CreateCoachRequest {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  dateOfBirth?: string;
+  associationId?: string;
+  role: string;
+  biography?: string;
+  specializations: string[];
+  teamIds: string[];
+  photo?: string;
+}
+
 export interface AssignTeamCoachRequest {
   coachId: string;
   role: string; // 'HeadCoach' | 'AssistantCoach' | 'GoalkeeperCoach' | 'FitnessCoach' | 'TechnicalCoach'
@@ -3945,6 +3958,21 @@ export const apiClient = {
     getById: async (coachId: string): Promise<ApiResponse<CoachDetailDto>> => {
       const response = await axiosInstance.get<ApiResponse<CoachDetailDto>>(`/v1/coaches/${coachId}`);
       return response.data;
+    },
+
+    /**
+     * Create a new coach for a club
+     */
+    create: async (clubId: string, request: CreateCoachRequest): Promise<ApiResponse<CoachDetailDto>> => {
+      try {
+        const response = await axiosInstance.post<ApiResponse<CoachDetailDto>>(
+          `/v1/clubs/${clubId}/coaches`,
+          request
+        );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
     },
 
     /**

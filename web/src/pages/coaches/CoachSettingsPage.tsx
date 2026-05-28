@@ -1,6 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useCoach, useClubTeams, useClubCoaches, useUpdateCoach, UpdateCoachRequest, ClubTeamDto } from '@/api';
+import { useCoach, useClubTeams, useClubCoaches, useUpdateCoach, useCreateCoach, UpdateCoachRequest, CreateCoachRequest, ClubTeamDto } from '@/api';
 import { mapApiRoleToUi, mapUiRoleToApi } from '@/api/mappers';
 import { coachRoles } from '@data/referenceData';
 import { Routes } from '@utils/routes';
@@ -95,7 +95,10 @@ export default function CoachSettingsPage() {
   );
   const { data: allTeams, isLoading: isLoadingTeams } = useClubTeams(clubId);
   const { data: clubCoaches, isLoading: isLoadingClubCoaches } = useClubCoaches(clubId);
-  const { updateCoach, isSubmitting, error: submitError } = useUpdateCoach(coachId || '');
+  const { updateCoach, isSubmitting: isUpdating, error: updateError } = useUpdateCoach(isNewCoach ? '' : coachId || '');
+  const { createCoach, isSubmitting: isCreating, error: createError } = useCreateCoach(clubId || '');
+  const isSubmitting = isNewCoach ? isCreating : isUpdating;
+  const submitError = isNewCoach ? createError : updateError;
 
   const isLoading = isLoadingCoach || isLoadingTeams || isLoadingClubCoaches;
 
@@ -222,6 +225,28 @@ export default function CoachSettingsPage() {
   }
 
   const handleSave = async () => {
+    if (isNewCoach) {
+      const request: CreateCoachRequest = {
+        firstName,
+        lastName,
+        phone: phone || undefined,
+        dateOfBirth: dateOfBirth || undefined,
+        associationId: associationId || undefined,
+        role: mapUiRoleToApi(role),
+        biography: biography || undefined,
+        specializations,
+        teamIds: selectedTeams,
+        photo: photo || undefined,
+      };
+
+      const created = await createCoach(request);
+      if (created) {
+        addToast('success', 'Coach created successfully');
+        navigate(Routes.coachSettings(clubId!, created.id));
+      }
+      return;
+    }
+
     const removeLinkedEmergencyContactIds = (coach?.linkedAccounts ?? [])
       .filter((account) => account.isLinked && isLinkedAccountRemoved('emergency', account.id))
       .map((account) => account.id);
@@ -245,7 +270,7 @@ export default function CoachSettingsPage() {
 
     await updateCoach(request);
 
-    if (!submitError) {
+    if (!updateError) {
       addToast('success', 'Coach settings saved successfully');
     }
   };

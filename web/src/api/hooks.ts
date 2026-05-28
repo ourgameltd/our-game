@@ -69,6 +69,7 @@ import {
   CreateTrainingSessionRequest,
   UpdateTrainingSessionRequest,
   UpdateCoachRequest,
+  CreateCoachRequest,
   PlayerAbilitiesDto,
   PlayerAbilityEvaluationDto,
   CreatePlayerAbilityEvaluationRequest,
@@ -1994,6 +1995,47 @@ export function useUpdateCoach(coachId: string): UseMutationState<CoachDetailDto
   }, [coachId]);
 
   return { updateCoach, isSubmitting, data, error };
+}
+
+/**
+ * Hook to create a new coach for a club.
+ */
+export function useCreateCoach(clubId: string): UseMutationState<CoachDetailDto> & {
+  createCoach: (request: CreateCoachRequest) => Promise<CoachDetailDto | null>;
+} {
+  const [data, setData] = useState<CoachDetailDto | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const createCoach = useCallback(async (request: CreateCoachRequest): Promise<CoachDetailDto | null> => {
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<CoachDetailDto> = await apiClient.coaches.create(clubId, request);
+      if (response.success && response.data) {
+        const normalized = normalizeCoachDetail(response.data);
+        setData(normalized);
+        return normalized;
+      } else {
+        setError({
+          message: response.error?.message || 'Failed to create coach',
+          statusCode: response.error?.statusCode,
+          validationErrors: response.error?.validationErrors,
+        });
+        return null;
+      }
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+      return null;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [clubId]);
+
+  return { createCoach, isSubmitting, data, error };
 }
 
 /**

@@ -190,6 +190,7 @@ export type {
   CreateTeamRequest,
   UpdateTeamRequest,
   UpdateCoachRequest,
+  CreateCoachRequest,
 } from './client';
 
 // React hooks
@@ -269,6 +270,7 @@ export {
   useCreateTeam,
   useUpdateTeam,
   useUpdateCoach,
+  useCreateCoach,
   useAddTeamPlayer,
   useRemoveTeamPlayer,
   useUpdateTeamPlayerSquadNumber,
