@@ -186,7 +186,7 @@ Dashboard
 - **Axios**: HTTP client for API calls via generated TypeScript client
 
 ### Styling
-- **Tailwind CSS**: Continue using Tailwind 4.2+ with mobile-first approach
+- **Tailwind CSS**: Continue using Tailwind 4.2+ with mobile-first approach. All UI patterns (form fields, page layout, action buttons, list pipe indicators, dark/light mode) are defined in [`web/STYLE_GUIDE.md`](../web/STYLE_GUIDE.md) — follow it exactly when generating or editing frontend code.
 - **Club Branding**: Dynamic color schemes based on club colors
 - **Accessibility**: WCAG 2.1 AA compliance, keyboard navigation, ARIA labels
 
