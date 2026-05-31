@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, Save } from 'lucide-react';
 import PageTitle from '@/components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -30,7 +30,6 @@ const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 m
 
 export default function CompetencyFrameworkEditorPage() {
   const { clubId, frameworkId } = useParams();
-  const navigate = useNavigate();
   const { addToast } = useToast();
 
   const { data: framework, isLoading, refetch } = useCompetencyFramework(frameworkId);
@@ -112,8 +111,8 @@ export default function CompetencyFrameworkEditorPage() {
         COMPETENCY_BANDS.map((b) => ({ competencyId, band: b, description: perBand[b] ?? '' })),
       ),
     };
-    await saveFramework(request);
-    if (error) return;
+    const { ok } = await saveFramework(request);
+    if (!ok) return;
     addToast('success', 'Framework saved');
     await refetch();
   };
@@ -144,6 +143,7 @@ export default function CompetencyFrameworkEditorPage() {
               ? 'System default — read only. Clone to customise.'
               : 'Edit weightings and competency descriptions.'
           }
+          backLink={`/dashboard/${clubId}/competency-frameworks`}
         />
 
         {framework.isSystemDefault && (
@@ -349,13 +349,7 @@ export default function CompetencyFrameworkEditorPage() {
           </div>
 
           {/* Footer actions */}
-          <div className="card flex items-center justify-between gap-4">
-            <button
-              onClick={() => navigate(`/dashboard/${clubId}/competency-frameworks`)}
-              className="text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors"
-            >
-              ← Back to list
-            </button>
+          <div className="card flex items-center justify-end gap-4">
             <button
               onClick={handleSave}
               disabled={!canSave}

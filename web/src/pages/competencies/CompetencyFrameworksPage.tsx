@@ -168,7 +168,7 @@ export default function CompetencyFrameworksPage() {
   const handleClone = async (source: CompetencyFrameworkListItemDto) => {
     if (!clubId) return;
     setCloningId(source.id);
-    const newId = await create({
+    const { ok, data: newId } = await create({
       name: `${source.name} (Copy)`,
       description: source.description,
       sourceFrameworkId: source.id,
@@ -177,19 +177,19 @@ export default function CompetencyFrameworksPage() {
       upliftPercent: source.upliftPercent,
     });
     setCloningId(null);
-    if (newId) {
+    if (ok && newId) {
       addToast('success', `Cloned "${source.name}"`);
       await refetch();
       navigate(Routes.competencyFramework(clubId, newId));
-    } else {
+    } else if (!ok) {
       addToast('error', 'Failed to clone framework');
     }
   };
 
   const handleArchive = async (framework: CompetencyFrameworkListItemDto) => {
     if (!confirm(`Archive "${framework.name}"? This is reversible from the database but hides it from the UI.`)) return;
-    await archive(framework.id);
-    addToast('success', 'Framework archived');
+    const { ok } = await archive(framework.id);
+    if (ok) addToast('success', 'Framework archived');
     await refetch();
   };
 

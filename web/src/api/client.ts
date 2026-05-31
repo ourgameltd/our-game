@@ -289,6 +289,8 @@ export interface ClubDetailDto {
   ethos?: string;
   principles: string[];
   mediaLinks: ClubMediaLinkDto[];
+  competencyFrameworkId?: string;
+  allowAgeGroupOverride?: boolean;
 }
 
 export interface ClubMediaLinkDto {

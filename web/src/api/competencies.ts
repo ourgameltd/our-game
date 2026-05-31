@@ -219,8 +219,8 @@ export const competenciesClient = {
   },
   updateFramework: async (frameworkId: string, request: UpdateCompetencyFrameworkRequest): Promise<ApiResponse<void>> => {
     try {
-      const r = await axiosInstance.put<ApiResponse<void>>(`/v1/competency-frameworks/${frameworkId}`, request);
-      return r.data ?? { success: true, statusCode: 204 } as ApiResponse<void>;
+      await axiosInstance.put(`/v1/competency-frameworks/${frameworkId}`, request);
+      return { success: true, statusCode: 204 };
     } catch (e) { return handleError(e); }
   },
   archiveFramework: async (frameworkId: string): Promise<ApiResponse<void>> => {
@@ -309,12 +309,12 @@ export function useCompetencyFramework(frameworkId: string | undefined) {
 
 function useMutation<TInput, TResult>(
   mutator: (input: TInput) => Promise<ApiResponse<TResult>>,
-): UseMutationState<TResult> & { mutate: (input: TInput) => Promise<TResult | null> } {
+): UseMutationState<TResult> & { mutate: (input: TInput) => Promise<{ ok: boolean; data: TResult | null }> } {
   const [data, setData] = useState<TResult | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const mutate = useCallback(async (input: TInput): Promise<TResult | null> => {
+  const mutate = useCallback(async (input: TInput): Promise<{ ok: boolean; data: TResult | null }> => {
     setIsSubmitting(true);
     setError(null);
     try {
@@ -322,17 +322,17 @@ function useMutation<TInput, TResult>(
       if (r.success) {
         const value = (r.data ?? null) as TResult | null;
         setData(value);
-        return value;
+        return { ok: true, data: value };
       }
       setError({
         message: r.error?.message ?? 'Request failed',
         statusCode: r.error?.statusCode,
         validationErrors: r.error?.validationErrors,
       });
-      return null;
+      return { ok: false, data: null };
     } catch (e) {
       setError({ message: e instanceof Error ? e.message : 'Unknown error' });
-      return null;
+      return { ok: false, data: null };
     } finally {
       setIsSubmitting(false);
     }

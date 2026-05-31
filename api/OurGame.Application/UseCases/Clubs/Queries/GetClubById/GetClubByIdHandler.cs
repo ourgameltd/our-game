@@ -27,7 +27,7 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
     public async Task<ClubDetailDto?> Handle(GetClubByIdQuery query, CancellationToken cancellationToken)
     {
         var sql = @"
-            SELECT 
+            SELECT
                 c.Id,
                 c.Name,
                 c.ShortName,
@@ -42,8 +42,12 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
                 c.FoundedYear,
                 c.History,
                 c.Ethos,
-                c.Principles
+                c.Principles,
+                cfa.FrameworkId AS CompetencyFrameworkId,
+                CAST(COALESCE(ccs.AllowAgeGroupOverride, 0) AS BIT) AS AllowAgeGroupOverride
             FROM Clubs c
+            LEFT JOIN CompetencyFrameworkAssignments cfa ON cfa.ClubId = c.Id AND cfa.Scope = 1
+            LEFT JOIN ClubCompetencySettings ccs ON ccs.ClubId = c.Id
             WHERE c.Id = {0}";
 
         var club = await _db.Database
@@ -78,7 +82,9 @@ public class GetClubByIdHandler : IRequestHandler<GetClubByIdQuery, ClubDetailDt
             History = club.History,
             Ethos = club.Ethos,
             Principles = ParsePrinciples(club.Principles),
-            MediaLinks = await GetMediaLinksAsync(query.ClubId, true, cancellationToken)
+            MediaLinks = await GetMediaLinksAsync(query.ClubId, true, cancellationToken),
+            CompetencyFrameworkId = club.CompetencyFrameworkId,
+            AllowAgeGroupOverride = club.AllowAgeGroupOverride,
         };
     }
 
@@ -167,6 +173,8 @@ public class ClubRawDto
     public string? History { get; set; }
     public string? Ethos { get; set; }
     public string? Principles { get; set; }
+    public Guid? CompetencyFrameworkId { get; set; }
+    public bool AllowAgeGroupOverride { get; set; }
 }
 
 public class ClubMediaLinkRawDto

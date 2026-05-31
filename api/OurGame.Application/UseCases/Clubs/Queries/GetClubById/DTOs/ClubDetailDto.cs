@@ -16,6 +16,8 @@ public class ClubDetailDto
     public string? Ethos { get; set; }
     public List<string> Principles { get; set; } = new();
     public List<ClubMediaLinkDto> MediaLinks { get; set; } = new();
+    public Guid? CompetencyFrameworkId { get; set; }
+    public bool AllowAgeGroupOverride { get; set; }
 }
 
 /// <summary>

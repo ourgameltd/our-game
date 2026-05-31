@@ -49,7 +49,7 @@ export default function CompetencyAssignmentPanel({
 
   const handleSave = async () => {
     if (!selectedFrameworkId) return;
-    await assign({
+    const { ok } = await assign({
       scope,
       scopeId,
       request: {
@@ -58,7 +58,7 @@ export default function CompetencyAssignmentPanel({
         allowTeamOverride: scope === 'ageGroup' && showOverrideToggle ? allowChildren : undefined,
       },
     });
-    if (!error) {
+    if (ok) {
       addToast('success', 'Competency framework assignment saved');
     }
   };
@@ -137,6 +137,7 @@ export default function CompetencyAssignmentPanel({
 
       <div className="mt-4 flex items-center gap-3">
         <button
+          type="button"
           onClick={handleSave}
           disabled={!selectedFrameworkId || disabled || isSubmitting}
           className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

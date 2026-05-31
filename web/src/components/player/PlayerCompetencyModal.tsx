@@ -75,18 +75,15 @@ export default function PlayerCompetencyModal({ playerId, playerName, onClose, o
 
   const handleSubmit = async () => {
     if (!data) return;
-    const result = await mutate({
+    const { ok } = await mutate({
       bands: Object.entries(selectedBands).map(([competencyId, band]) => ({ competencyId, band })),
       coachNotes: coachNotes.trim() || undefined,
     });
-    // mutate returns null on success of void payload with truthy success; the hook's error state is the source of truth
-    if (error) return;
+    if (!ok) return;
     addToast('success', 'Competencies saved and scores recalculated');
     setCoachNotes('');
     await refetch();
     if (onSuccess) await onSuccess();
-    // Stay on the page per project convention.
-    void result;
   };
 
   return (

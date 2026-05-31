@@ -640,6 +640,8 @@ export default function ClubSettingsPage() {
                 clubId={clubId}
                 scope="club"
                 scopeId={clubId}
+                currentFrameworkId={club?.competencyFrameworkId}
+                allowChildrenOverride={club?.allowAgeGroupOverride}
                 showOverrideToggle
               />
             )}
