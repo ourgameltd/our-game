@@ -164,6 +164,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/matches" element={<ClubMatchesPage />} />
         <Route path="/dashboard/:clubId/training" element={<ClubTrainingSessionsPage />} />
         <Route path="/dashboard/:clubId/kits" element={<ClubKitsPage />} />
+        <Route path="/dashboard/:clubId/kits/:kitId" element={<ClubKitsPage />} />
         <Route path="/dashboard/:clubId/settings" element={<ClubSettingsPage />} />
         <Route path="/dashboard/:clubId/competency-frameworks" element={<CompetencyFrameworksPage />} />
         <Route path="/dashboard/:clubId/competency-frameworks/:frameworkId" element={<CompetencyFrameworkEditorPage />} />

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Shirt } from 'lucide-react';
 import { Kit } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -16,19 +16,23 @@ import KitBuilder from '@/components/kit/KitBuilder';
 import KitCard from '@/components/kit/KitCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
+import { Routes } from '@/utils/routes';
 
 // Skeleton component for kit card loading state
 function KitCardSkeleton() {
   return (
-    <div className="card-hover animate-pulse">
-      <div className="flex items-center gap-4">
-        <div className="flex gap-1.5 shrink-0">
-          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
-          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
-          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+    <div className="card-hover p-3 md:p-4 animate-pulse">
+      <div className="flex items-stretch gap-3">
+        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div className="flex-1 min-w-0 flex items-center gap-4">
+          <div className="flex gap-1.5 shrink-0">
+            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+          </div>
+          <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
+          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
-        <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
-        <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
     </div>
   );
@@ -51,7 +55,12 @@ function mapApiKitToKit(apiKit: ClubKitDto): Kit {
 export default function ClubKitsPage() {
   usePageTitle(['Club Kits']);
 
-  const { clubId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { clubId, kitId } = useParams<{ clubId: string; kitId?: string }>();
+  const pathKitId = location.pathname.split('/kits/')[1]?.split('/')[0];
+  const activeKitId = kitId || pathKitId;
+  const isKitDetailPage = Boolean(activeKitId);
 
   const {
     data: apiKits,
@@ -75,19 +84,18 @@ export default function ClubKitsPage() {
 
   // Local state for UI
   const [showBuilder, setShowBuilder] = useState(false);
-  const [editingKit, setEditingKit] = useState<Kit | undefined>();
+  const kits = (apiKits ?? []).map(mapApiKitToKit);
+  const selectedKit = activeKitId ? kits.find((kit) => kit.id === activeKitId) : undefined;
 
   useEffect(() => {
     if (!createdKit && !updatedKit) {
       return;
     }
 
-    setShowBuilder(false);
-    setEditingKit(undefined);
-  }, [createdKit, updatedKit]);
-
-  // Map API kits to Kit type for component compatibility
-  const kits = (apiKits ?? []).map(mapApiKitToKit);
+    if (!isKitDetailPage) {
+      setShowBuilder(false);
+    }
+  }, [createdKit, updatedKit, isKitDetailPage]);
 
   // Show club not found error
   if (!clubLoading && (clubError || !club)) {
@@ -103,7 +111,7 @@ export default function ClubKitsPage() {
   }
 
   const handleSaveKit = async (kitData: Omit<Kit, 'id'>) => {
-    if (editingKit) {
+    if (isKitDetailPage && selectedKit) {
       const request: UpdateClubKitRequest = {
         name: kitData.name,
         type: kitData.type,
@@ -114,7 +122,7 @@ export default function ClubKitsPage() {
         isActive: kitData.isActive,
       };
 
-      await updateKit(editingKit.id, request);
+      await updateKit(selectedKit.id, request);
       await refetchKits();
     } else {
       const request: CreateClubKitRequest = {
@@ -129,33 +137,39 @@ export default function ClubKitsPage() {
 
       await createKit(request);
       await refetchKits();
+      setShowBuilder(false);
     }
   };
 
-  const handleEditKit = (kit: Kit) => {
-    setEditingKit(kit);
-    setShowBuilder(true);
-  };
+  const handleDeleteKit = async () => {
+    if (!selectedKit || !clubId) {
+      return;
+    }
 
-  const handleDeleteKit = async (kitId: string) => {
     if (confirm('Are you sure you want to delete this kit?')) {
-      await deleteKit(kitId);
+      await deleteKit(selectedKit.id);
       await refetchKits();
+      navigate(Routes.clubKits(clubId));
     }
   };
 
   const handleCancel = () => {
+    if (isKitDetailPage && clubId) {
+      navigate(Routes.clubKits(clubId));
+      return;
+    }
+
     setShowBuilder(false);
-    setEditingKit(undefined);
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         <PageTitle
-          title={clubLoading ? 'Loading...' : `${club?.name} - Kit Management`}
-          subtitle="Manage club kits that can be used by all teams"
-          action={!showBuilder && !kitsLoading ? {
+          title={clubLoading ? 'Loading...' : (isKitDetailPage ? `${club?.name} - ${selectedKit?.name || 'Kit'}` : `${club?.name} - Kit Management`)}
+          subtitle={isKitDetailPage ? 'Edit kit details and manage deletion from this page' : 'Manage club kits that can be used by all teams'}
+          backLink={isKitDetailPage && clubId ? Routes.clubKits(clubId) : undefined}
+          action={!isKitDetailPage && !showBuilder && !kitsLoading ? {
             label: 'Create Kit',
             onClick: () => setShowBuilder(true),
             variant: 'success',
@@ -163,11 +177,10 @@ export default function ClubKitsPage() {
           } : undefined}
         />
 
-        {/* Kit Builder */}
-        {showBuilder && (
+        {/* Create Kit Builder */}
+        {!isKitDetailPage && showBuilder && (
           <div className="mb-4">
             <KitBuilder
-              kit={editingKit}
               onSave={handleSaveKit}
               onCancel={handleCancel}
             />
@@ -179,6 +192,32 @@ export default function ClubKitsPage() {
                 </p>
               </div>
             )}
+          </div>
+        )}
+
+        {/* Kit Detail */}
+        {isKitDetailPage && !kitsLoading && !kitsError && selectedKit && (
+          <div className="space-y-4">
+            <KitBuilder
+              kit={selectedKit}
+              onSave={handleSaveKit}
+              onCancel={handleCancel}
+              onDelete={handleDeleteKit}
+            />
+
+            {(updateError || deleteError) && (
+              <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                <p className="text-red-700 dark:text-red-300">
+                  {updateError?.message || deleteError?.message}
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {isKitDetailPage && !kitsLoading && !kitsError && !selectedKit && (
+          <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+            <p className="text-red-700 dark:text-red-300">Kit not found for this club.</p>
           </div>
         )}
 
@@ -198,23 +237,17 @@ export default function ClubKitsPage() {
           </div>
         )}
 
-        {!showBuilder && deleteError && (
-          <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mb-4">
-            <p className="text-red-700 dark:text-red-300">{deleteError.message}</p>
-          </div>
-        )}
-
-        {/* Kits Grid */}
-        {!showBuilder && !kitsLoading && !kitsError && kits.length > 0 && (
+        {/* Kits List */}
+        {!isKitDetailPage && !showBuilder && !kitsLoading && !kitsError && kits.length > 0 && (
           <div>
-            <div className="flex flex-col gap-2">
+            <div className="grid grid-cols-1 gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
               {kits.map((kit) => (
                 <KitCard
                   key={kit.id}
                   kit={kit}
-                  onEdit={() => handleEditKit(kit)}
-                  onDelete={() => handleDeleteKit(kit.id)}
-                  showActions={true}
+                  onClick={() => navigate(Routes.clubKit(clubId!, kit.id))}
+                  showActions={false}
+                  variant="list"
                 />
               ))}
             </div>
@@ -222,7 +255,7 @@ export default function ClubKitsPage() {
         )}
 
         {/* Empty State */}
-        {!showBuilder && !kitsLoading && !kitsError && kits.length === 0 && (
+        {!isKitDetailPage && !showBuilder && !kitsLoading && !kitsError && kits.length === 0 && (
           <EmptyState
             icon={Shirt}
             title="No kits yet"

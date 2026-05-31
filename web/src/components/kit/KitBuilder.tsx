@@ -1,14 +1,17 @@
 import { useState } from 'react';
 import { Kit } from '@/types';
 import { kitTypes } from '@/data/referenceData';
+import { Trash2 } from 'lucide-react';
+import FormActions from '@components/common/FormActions';
 
 interface KitBuilderProps {
   kit?: Kit;
   onSave: (kit: Omit<Kit, 'id'>) => void;
   onCancel: () => void;
+  onDelete?: () => void;
 }
 
-export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
+export default function KitBuilder({ kit, onSave, onCancel, onDelete }: KitBuilderProps) {
   const [name, setName] = useState(kit?.name || '');
   const [type, setType] = useState<Kit['type']>(kit?.type || 'home');
   const [shirtColor, setShirtColor] = useState(kit?.shirtColor || '#FF0000');
@@ -158,20 +161,18 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
         </div>
 
         {/* Action Buttons */}
-        <div className="flex gap-3 mt-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-          <button
-            type="submit"
-            className="btn btn-md btn-success"
-          >
-            {kit ? 'Update Kit' : 'Create Kit'}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600"
-          >
-            Cancel
-          </button>
+        <div className="mt-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <FormActions
+            onCancel={onCancel}
+            showArchive={false}
+            saveLabel={kit ? 'Save' : 'Create Kit'}
+            customAction={kit && onDelete ? {
+              label: 'Delete',
+              onClick: onDelete,
+              variant: 'danger',
+              icon: <Trash2 className="w-4 h-4" />,
+            } : undefined}
+          />
         </div>
       </form>
     </div>

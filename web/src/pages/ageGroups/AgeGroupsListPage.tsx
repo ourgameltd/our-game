@@ -36,25 +36,29 @@ function AgeGroupCardSkeleton() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b overflow-hidden animate-pulse">
       {/* Mobile: Card Layout */}
-      <div className="md:hidden">
-        {/* Gradient Header Skeleton */}
-        <div className="p-4 bg-gray-200 dark:bg-gray-700">
-          <div className="h-6 w-32 bg-gray-300 dark:bg-gray-600 rounded mb-2" />
-          <div className="h-4 w-48 bg-gray-300 dark:bg-gray-600 rounded" />
-        </div>
-        {/* Stats Grid Skeleton */}
-        <div className="p-4">
-          <div className="grid grid-cols-4 gap-3 mb-4">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="text-center">
-                <div className="h-6 w-8 mx-auto bg-gray-200 dark:bg-gray-700 rounded mb-1" />
-                <div className="h-3 w-10 mx-auto bg-gray-200 dark:bg-gray-700 rounded" />
-              </div>
-            ))}
+      <div className="md:hidden flex items-stretch">
+        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div className="flex-1 min-w-0">
+          {/* Gradient Header Skeleton */}
+          <div className="p-4 bg-gray-200 dark:bg-gray-700">
+            <div className="h-6 w-32 bg-gray-300 dark:bg-gray-600 rounded mb-2" />
+            <div className="h-4 w-48 bg-gray-300 dark:bg-gray-600 rounded" />
           </div>
-          <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between">
-            <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
-            <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
+
+          {/* Stats Grid Skeleton */}
+          <div className="p-4">
+            <div className="grid grid-cols-4 gap-3 mb-4">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="text-center">
+                  <div className="h-6 w-8 mx-auto bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+                  <div className="h-3 w-10 mx-auto bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+              ))}
+            </div>
+            <div className="pt-3 border-t border-gray-200 dark:border-gray-700 flex justify-between">
+              <div className="h-4 w-24 bg-gray-200 dark:bg-gray-700 rounded" />
+              <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
+            </div>
           </div>
         </div>
       </div>

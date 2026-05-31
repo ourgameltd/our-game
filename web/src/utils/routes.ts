@@ -93,6 +93,10 @@ export class Routes {
     return `/dashboard/${validateParam(clubId, 'clubId')}/kits`;
   }
 
+  static clubKit(clubId: string, kitId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/kits/${validateParam(kitId, 'kitId')}`;
+  }
+
   static clubTraining(clubId: string): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}/training`;
   }
