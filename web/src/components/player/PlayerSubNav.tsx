@@ -40,7 +40,7 @@ export default function PlayerSubNav() {
   const tabs = [
     { label: 'Overview', href: profileLink, active: isProfilePage, Icon: User },
     ...(abilitiesLink && canViewPlayerAbilities(profile)
-      ? [{ label: 'Abilities', href: abilitiesLink, active: isAbilitiesPage, Icon: BarChart3 }]
+      ? [{ label: 'Competencies', href: abilitiesLink, active: isAbilitiesPage, Icon: BarChart3 }]
       : []),
     ...(reviewsLink && canViewPlayerAbilities(profile)
       ? [{ label: 'Reviews', href: reviewsLink, active: isReviewsPage, Icon: ClipboardList }]
