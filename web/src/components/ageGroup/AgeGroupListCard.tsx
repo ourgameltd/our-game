@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
 import { AgeGroup, Club } from '@/types';
-import { getGradientColors, getContrastTextColorClass, getPerformanceColorClass } from '@utils/colorHelpers';
+import { getPerformanceColorClass } from '@utils/colorHelpers';
 
 interface AgeGroupStats {
   teamCount: number;
@@ -23,13 +23,14 @@ interface AgeGroupListCardProps {
 
 const AgeGroupListCard: React.FC<AgeGroupListCardProps> = ({ 
   ageGroup, 
-  club,
+  club: _club,
   stats,
   badges,
   actions
 }) => {
-  const { primaryColor, secondaryColor } = getGradientColors(club);
-  const textColorClass = getContrastTextColorClass(primaryColor);
+  const indicatorClass = ageGroup.isArchived
+    ? 'bg-gray-300 dark:bg-gray-600'
+    : 'bg-primary-500 dark:bg-primary-400';
 
   return (
     <div
@@ -39,24 +40,13 @@ const AgeGroupListCard: React.FC<AgeGroupListCardProps> = ({
     >
       {/* Mobile: Card Layout */}
       <div className="md:hidden flex items-stretch">
-        <div
-          className="w-1 self-stretch rounded-full shrink-0"
-          style={{
-            backgroundImage: `linear-gradient(180deg, ${primaryColor}, ${secondaryColor})`,
-          }}
-        />
+        <div className={`w-1 self-stretch rounded-full shrink-0 ${indicatorClass}`} />
         <div className="flex-1 min-w-0">
-          {/* Gradient Header */}
-          <div 
-            className={`p-4 ${textColorClass} relative`}
-            style={{
-              backgroundImage: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-            }}
-          >
+          <div className="p-4 bg-white dark:bg-gray-800 relative border-b border-gray-200 dark:border-gray-700">
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-xl font-bold">{ageGroup.name}</h3>
-                <p className="text-sm opacity-90 mt-1">{ageGroup.description}</p>
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{ageGroup.name}</h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{ageGroup.description}</p>
               </div>
               {ageGroup.isArchived && (
                 <span className="badge bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs shrink-0">
@@ -111,12 +101,7 @@ const AgeGroupListCard: React.FC<AgeGroupListCardProps> = ({
       {/* Desktop: Row Layout */}
       <div className="hidden md:flex md:items-center md:gap-4">
         {/* Color indicator */}
-        <div 
-          className="w-1 self-stretch rounded-full shrink-0"
-          style={{
-            backgroundImage: `linear-gradient(180deg, ${primaryColor}, ${secondaryColor})`,
-          }}
-        />
+        <div className={`w-1 self-stretch rounded-full shrink-0 ${indicatorClass}`} />
 
         {/* Name & Description */}
         <div className="flex-1 min-w-0">
