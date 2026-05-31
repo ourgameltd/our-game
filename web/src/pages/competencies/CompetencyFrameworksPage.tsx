@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Copy, Edit3, Trash2, Award } from 'lucide-react';
+import { Copy, Edit3, Trash2, Award, ChevronRight } from 'lucide-react';
 import PageTitle from '@/components/common/PageTitle';
+import EmptyState from '@/components/common/EmptyState';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
 import {
@@ -10,6 +11,144 @@ import {
   useArchiveCompetencyFramework,
   CompetencyFrameworkListItemDto,
 } from '@/api/competencies';
+import { Routes } from '@/utils/routes';
+
+function FrameworkRowSkeleton() {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg md:rounded-none px-4 py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b animate-pulse">
+      <div className="hidden md:flex md:items-center md:gap-4">
+        <div className="w-1 h-10 bg-gray-200 dark:bg-gray-700 rounded-full shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="h-4 w-40 bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+          <div className="h-3 w-64 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+        <div className="shrink-0 w-20 text-center">
+          <div className="h-5 w-8 mx-auto bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+          <div className="h-3 w-14 mx-auto bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+        <div className="h-4 w-4 bg-gray-200 dark:bg-gray-700 rounded" />
+      </div>
+      <div className="md:hidden flex flex-col gap-2">
+        <div className="h-5 w-40 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-3 w-56 bg-gray-200 dark:bg-gray-700 rounded" />
+      </div>
+    </div>
+  );
+}
+
+interface FrameworkRowProps {
+  framework: CompetencyFrameworkListItemDto;
+  busy?: boolean;
+  onView: () => void;
+  onClone?: () => void;
+  onEdit?: () => void;
+  onArchive?: () => void;
+}
+
+function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: FrameworkRowProps) {
+  return (
+    <div
+      className="bg-white dark:bg-gray-800 rounded-lg md:rounded-none border border-gray-200 dark:border-gray-700 md:border-0 md:border-b hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors overflow-hidden"
+    >
+      {/* Mobile layout */}
+      <div className="md:hidden p-4">
+        <div className="flex items-start justify-between gap-2 mb-1">
+          <button onClick={onView} className="text-left font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+            {framework.name}
+          </button>
+          {framework.isSystemDefault && (
+            <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded">
+              System
+            </span>
+          )}
+        </div>
+        {framework.description && (
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{framework.description}</p>
+        )}
+        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+          <span className="text-xs text-gray-500 dark:text-gray-400">{framework.assignmentCount} assignment{framework.assignmentCount !== 1 ? 's' : ''}</span>
+          <div className="flex items-center gap-2">
+            {onEdit && (
+              <button onClick={onEdit} className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                <Edit3 size={12} /> Edit
+              </button>
+            )}
+            {onClone && (
+              <button onClick={onClone} disabled={busy} className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 disabled:opacity-50">
+                <Copy size={12} /> {busy ? 'Cloning…' : 'Clone'}
+              </button>
+            )}
+            {onArchive && (
+              <button onClick={onArchive} className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
+                <Trash2 size={12} /> Archive
+              </button>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Desktop row layout */}
+      <div className="hidden md:flex md:items-center md:gap-4 px-4 py-3">
+        {/* Accent bar */}
+        <div className={`w-1 h-10 rounded-full flex-shrink-0 ${framework.isSystemDefault ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary-500 dark:bg-primary-400'}`} />
+
+        {/* Name & description */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <button onClick={onView} className="font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors truncate">
+              {framework.name}
+            </button>
+            {framework.isSystemDefault && (
+              <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">
+                System
+              </span>
+            )}
+          </div>
+          {framework.description && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{framework.description}</p>
+          )}
+        </div>
+
+        {/* Assignments */}
+        <div className="flex-shrink-0 w-[80px] text-center">
+          <div className="text-base font-bold text-gray-900 dark:text-white">{framework.assignmentCount}</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400">Assignments</div>
+        </div>
+
+        {/* Actions */}
+        <div className="flex-shrink-0 flex items-center gap-1">
+          {onEdit && (
+            <button
+              onClick={onEdit}
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+            >
+              <Edit3 size={12} /> Edit
+            </button>
+          )}
+          {onClone && (
+            <button
+              onClick={onClone}
+              disabled={busy}
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 transition-colors"
+            >
+              <Copy size={12} /> {busy ? 'Cloning…' : 'Clone'}
+            </button>
+          )}
+          {onArchive && (
+            <button
+              onClick={onArchive}
+              className="flex items-center gap-1 text-xs px-2.5 py-1.5 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+            >
+              <Trash2 size={12} /> Archive
+            </button>
+          )}
+        </div>
+
+        <ChevronRight className="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500" />
+      </div>
+    </div>
+  );
+}
 
 export default function CompetencyFrameworksPage() {
   usePageTitle(['Competency Frameworks']);
@@ -41,7 +180,7 @@ export default function CompetencyFrameworksPage() {
     if (newId) {
       addToast('success', `Cloned "${source.name}"`);
       await refetch();
-      navigate(`/dashboard/${clubId}/competency-frameworks/${newId}`);
+      navigate(Routes.competencyFramework(clubId, newId));
     } else {
       addToast('error', 'Failed to clone framework');
     }
@@ -54,128 +193,61 @@ export default function CompetencyFrameworksPage() {
     await refetch();
   };
 
+  const goTo = (id: string) => navigate(Routes.competencyFramework(clubId!, id));
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <main className="mx-auto px-4 py-4 max-w-6xl">
+      <main className="mx-auto px-4 py-4">
         <PageTitle title="Competency Frameworks" subtitle="System defaults and club-owned frameworks." />
 
-        {isLoading && (
-          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-40 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-            ))}
-          </div>
-        )}
-
-        {!isLoading && (
-          <>
-            <section className="mt-6">
-              <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                System defaults
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {systemFrameworks.map((f) => (
-                  <FrameworkCard
+        {/* System defaults */}
+        <section className="mb-6">
+          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
+            System defaults
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+            {isLoading
+              ? [...Array(2)].map((_, i) => <FrameworkRowSkeleton key={i} />)
+              : systemFrameworks.map((f) => (
+                  <FrameworkRow
                     key={f.id}
                     framework={f}
                     busy={cloningId === f.id || isCreating}
-                    onView={() => navigate(`/dashboard/${clubId}/competency-frameworks/${f.id}`)}
+                    onView={() => goTo(f.id)}
                     onClone={() => handleClone(f)}
                   />
                 ))}
-              </div>
-            </section>
+          </div>
+        </section>
 
-            <section className="mt-8">
-              <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-                Club frameworks
-              </h2>
-              {clubFrameworks.length === 0 ? (
-                <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
-                  <Award className="w-10 h-10 mx-auto mb-3 text-gray-400 dark:text-gray-500" />
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    No custom frameworks yet. Clone a system framework to start customising.
-                  </p>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {clubFrameworks.map((f) => (
-                    <FrameworkCard
+        {/* Club frameworks */}
+        <section>
+          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
+            Club frameworks
+          </h2>
+          {!isLoading && clubFrameworks.length === 0 ? (
+            <EmptyState
+              icon={Award}
+              title="No custom frameworks yet"
+              description="Clone a system framework to start customising it for your club."
+            />
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+              {isLoading
+                ? [...Array(2)].map((_, i) => <FrameworkRowSkeleton key={i} />)
+                : clubFrameworks.map((f) => (
+                    <FrameworkRow
                       key={f.id}
                       framework={f}
-                      onView={() => navigate(`/dashboard/${clubId}/competency-frameworks/${f.id}`)}
-                      onEdit={() => navigate(`/dashboard/${clubId}/competency-frameworks/${f.id}`)}
+                      onView={() => goTo(f.id)}
+                      onEdit={() => goTo(f.id)}
                       onArchive={() => handleArchive(f)}
                     />
                   ))}
-                </div>
-              )}
-            </section>
-          </>
-        )}
+            </div>
+          )}
+        </section>
       </main>
-    </div>
-  );
-}
-
-interface FrameworkCardProps {
-  framework: CompetencyFrameworkListItemDto;
-  busy?: boolean;
-  onView?: () => void;
-  onEdit?: () => void;
-  onClone?: () => void;
-  onArchive?: () => void;
-}
-
-function FrameworkCard({ framework, busy, onView, onEdit, onClone, onArchive }: FrameworkCardProps) {
-  return (
-    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 flex flex-col hover:border-primary-300 dark:hover:border-primary-700 transition-colors">
-      <div className="flex items-start justify-between gap-2 mb-2">
-        <button
-          onClick={onView}
-          className="text-left font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-        >
-          {framework.name}
-        </button>
-        {framework.isSystemDefault && (
-          <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded">
-            System
-          </span>
-        )}
-      </div>
-      {framework.description && (
-        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-3 mb-3">{framework.description}</p>
-      )}
-      <div className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-        Uplift {framework.upliftPercent}% · Assignments {framework.assignmentCount}
-      </div>
-      <div className="mt-auto flex items-center gap-2">
-        {onEdit && (
-          <button
-            onClick={onEdit}
-            className="flex items-center gap-1 text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
-          >
-            <Edit3 size={12} /> Edit
-          </button>
-        )}
-        {onClone && (
-          <button
-            onClick={onClone}
-            disabled={busy}
-            className="flex items-center gap-1 text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 transition-colors"
-          >
-            <Copy size={12} /> {busy ? 'Cloning…' : 'Clone'}
-          </button>
-        )}
-        {onArchive && (
-          <button
-            onClick={onArchive}
-            className="flex items-center gap-1 text-xs px-2 py-1 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded hover:bg-red-50 dark:hover:bg-red-900/20 ml-auto transition-colors"
-          >
-            <Trash2 size={12} /> Archive
-          </button>
-        )}
-      </div>
     </div>
   );
 }
