@@ -56,11 +56,6 @@ function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: F
           <button onClick={onView} className="text-left font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
             {framework.name}
           </button>
-          {framework.isSystemDefault && (
-            <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-1.5 py-0.5 rounded">
-              System
-            </span>
-          )}
         </div>
         {framework.description && (
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{framework.description}</p>
