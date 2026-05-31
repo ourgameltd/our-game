@@ -49,6 +49,9 @@ npm run generate:api # Regenerate TypeScript API client from running Functions (
 # Start SQL Server 2022 (localhost:14330) + Azurite
 docker compose -f docker-compose.local.yml up -d
 
+# Create Azurite blob containers (one-time after first up, or after volume reset)
+node scripts/init-azurite-containers.js
+
 # Seed database (applies migrations first)
 docker compose -f docker-compose.local.yml --profile seed run --no-deps --rm seeder
 

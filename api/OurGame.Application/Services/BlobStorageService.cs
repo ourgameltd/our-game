@@ -118,15 +118,32 @@ public class BlobStorageService : IBlobStorageService
             return;
         }
 
-        // Extract container and blob name from the URI path: /<container>/<blob>
-        var segments = uri.AbsolutePath.TrimStart('/').Split('/', 2);
+        // Extract container and blob name from URI path. Supports both:
+        // - Path style: /<account>/<container>/<blob>
+        // - Host style: /<container>/<blob>
+        var segments = uri.AbsolutePath
+            .Trim('/')
+            .Split('/', StringSplitOptions.RemoveEmptyEntries);
+
         if (segments.Length < 2)
         {
             return;
         }
 
-        var containerName = segments[0];
-        var blobName = segments[1];
+        var containerSegmentIndex = 0;
+        if (segments.Length >= 3 &&
+            string.Equals(segments[0], _blobServiceClient.AccountName, StringComparison.OrdinalIgnoreCase))
+        {
+            containerSegmentIndex = 1;
+        }
+
+        if (segments.Length <= containerSegmentIndex + 1)
+        {
+            return;
+        }
+
+        var containerName = segments[containerSegmentIndex];
+        var blobName = string.Join('/', segments[(containerSegmentIndex + 1)..]);
 
         try
         {
@@ -165,4 +182,5 @@ public class BlobStorageService : IBlobStorageService
         var bytes = Convert.FromBase64String(base64Data);
         return (contentType, bytes);
     }
+
 }
