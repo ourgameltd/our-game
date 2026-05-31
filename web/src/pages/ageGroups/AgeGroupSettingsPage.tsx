@@ -7,6 +7,7 @@ import { apiClient } from '@/api/client';
 import { teamLevels, squadSizes, type AgeGroupLevel } from '@/constants/referenceData';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
+import CompetencyAssignmentPanel from '@components/competencies/CompetencyAssignmentPanel';
 import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
@@ -531,6 +532,15 @@ export default function AgeGroupSettingsPage() {
             </div>
           </div>
 
+
+          {clubId && ageGroupId && (
+            <CompetencyAssignmentPanel
+              clubId={clubId}
+              scope="ageGroup"
+              scopeId={ageGroupId}
+              showOverrideToggle
+            />
+          )}
 
           {/* Action Buttons */}
           <FormActions

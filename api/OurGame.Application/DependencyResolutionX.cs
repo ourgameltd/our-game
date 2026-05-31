@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OurGame.Application.Services;
+using OurGame.Application.Services.CompetencyCalculation;
 using OurGame.Persistence;
 
 namespace OurGame.Application
@@ -13,6 +14,7 @@ namespace OurGame.Application
             services.AddScoped<IPushNotificationService, PushNotificationService>();
             services.AddScoped<INotificationService, NotificationService>();
             services.AddScoped<IBlobStorageService, BlobStorageService>();
+            services.AddScoped<ICompetencyCalculationService, CompetencyCalculationService>();
         }
     }
 }

@@ -6,6 +6,7 @@ import FormActions from '@/components/common/FormActions';
 import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
+import CompetencyAssignmentPanel from '@components/competencies/CompetencyAssignmentPanel';
 
 type MediaLinkForm = {
   id: string;
@@ -633,6 +634,15 @@ export default function ClubSettingsPage() {
                 )}
               </div>
             </div>
+
+            {clubId && (
+              <CompetencyAssignmentPanel
+                clubId={clubId}
+                scope="club"
+                scopeId={clubId}
+                showOverrideToggle
+              />
+            )}
 
             {/* Action Buttons */}
             <FormActions

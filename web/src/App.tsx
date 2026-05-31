@@ -21,6 +21,8 @@ import ClubPlayerSettingsPage from '@pages/clubs/ClubPlayerSettingsPage';
 import ClubCoachesPage from '@pages/clubs/ClubCoachesPage';
 import ClubKitsPage from '@pages/clubs/ClubKitsPage';
 import ClubSettingsPage from '@pages/clubs/ClubSettingsPage';
+import CompetencyFrameworksPage from '@pages/competencies/CompetencyFrameworksPage';
+import CompetencyFrameworkEditorPage from '@pages/competencies/CompetencyFrameworkEditorPage';
 import ClubMatchesPage from '@pages/clubs/ClubMatchesPage';
 import ClubTrainingSessionsPage from '@pages/clubs/ClubTrainingSessionsPage';
 import AgeGroupsListPage from '@pages/ageGroups/AgeGroupsListPage';
@@ -163,6 +165,8 @@ function AppContent() {
         <Route path="/dashboard/:clubId/training" element={<ClubTrainingSessionsPage />} />
         <Route path="/dashboard/:clubId/kits" element={<ClubKitsPage />} />
         <Route path="/dashboard/:clubId/settings" element={<ClubSettingsPage />} />
+        <Route path="/dashboard/:clubId/competency-frameworks" element={<CompetencyFrameworksPage />} />
+        <Route path="/dashboard/:clubId/competency-frameworks/:frameworkId" element={<CompetencyFrameworkEditorPage />} />
         {/* Hidden: Report Cards & Development Plans (not ready for release) */}
         {/* <Route path="/dashboard/:clubId/report-cards" element={<ClubReportCardsPage />} /> */}
         {/* <Route path="/dashboard/:clubId/development-plans" element={<ClubDevelopmentPlansPage />} /> */}

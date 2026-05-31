@@ -11,7 +11,7 @@ import { canViewPlayerAbilities } from '@/utils/accessControl';
 import PlayerSubNav from '@components/player/PlayerSubNav';
 import PageTitle from '@components/common/PageTitle';
 import AccessDeniedPage from '@components/common/AccessDeniedPage';
-import PlayerEvaluationFormModal from '@components/player/PlayerEvaluationFormModal';
+import PlayerCompetencyModal from '@components/player/PlayerCompetencyModal';
 
 export default function PlayerReviewsPage() {
   const { clubId, playerId, ageGroupId, teamId } = useParams();
@@ -375,10 +375,10 @@ export default function PlayerReviewsPage() {
           </div>
         )}
 
-        {showForm && abilities && (
-          <PlayerEvaluationFormModal
-            abilities={abilities}
+        {showForm && playerId && (
+          <PlayerCompetencyModal
             playerId={playerId}
+            playerName={player ? `${player.firstName} ${player.lastName}` : undefined}
             onClose={() => setShowForm(false)}
             onSuccess={refetch}
           />

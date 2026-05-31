@@ -247,6 +247,27 @@ try
         await context.SaveChangesAsync();
     }
     
+    if (!await context.CompetencyCategories.AnyAsync())
+    {
+        Console.WriteLine("  📐 Seeding competency taxonomy (categories, competencies, attributes)...");
+        await context.CompetencyCategories.AddRangeAsync(OurGame.Persistence.Data.SeedData.CompetencyTaxonomySeedData.GetCategories());
+        await context.Competencies.AddRangeAsync(OurGame.Persistence.Data.SeedData.CompetencyTaxonomySeedData.GetCompetencies());
+        await context.SaveChangesAsync();
+        await context.CompetencyAttributes.AddRangeAsync(OurGame.Persistence.Data.SeedData.CompetencyTaxonomySeedData.GetAttributes());
+        await context.SaveChangesAsync();
+    }
+
+    if (!await context.CompetencyFrameworks.AnyAsync(f => f.IsSystemDefault))
+    {
+        Console.WriteLine("  🎯 Seeding system competency frameworks (Balanced, Tiki-Taka, Gegenpress, Long Ball, Physical, Skill-Based)...");
+        await context.CompetencyFrameworks.AddRangeAsync(OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetFrameworks());
+        await context.SaveChangesAsync();
+        await context.CompetencyFrameworkBandThresholds.AddRangeAsync(OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetBandThresholds());
+        await context.CompetencyFrameworkCompetencyDescriptions.AddRangeAsync(OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetCompetencyDescriptions());
+        await context.CompetencyFrameworkAttributeWeights.AddRangeAsync(OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetAttributeWeights());
+        await context.SaveChangesAsync();
+    }
+
     if (!await context.PlayerAttributes.AnyAsync())
     {
         Console.WriteLine("  ⭐ Seeding player attributes...");

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { teamLevels } from '@/constants/referenceData';
 import PageTitle from '@/components/common/PageTitle';
 import FormActions from '@/components/common/FormActions';
+import CompetencyAssignmentPanel from '@components/competencies/CompetencyAssignmentPanel';
 import { Routes } from '@/utils/routes';
 import { useTeamOverview, useTeamPlayers, useUpdateTeam, useUpdateTeamSquadNumbers, useArchiveTeam, useAgeGroupById } from '@/api/hooks';
 import type { SquadNumberAssignment } from '@/api/client';
@@ -480,6 +481,14 @@ export default function TeamSettingsPage() {
               </div>
             )}
           </div>
+
+          {clubId && teamId && (
+            <CompetencyAssignmentPanel
+              clubId={clubId}
+              scope="team"
+              scopeId={teamId}
+            />
+          )}
 
           {/* Action Buttons */}
           <FormActions
