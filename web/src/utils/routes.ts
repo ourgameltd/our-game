@@ -101,6 +101,14 @@ export class Routes {
     return `/dashboard/${validateParam(clubId, 'clubId')}/settings`;
   }
 
+  static competencyFrameworks(clubId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/competency-frameworks`;
+  }
+
+  static competencyFramework(clubId: string, frameworkId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/competency-frameworks/${validateParam(frameworkId, 'frameworkId')}`;
+  }
+
   static clubPublicMedia(clubId: string): string {
     return `/play/${validateParam(clubId, 'clubId')}/media`;
   }

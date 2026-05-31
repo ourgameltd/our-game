@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, matchPath } from 'react-router-dom';
 import { 
-  Users, 
+  Users,
   Home,
   HelpCircle,
   LogOut,
@@ -20,7 +20,8 @@ import {
   ChevronUp,
   Settings,
   Calendar,
-  Dumbbell
+  Dumbbell,
+  Award
 } from 'lucide-react';
 import { useClubById, useTeamOverview, useAgeGroup, usePlayer, useCoach } from '@/api/hooks';
 import { apiClient } from '@/api/client';
@@ -89,8 +90,8 @@ export default function MobileNavigation() {
   // Check if we're viewing a scheduling-related page (matches or training)
   const isSchedulingPage = location.pathname.includes('/matches') || location.pathname.includes('/training');
 
-  // Check if we're viewing a management-related page (ethos, kits, report-cards)
-  const isManagementPage = location.pathname.includes('/ethos') || location.pathname.includes('/kits') || location.pathname.includes('/invites');
+  // Check if we're viewing a management-related page (ethos, kits, report-cards, competency-frameworks)
+  const isManagementPage = location.pathname.includes('/ethos') || location.pathname.includes('/kits') || location.pathname.includes('/invites') || location.pathname.includes('/competency-frameworks');
 
   // Check if we're viewing a tactics-related page (formations, drills, templates)
   const isTacticsPage = location.pathname.includes('/tactics') || location.pathname.includes('/drills') || location.pathname.includes('/drill-templates');
@@ -264,6 +265,7 @@ export default function MobileNavigation() {
       if (path.includes('/coaches')) return { title: 'Coaches', image: club.logo };
       if (path.includes('/ethos')) return { title: 'Club Ethos', image: club.logo };
       if (path.includes('/kit')) return { title: 'Kit Management', image: club.logo };
+      if (path.includes('/competency-frameworks')) return { title: 'Competency Frameworks', image: club.logo };
       if (path.includes('/drill-templates')) return { title: 'Sessions', image: club.logo };
       if (path.includes('/drills')) return { title: 'Drills', image: club.logo };
       if (path.includes('/tactics')) return { title: 'Formations', image: club.logo };
@@ -549,6 +551,15 @@ export default function MobileNavigation() {
                                     <span className="mobile-nav-text">Invites</span>
                                   </Link>
                                 </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.competencyFrameworks(clubId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes('/competency-frameworks') ? 'active' : ''}`}
+                                  >
+                                    <Award className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Competencies</span>
+                                  </Link>
+                                </li>
                               </ul>
                             )}
                           </li>
@@ -733,6 +744,15 @@ export default function MobileNavigation() {
                                   >
                                     <Shirt className="mobile-nav-icon" />
                                     <span className="mobile-nav-text">Kits</span>
+                                  </Link>
+                                </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.competencyFrameworks(clubId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes('/competency-frameworks') ? 'active' : ''}`}
+                                  >
+                                    <Award className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Competencies</span>
                                   </Link>
                                 </li>
                               </ul>
@@ -936,6 +956,15 @@ export default function MobileNavigation() {
                                   >
                                     <Shirt className="mobile-nav-icon" />
                                     <span className="mobile-nav-text">Kits</span>
+                                  </Link>
+                                </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.competencyFrameworks(clubId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes('/competency-frameworks') ? 'active' : ''}`}
+                                  >
+                                    <Award className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Competencies</span>
                                   </Link>
                                 </li>
                               </ul>

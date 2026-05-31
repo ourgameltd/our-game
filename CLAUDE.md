@@ -88,6 +88,23 @@ State: Zustand stores for global state; React Context for auth, theme, navigatio
 
 Type definitions live in `src/types/index.ts` (~700 lines). Use those; avoid `any`.
 
+### Tailwind Dark/Light Theme
+
+All UI must support both light and dark themes using Tailwind's `dark:` variant. Never use hardcoded light-only colour classes without a `dark:` counterpart. Key patterns:
+
+- Page backgrounds: `bg-gray-50 dark:bg-gray-900`
+- Cards/panels: `bg-white dark:bg-gray-800`
+- Borders: `border-gray-200 dark:border-gray-700`
+- Primary text: `text-gray-900 dark:text-white`
+- Secondary/muted text: `text-gray-600 dark:text-gray-400` or `text-gray-500 dark:text-gray-400`
+- Accent/brand: `text-primary-600 dark:text-primary-400`
+- Hover states: `hover:bg-gray-50 dark:hover:bg-gray-700`
+- Destructive/danger: `text-red-700 dark:text-red-400`, `border-red-200 dark:border-red-800`, `hover:bg-red-50 dark:hover:bg-red-900/20`
+- Section headings: `text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider`
+- Loading skeletons: `bg-gray-200 dark:bg-gray-700 animate-pulse`
+
+Page wrapper pattern: `<div className="min-h-screen bg-gray-50 dark:bg-gray-900"><main className="mx-auto px-4 py-4">…</main></div>`
+
 ### Data Flow
 
 Frontend → generated TypeScript client → Azure Functions trigger → MediatR handler in Application → EF Core → Azure SQL.

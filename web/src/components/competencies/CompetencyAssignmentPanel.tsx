@@ -13,23 +13,18 @@ interface CompetencyAssignmentPanelProps {
   clubId: string;
   scope: 'club' | 'ageGroup' | 'team';
   scopeId: string;
-  /** Currently assigned framework id (if any) at this scope. */
   currentFrameworkId?: string;
-  /** Whether children below this scope are allowed to override (club -> age-groups, age-group -> teams). */
   allowChildrenOverride?: boolean;
-  /** Set true to render the "allow children override" toggle. */
   showOverrideToggle?: boolean;
-  /** When the parent scope disallows override, this scope cannot change its framework. */
   disabled?: boolean;
-  /** Optional: team format selector (only meaningful at scope='team'). */
   teamFormat?: GameFormat | null;
   onTeamFormatChange?: (format: GameFormat) => void;
 }
 
-/**
- * Hierarchical framework picker + override toggle.
- * Reusable across club, age-group and team settings pages.
- */
+const selectClass =
+  'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed';
+const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2';
+
 export default function CompetencyAssignmentPanel({
   clubId,
   scope,
@@ -69,23 +64,33 @@ export default function CompetencyAssignmentPanel({
   };
 
   return (
-    <div className="card mt-4">
-      <h3 className="font-semibold text-slate-900 mb-1">Competency framework</h3>
-      <p className="text-xs text-slate-500 mb-3">
+    <div className="card">
+      <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        Competency framework
+      </h3>
+      <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
         Players belonging to this {scope === 'ageGroup' ? 'age group' : scope} will be scored using the selected framework.
       </p>
 
       {disabled && (
-        <div className="text-xs bg-amber-50 border border-amber-200 text-amber-800 rounded px-3 py-2 mb-3">
-          Your parent scope does not currently allow overriding the competency framework here. Enable the corresponding toggle in the parent settings to unlock this control.
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <p className="text-sm text-amber-800 dark:text-amber-300">
+            Your parent scope does not currently allow overriding the competency framework here. Enable the corresponding toggle in the parent settings to unlock this control.
+          </p>
         </div>
       )}
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <label className="text-sm">
-          <span className="block text-slate-600 mb-1">Framework</span>
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+          <p className="text-sm text-red-800 dark:text-red-300">{error.message}</p>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className={labelClass}>Framework</label>
           <select
-            className="w-full border border-slate-300 rounded px-2 py-1.5 disabled:bg-slate-50"
+            className={selectClass}
             value={selectedFrameworkId}
             onChange={(e) => setSelectedFrameworkId(e.target.value)}
             disabled={!!disabled || isLoading}
@@ -97,13 +102,13 @@ export default function CompetencyAssignmentPanel({
               </option>
             ))}
           </select>
-        </label>
+        </div>
 
         {scope === 'team' && (
-          <label className="text-sm">
-            <span className="block text-slate-600 mb-1">Game format</span>
+          <div>
+            <label className={labelClass}>Game format</label>
             <select
-              className="w-full border border-slate-300 rounded px-2 py-1.5"
+              className={selectClass}
               value={teamFormat ?? ''}
               onChange={(e) => onTeamFormatChange?.(e.target.value as GameFormat)}
             >
@@ -112,16 +117,17 @@ export default function CompetencyAssignmentPanel({
                 <option key={f} value={f}>{GAME_FORMAT_LABELS[f]}</option>
               ))}
             </select>
-          </label>
+          </div>
         )}
       </div>
 
       {showOverrideToggle && (
-        <label className="mt-3 flex items-center gap-2 text-sm">
+        <label className="mt-4 flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer">
           <input
             type="checkbox"
             checked={allowChildren}
             onChange={(e) => setAllowChildren(e.target.checked)}
+            className="rounded border-gray-300 dark:border-gray-600"
           />
           {scope === 'club'
             ? 'Allow age groups to choose their own framework'
@@ -133,17 +139,16 @@ export default function CompetencyAssignmentPanel({
         <button
           onClick={handleSave}
           disabled={!selectedFrameworkId || disabled || isSubmitting}
-          className="text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded disabled:bg-slate-300"
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {isSubmitting ? 'Saving…' : 'Save assignment'}
         </button>
         <button
           onClick={() => navigate(`/dashboard/${clubId}/competency-frameworks`)}
-          className="text-xs text-slate-600 hover:underline"
+          className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 underline transition-colors"
         >
           Manage frameworks
         </button>
-        {error && <span className="text-xs text-red-600">{error.message}</span>}
       </div>
     </div>
   );

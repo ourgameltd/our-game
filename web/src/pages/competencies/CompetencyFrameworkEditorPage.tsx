@@ -15,7 +15,7 @@ import {
   UpdateCompetencyFrameworkRequest,
 } from '@/api/competencies';
 
-type WeightMap = Record<string, Record<GameFormat, number>>; // attributeId -> format -> percent
+type WeightMap = Record<string, Record<GameFormat, number>>;
 
 const DEFAULT_THRESHOLDS: Record<CompetencyBand, number> = {
   Development: 18,
@@ -23,6 +23,10 @@ const DEFAULT_THRESHOLDS: Record<CompetencyBand, number> = {
   Advanced: 52,
   Elite: 70,
 };
+
+const inputClass =
+  'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed';
+const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2';
 
 export default function CompetencyFrameworkEditorPage() {
   const { clubId, frameworkId } = useParams();
@@ -67,7 +71,6 @@ export default function CompetencyFrameworkEditorPage() {
     setDescriptions(d);
   }, [framework]);
 
-  // Totals
   const formatTotals = useMemo(() => {
     const totals: Record<GameFormat, number> = { FiveASide: 0, SevenASide: 0, NineASide: 0, ElevenASide: 0 };
     Object.values(weights).forEach((perFormat) => {
@@ -122,190 +125,258 @@ export default function CompetencyFrameworkEditorPage() {
   };
 
   if (isLoading || !framework) {
-    return <div className="p-6 max-w-6xl mx-auto text-slate-500 text-sm">Loading…</div>;
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <main className="mx-auto px-4 py-4 max-w-6xl">
+          <div className="card">
+            <div className="animate-pulse space-y-4">
+              <div className="h-8 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
+              <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+              <div className="h-64 bg-gray-200 dark:bg-gray-700 rounded"></div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <PageTitle
-        title={framework.name}
-        subtitle={framework.isSystemDefault ? 'System default — read only. Clone to customise.' : 'Edit weights, thresholds, descriptions and uplift.'}
-      />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <main className="mx-auto px-4 py-4 max-w-6xl">
+        <PageTitle
+          title={framework.name}
+          subtitle={
+            framework.isSystemDefault
+              ? 'System default — read only. Clone to customise.'
+              : 'Edit weights, thresholds, descriptions and uplift.'
+          }
+        />
 
-      {/* Identity */}
-      <section className="card mt-6">
-        <h3 className="font-semibold text-slate-900 mb-3">Identity</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <label className="text-sm">
-            <span className="block text-slate-600 mb-1">Name</span>
-            <input className="w-full border border-slate-300 rounded px-2 py-1.5" value={name} onChange={(e) => setName(e.target.value)} disabled={framework.isSystemDefault} />
-          </label>
-          <label className="text-sm sm:col-span-2">
-            <span className="block text-slate-600 mb-1">Description</span>
-            <input className="w-full border border-slate-300 rounded px-2 py-1.5" value={description} onChange={(e) => setDescription(e.target.value)} disabled={framework.isSystemDefault} />
-          </label>
-          <label className="text-sm">
-            <span className="block text-slate-600 mb-1">Uplift %</span>
-            <input
-              type="number"
-              step="0.5"
-              className="w-full border border-slate-300 rounded px-2 py-1.5"
-              value={upliftPercent}
-              onChange={(e) => setUpliftPercent(Number(e.target.value))}
-              disabled={framework.isSystemDefault}
-            />
-          </label>
-        </div>
-      </section>
-
-      {/* Thresholds */}
-      <section className="card mt-4">
-        <h3 className="font-semibold text-slate-900 mb-3">Band thresholds</h3>
-        <p className="text-xs text-slate-500 mb-3">Boosted score &ge; threshold &rArr; band. Must be strictly ascending.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {COMPETENCY_BANDS.map((band) => (
-            <label key={band} className="text-sm">
-              <span className="block text-slate-600 mb-1">{band}</span>
-              <input
-                type="number"
-                step="0.5"
-                className="w-full border border-slate-300 rounded px-2 py-1.5"
-                value={thresholds[band]}
-                onChange={(e) => setThresholds((s) => ({ ...s, [band]: Number(e.target.value) }))}
-                disabled={framework.isSystemDefault}
-              />
-            </label>
-          ))}
-        </div>
-        {!thresholdsAscending && (
-          <div className="mt-2 text-xs text-red-600 flex items-center gap-1"><AlertCircle size={12} /> Thresholds must be strictly ascending.</div>
-        )}
-      </section>
-
-      {/* Weightings */}
-      <section className="card mt-4">
-        <div className="flex items-center justify-between gap-2 mb-3">
-          <h3 className="font-semibold text-slate-900">Weightings</h3>
-          <div className="flex gap-1">
-            {GAME_FORMATS.map((f) => {
-              const total = formatTotals[f];
-              const ok = total === 100;
-              return (
-                <button
-                  key={f}
-                  onClick={() => setActiveFormat(f)}
-                  className={`px-2.5 py-1 text-xs rounded border transition-colors ${activeFormat === f ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}`}
-                >
-                  {GAME_FORMAT_LABELS[f]}{' '}
-                  <span className={ok ? 'text-emerald-300' : 'text-amber-300'}>
-                    {ok ? '✓' : `(${total})`}
-                  </span>
-                </button>
-              );
-            })}
+        {framework.isSystemDefault && (
+          <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              This is a system default framework and cannot be edited. Clone it to create a customisable copy.
+            </p>
           </div>
-        </div>
+        )}
 
-        <p className="text-xs text-slate-500 mb-3">
-          Each attribute's weight is a percent of the total for the active format. The grand total must be exactly 100.
-        </p>
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <p className="text-sm text-red-800 dark:text-red-300">{error.message}</p>
+          </div>
+        )}
 
-        {framework.categories.map((cat) => {
-          const catTotal = categoryTotals.find((c) => c.categoryId === cat.categoryId)?.totalsByFormat[activeFormat] ?? 0;
-          return (
-            <div key={cat.categoryId} className="mb-5">
-              <div className="flex items-center justify-between text-sm font-medium text-slate-800 mb-2">
-                <span>{cat.categoryName}</span>
-                <span className="text-xs text-slate-500">Category total: {catTotal}</span>
+        <div className="space-y-2">
+          {/* Identity */}
+          <div className="card">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Identity</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className={labelClass}>Name</label>
+                <input
+                  className={inputClass}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  disabled={framework.isSystemDefault}
+                />
               </div>
-              <div className="space-y-2">
-                {cat.attributes.map((attr) => {
-                  const value = weights[attr.attributeId]?.[activeFormat] ?? 0;
+              <div className="sm:col-span-2">
+                <label className={labelClass}>Description</label>
+                <input
+                  className={inputClass}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  disabled={framework.isSystemDefault}
+                />
+              </div>
+              <div>
+                <label className={labelClass}>Uplift %</label>
+                <input
+                  type="number"
+                  step="0.5"
+                  className={inputClass}
+                  value={upliftPercent}
+                  onChange={(e) => setUpliftPercent(Number(e.target.value))}
+                  disabled={framework.isSystemDefault}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Thresholds */}
+          <div className="card">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Band thresholds</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Boosted score &ge; threshold &rArr; band. Must be strictly ascending.
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              {COMPETENCY_BANDS.map((band) => (
+                <div key={band}>
+                  <label className={labelClass}>{band}</label>
+                  <input
+                    type="number"
+                    step="0.5"
+                    className={inputClass}
+                    value={thresholds[band]}
+                    onChange={(e) => setThresholds((s) => ({ ...s, [band]: Number(e.target.value) }))}
+                    disabled={framework.isSystemDefault}
+                  />
+                </div>
+              ))}
+            </div>
+            {!thresholdsAscending && (
+              <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-2">
+                <AlertCircle size={14} className="text-red-600 dark:text-red-400 flex-shrink-0" />
+                <p className="text-sm text-red-800 dark:text-red-300">Thresholds must be strictly ascending.</p>
+              </div>
+            )}
+          </div>
+
+          {/* Weightings */}
+          <div className="card">
+            <div className="flex items-center justify-between gap-2 mb-4">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Weightings</h3>
+              <div className="flex gap-1 flex-wrap justify-end">
+                {GAME_FORMATS.map((f) => {
+                  const total = formatTotals[f];
+                  const ok = total === 100;
                   return (
-                    <div key={attr.attributeId} className="grid grid-cols-12 gap-2 items-center text-sm">
-                      <div className="col-span-4 text-slate-700">
-                        {attr.attributeName}
-                        <div className="text-[10px] text-slate-400">{attr.competencyName}</div>
-                      </div>
-                      <input
-                        type="range"
-                        min={0}
-                        max={50}
-                        step={1}
-                        value={value}
-                        onChange={(e) => handleWeightChange(attr.attributeId, activeFormat, Number(e.target.value))}
-                        className="col-span-6"
-                        disabled={framework.isSystemDefault}
-                      />
-                      <input
-                        type="number"
-                        min={0}
-                        max={100}
-                        step={1}
-                        value={value}
-                        onChange={(e) => handleWeightChange(attr.attributeId, activeFormat, Number(e.target.value))}
-                        className="col-span-2 border border-slate-300 rounded px-1.5 py-1 text-right"
-                        disabled={framework.isSystemDefault}
-                      />
-                    </div>
+                    <button
+                      key={f}
+                      onClick={() => setActiveFormat(f)}
+                      className={`px-2.5 py-1.5 text-xs rounded-lg border transition-colors ${
+                        activeFormat === f
+                          ? 'bg-blue-600 text-white border-blue-600'
+                          : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      {GAME_FORMAT_LABELS[f]}{' '}
+                      <span className={ok ? (activeFormat === f ? 'text-green-300' : 'text-emerald-600 dark:text-emerald-400') : 'text-amber-500 dark:text-amber-400'}>
+                        {ok ? '✓' : `(${total})`}
+                      </span>
+                    </button>
                   );
                 })}
               </div>
             </div>
-          );
-        })}
 
-        <div className={`mt-3 text-sm flex items-center gap-2 ${formatTotals[activeFormat] === 100 ? 'text-emerald-700' : 'text-amber-700'}`}>
-          {formatTotals[activeFormat] === 100 ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-          {GAME_FORMAT_LABELS[activeFormat]} total: <strong>{formatTotals[activeFormat]}</strong> / 100
-        </div>
-      </section>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Each attribute's weight is a percent of the total for the active format. The grand total must be exactly 100.
+            </p>
 
-      {/* Descriptions */}
-      <section className="card mt-4">
-        <h3 className="font-semibold text-slate-900 mb-3">Competency rubric</h3>
-        <div className="space-y-4">
-          {framework.competencyDescriptions.map((cd) => (
-            <div key={cd.competencyId} className="border border-slate-200 rounded-md p-3">
-              <div className="font-medium text-slate-900 text-sm mb-2">{cd.competencyName}</div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                {COMPETENCY_BANDS.map((band) => (
-                  <label key={band} className="text-sm">
-                    <span className="block text-slate-600 mb-1">{band}</span>
-                    <textarea
-                      className="w-full border border-slate-300 rounded px-2 py-1.5 text-xs"
-                      rows={2}
-                      value={descriptions[cd.competencyId]?.[band] ?? ''}
-                      onChange={(e) => setDescriptions((s) => ({
-                        ...s,
-                        [cd.competencyId]: { ...s[cd.competencyId], [band]: e.target.value },
-                      }))}
-                      disabled={framework.isSystemDefault}
-                    />
-                  </label>
-                ))}
-              </div>
+            {framework.categories.map((cat) => {
+              const catTotal = categoryTotals.find((c) => c.categoryId === cat.categoryId)?.totalsByFormat[activeFormat] ?? 0;
+              return (
+                <div key={cat.categoryId} className="mb-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-gray-800 dark:text-gray-200">{cat.categoryName}</span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">Category total: {catTotal}</span>
+                  </div>
+                  <div className="space-y-3">
+                    {cat.attributes.map((attr) => {
+                      const value = weights[attr.attributeId]?.[activeFormat] ?? 0;
+                      return (
+                        <div key={attr.attributeId} className="grid grid-cols-12 gap-3 items-center">
+                          <div className="col-span-4 text-sm text-gray-700 dark:text-gray-300">
+                            {attr.attributeName}
+                            <div className="text-[10px] text-gray-400 dark:text-gray-500">{attr.competencyName}</div>
+                          </div>
+                          <input
+                            type="range"
+                            min={0}
+                            max={50}
+                            step={1}
+                            value={value}
+                            onChange={(e) => handleWeightChange(attr.attributeId, activeFormat, Number(e.target.value))}
+                            className="col-span-6"
+                            disabled={framework.isSystemDefault}
+                          />
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={value}
+                            onChange={(e) => handleWeightChange(attr.attributeId, activeFormat, Number(e.target.value))}
+                            className="col-span-2 px-2 py-1.5 text-right border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={framework.isSystemDefault}
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+
+            <div
+              className={`mt-2 p-3 rounded-lg flex items-center gap-2 text-sm ${
+                formatTotals[activeFormat] === 100
+                  ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400'
+                  : 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-400'
+              }`}
+            >
+              {formatTotals[activeFormat] === 100 ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              {GAME_FORMAT_LABELS[activeFormat]} total:{' '}
+              <strong>{formatTotals[activeFormat]}</strong> / 100
             </div>
-          ))}
-        </div>
-      </section>
+          </div>
 
-      {/* Footer */}
-      <div className="mt-6 flex items-center justify-between">
-        <button onClick={() => navigate(`/dashboard/${clubId}/competency-frameworks`)} className="text-sm text-slate-700 hover:bg-slate-100 px-3 py-2 rounded">
-          Back to list
-        </button>
-        <div className="flex items-center gap-3">
-          {error && <span className="text-xs text-red-600">{error.message}</span>}
-          <button
-            onClick={handleSave}
-            disabled={!canSave}
-            className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded disabled:bg-slate-300"
-          >
-            <Save size={14} /> {isSubmitting ? 'Saving…' : 'Save framework'}
-          </button>
+          {/* Competency rubric */}
+          <div className="card">
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Competency rubric</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Descriptions for each competency at each performance band.
+            </p>
+            <div className="space-y-4">
+              {framework.competencyDescriptions.map((cd) => (
+                <div
+                  key={cd.competencyId}
+                  className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                >
+                  <p className="text-sm font-semibold text-gray-900 dark:text-white mb-3">{cd.competencyName}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {COMPETENCY_BANDS.map((band) => (
+                      <div key={band}>
+                        <label className={labelClass}>{band}</label>
+                        <textarea
+                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+                          rows={2}
+                          value={descriptions[cd.competencyId]?.[band] ?? ''}
+                          onChange={(e) =>
+                            setDescriptions((s) => ({
+                              ...s,
+                              [cd.competencyId]: { ...s[cd.competencyId], [band]: e.target.value },
+                            }))
+                          }
+                          disabled={framework.isSystemDefault}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Footer actions */}
+          <div className="card flex items-center justify-between gap-4">
+            <button
+              onClick={() => navigate(`/dashboard/${clubId}/competency-frameworks`)}
+              className="text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 px-4 py-2 rounded-lg transition-colors"
+            >
+              ← Back to list
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!canSave}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <Save size={14} /> {isSubmitting ? 'Saving…' : 'Save framework'}
+            </button>
+          </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
