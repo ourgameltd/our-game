@@ -164,7 +164,7 @@ export default function CompetencyFrameworkEditorPage() {
           {/* Identity */}
           <div className="card">
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">Identity</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className="space-y-4">
               <div>
                 <label className={labelClass}>Name</label>
                 <input
@@ -174,10 +174,11 @@ export default function CompetencyFrameworkEditorPage() {
                   disabled={framework.isSystemDefault}
                 />
               </div>
-              <div className="sm:col-span-2">
+              <div>
                 <label className={labelClass}>Description</label>
-                <input
-                  className={inputClass}
+                <textarea
+                  className={`${inputClass} resize-y`}
+                  rows={3}
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   disabled={framework.isSystemDefault}
