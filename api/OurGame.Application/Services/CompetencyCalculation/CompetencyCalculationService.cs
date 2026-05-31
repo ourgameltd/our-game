@@ -110,11 +110,11 @@ public class CompetencyCalculationService : ICompetencyCalculationService
             var teamId = memberships[i].TeamId;
             var team = await _db.Teams
                 .Where(t => t.Id == teamId)
-                .Select(t => new { t.Id, t.Format })
+                .Select(t => new { t.Id, t.AgeGroup.DefaultSquadSize })
                 .FirstOrDefaultAsync(cancellationToken);
             if (team is null) continue;
 
-            var format = team.Format ?? GameFormat.ElevenASide;
+            var format = GameFormatMapping.FromSquadSize(team.DefaultSquadSize);
             var framework = await ResolveFrameworkForTeamAsync(teamId, cancellationToken);
             if (framework is null) continue;
 

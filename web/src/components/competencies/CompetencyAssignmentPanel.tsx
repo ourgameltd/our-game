@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import {
   useClubCompetencyFrameworks,
   useSetCompetencyAssignment,
-  GAME_FORMAT_LABELS,
-  GAME_FORMATS,
-  GameFormat,
 } from '@/api/competencies';
 import { useToast } from '@/contexts/ToastContext';
 
@@ -17,8 +14,6 @@ interface CompetencyAssignmentPanelProps {
   allowChildrenOverride?: boolean;
   showOverrideToggle?: boolean;
   disabled?: boolean;
-  teamFormat?: GameFormat | null;
-  onTeamFormatChange?: (format: GameFormat) => void;
   /** When true, hides the "Save assignment" and "Manage frameworks" controls. */
   hideSaveControls?: boolean;
   /** When provided, `current` is set to the panel's save function so a parent form can trigger it. */
@@ -36,8 +31,6 @@ export default function CompetencyAssignmentPanel({
   allowChildrenOverride,
   showOverrideToggle,
   disabled,
-  teamFormat,
-  onTeamFormatChange,
   hideSaveControls = false,
   saveRef,
 }: CompetencyAssignmentPanelProps) {
@@ -116,22 +109,6 @@ export default function CompetencyAssignmentPanel({
             ))}
           </select>
         </div>
-
-        {scope === 'team' && (
-          <div>
-            <label className={labelClass}>Game format</label>
-            <select
-              className={selectClass}
-              value={teamFormat ?? ''}
-              onChange={(e) => onTeamFormatChange?.(e.target.value as GameFormat)}
-            >
-              <option value="" disabled>Select format…</option>
-              {GAME_FORMATS.map((f) => (
-                <option key={f} value={f}>{GAME_FORMAT_LABELS[f]}</option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       {showOverrideToggle && (
