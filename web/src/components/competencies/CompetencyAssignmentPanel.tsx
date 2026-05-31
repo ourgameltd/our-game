@@ -19,6 +19,10 @@ interface CompetencyAssignmentPanelProps {
   disabled?: boolean;
   teamFormat?: GameFormat | null;
   onTeamFormatChange?: (format: GameFormat) => void;
+  /** When true, hides the "Save assignment" and "Manage frameworks" controls. */
+  hideSaveControls?: boolean;
+  /** When provided, `current` is set to the panel's save function so a parent form can trigger it. */
+  saveRef?: React.MutableRefObject<(() => Promise<void>) | null>;
 }
 
 const selectClass =
