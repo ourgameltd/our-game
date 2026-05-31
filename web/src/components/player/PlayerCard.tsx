@@ -2,6 +2,14 @@ import { Player } from '@/types';
 import { groupAttributes } from '@/utils/attributeHelpers';
 import { ReactNode } from 'react';
 import { calculateAge } from '@/utils/dateOfBirth';
+import type { CompetencyBand } from '@api/competencies';
+
+const BAND_COLOURS: Record<CompetencyBand, string> = {
+  Development: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+  Intermediate: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  Advanced: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900 dark:text-emerald-300',
+  Elite: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
+};
 
 interface PlayerCardProps {
   player: Player;
@@ -11,24 +19,34 @@ interface PlayerCardProps {
   isSelected?: boolean;
   badges?: ReactNode;
   actions?: ReactNode;
+  detailDisplay?: 'attributes' | 'banding';
+  competencyBand?: CompetencyBand | null;
 }
 
-export default function PlayerCard({ player, squadNumber, isCaptain = false, onClick, isSelected = false, badges, actions }: PlayerCardProps) {
+export default function PlayerCard({
+  player,
+  squadNumber,
+  isCaptain = false,
+  onClick,
+  isSelected = false,
+  badges,
+  actions,
+  detailDisplay = 'attributes',
+  competencyBand = null
+}: PlayerCardProps) {
   const age = calculateAge(player.dateOfBirth);
   const indicatorClass = player.isArchived ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary-500 dark:bg-primary-400';
   
   // Convert player attributes to grouped format and get top 4 attributes
-  const groupedAttributes = groupAttributes(player.attributes);
-  const allAttributes = [
-    ...groupedAttributes.skills,
-    ...groupedAttributes.physical,
-    ...groupedAttributes.mental
-  ];
-  
-  // Sort by rating and take top 4
-  const topAttributes = allAttributes
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 4);
+  const topAttributes = detailDisplay === 'attributes'
+    ? [
+      ...groupAttributes(player.attributes).skills,
+      ...groupAttributes(player.attributes).physical,
+      ...groupAttributes(player.attributes).mental,
+    ]
+      .sort((a, b) => b.rating - a.rating)
+      .slice(0, 4)
+    : [];
 
   return (
     <div 
@@ -56,7 +74,7 @@ export default function PlayerCard({ player, squadNumber, isCaptain = false, onC
                 className="w-12 h-12 md:w-10 md:h-10 rounded-full object-cover shrink-0"
               />
             ) : (
-              <div className="w-12 h-12 md:w-10 md:h-10 bg-gradient-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white text-lg md:text-base font-bold shrink-0">
+              <div className="w-12 h-12 md:w-10 md:h-10 bg-linear-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white text-lg md:text-base font-bold shrink-0">
                 {player.firstName[0]}{player.lastName[0]}
               </div>
             )}
@@ -113,7 +131,7 @@ export default function PlayerCard({ player, squadNumber, isCaptain = false, onC
           </div>
 
           {/* Top Attributes - shown differently on mobile vs desktop */}
-          {topAttributes.length > 0 && (
+          {detailDisplay === 'attributes' && topAttributes.length > 0 && (
             <div className="mt-auto pt-4 md:pt-0 md:mt-0 border-t md:border-t-0 border-gray-100 dark:border-gray-700 md:order-5 md:flex-1">
               <div className="grid grid-cols-2 md:flex md:gap-4 gap-2 md:justify-end">
                 {topAttributes.map(attribute => (
@@ -125,9 +143,24 @@ export default function PlayerCard({ player, squadNumber, isCaptain = false, onC
               </div>
             </div>
           )}
+
+          {/* Banding display for list pages that do not show attributes */}
+          {detailDisplay === 'banding' && (
+            <div className="mt-auto pt-4 md:pt-0 md:mt-0 border-t md:border-t-0 border-gray-100 dark:border-gray-700 md:order-5 md:flex-1 md:flex md:justify-end md:items-center">
+              <div className="flex items-center justify-between md:justify-end gap-2 text-sm">
+                {competencyBand ? (
+                  <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${BAND_COLOURS[competencyBand]}`}>
+                    {competencyBand}
+                  </span>
+                ) : (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">Not Assessed</span>
+                )}
+              </div>
+            </div>
+          )}
           
           {/* Empty spacer when no attributes on desktop */}
-          {topAttributes.length === 0 && (
+          {detailDisplay === 'attributes' && topAttributes.length === 0 && (
             <div className="hidden md:block md:flex-1 md:order-5" />
           )}
 

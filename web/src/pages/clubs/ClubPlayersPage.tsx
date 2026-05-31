@@ -4,6 +4,7 @@ import { Plus, ChevronDown, ChevronUp, Filter, Users, Search } from 'lucide-reac
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
 import type { ClubPlayerDto, ClubTeamDto, ClubDetailDto } from '@/api';
+import type { CompetencyBand } from '@/api/competencies';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
@@ -103,6 +104,7 @@ export default function ClubPlayersPage() {
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
   const [filterPosition, setFilterPosition] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
+  const [filterBanding, setFilterBanding] = useState<CompetencyBand | ''>('');
   const [showArchived, setShowArchived] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -157,6 +159,13 @@ export default function ClubPlayersPage() {
       })
       .finally(() => setClubLoading(false));
   }, [clubId]);
+
+  // Build a quick lookup of playerId -> competency band from the main API payload.
+  const playerBands = useMemo<Record<string, CompetencyBand | null>>(() => {
+    return Object.fromEntries(
+      apiPlayers.map((player) => [player.id, player.overallBand ?? null])
+    );
+  }, [apiPlayers]);
 
   // Map API players to Player type for compatibility with existing components
   const allPlayers = useMemo(() => {
@@ -219,6 +228,14 @@ export default function ClubPlayersPage() {
         }
       }
 
+      // Banding filter
+      if (filterBanding) {
+        const playerBand = playerBands[player.id];
+        if (playerBand !== filterBanding) {
+          return false;
+        }
+      }
+
       // Archived filter
       if (!showArchived && player.isArchived) {
         return false;
@@ -226,7 +243,7 @@ export default function ClubPlayersPage() {
 
       return true;
     });
-  }, [allPlayers, searchName, filterAgeGroup, filterPosition, filterTeam, showArchived]);
+  }, [allPlayers, searchName, filterAgeGroup, filterPosition, filterTeam, filterBanding, showArchived, playerBands]);
 
   // Invalid parameters state
   if (!clubId) {
@@ -301,9 +318,9 @@ export default function ClubPlayersPage() {
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {(searchName || filterAgeGroup || filterPosition || filterTeam || showArchived) && (
+              {(searchName || filterAgeGroup || filterPosition || filterTeam || filterBanding || showArchived) && (
                 <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {[searchName ? 1 : 0, filterAgeGroup ? 1 : 0, filterPosition ? 1 : 0, filterTeam ? 1 : 0, showArchived ? 1 : 0].reduce((a, b) => a + b, 0)} active
+                  {[searchName ? 1 : 0, filterAgeGroup ? 1 : 0, filterPosition ? 1 : 0, filterTeam ? 1 : 0, filterBanding ? 1 : 0, showArchived ? 1 : 0].reduce((a, b) => a + b, 0)} active
                 </span>
               )}
             </div>
@@ -317,7 +334,7 @@ export default function ClubPlayersPage() {
           {showFilters && !playersLoading && (
             <>
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="grid md:grid-cols-4 gap-4">
+                <div className="grid md:grid-cols-5 gap-4">
                   <div>
                     <label className="label">Search Name</label>
                     <input
@@ -370,6 +387,20 @@ export default function ClubPlayersPage() {
                       ))}
                     </select>
                   </div>
+                  <div>
+                    <label className="label">Banding</label>
+                    <select
+                      value={filterBanding}
+                      onChange={(e) => setFilterBanding(e.target.value as CompetencyBand | '')}
+                      className="input"
+                    >
+                      <option value="">All Bands</option>
+                      <option value="Development">Development</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                      <option value="Elite">Elite</option>
+                    </select>
+                  </div>
                 </div>
 
                 <div className="mt-4">
@@ -388,7 +419,7 @@ export default function ClubPlayersPage() {
               </div>
           
               {/* Active filters display and clear */}
-              {(searchName || filterAgeGroup || filterPosition || filterTeam) && (
+              {(searchName || filterAgeGroup || filterPosition || filterTeam || filterBanding) && (
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
                   {searchName && (
@@ -415,12 +446,19 @@ export default function ClubPlayersPage() {
                       <button onClick={() => setFilterTeam('')} className="hover:text-primary-900 dark:hover:text-primary-100">×</button>
                     </span>
                   )}
+                  {filterBanding && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm">
+                      Band: {filterBanding}
+                      <button onClick={() => setFilterBanding('')} className="hover:text-primary-900 dark:hover:text-primary-100">×</button>
+                    </span>
+                  )}
                   <button 
                     onClick={() => {
                       setSearchName('');
                       setFilterAgeGroup('');
                       setFilterPosition('');
                       setFilterTeam('');
+                      setFilterBanding('');
                     }}
                     className="ml-auto text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
                   >
@@ -448,6 +486,8 @@ export default function ClubPlayersPage() {
               <Link key={player.id} to={player.ageGroupIds[0] ? Routes.player(clubId, player.ageGroupIds[0], player.id) : '#'}>
                 <PlayerCard 
                   player={player}
+                  detailDisplay="banding"
+                  competencyBand={playerBands[player.id] ?? null}
                   badges={
                     player.isArchived ? (
                       <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
@@ -487,6 +527,7 @@ export default function ClubPlayersPage() {
                   setFilterAgeGroup('');
                   setFilterPosition('');
                   setFilterTeam('');
+                  setFilterBanding('');
                 }}
                 className="btn-secondary btn-md"
               >

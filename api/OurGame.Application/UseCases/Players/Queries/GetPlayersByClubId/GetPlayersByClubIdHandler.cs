@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
 using OurGame.Application.UseCases.Players.Queries.GetPlayersByClubId.DTOs;
+using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.Players.Queries.GetPlayersByClubId;
@@ -39,6 +40,7 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
                     p.AssociationId,
                     p.PreferredPositions,
                     p.OverallRating,
+                    p.OverallBand,
                     p.IsArchived
                 FROM Players p
                 WHERE p.ClubId = {0}
@@ -55,6 +57,7 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
                     p.AssociationId,
                     p.PreferredPositions,
                     p.OverallRating,
+                    p.OverallBand,
                     p.IsArchived
                 FROM Players p
                 WHERE p.ClubId = {0} AND p.IsArchived = 0
@@ -149,6 +152,7 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
                 AssociationId = p.AssociationId,
                 PreferredPositions = ParsePositions(p.PreferredPositions),
                 OverallRating = p.OverallRating,
+                OverallBand = p.OverallBand,
                 IsArchived = p.IsArchived,
                 AgeGroups = ageGroupsByPlayer.TryGetValue(p.Id, out var ageGroups)
                     ? ageGroups
@@ -198,6 +202,7 @@ class PlayerRawDto
     public string? AssociationId { get; set; }
     public string? PreferredPositions { get; set; }
     public int? OverallRating { get; set; }
+    public CompetencyBand? OverallBand { get; set; }
     public bool IsArchived { get; set; }
 }
 

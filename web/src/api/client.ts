@@ -759,6 +759,7 @@ export interface ClubPlayerDto {
   associationId?: string;
   preferredPositions: string[];
   overallRating?: number;
+  overallBand?: 'Development' | 'Intermediate' | 'Advanced' | 'Elite';
   isArchived: boolean;
   ageGroups: ClubPlayerAgeGroupDto[];
   teams: ClubPlayerTeamDto[];

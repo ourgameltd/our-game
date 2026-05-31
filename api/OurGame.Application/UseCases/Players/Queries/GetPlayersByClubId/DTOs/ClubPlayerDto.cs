@@ -1,3 +1,5 @@
+using OurGame.Persistence.Enums;
+
 namespace OurGame.Application.UseCases.Players.Queries.GetPlayersByClubId.DTOs;
 
 /// <summary>
@@ -15,6 +17,7 @@ public class ClubPlayerDto
     public string? AssociationId { get; set; }
     public List<string> PreferredPositions { get; set; } = new();
     public int? OverallRating { get; set; }
+    public CompetencyBand? OverallBand { get; set; }
     public bool IsArchived { get; set; }
     public List<ClubPlayerAgeGroupDto> AgeGroups { get; set; } = new();
     public List<ClubPlayerTeamDto> Teams { get; set; } = new();
