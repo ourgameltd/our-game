@@ -319,7 +319,10 @@ export default function DrillTemplatesListPage() {
                       to={getTemplateRoute(template.id)}
                       className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
                     >
-                      <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                      <div className="flex items-stretch gap-3">
+                        <div className="w-1 self-stretch rounded-full shrink-0 bg-primary-500 dark:bg-primary-400" />
+
+                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 flex-1 min-w-0">
                         {/* Name, Category, Description */}
                         <div className="md:flex-1 md:min-w-0">
                           <div className="flex flex-wrap items-start gap-2">
@@ -390,6 +393,7 @@ export default function DrillTemplatesListPage() {
                           )}
                         </div>
                       </div>
+                      </div>
                     </Link>
                   ))}
                 </div>
@@ -422,7 +426,10 @@ export default function DrillTemplatesListPage() {
                         key={template.id}
                         className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0 opacity-75"
                       >
-                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+                        <div className="flex items-stretch gap-3">
+                          <div className="w-1 self-stretch rounded-full shrink-0 bg-gray-300 dark:bg-gray-600" />
+
+                          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 flex-1 min-w-0">
                           {/* Name and Category with scope badge */}
                           <div className="md:flex-1 md:min-w-0">
                             <div className="flex flex-wrap items-start gap-2">
@@ -494,6 +501,7 @@ export default function DrillTemplatesListPage() {
                                 +{template.attributes.length - 3}
                               </span>
                             )}
+                          </div>
                           </div>
                         </div>
                       </div>

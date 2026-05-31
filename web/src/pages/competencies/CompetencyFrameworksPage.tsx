@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Copy, Edit3, Trash2, Award, ChevronRight } from 'lucide-react';
+import { Copy, Pencil, Trash2, Award, ChevronRight } from 'lucide-react';
 import PageTitle from '@/components/common/PageTitle';
 import EmptyState from '@/components/common/EmptyState';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -46,38 +46,45 @@ interface FrameworkRowProps {
 }
 
 function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: FrameworkRowProps) {
+  const indicatorClass = framework.isSystemDefault ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary-500 dark:bg-primary-400';
+
   return (
     <div
       className="bg-white dark:bg-gray-800 rounded-lg md:rounded-none border border-gray-200 dark:border-gray-700 md:border-0 md:border-b hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors overflow-hidden"
     >
       {/* Mobile layout */}
       <div className="md:hidden p-4">
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <button onClick={onView} className="text-left font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
-            {framework.name}
-          </button>
-        </div>
-        {framework.description && (
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{framework.description}</p>
-        )}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
-          <span className="text-xs text-gray-500 dark:text-gray-400">{framework.assignmentCount} assignment{framework.assignmentCount !== 1 ? 's' : ''}</span>
-          <div className="flex items-center gap-2">
-            {onEdit && (
-              <button onClick={onEdit} className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
-                <Edit3 size={12} /> Edit
+        <div className="flex items-stretch gap-3">
+          <div className={`w-1 self-stretch rounded-full shrink-0 ${indicatorClass}`} />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2 mb-1">
+              <button onClick={onView} className="text-left font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                {framework.name}
               </button>
+            </div>
+            {framework.description && (
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">{framework.description}</p>
             )}
-            {onClone && (
-              <button onClick={onClone} disabled={busy} className="flex items-center gap-1 text-xs text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 disabled:opacity-50">
-                <Copy size={12} /> {busy ? 'Cloning…' : 'Clone'}
-              </button>
-            )}
-            {onArchive && (
-              <button onClick={onArchive} className="flex items-center gap-1 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">
-                <Trash2 size={12} /> Archive
-              </button>
-            )}
+            <div className="flex items-center justify-between pt-2 border-t border-gray-100 dark:border-gray-700">
+              <span className="text-xs text-gray-500 dark:text-gray-400">{framework.assignmentCount} assignment{framework.assignmentCount !== 1 ? 's' : ''}</span>
+              <div className="flex items-center gap-2">
+                {onEdit && (
+                  <button onClick={onEdit} className="btn-sm btn-secondary gap-1.5">
+                    <Pencil className="w-4 h-4" /> Edit
+                  </button>
+                )}
+                {onClone && (
+                  <button onClick={onClone} disabled={busy} className="btn-sm btn-secondary gap-1.5">
+                    <Copy className="w-4 h-4" /> {busy ? 'Cloning…' : 'Clone'}
+                  </button>
+                )}
+                {onArchive && (
+                  <button onClick={onArchive} className="btn-sm btn-danger gap-1.5">
+                    <Trash2 className="w-4 h-4" /> Archive
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -85,7 +92,7 @@ function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: F
       {/* Desktop row layout */}
       <div className="hidden md:flex md:items-center md:gap-4 px-4 py-3">
         {/* Accent bar */}
-        <div className={`w-1 h-10 rounded-full flex-shrink-0 ${framework.isSystemDefault ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary-500 dark:bg-primary-400'}`} />
+        <div className={`w-1 self-stretch rounded-full shrink-0 ${indicatorClass}`} />
 
         {/* Name & description */}
         <div className="flex-1 min-w-0">
@@ -94,7 +101,7 @@ function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: F
               {framework.name}
             </button>
             {framework.isSystemDefault && (
-              <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">
+              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">
                 System
               </span>
             )}
@@ -105,41 +112,41 @@ function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: F
         </div>
 
         {/* Assignments */}
-        <div className="flex-shrink-0 w-[80px] text-center">
+        <div className="shrink-0 w-[80px] text-center">
           <div className="text-base font-bold text-gray-900 dark:text-white">{framework.assignmentCount}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400">Assignments</div>
         </div>
 
         {/* Actions */}
-        <div className="flex-shrink-0 flex items-center gap-1">
+        <div className="shrink-0 flex items-center gap-1">
           {onEdit && (
             <button
               onClick={onEdit}
-              className="flex items-center gap-1 text-xs px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 transition-colors"
+              className="btn-sm btn-secondary gap-1.5"
             >
-              <Edit3 size={12} /> Edit
+              <Pencil className="w-4 h-4" /> Edit
             </button>
           )}
           {onClone && (
             <button
               onClick={onClone}
               disabled={busy}
-              className="flex items-center gap-1 text-xs px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 disabled:opacity-50 transition-colors"
+              className="btn-sm btn-secondary gap-1.5"
             >
-              <Copy size={12} /> {busy ? 'Cloning…' : 'Clone'}
+              <Copy className="w-4 h-4" /> {busy ? 'Cloning…' : 'Clone'}
             </button>
           )}
           {onArchive && (
             <button
               onClick={onArchive}
-              className="flex items-center gap-1 text-xs px-2.5 py-1.5 border border-red-200 dark:border-red-800 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 dark:text-red-400 transition-colors"
+              className="btn-sm btn-danger gap-1.5"
             >
-              <Trash2 size={12} /> Archive
+              <Trash2 className="w-4 h-4" /> Archive
             </button>
           )}
         </div>
 
-        <ChevronRight className="flex-shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500" />
+        <ChevronRight className="shrink-0 w-4 h-4 text-gray-400 dark:text-gray-500" />
       </div>
     </div>
   );

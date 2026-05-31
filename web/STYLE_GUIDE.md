@@ -165,6 +165,8 @@ All small action buttons use `.btn-sm` paired with a semantic colour variant. Ic
 |--------|---------------|---------------------|
 | Edit | `btn-sm btn-secondary` | `Pencil` |
 | View / Open | `btn-sm btn-secondary` | `Eye` or `ArrowRight` |
+| Copy / Clone | `btn-sm btn-secondary` | `Copy` |
+| Copy success (short-lived feedback) | `btn-sm btn-success` | `Check` |
 | Add / Create | `btn-sm btn-primary` | `Plus` |
 | Save / Confirm | `btn-sm btn-primary` | `Check` |
 | Remove (soft / reversible) | `btn-sm btn-outline-danger` | `X` or `Minus` |
@@ -195,6 +197,15 @@ All small action buttons use `.btn-sm` paired with a semantic colour variant. Ic
 >
   <Pencil className="w-4 h-4" />
 </button>
+
+<button
+  type="button"
+  className="btn-sm btn-secondary p-1.5"
+  aria-label="Copy link"
+  title="Copy link"
+>
+  <Copy className="w-4 h-4" />
+</button>
 ```
 
 ### Button Size Reference
@@ -209,7 +220,9 @@ All small action buttons use `.btn-sm` paired with a semantic colour variant. Ic
 
 ## Listing Pipe Indicator
 
-List rows and resource cards should include a left-side narrow rounded pill to communicate status or ownership at a glance.
+List rows and resource cards must include a left-side narrow rounded pill to communicate status or ownership at a glance.
+
+**This is required on all listing pages**: place the pill as the first child inside each list row/panel container (desktop and mobile).
 
 **Use the pill approach (`w-1 rounded-full`) — not `border-l-4`, which is reserved for informational callout blocks (coach comments, blockquotes, alerts).**
 
@@ -228,7 +241,7 @@ List rows and resource cards should include a left-side narrow rounded pill to c
 <div className="flex items-center gap-3 bg-white dark:bg-gray-800 rounded-lg p-3">
   {/* Pipe indicator */}
   <div
-    className={`w-1 self-stretch rounded-full flex-shrink-0 ${
+    className={`w-1 self-stretch rounded-full shrink-0 ${
       item.isActive
         ? 'bg-primary-500 dark:bg-primary-400'
         : 'bg-gray-300 dark:bg-gray-600'
@@ -246,14 +259,14 @@ Use `self-stretch` so the pill fills the full row height. For fixed-height rows 
 **Custom gradient (e.g. age group colours):**
 ```tsx
 <div
-  className="w-1 self-stretch rounded-full flex-shrink-0"
+  className="w-1 self-stretch rounded-full shrink-0"
   style={{ backgroundImage: `linear-gradient(180deg, ${primaryColor}, ${secondaryColor})` }}
 />
 ```
 
 **Loading skeleton:**
 ```tsx
-<div className="w-1 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse flex-shrink-0" />
+<div className="w-1 h-10 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse shrink-0" />
 ```
 
 ---

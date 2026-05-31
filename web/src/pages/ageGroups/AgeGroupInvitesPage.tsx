@@ -150,70 +150,81 @@ export default function AgeGroupInvitesPage() {
           <div className="space-y-3">
             {inviteRoles.map(role => (
               <div key={role.type} className="card">
-                <div className="flex items-center justify-between gap-3 mb-3">
-                  <div className="min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{role.label}</h3>
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      {role.type === 2
-                        ? 'Parents can link multiple players.'
-                        : 'Users can link one account and switch if needed.'}
-                    </p>
-                  </div>
-                  {!invites[role.type] && (
-                    <button
-                      type="button"
-                      onClick={() => createInvite(role.type)}
-                      disabled={creating[role.type]}
-                      title="Create invite link"
-                      aria-label="Create invite link"
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 shrink-0"
-                    >
-                      {creating[role.type] ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <Plus className="w-5 h-5" />
+                <div className="flex items-stretch gap-3">
+                  <div
+                    className={`w-1 self-stretch rounded-full shrink-0 ${
+                      invites[role.type]
+                        ? 'bg-primary-500 dark:bg-primary-400'
+                        : 'bg-gray-300 dark:bg-gray-600'
+                    }`}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-3 mb-3">
+                      <div className="min-w-0">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{role.label}</h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          {role.type === 2
+                            ? 'Parents can link multiple players.'
+                            : 'Users can link one account and switch if needed.'}
+                        </p>
+                      </div>
+                      {!invites[role.type] && (
+                        <button
+                          type="button"
+                          onClick={() => createInvite(role.type)}
+                          disabled={creating[role.type]}
+                          title="Create invite link"
+                          aria-label="Create invite link"
+                          className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 shrink-0"
+                        >
+                          {creating[role.type] ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <Plus className="w-5 h-5" />
+                          )}
+                        </button>
                       )}
-                    </button>
-                  )}
-                </div>
+                    </div>
 
-                {invites[role.type] && (
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      readOnly
-                      value={inviteLinks[role.type]}
-                      onFocus={(e) => e.currentTarget.select()}
-                      className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-mono truncate"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => copyLink(role.type)}
-                      title={copied[role.type] ? 'Copied' : 'Copy link'}
-                      aria-label="Copy invite link"
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-green-600 text-white hover:bg-green-700 shrink-0"
-                    >
-                      {copied[role.type] ? <Check className="w-5 h-5" /> : <Copy className="w-5 h-5" />}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => regenerateInvite(role.type)}
-                      disabled={regenerating[role.type]}
-                      title="Regenerate link (invalidates the current one)"
-                      aria-label="Regenerate invite link"
-                      className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 shrink-0"
-                    >
-                      {regenerating[role.type] ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <RefreshCw className="w-5 h-5" />
-                      )}
-                    </button>
+                    {invites[role.type] && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          readOnly
+                          value={inviteLinks[role.type]}
+                          onFocus={(e) => e.currentTarget.select()}
+                          className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-mono truncate"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => copyLink(role.type)}
+                          title={copied[role.type] ? 'Copied' : 'Copy link'}
+                          aria-label="Copy invite link"
+                          className={`btn-sm gap-1.5 p-1.5 shrink-0 ${copied[role.type] ? 'btn-success' : 'btn-secondary'}`}
+                        >
+                          {copied[role.type] ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => regenerateInvite(role.type)}
+                          disabled={regenerating[role.type]}
+                          title="Regenerate link (invalidates the current one)"
+                          aria-label="Regenerate invite link"
+                          className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 shrink-0"
+                        >
+                          {regenerating[role.type] ? (
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-5 h-5" />
+                          )}
+                        </button>
+                      </div>
+                    )}
+                    {errors[role.type] && (
+                      <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors[role.type]}</p>
+                    )}
                   </div>
-                )}
-                {errors[role.type] && (
-                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{errors[role.type]}</p>
-                )}
+                </div>
               </div>
             ))}
           </div>

@@ -350,7 +350,14 @@ export default function DrillsListPage() {
                 key={drill.id}
                 className="bg-white dark:bg-gray-800 rounded-lg md:rounded-none px-3 py-2 md:px-3 md:py-2 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-stretch gap-3">
+                  <div
+                    className={`w-1 self-stretch rounded-full shrink-0 ${
+                      isInheritedDrill
+                        ? 'bg-gray-300 dark:bg-gray-600'
+                        : 'bg-primary-500 dark:bg-primary-400'
+                    }`}
+                  />
                   <div className="w-12 h-12 md:w-14 md:h-14 border border-gray-200 dark:border-gray-700 rounded-md overflow-hidden bg-gray-50 dark:bg-gray-900 shrink-0">
                     {drill.drillDiagramConfig ? (
                       <DrillDiagramRenderer drillDiagramConfig={drill.drillDiagramConfig} forceSquare />
