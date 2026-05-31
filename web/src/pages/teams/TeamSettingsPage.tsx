@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { teamLevels } from '@/constants/referenceData';
 import PageTitle from '@/components/common/PageTitle';
@@ -71,6 +71,7 @@ export default function TeamSettingsPage() {
 
   // Initialize squad numbers from team data
   const [squadNumbers, setSquadNumbers] = useState<SquadNumberAssignment[]>([]);
+  const competencySaveRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     if (teamPlayers.length > 0) {
@@ -165,6 +166,10 @@ export default function TeamSettingsPage() {
       await updateSquadNumbers({
         assignments: squadNumbers
       });
+
+      if (competencySaveRef.current) {
+        await competencySaveRef.current();
+      }
 
       await refetchPlayers();
       addToast('success', 'Team settings saved successfully');
@@ -487,6 +492,8 @@ export default function TeamSettingsPage() {
               clubId={clubId}
               scope="team"
               scopeId={teamId}
+              hideSaveControls
+              saveRef={competencySaveRef}
             />
           )}
 

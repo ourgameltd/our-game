@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useClubById, useUpdateClub, UpdateClubRequest } from '@/api';
 import PageTitle from '@/components/common/PageTitle';
@@ -104,6 +104,7 @@ export default function ClubSettingsPage() {
 
   const [logoPreview, setLogoPreview] = useState<string>('');
   const [logoDataUri, setLogoDataUri] = useState<string>('');
+  const competencySaveRef = useRef<(() => Promise<void>) | null>(null);
 
   // Initialize form state from API data (only once)
   useEffect(() => {
@@ -215,6 +216,10 @@ export default function ClubSettingsPage() {
     };
 
     await updateClub(request);
+
+    if (competencySaveRef.current) {
+      await competencySaveRef.current();
+    }
 
     if (!submitError) {
       addToast('success', 'Club settings saved successfully');
@@ -643,6 +648,8 @@ export default function ClubSettingsPage() {
                 currentFrameworkId={club?.competencyFrameworkId}
                 allowChildrenOverride={club?.allowAgeGroupOverride}
                 showOverrideToggle
+                hideSaveControls
+                saveRef={competencySaveRef}
               />
             )}
 

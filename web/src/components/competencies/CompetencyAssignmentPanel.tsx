@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   useClubCompetencyFrameworks,
@@ -38,6 +38,8 @@ export default function CompetencyAssignmentPanel({
   disabled,
   teamFormat,
   onTeamFormatChange,
+  hideSaveControls = false,
+  saveRef,
 }: CompetencyAssignmentPanelProps) {
   const navigate = useNavigate();
   const { addToast } = useToast();
@@ -50,7 +52,7 @@ export default function CompetencyAssignmentPanel({
   useEffect(() => { if (currentFrameworkId) setSelectedFrameworkId(currentFrameworkId); }, [currentFrameworkId]);
   useEffect(() => { setAllowChildren(!!allowChildrenOverride); }, [allowChildrenOverride]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!selectedFrameworkId) return;
     const { ok } = await assign({
       scope,
@@ -64,7 +66,15 @@ export default function CompetencyAssignmentPanel({
     if (ok) {
       addToast('success', 'Competency framework assignment saved');
     }
-  };
+  }, [addToast, allowChildren, assign, scope, scopeId, selectedFrameworkId, showOverrideToggle]);
+
+  useEffect(() => {
+    if (!saveRef) return;
+    saveRef.current = handleSave;
+    return () => {
+      saveRef.current = null;
+    };
+  }, [handleSave, saveRef]);
 
   return (
     <div className="card">
@@ -138,22 +148,24 @@ export default function CompetencyAssignmentPanel({
         </label>
       )}
 
-      <div className="mt-4 flex items-center gap-3">
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!selectedFrameworkId || disabled || isSubmitting}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-        >
-          {isSubmitting ? 'Saving…' : 'Save assignment'}
-        </button>
-        <button
-          onClick={() => navigate(`/dashboard/${clubId}/competency-frameworks`)}
-          className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 underline transition-colors"
-        >
-          Manage frameworks
-        </button>
-      </div>
+      {!hideSaveControls && (
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!selectedFrameworkId || disabled || isSubmitting}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSubmitting ? 'Saving…' : 'Save assignment'}
+          </button>
+          <button
+            onClick={() => navigate(`/dashboard/${clubId}/competency-frameworks`)}
+            className="text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 underline transition-colors"
+          >
+            Manage frameworks
+          </button>
+        </div>
+      )}
     </div>
   );
 }

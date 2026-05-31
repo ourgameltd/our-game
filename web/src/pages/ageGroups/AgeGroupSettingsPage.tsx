@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAgeGroupById, useUpdateAgeGroup } from '@/api';
@@ -44,6 +44,7 @@ export default function AgeGroupSettingsPage() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const competencySaveRef = useRef<(() => Promise<void>) | null>(null);
 
   // Hydrate form once when age group data loads
   useEffect(() => {
@@ -256,6 +257,10 @@ export default function AgeGroupSettingsPage() {
     };
 
     await updateAgeGroup(payload);
+
+    if (competencySaveRef.current) {
+      await competencySaveRef.current();
+    }
   };
 
   const handleCancel = () => {
@@ -539,6 +544,8 @@ export default function AgeGroupSettingsPage() {
               scope="ageGroup"
               scopeId={ageGroupId}
               showOverrideToggle
+              hideSaveControls
+              saveRef={competencySaveRef}
             />
           )}
 
