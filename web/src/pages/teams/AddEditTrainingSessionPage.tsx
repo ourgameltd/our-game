@@ -212,7 +212,7 @@ export default function AddEditTrainingSessionPage() {
             </p>
             <button
               onClick={() => navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!))}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="btn btn-md btn-primary"
             >
               Back to Training Sessions
             </button>
@@ -250,7 +250,7 @@ export default function AddEditTrainingSessionPage() {
             </p>
             <button
               onClick={() => navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!))}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="btn btn-md btn-primary"
             >
               Back to Training Sessions
             </button>
@@ -606,7 +606,7 @@ export default function AddEditTrainingSessionPage() {
             <div className="mt-4 space-y-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     <Calendar className="w-4 h-4 inline mr-1" />
                     Session Date & Time *
                   </label>
@@ -614,13 +614,13 @@ export default function AddEditTrainingSessionPage() {
                     type="datetime-local"
                     value={sessionDate}
                     onChange={(e) => setSessionDate(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label className="label">
                       <Clock className="w-4 h-4 inline mr-1" />
                       Meet Time
                     </label>
@@ -667,7 +667,7 @@ export default function AddEditTrainingSessionPage() {
                     type="datetime-local"
                     value={meetTime}
                     onChange={(e) => setMeetTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="input"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Optional: When players should arrive before the session
@@ -675,13 +675,13 @@ export default function AddEditTrainingSessionPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Duration (minutes)
                   </label>
                   <select
                     value={duration}
                     onChange={(e) => setDuration(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="input"
                   >
                     {sessionDurations.map(d => (
                       <option key={d.value} value={d.value.toString()}>{d.label}</option>
@@ -690,7 +690,7 @@ export default function AddEditTrainingSessionPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     <MapPin className="w-4 h-4 inline mr-1" />
                     Location *
                   </label>
@@ -782,7 +782,7 @@ export default function AddEditTrainingSessionPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={6}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y"
+                  className="input resize-y"
                   placeholder={`Session Plan:
 - Warm up (10 mins): Light jog, dynamic stretches
 - Main session (40 mins): Passing drills, small-sided games
@@ -818,7 +818,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                   <button
                     type="button"
                     onClick={() => setShowDrillModal(true)}
-                    className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                    className="btn btn-md btn-success gap-2"
                   >
                     <Plus className="w-5 h-5" />
                   </button>
@@ -1077,7 +1077,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     <button
                       type="button"
                       onClick={() => setShowCoachModal(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                      className="btn btn-md btn-success gap-2"
                       title="Add Coach"
                     >
                       <Plus className="w-5 h-5" />
@@ -1473,7 +1473,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="label">
                     Search
                   </label>
                   <input
@@ -1481,17 +1481,17 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     value={drillSearchTerm}
                     onChange={(e) => setDrillSearchTerm(e.target.value)}
                     placeholder="Search drills..."
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    className="input text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="label">
                     Category
                   </label>
                   <select
                     value={drillCategoryFilter}
                     onChange={(e) => setDrillCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    className="input text-sm"
                   >
                     <option value="all">All Categories</option>
                     {drillCategories.filter(c => c.value !== 'Mixed').map(cat => (
@@ -1723,7 +1723,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     setShowDrillModal(false);
                     setPreviewDrill(null);
                   }}
-                  className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+                  className="btn btn-md btn-primary"
                 >
                   Done
                 </button>
@@ -1758,7 +1758,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                 value={templateSearchTerm}
                 onChange={(e) => setTemplateSearchTerm(e.target.value)}
                 placeholder="Search templates..."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                className="input text-sm"
               />
             </div>
             

@@ -291,7 +291,7 @@ export default function ClubSettingsPage() {
               
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Club Name *
                   </label>
                   <input
@@ -300,12 +300,12 @@ export default function ClubSettingsPage() {
                     value={formData.name}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Short Name *
                   </label>
                   <input
@@ -314,12 +314,12 @@ export default function ClubSettingsPage() {
                     value={formData.shortName}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Founded Year *
                   </label>
                   <input
@@ -330,19 +330,19 @@ export default function ClubSettingsPage() {
                     required
                     min="1800"
                     max={new Date().getFullYear()}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Logo
                   </label>
                   <input
                     type="file"
                     accept="image/*"
                     onChange={handleLogoChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                   {logoPreview && (
                     <img 
@@ -363,7 +363,7 @@ export default function ClubSettingsPage() {
               
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     City *
                   </label>
                   <input
@@ -372,12 +372,12 @@ export default function ClubSettingsPage() {
                     value={formData.city}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Country *
                   </label>
                   <input
@@ -386,12 +386,12 @@ export default function ClubSettingsPage() {
                     value={formData.country}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Home Venue *
                   </label>
                   <input
@@ -400,12 +400,12 @@ export default function ClubSettingsPage() {
                     value={formData.venue}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Address
                   </label>
                   <input
@@ -413,7 +413,7 @@ export default function ClubSettingsPage() {
                     name="address"
                     value={formData.address}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
               </div>
@@ -427,7 +427,7 @@ export default function ClubSettingsPage() {
               
               <div className="grid md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Primary Color *
                   </label>
                   <div className="flex gap-2">
@@ -448,7 +448,7 @@ export default function ClubSettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Secondary Color *
                   </label>
                   <div className="flex gap-2">
@@ -469,7 +469,7 @@ export default function ClubSettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Accent Color
                   </label>
                   <div className="flex gap-2">
@@ -499,7 +499,7 @@ export default function ClubSettingsPage() {
               
               <div className="space-y-2">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Club History
                   </label>
                   <textarea
@@ -507,13 +507,13 @@ export default function ClubSettingsPage() {
                     value={formData.history}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                     placeholder="Tell the story of your club..."
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Club Ethos
                   </label>
                   <textarea
@@ -521,13 +521,13 @@ export default function ClubSettingsPage() {
                     value={formData.ethos}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                     placeholder="What does your club stand for?"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Core Principles
                     <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">(One per line)</span>
                   </label>
@@ -536,7 +536,7 @@ export default function ClubSettingsPage() {
                     value={formData.principles}
                     onChange={handleInputChange}
                     rows={6}
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                     placeholder="Inclusivity - Football for everyone&#10;Community - Building strong connections&#10;Development - Nurturing talent"
                   />
                 </div>
@@ -552,7 +552,7 @@ export default function ClubSettingsPage() {
                 <button
                   type="button"
                   onClick={addMediaLink}
-                  className="rounded bg-blue-600 px-3 py-2 text-sm font-medium text-white hover:bg-blue-700"
+                  className="btn-sm btn-primary"
                 >
                   Add Link
                 </button>
@@ -570,31 +570,31 @@ export default function ClubSettingsPage() {
                     <div key={link.id} className="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
                       <div className="grid gap-3 md:grid-cols-2">
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">URL</label>
+                          <label className="label">URL</label>
                           <input
                             type="url"
                             value={link.url}
                             onChange={(e) => updateMediaLink(index, { url: e.target.value })}
                             placeholder="https://..."
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="input"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Title</label>
+                          <label className="label">Title</label>
                           <input
                             type="text"
                             value={link.title}
                             onChange={(e) => updateMediaLink(index, { title: e.target.value })}
                             placeholder="Match highlights vs Blues"
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="input"
                           />
                         </div>
                         <div>
-                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                          <label className="label">Type</label>
                           <select
                             value={link.type}
                             onChange={(e) => updateMediaLink(index, { type: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                            className="input"
                           >
                             <option value="youtube">YouTube</option>
                             <option value="instagram">Instagram</option>

@@ -125,12 +125,15 @@ export default function ClubPlayerSettingsPage() {
               
               <div className="space-y-6">
                 {[...Array(2)].map((_, i) => (
-                  <div key={i} className="border-l-4 border-gray-200 dark:border-gray-700 pl-4">
-                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-3"></div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                      {[...Array(3)].map((_, j) => (
-                        <div key={j} className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-800"></div>
-                      ))}
+                  <div key={i} className="flex gap-3">
+                    <div className="w-1 self-stretch rounded-full flex-shrink-0 bg-gray-200 dark:bg-gray-700" />
+                    <div className="flex-1">
+                      <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-3"></div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                        {[...Array(3)].map((_, j) => (
+                          <div key={j} className="h-12 bg-gray-200 dark:bg-gray-700 rounded-lg border border-gray-100 dark:border-gray-800"></div>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -303,7 +306,7 @@ export default function ClubPlayerSettingsPage() {
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   First Name *
                 </label>
                 <input
@@ -314,12 +317,12 @@ export default function ClubPlayerSettingsPage() {
                   required
                   disabled={!!isFormDisabled}
                   placeholder="Enter first name"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Last Name *
                 </label>
                 <input
@@ -330,12 +333,12 @@ export default function ClubPlayerSettingsPage() {
                   required
                   disabled={!!isFormDisabled}
                   placeholder="Enter last name"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Nickname
                 </label>
                 <input
@@ -345,12 +348,12 @@ export default function ClubPlayerSettingsPage() {
                   onChange={handleInputChange}
                   disabled={!!isFormDisabled}
                   placeholder="Enter nickname"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Date of Birth *
                 </label>
                 <input
@@ -360,12 +363,12 @@ export default function ClubPlayerSettingsPage() {
                   onChange={handleInputChange}
                   required
                   disabled={!!isFormDisabled}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Association ID
                 </label>
                 <input
@@ -375,7 +378,7 @@ export default function ClubPlayerSettingsPage() {
                   onChange={handleInputChange}
                   disabled={!!isFormDisabled}
                   placeholder="e.g., SFA-Y-40123"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   FA, UEFA, or other football association registration ID
@@ -385,7 +388,7 @@ export default function ClubPlayerSettingsPage() {
 
             {/* Photo Upload */}
             <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="label">
                 Profile Photo
               </label>
               <div className="flex items-center gap-4">
@@ -468,29 +471,32 @@ export default function ClubPlayerSettingsPage() {
                 const ageGroupName = ageGroupTeams[0]?.ageGroupName || 'Unknown Age Group';
                 
                 return (
-                  <div key={ageGroupId} className="border-l-4 border-primary-500 pl-4">
-                    <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                      {ageGroupName}
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                      {ageGroupTeams.map((team) => (
-                        <label
-                          key={team.id}
-                          className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer border border-gray-200 dark:border-gray-700"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={selectedTeams.includes(team.id)}
-                            onChange={() => handleTeamToggle(team.id)}
-                            disabled={!!isFormDisabled}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                          />
-                          <div>
-                            <div className="font-medium text-gray-900 dark:text-white">{team.name}</div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">{team.level}</div>
-                          </div>
-                        </label>
-                      ))}
+                  <div key={ageGroupId} className="flex gap-3">
+                    <div className="w-1 self-stretch rounded-full flex-shrink-0 bg-primary-500 dark:bg-primary-400" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                        {ageGroupName}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                        {ageGroupTeams.map((team) => (
+                          <label
+                            key={team.id}
+                            className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 cursor-pointer border border-gray-200 dark:border-gray-700"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={selectedTeams.includes(team.id)}
+                              onChange={() => handleTeamToggle(team.id)}
+                              disabled={!!isFormDisabled}
+                              className="w-4 h-4 text-blue-600 rounded focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                            />
+                            <div>
+                              <div className="font-medium text-gray-900 dark:text-white">{team.name}</div>
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{team.level}</div>
+                            </div>
+                          </label>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 );

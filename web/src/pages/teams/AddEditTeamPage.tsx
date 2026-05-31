@@ -143,7 +143,7 @@ const AddEditTeamPage: React.FC = () => {
           <p className="text-red-700 dark:text-red-400 mb-4">The requested club could not be found.</p>
           <button
             onClick={() => navigate(Routes.dashboard())}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Return to Dashboard
           </button>
@@ -160,7 +160,7 @@ const AddEditTeamPage: React.FC = () => {
           <p className="text-red-700 dark:text-red-400 mb-4">The requested age group could not be found.</p>
           <button
             onClick={() => navigate(Routes.club(clubId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Return to Club
           </button>
@@ -190,7 +190,7 @@ const AddEditTeamPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate(Routes.ageGroup(clubId!, ageGroupId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Back to Age Group
           </button>
@@ -212,7 +212,7 @@ const AddEditTeamPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate(Routes.team(clubId!, ageGroupId!, teamId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Back to Team
           </button>
@@ -311,7 +311,7 @@ const AddEditTeamPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-2">
             {/* Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="name" className="label">
                 Team Name *
               </label>
               <input
@@ -321,7 +321,7 @@ const AddEditTeamPage: React.FC = () => {
                 value={formData.name}
                 onChange={handleChange}
                 placeholder="e.g., Reds, Blues, Whites, Greens"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                className={`input ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 }`}
               />
@@ -332,7 +332,7 @@ const AddEditTeamPage: React.FC = () => {
             
             {/* Short Name */}
             <div>
-              <label htmlFor="shortName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="shortName" className="label">
                 Short Name
               </label>
               <input
@@ -343,7 +343,7 @@ const AddEditTeamPage: React.FC = () => {
                 onChange={handleChange}
                 placeholder="e.g., RDS, BLS, WTS"
                 maxLength={3}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="input"
               />
               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                 3-letter abbreviation for the team (optional)
@@ -352,7 +352,7 @@ const AddEditTeamPage: React.FC = () => {
             
             {/* Level */}
             <div>
-              <label htmlFor="level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="level" className="label">
                 Level *
               </label>
               <select
@@ -360,7 +360,7 @@ const AddEditTeamPage: React.FC = () => {
                 name="level"
                 value={formData.level}
                 onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                className="input"
               >
                 {teamLevels.map(level => (
                   <option key={level.value} value={level.value}>{level.label}</option>
@@ -373,7 +373,7 @@ const AddEditTeamPage: React.FC = () => {
             
             {/* Season */}
             <div>
-              <label htmlFor="season" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="season" className="label">
                 Season *
               </label>
               <select
@@ -381,7 +381,7 @@ const AddEditTeamPage: React.FC = () => {
                 name="season"
                 value={formData.season}
                 onChange={handleChange}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                className={`input ${
                   errors.season ? 'border-red-500' : 'border-gray-300'
                 }`}
               >
@@ -416,7 +416,7 @@ const AddEditTeamPage: React.FC = () => {
               
               {/* Primary Color */}
               <div>
-                <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="primaryColor" className="label">
                   Primary Color *
                 </label>
                 <div className="flex gap-4 items-center">
@@ -446,7 +446,7 @@ const AddEditTeamPage: React.FC = () => {
               
               {/* Secondary Color */}
               <div>
-                <label htmlFor="secondaryColor" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="secondaryColor" className="label">
                   Secondary Color *
                 </label>
                 <div className="flex gap-4 items-center">

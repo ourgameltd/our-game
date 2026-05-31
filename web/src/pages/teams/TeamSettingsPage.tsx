@@ -228,7 +228,7 @@ export default function TeamSettingsPage() {
             
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Team Name *
                 </label>
                 <input
@@ -239,12 +239,12 @@ export default function TeamSettingsPage() {
                   required
                   disabled={team.isArchived || isUpdatingTeam}
                   placeholder="e.g., Reds, Blues, Whites"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Short Name
                 </label>
                 <input
@@ -255,12 +255,12 @@ export default function TeamSettingsPage() {
                   placeholder="e.g., RDS, BLS, WTS"
                   maxLength={3}
                   disabled={team.isArchived || isUpdatingTeam}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Level *
                 </label>
                 <select
@@ -269,7 +269,7 @@ export default function TeamSettingsPage() {
                   onChange={handleInputChange}
                   required
                   disabled={team.isArchived || isUpdatingTeam}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {teamLevels.map(level => (
                     <option key={level.value} value={level.value}>{level.label}</option>
@@ -278,7 +278,7 @@ export default function TeamSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Season *
                 </label>
                 <select
@@ -287,7 +287,7 @@ export default function TeamSettingsPage() {
                   onChange={handleInputChange}
                   required
                   disabled={team.isArchived || isUpdatingTeam}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {/* Show legacy season if team has one not in age group list */}
                   {team.season && availableSeasons.length > 0 && !availableSeasons.includes(team.season) && (
@@ -324,7 +324,7 @@ export default function TeamSettingsPage() {
             
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Primary Color *
                 </label>
                 <div className="flex gap-2">
@@ -347,7 +347,7 @@ export default function TeamSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Secondary Color *
                 </label>
                 <div className="flex gap-2">

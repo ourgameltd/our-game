@@ -144,7 +144,7 @@ const AddEditAgeGroupPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate(Routes.dashboard())}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Back to Dashboard
           </button>
@@ -166,7 +166,7 @@ const AddEditAgeGroupPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate(Routes.ageGroups(clubId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Back to Age Groups
           </button>
@@ -188,7 +188,7 @@ const AddEditAgeGroupPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate(Routes.ageGroups(clubId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Back to Age Groups
           </button>
@@ -210,7 +210,7 @@ const AddEditAgeGroupPage: React.FC = () => {
           </p>
           <button
             onClick={() => navigate(Routes.ageGroup(clubId!, ageGroupId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Back to Age Group
           </button>
@@ -320,7 +320,7 @@ const AddEditAgeGroupPage: React.FC = () => {
 
             {/* Name */}
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="name" className="label">
                 Age Group Name *
               </label>
               <input
@@ -331,7 +331,7 @@ const AddEditAgeGroupPage: React.FC = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
                 placeholder="e.g., 2014s, 2013s, Amateur, Reserves, Senior"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                className={`input ${
                   errors.name ? 'border-red-500' : 'border-gray-300'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -342,7 +342,7 @@ const AddEditAgeGroupPage: React.FC = () => {
 
             {/* Code */}
             <div>
-              <label htmlFor="code" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="code" className="label">
                 Age Group Code *
               </label>
               <input
@@ -353,7 +353,7 @@ const AddEditAgeGroupPage: React.FC = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
                 placeholder="e.g., 2014, amateur, reserves, senior"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                className={`input ${
                   errors.code ? 'border-red-500' : 'border-gray-300'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -367,7 +367,7 @@ const AddEditAgeGroupPage: React.FC = () => {
 
             {/* Level */}
             <div>
-              <label htmlFor="level" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="level" className="label">
                 Level *
               </label>
               <select
@@ -376,7 +376,7 @@ const AddEditAgeGroupPage: React.FC = () => {
                 value={formData.level}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`input ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {teamLevels.map(level => (
                   <option key={level.value} value={level.value}>{level.label}</option>
@@ -389,7 +389,7 @@ const AddEditAgeGroupPage: React.FC = () => {
 
             {/* Season */}
             <div>
-              <label htmlFor="season" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="season" className="label">
                 Season *
               </label>
               <input
@@ -400,7 +400,7 @@ const AddEditAgeGroupPage: React.FC = () => {
                 onChange={handleChange}
                 disabled={isSubmitting}
                 placeholder="e.g., 2024/25"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${
+                className={`input ${
                   errors.season ? 'border-red-500' : 'border-gray-300'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -411,7 +411,7 @@ const AddEditAgeGroupPage: React.FC = () => {
 
             {/* Default Squad Size */}
             <div>
-              <label htmlFor="defaultSquadSize" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="defaultSquadSize" className="label">
                 Default Squad Size
               </label>
               <select
@@ -420,7 +420,7 @@ const AddEditAgeGroupPage: React.FC = () => {
                 value={formData.defaultSquadSize}
                 onChange={handleChange}
                 disabled={isSubmitting}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`input ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {squadSizes.map(size => (
                   <option key={size.value} value={size.value}>{size.label}</option>
@@ -433,7 +433,7 @@ const AddEditAgeGroupPage: React.FC = () => {
 
             {/* Description */}
             <div>
-              <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="description" className="label">
                 Description
               </label>
               <textarea
@@ -444,7 +444,7 @@ const AddEditAgeGroupPage: React.FC = () => {
                 disabled={isSubmitting}
                 rows={3}
                 placeholder="Brief description of the age group..."
-                className={`w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-gray-700 dark:border-gray-600 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                className={`input ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
             </div>
 

@@ -77,7 +77,7 @@ export default function PositionRolePanel({
         {/* Direction Selector */}
         <div>
           <div className="flex items-center justify-between mb-3">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+            <label className="label">
               Movement Direction
               {isDirectionInherited && (
                 <span className="ml-2 text-xs text-blue-600 dark:text-blue-400">(inherited)</span>

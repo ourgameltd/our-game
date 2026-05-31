@@ -489,7 +489,7 @@ export default function PlayerSettingsPage() {
             
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   First Name *
                 </label>
                 <input
@@ -500,12 +500,12 @@ export default function PlayerSettingsPage() {
                   required
                   disabled={isFormDisabled}
                   placeholder="Enter first name"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Last Name *
                 </label>
                 <input
@@ -516,12 +516,12 @@ export default function PlayerSettingsPage() {
                   required
                   disabled={isFormDisabled}
                   placeholder="Enter last name"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Nickname
                 </label>
                 <input
@@ -531,7 +531,7 @@ export default function PlayerSettingsPage() {
                   onChange={handleInputChange}
                   disabled={isFormDisabled}
                   placeholder="e.g., Speedy, The Wall, Magic"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Optional nickname or moniker for the player
@@ -539,7 +539,7 @@ export default function PlayerSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Date of Birth *
                 </label>
                 <input
@@ -549,7 +549,7 @@ export default function PlayerSettingsPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isFormDisabled}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 {dateOfBirth && (
                   <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -559,7 +559,7 @@ export default function PlayerSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Association ID
                 </label>
                 <input
@@ -569,7 +569,7 @@ export default function PlayerSettingsPage() {
                   onChange={handleInputChange}
                   disabled={protectedFieldsDisabled}
                   placeholder="e.g., SFA-Y-40123"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   FA, UEFA, or other football association registration ID
@@ -582,7 +582,7 @@ export default function PlayerSettingsPage() {
               </div>
 
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Player Photo
                 </label>
                 <div className="flex items-start gap-4">
@@ -762,7 +762,7 @@ export default function PlayerSettingsPage() {
             
             <div className="space-y-2">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Allergies
                 </label>
                 <input
@@ -772,12 +772,12 @@ export default function PlayerSettingsPage() {
                   onChange={handleInputChange}
                   disabled={isFormDisabled}
                   placeholder="e.g., Peanuts, Penicillin (comma-separated)"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Medical Conditions
                 </label>
                 <input
@@ -787,7 +787,7 @@ export default function PlayerSettingsPage() {
                   onChange={handleInputChange}
                   disabled={isFormDisabled}
                   placeholder="e.g., Asthma, Diabetes (comma-separated)"
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 />
               </div>
             </div>

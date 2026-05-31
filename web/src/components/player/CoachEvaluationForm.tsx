@@ -102,7 +102,7 @@ export default function CoachEvaluationForm({
         {/* Evaluation Period */}
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="label">
               Period Start
             </label>
             <input
@@ -115,7 +115,7 @@ export default function CoachEvaluationForm({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="label">
               Period End
             </label>
             <input
@@ -196,7 +196,7 @@ export default function CoachEvaluationForm({
 
         {/* Overall Coach Notes */}
         <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+          <label className="label">
             Overall Coach Comments
           </label>
           <textarea

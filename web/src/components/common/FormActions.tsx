@@ -39,13 +39,13 @@ export default function FormActions({
           <button
             type="button"
             onClick={onArchive}
-            className={`px-4 sm:px-6 py-2 text-sm sm:text-base ${
+            className={`btn btn-md whitespace-nowrap ${
               isArchived
-                ? 'bg-green-600 hover:bg-green-700'
-                : 'bg-orange-600 hover:bg-orange-700'
-            } text-white rounded-lg transition-colors whitespace-nowrap`}
+                ? 'btn-secondary'
+                : 'btn-outline-danger'
+            }`}
           >
-            {isArchived ? '📂 Unarchive' : '🗄️ Archive'}
+            {isArchived ? 'Unarchive' : 'Archive'}
           </button>
         )}
       </div>
@@ -55,7 +55,7 @@ export default function FormActions({
         <button
           type="button"
           onClick={onCancel}
-          className="px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+          className="btn btn-md btn-secondary"
         >
           Cancel
         </button>
@@ -63,7 +63,7 @@ export default function FormActions({
           <button
             type="submit"
             disabled={saveDisabled}
-            className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
+            className="btn btn-md btn-primary"
           >
             {saveLabel}
           </button>

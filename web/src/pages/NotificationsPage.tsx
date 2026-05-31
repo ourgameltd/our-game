@@ -143,41 +143,48 @@ export default function NotificationsPage() {
     <div
       key={notification.id}
       onClick={notification.url ? () => { navigate(notification.url!); } : undefined}
-      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-all hover:shadow-md ${
-        !notification.isRead ? 'border-l-4 border-primary-500' : ''
-      } ${notification.url ? 'cursor-pointer' : ''}`}
+      className={`bg-white dark:bg-gray-800 rounded-lg shadow-sm transition-all hover:shadow-md ${notification.url ? 'cursor-pointer' : ''}`}
     >
       <div className="p-4">
-        <div className="flex items-start gap-4">
-          <div className={`p-3 rounded-lg flex-shrink-0 ${getNotificationColor(notification.type)}`}>
-            {getNotificationIcon(notification.type)}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-3">
-              <div className="flex-1 min-w-0">
-                <h3 className={`text-sm font-semibold mb-1 ${
-                  !notification.isRead
-                    ? 'text-gray-900 dark:text-white'
-                    : 'text-gray-700 dark:text-gray-300'
-                }`}>
-                  {notification.title}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  {notification.message}
-                </p>
-                <span className="text-xs text-gray-500 dark:text-gray-500">
-                  {formatTimestamp(new Date(notification.createdAt))}
-                </span>
+        <div className="flex items-stretch gap-3">
+          <div
+            className={`w-1 self-stretch rounded-full flex-shrink-0 ${
+              !notification.isRead
+                ? 'bg-primary-500 dark:bg-primary-400'
+                : 'bg-gray-300 dark:bg-gray-600'
+            }`}
+          />
+          <div className="flex items-start gap-4 flex-1 min-w-0">
+            <div className={`p-3 rounded-lg flex-shrink-0 ${getNotificationColor(notification.type)}`}>
+              {getNotificationIcon(notification.type)}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className={`text-sm font-semibold mb-1 ${
+                    !notification.isRead
+                      ? 'text-gray-900 dark:text-white'
+                      : 'text-gray-700 dark:text-gray-300'
+                  }`}>
+                    {notification.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    {notification.message}
+                  </p>
+                  <span className="text-xs text-gray-500 dark:text-gray-500">
+                    {formatTimestamp(new Date(notification.createdAt))}
+                  </span>
+                </div>
+                {!notification.isRead && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); void markAsRead(notification.id); }}
+                    className="btn-sm btn-secondary gap-1.5 flex-shrink-0"
+                  >
+                    <Check className="w-4 h-4" />
+                    Mark as read
+                  </button>
+                )}
               </div>
-              {!notification.isRead && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); void markAsRead(notification.id); }}
-                  className="flex-shrink-0 text-xs px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-gray-300 transition-colors flex items-center gap-1"
-                >
-                  <Check className="w-3 h-3" />
-                  Mark as read
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -193,7 +200,7 @@ export default function NotificationsPage() {
           subtitle={`You have ${unreadNotifications.length} unread notification${unreadNotifications.length !== 1 ? 's' : ''}`}
         />
 
-        <div className="max-w-4xl mx-auto">
+        <div>
           {/* Push Notification Opt-in Banner */}
           {push.isSupported && !push.isSubscribed && push.permission !== 'denied' && (
             <div className="bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800 rounded-lg p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
@@ -215,7 +222,7 @@ export default function NotificationsPage() {
               <button
                 onClick={() => void push.subscribe()}
                 disabled={push.isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg transition-colors disabled:opacity-60 flex-shrink-0"
+                className="btn btn-md btn-primary gap-2 disabled:opacity-60 flex-shrink-0"
               >
                 {push.isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -255,7 +262,7 @@ export default function NotificationsPage() {
               <button
                 onClick={push.unsubscribe}
                 disabled={push.isLoading}
-                className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-lg transition-colors disabled:opacity-60 flex-shrink-0"
+                className="btn btn-md btn-secondary gap-2 disabled:opacity-60 flex-shrink-0"
               >
                 {push.isLoading ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
@@ -279,7 +286,7 @@ export default function NotificationsPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4 flex justify-end">
               <button
                 onClick={() => void markAllAsRead()}
-                className="px-4 py-2 rounded-lg text-sm font-medium bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-400 dark:hover:bg-green-900/50 transition-colors"
+                className="btn-sm btn-primary gap-1.5"
               >
                 <span className="flex items-center gap-2">
                   <CheckCheck className="w-4 h-4" />

@@ -24,15 +24,27 @@ interface PageTitleProps {
 
 export default function PageTitle({ title, subtitle, badge, backLink, image, action }: PageTitleProps) {
   const getActionButtonClass = (variant: string = 'primary') => {
-    const baseClass = 'btn-md';
+    const baseClass = 'btn btn-md';
     const variantClass = {
       primary: 'btn-primary',
       success: 'btn-success',
       danger: 'btn-danger',
-      warning: 'btn-warning',
+      warning: 'btn-outline-danger',
     }[variant] || 'btn-primary';
     
     return `${baseClass} ${variantClass}`;
+  };
+
+  const renderActionIcon = (icon?: string) => {
+    if (icon === 'plus') {
+      return <Plus className="w-4 h-4" />;
+    }
+
+    if (icon === 'settings') {
+      return <Settings className="w-4 h-4" />;
+    }
+
+    return null;
   };
 
   return (
@@ -79,29 +91,20 @@ export default function PageTitle({ title, subtitle, badge, backLink, image, act
         action.href ? (
           <Link
             to={action.href}
-            className={`${getActionButtonClass(action.variant)} whitespace-nowrap flex items-center gap-2`}
+            className={`${getActionButtonClass(action.variant)} whitespace-nowrap flex items-center gap-1.5`}
             title={action.title || action.label}
           >
-            {action.icon === 'plus' ? (
-              <Plus className="w-5 h-5" />
-            ) : action.icon === 'settings' ? (
-              <Settings className="w-5 h-5" />
-            ) : null}
-            {action.icon ? null : action.label}
+            {renderActionIcon(action.icon)}
+            {action.label}
           </Link>
         ) : (
           <button
             onClick={action.onClick}
-            className={`${getActionButtonClass(action.variant)} whitespace-nowrap flex items-center gap-2`}
+            className={`${getActionButtonClass(action.variant)} whitespace-nowrap flex items-center gap-1.5`}
             title={action.title || action.label}
           >
-            {action.icon === 'plus' ? (
-              <Plus className="w-5 h-5" />
-            ) : action.icon === 'settings' ? (
-              <Settings className="w-5 h-5" />
-            ) : (
-              action.label
-            )}
+            {renderActionIcon(action.icon)}
+            {action.label}
           </button>
         )
       )}

@@ -99,14 +99,14 @@ export default function PlayerDevelopmentPlansPage() {
         <div className="card mb-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label htmlFor="sort" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="sort" className="label">
                 Sort By
               </label>
               <select
                 id="sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'date' | 'progress')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="input"
               >
                 <option value="date">Most Recent</option>
                 <option value="progress">Highest Progress</option>
@@ -114,7 +114,7 @@ export default function PlayerDevelopmentPlansPage() {
             </div>
 
             <div className="flex-1">
-              <label htmlFor="filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="filter" className="label">
                 <Filter className="w-4 h-4 inline mr-1" />
                 Filter Plans
               </label>
@@ -122,7 +122,7 @@ export default function PlayerDevelopmentPlansPage() {
                 id="filter"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value as 'all' | 'active' | 'completed' | 'archived')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="input"
               >
                 <option value="all">All Plans</option>
                 <option value="active">Active Plans</option>

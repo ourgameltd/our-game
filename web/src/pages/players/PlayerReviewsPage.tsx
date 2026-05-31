@@ -190,7 +190,7 @@ export default function PlayerReviewsPage() {
           {!loading && abilities && (
             <button
               onClick={() => setShowForm(true)}
-              className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+              className="btn btn-md btn-success gap-2"
               title="Add New Review"
             >
               <Plus className="w-5 h-5" />
@@ -224,7 +224,7 @@ export default function PlayerReviewsPage() {
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Coach
                   </label>
                   <select

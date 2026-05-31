@@ -24,9 +24,8 @@ const DEFAULT_THRESHOLDS: Record<CompetencyBand, number> = {
   Elite: 70,
 };
 
-const inputClass =
-  'w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed';
-const labelClass = 'block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2';
+const inputClass = 'input disabled:opacity-50 disabled:cursor-not-allowed';
+const labelClass = 'label';
 
 export default function CompetencyFrameworkEditorPage() {
   const { clubId, frameworkId } = useParams();
@@ -329,7 +328,7 @@ export default function CompetencyFrameworkEditorPage() {
                       <div key={band}>
                         <label className={labelClass}>{band}</label>
                         <textarea
-                          className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm disabled:opacity-50 disabled:cursor-not-allowed resize-y"
+                          className="input text-sm disabled:opacity-50 disabled:cursor-not-allowed resize-y"
                           rows={4}
                           placeholder={`Describe ${band} level performance…`}
                           value={descriptions[cd.competencyId]?.[band] ?? ''}

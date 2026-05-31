@@ -148,7 +148,7 @@ export default function PlayerEvaluationFormModal({
           )}
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="label">
               Review Date
             </label>
             <input
@@ -222,7 +222,7 @@ export default function PlayerEvaluationFormModal({
           </div>
 
           <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label className="label">
               Overall Coach Comments
             </label>
             <textarea

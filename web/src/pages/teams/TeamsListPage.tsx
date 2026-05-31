@@ -32,7 +32,7 @@ export default function TeamsListPage() {
           </p>
           <button
             onClick={() => navigate(Routes.dashboard())}
-            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="btn btn-md btn-danger w-full transition-colors"
           >
             Return to Dashboard
           </button>
@@ -53,7 +53,7 @@ export default function TeamsListPage() {
           </p>
           <button
             onClick={() => navigate(Routes.club(clubId!))}
-            className="w-full px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+            className="btn btn-md btn-danger w-full transition-colors"
           >
             Return to Club
           </button>

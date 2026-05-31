@@ -750,7 +750,7 @@ export default function AddEditMatchPage() {
             </p>
             <button
               onClick={() => navigate(Routes.matches(clubId!, ageGroupId!, teamId!))}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="btn btn-md btn-primary"
             >
               Back to Matches
             </button>
@@ -1673,26 +1673,26 @@ export default function AddEditMatchPage() {
             <div className="mt-4 space-y-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Opposition *
                   </label>
                   <input
                     type="text"
                     value={opposition}
                     onChange={(e) => setOpposition(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="Enter opposition team name"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Season *
                   </label>
                   <select
                     value={seasonId}
                     onChange={(e) => setSeasonId(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {availableSeasons.length === 0 ? (
                       <option value={defaultSeason}>{defaultSeason}</option>
@@ -1707,13 +1707,13 @@ export default function AddEditMatchPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Squad Size *
                   </label>
                   <select
                     value={squadSize}
                     onChange={(e) => handleSquadSizeChange(parseInt(e.target.value) as SquadSize)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {squadSizes.map(size => (
                       <option key={size.value} value={size.value}>
@@ -1727,20 +1727,20 @@ export default function AddEditMatchPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Kick Off Time *
                   </label>
                   <input
                     type="datetime-local"
                     value={kickOffTime}
                     onChange={(e) => setKickOffTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label className="label">
                       Meet Time
                     </label>
                     <div className="flex gap-1">
@@ -1777,13 +1777,13 @@ export default function AddEditMatchPage() {
                     type="datetime-local"
                     value={meetTime}
                     onChange={(e) => setMeetTime(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="Optional: Team meeting time before kick off"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Location *
                   </label>
                   <div className="flex gap-2">
@@ -1813,7 +1813,7 @@ export default function AddEditMatchPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Venue Type *
                   </label>
                   <div className="flex gap-4">
@@ -1839,26 +1839,26 @@ export default function AddEditMatchPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Competition *
                   </label>
                   <input
                     type="text"
                     value={competition}
                     onChange={(e) => setCompetition(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="e.g., County League Division 1"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Kit *
                   </label>
                   <select
                     value={kit}
                     onChange={(e) => setKit(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Select a team or club kit</option>
                     {availableOutfieldKits.map(k => (
@@ -1904,13 +1904,13 @@ export default function AddEditMatchPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Goalkeeper Kit
                   </label>
                   <select
                     value={goalkeeperKit}
                     onChange={(e) => setGoalkeeperKit(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <option value="">Select a team or club goalkeeper kit (optional)</option>
                     {availableGoalkeeperKits.map(k => (
@@ -1956,7 +1956,7 @@ export default function AddEditMatchPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Home Score
                   </label>
                   <input
@@ -1964,13 +1964,13 @@ export default function AddEditMatchPage() {
                     min="0"
                     value={homeScore}
                     onChange={(e) => setHomeScore(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="0"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Away Score
                   </label>
                   <input
@@ -1978,7 +1978,7 @@ export default function AddEditMatchPage() {
                     min="0"
                     value={awayScore}
                     onChange={(e) => setAwayScore(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="0"
                   />
                 </div>
@@ -1996,13 +1996,13 @@ export default function AddEditMatchPage() {
                   {showWeatherSection && (
                     <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="label">
                           Weather Condition
                         </label>
                         <select
                           value={weather}
                           onChange={(e) => setWeather(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="input"
                         >
                           <option value="">Select weather</option>
                           {weatherConditions.map(w => (
@@ -2011,14 +2011,14 @@ export default function AddEditMatchPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="label">
                           Temperature (°C)
                         </label>
                         <input
                           type="number"
                           value={temperature}
                           onChange={(e) => setTemperature(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                          className="input"
                           placeholder="e.g., 15"
                         />
                       </div>
@@ -2040,7 +2040,7 @@ export default function AddEditMatchPage() {
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y"
+                  className="input resize-y"
                   placeholder="e.g., Car pooling arrangements, bring packed lunch, meet at school gates, wear appropriate footwear..."
                 />
               </div>
@@ -2056,7 +2056,7 @@ export default function AddEditMatchPage() {
                   value={summary}
                   onChange={(e) => setSummary(e.target.value)}
                   rows={5}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-y"
+                  className="input resize-y"
                   placeholder="Write a summary of the match..."
                 />
               </div>
@@ -2816,7 +2816,7 @@ export default function AddEditMatchPage() {
                     <button
                       type="button"
                       onClick={() => setShowCoachModal(true)}
-                      className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                      className="btn btn-md btn-success gap-2"
                       title="Add Coach"
                     >
                       <Plus className="w-5 h-5" />
@@ -3215,7 +3215,7 @@ export default function AddEditMatchPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-1">
                 {/* Search */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="label">
                     Search by name
                   </label>
                   <input
@@ -3223,13 +3223,13 @@ export default function AddEditMatchPage() {
                     value={modalSearchTerm}
                     onChange={(e) => setModalSearchTerm(e.target.value)}
                     placeholder="Search players..."
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    className="input text-sm"
                   />
                 </div>
                 
                 {/* Age Group Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="label">
                     Age Group
                   </label>
                   <select
@@ -3238,7 +3238,7 @@ export default function AddEditMatchPage() {
                       setModalAgeGroupFilter(e.target.value);
                       setModalTeamFilter('all'); // Reset team filter when age group changes
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    className="input text-sm"
                   >
                     <option value="all">All Age Groups</option>
                     {/* TODO: Add age groups when useClubAgeGroups() hook is available */}
@@ -3247,13 +3247,13 @@ export default function AddEditMatchPage() {
                 
                 {/* Team Filter */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="label">
                     Team
                   </label>
                   <select
                     value={modalTeamFilter}
                     onChange={(e) => setModalTeamFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    className="input text-sm"
                   >
                     <option value="all">All Teams</option>
                     {/* TODO: Add team filter when useClubTeams() hook is available */}

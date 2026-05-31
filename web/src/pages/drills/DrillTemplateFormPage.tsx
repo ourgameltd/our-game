@@ -430,7 +430,7 @@ export default function DrillTemplateFormPage() {
                 <div className="space-y-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="label">
                         Session Name *
                       </label>
                       <input
@@ -438,20 +438,20 @@ export default function DrillTemplateFormPage() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g., Technical Foundation, Possession Play"
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="input"
                         disabled={isInherited || isSubmitting}
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="label">
                         Session Category
                       </label>
                       <select
                         value={sessionCategory}
                         onChange={(e) => setSessionCategory(e.target.value as typeof sessionCategory)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                        className="input"
                         disabled={isInherited || isSubmitting}
                       >
                         {sessionCategories.map((cat) => (
@@ -462,7 +462,7 @@ export default function DrillTemplateFormPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="label">
                       Description (optional)
                     </label>
                     <textarea
@@ -470,14 +470,14 @@ export default function DrillTemplateFormPage() {
                       onChange={(e) => setDescription(e.target.value)}
                       placeholder="Brief description of the session objectives"
                       rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="input"
                       disabled={isInherited || isSubmitting}
                     />
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      <label className="label">
                         Sharing
                       </label>
                       <div className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
@@ -720,21 +720,21 @@ export default function DrillTemplateFormPage() {
             <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+                  <label className="label">Search</label>
                   <input
                     type="text"
                     value={drillSearchTerm}
                     onChange={(e) => setDrillSearchTerm(e.target.value)}
                     placeholder="Search by name, description, or attributes..."
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    className="input text-sm"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
+                  <label className="label">Category</label>
                   <select
                     value={drillCategoryFilter}
                     onChange={(e) => setDrillCategoryFilter(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm"
+                    className="input text-sm"
                   >
                     <option value="all">All Categories</option>
                     {[
@@ -926,7 +926,7 @@ export default function DrillTemplateFormPage() {
                   <button
                     type="button"
                     onClick={closeDrillModal}
-                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    className="btn btn-md btn-secondary"
                   >
                     Cancel
                   </button>
@@ -934,7 +934,7 @@ export default function DrillTemplateFormPage() {
                     type="button"
                     onClick={addSelectedDrills}
                     disabled={pendingSelectedDrillIds.length === 0}
-                    className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="btn btn-md btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Add Selected ({pendingSelectedDrillIds.length})
                   </button>

@@ -389,7 +389,7 @@ export default function CoachSettingsPage() {
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     First Name *
                   </label>
                   <input
@@ -398,11 +398,11 @@ export default function CoachSettingsPage() {
                     onChange={(e) => setFirstName(e.target.value)}
                     required
                     placeholder="Enter first name"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Last Name *
                   </label>
                   <input
@@ -411,11 +411,11 @@ export default function CoachSettingsPage() {
                     onChange={(e) => setLastName(e.target.value)}
                     required
                     placeholder="Enter last name"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Date of Birth *
                   </label>
                   <input
@@ -423,12 +423,12 @@ export default function CoachSettingsPage() {
                     value={dateOfBirth}
                     onChange={(e) => setDateOfBirth(e.target.value)}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Coach Photo
                   </label>
                   <div className="flex items-start gap-4">
@@ -496,7 +496,7 @@ export default function CoachSettingsPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label className="label">
                       Email *
                     </label>
                     {coach?.hasAccount && (
@@ -516,14 +516,14 @@ export default function CoachSettingsPage() {
                     readOnly
                     disabled
                     placeholder="coach@example.com"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Email is read-only from the linked user account
                   </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Phone *
                   </label>
                   <input
@@ -532,7 +532,7 @@ export default function CoachSettingsPage() {
                     onChange={(e) => setPhone(e.target.value)}
                     required
                     placeholder="+44 123 456 7890"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
               </div>
@@ -600,14 +600,14 @@ export default function CoachSettingsPage() {
               </h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Role *
                   </label>
                   <select
                     value={role}
                     onChange={(e) => setRole(e.target.value)}
                     required
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   >
                     {roleOptions.map(option => (
                       <option key={option.value} value={option.value}>
@@ -617,7 +617,7 @@ export default function CoachSettingsPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="label">
                     Association ID
                   </label>
                   <input
@@ -625,7 +625,7 @@ export default function CoachSettingsPage() {
                     value={associationId}
                     onChange={(e) => setAssociationId(e.target.value)}
                     placeholder="e.g., SFA-12345"
-                    className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
               </div>
@@ -650,7 +650,7 @@ export default function CoachSettingsPage() {
                 onChange={(e) => setBiography(e.target.value)}
                 rows={4}
                 placeholder="Brief biography about the coach..."
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="input"
               />
             </div>
 

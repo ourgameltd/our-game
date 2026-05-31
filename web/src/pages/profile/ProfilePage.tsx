@@ -142,7 +142,7 @@ export default function ProfilePage() {
   if (isLoadingProfile || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mx-auto px-4 py-4">
           <div className="text-center text-gray-600 dark:text-gray-400">Loading profile...</div>
         </div>
       </div>
@@ -152,7 +152,7 @@ export default function ProfilePage() {
   if (!userProfile) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mx-auto px-4 py-4">
           <div className="text-center text-gray-600 dark:text-gray-400">Failed to load profile</div>
         </div>
       </div>
@@ -161,7 +161,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="mx-auto px-4 py-4">
         <PageTitle
           title="My Profile"
           subtitle="Manage your account settings and preferences"

@@ -194,7 +194,7 @@ export default function PlayerCompetencyModal({ playerId, playerName, onClose, o
           )}
 
           <section>
-            <label htmlFor="coach-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+            <label htmlFor="coach-notes" className="label">
               Coach notes (optional)
             </label>
             <textarea

@@ -241,14 +241,14 @@ export default function ClubReportCardsPage() {
         <div className="card mb-4">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <label htmlFor="sort" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="sort" className="label">
                 Sort By
               </label>
               <select
                 id="sort"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as 'date' | 'rating')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="input"
               >
                 <option value="date">Most Recent</option>
                 <option value="rating">Highest Rated</option>
@@ -256,7 +256,7 @@ export default function ClubReportCardsPage() {
             </div>
 
             <div className="flex-1">
-              <label htmlFor="filter" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="filter" className="label">
                 <Filter className="w-4 h-4 inline mr-1" />
                 Filter Reports
               </label>
@@ -264,7 +264,7 @@ export default function ClubReportCardsPage() {
                 id="filter"
                 value={filterRating}
                 onChange={(e) => setFilterRating(e.target.value as 'all' | 'high' | 'medium' | 'low')}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                className="input"
               >
                 <option value="all">All Reports</option>
                 <option value="high">High Performers (8.0+)</option>

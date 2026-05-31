@@ -127,7 +127,7 @@ export default function AgeGroupSettingsPage() {
             </p>
             <button
               onClick={() => navigate(Routes.dashboard())}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="btn btn-md btn-primary"
             >
               Back to Dashboard
             </button>
@@ -151,7 +151,7 @@ export default function AgeGroupSettingsPage() {
             </p>
             <button
               onClick={() => clubId ? navigate(Routes.ageGroups(clubId)) : navigate(Routes.dashboard())}
-              className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+              className="btn btn-md btn-primary"
             >
               Back
             </button>
@@ -348,7 +348,7 @@ export default function AgeGroupSettingsPage() {
             ) : (
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Age Group Name *
                 </label>
                 <input
@@ -359,7 +359,7 @@ export default function AgeGroupSettingsPage() {
                   required
                   disabled={isDisabled}
                   placeholder="e.g., 2014s, Reserves, Senior"
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`input disabled:opacity-50 disabled:cursor-not-allowed ${
                     errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                 />
@@ -367,7 +367,7 @@ export default function AgeGroupSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Code *
                 </label>
                 <input
@@ -378,7 +378,7 @@ export default function AgeGroupSettingsPage() {
                   required
                   disabled={isDisabled}
                   placeholder="e.g., 2014, reserve, senior"
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed ${
+                  className={`input disabled:opacity-50 disabled:cursor-not-allowed ${
                     errors.code ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                 />
@@ -386,7 +386,7 @@ export default function AgeGroupSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Level *
                 </label>
                 <select
@@ -395,7 +395,7 @@ export default function AgeGroupSettingsPage() {
                   onChange={handleInputChange}
                   required
                   disabled={isDisabled}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {teamLevels.map(level => (
                     <option key={level.value} value={level.value}>{level.label}</option>
@@ -404,7 +404,7 @@ export default function AgeGroupSettingsPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="label">
                   Default Squad Size
                 </label>
                 <select
@@ -412,7 +412,7 @@ export default function AgeGroupSettingsPage() {
                   value={formData.defaultSquadSize}
                   onChange={handleInputChange}
                   disabled={isDisabled}
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="input disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {squadSizes.map(size => (
                     <option key={size.value} value={size.value}>{size.label}</option>
@@ -486,7 +486,7 @@ export default function AgeGroupSettingsPage() {
                           type="button"
                           onClick={() => setDefaultSeason(season)}
                           disabled={isDisabled}
-                          className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="btn-sm btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           Set Default
                         </button>
@@ -495,7 +495,7 @@ export default function AgeGroupSettingsPage() {
                         type="button"
                         onClick={() => handleRemoveSeason(season)}
                         disabled={isDisabled || seasons.length === 1}
-                        className="px-3 py-1 text-sm bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="btn-sm btn-danger disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         Remove
                       </button>
@@ -515,7 +515,7 @@ export default function AgeGroupSettingsPage() {
                 </div>
               ) : (
               <>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="label">
                 Description
               </label>
               <textarea
@@ -525,7 +525,7 @@ export default function AgeGroupSettingsPage() {
                 rows={3}
                 disabled={isDisabled}
                 placeholder="Brief description of this age group..."
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                className="input disabled:opacity-50 disabled:cursor-not-allowed"
               />
               </>
               )}

@@ -47,27 +47,27 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
           {/* Left Column - Form Fields */}
           <div className="space-y-2">
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="label">
                 Kit Name *
               </label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="input"
                 placeholder="e.g., Home Kit, Away Kit"
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="label">
                 Kit Type *
               </label>
               <select
                 value={type}
                 onChange={(e) => setType(e.target.value as Kit['type'])}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                className="input"
               >
                 {kitTypes.map(kitType => (
                   <option key={kitType.value} value={kitType.value}>{kitType.label}</option>
@@ -92,7 +92,7 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
 
           <div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="label">
                 Shirt Color *
               </label>
               <div className="flex gap-3 items-center">
@@ -113,7 +113,7 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
             </div>
             
              <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="label">
                 Shorts Color *
               </label>
               <div className="flex gap-3 items-center">
@@ -134,7 +134,7 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label className="label">
                 Socks Color *
               </label>
               <div className="flex gap-3 items-center">
@@ -161,7 +161,7 @@ export default function KitBuilder({ kit, onSave, onCancel }: KitBuilderProps) {
         <div className="flex gap-3 mt-4 pt-6 border-t border-gray-200 dark:border-gray-700">
           <button
             type="submit"
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
+            className="btn btn-md btn-success"
           >
             {kit ? 'Update Kit' : 'Create Kit'}
           </button>

@@ -312,7 +312,7 @@ export default function ClubTrainingSessionsPage() {
               ) : (
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <div className="mb-4">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Status</label>
+                    <label className="label">Status</label>
                     <div className="flex items-center gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -354,7 +354,7 @@ export default function ClubTrainingSessionsPage() {
                   </div>
                   <div className="grid md:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Age Group</label>
+                      <label className="label">Age Group</label>
                       <select 
                         value={filterAgeGroup}
                         onChange={(e) => {
@@ -367,7 +367,7 @@ export default function ClubTrainingSessionsPage() {
                             }
                           }
                         }}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="input"
                       >
                         <option value="">All Age Groups</option>
                         {allAgeGroups.map(ageGroup => (
@@ -376,11 +376,11 @@ export default function ClubTrainingSessionsPage() {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Team</label>
+                      <label className="label">Team</label>
                       <select 
                         value={filterTeam}
                         onChange={(e) => setFilterTeam(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
+                        className="input"
                       >
                         <option value="">All Teams</option>
                         {filteredTeams.map(team => (

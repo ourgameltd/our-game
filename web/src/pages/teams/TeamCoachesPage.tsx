@@ -308,7 +308,7 @@ export default function TeamCoachesPage() {
               !team.isArchived ? (
                 <button
                   onClick={() => setShowAddModal(true)}
-                  className="bg-green-600 hover:bg-green-700 text-white font-medium py-2 px-4 rounded-lg transition-colors flex items-center gap-2"
+                  className="btn btn-md btn-success gap-2"
                   title="Assign Coaches"
                 >
                   <Plus className="w-5 h-5" />

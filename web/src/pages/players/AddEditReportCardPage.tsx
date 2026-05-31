@@ -292,7 +292,7 @@ export default function AddEditReportCardPage() {
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Report Period</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="periodStart" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="periodStart" className="label">
                   Period Start
                 </label>
                 <input
@@ -301,11 +301,11 @@ export default function AddEditReportCardPage() {
                   value={periodStart}
                   onChange={(e) => setPeriodStart(e.target.value)}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="input"
                 />
               </div>
               <div>
-                <label htmlFor="periodEnd" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="periodEnd" className="label">
                   Period End
                 </label>
                 <input
@@ -314,7 +314,7 @@ export default function AddEditReportCardPage() {
                   value={periodEnd}
                   onChange={(e) => setPeriodEnd(e.target.value)}
                   required
-                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                  className="input"
                 />
               </div>
             </div>
@@ -410,7 +410,7 @@ export default function AddEditReportCardPage() {
               placeholder="Enter overall comments about the player's performance and development..."
               rows={6}
               required
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+              className="input resize-none"
             />
           </div>
 
@@ -452,7 +452,7 @@ export default function AddEditReportCardPage() {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="label">
                           Name *
                         </label>
                         <input
@@ -460,11 +460,11 @@ export default function AddEditReportCardPage() {
                           value={player.name}
                           onChange={(e) => updateSimilarPlayer(index, 'name', e.target.value)}
                           placeholder="e.g., Kevin De Bruyne"
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          className="input"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="label">
                           Team
                         </label>
                         <input
@@ -472,11 +472,11 @@ export default function AddEditReportCardPage() {
                           value={player.team}
                           onChange={(e) => updateSimilarPlayer(index, 'team', e.target.value)}
                           placeholder="e.g., Manchester City"
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          className="input"
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="label">
                           Position
                         </label>
                         <input
@@ -484,12 +484,12 @@ export default function AddEditReportCardPage() {
                           value={player.position}
                           onChange={(e) => updateSimilarPlayer(index, 'position', e.target.value)}
                           placeholder="e.g., Midfielder"
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                          className="input"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="label">
                         Why study this player? *
                       </label>
                       <textarea
@@ -497,7 +497,7 @@ export default function AddEditReportCardPage() {
                         onChange={(e) => updateSimilarPlayer(index, 'reason', e.target.value)}
                         placeholder="Explain what aspects of this player's game are relevant to study..."
                         rows={3}
-                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none"
+                        className="input resize-none"
                       />
                     </div>
                   </div>

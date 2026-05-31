@@ -515,7 +515,7 @@ export default function DrillFormPage() {
                 <div className="grid gap-3 md:grid-cols-2">
                   <div>
                     <div className="mb-2 flex items-center gap-2">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                      <label className="label">
                         Drill Name *
                       </label>
                     </div>
@@ -524,20 +524,20 @@ export default function DrillFormPage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g., Passing Triangle, Dribbling Gates"
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="input"
                       disabled={isInherited}
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="label">
                       Category *
                     </label>
                     <select
                       value={category}
                       onChange={(e) => setCategory(e.target.value as 'Drill' | 'Skills Practice' | 'Game Related Practice' | 'Conditioned Game')}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="input"
                       disabled={isInherited}
                       required
                     >
@@ -554,7 +554,7 @@ export default function DrillFormPage() {
 
                 <div className={`grid gap-3 ${!isInherited ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    <label className="label">
                       Duration (minutes) *
                     </label>
                     <input
@@ -563,7 +563,7 @@ export default function DrillFormPage() {
                       onChange={(e) => setDuration(Number(e.target.value))}
                       min={1}
                       max={120}
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                      className="input"
                       disabled={isInherited}
                       required
                     />
@@ -735,7 +735,7 @@ export default function DrillFormPage() {
 
               <div className="p-4 space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="label">
                     Link Title (optional)
                   </label>
                   <input
@@ -743,12 +743,12 @@ export default function DrillFormPage() {
                     value={newLinkTitle}
                     onChange={(e) => setNewLinkTitle(e.target.value)}
                     placeholder="e.g. Passing tutorial"
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="input"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                  <label className="label">
                     Link URL *
                   </label>
                   <input
@@ -761,7 +761,7 @@ export default function DrillFormPage() {
                       }
                     }}
                     placeholder="https://..."
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    className="input"
                   />
                   {newLinkError && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">{newLinkError}</p>

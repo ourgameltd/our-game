@@ -38,7 +38,7 @@ const CreateClubPage: React.FC = () => {
 
   if (!isAdmin) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <div className="mx-auto px-4 py-4">
         <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-6">
           <p className="text-red-800 dark:text-red-200 font-medium">Access Denied</p>
           <p className="text-red-600 dark:text-red-300 text-sm mt-1">You must be an admin to create a club.</p>
@@ -110,7 +110,7 @@ const CreateClubPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="mx-auto px-4 py-4">
       <PageTitle title="Create Club" />
 
       {submitError && (
@@ -125,28 +125,28 @@ const CreateClubPage: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Basic Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="name" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="name" className="label">
                 Club Name *
               </label>
               <input
                 type="text" id="name" name="name"
                 value={formData.name} onChange={handleChange} disabled={isSubmitting}
                 placeholder="e.g. Vale FC"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white ${
+                className={`input ${
                   errors.name ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
             </div>
             <div>
-              <label htmlFor="shortName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="shortName" className="label">
                 Short Name *
               </label>
               <input
                 type="text" id="shortName" name="shortName"
                 value={formData.shortName} onChange={handleChange} disabled={isSubmitting}
                 placeholder="e.g. VFC"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white ${
+                className={`input ${
                   errors.shortName ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
@@ -154,27 +154,27 @@ const CreateClubPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4">
-            <label htmlFor="logo" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="logo" className="label">
               Logo URL
             </label>
             <input
               type="text" id="logo" name="logo"
               value={formData.logo} onChange={handleChange} disabled={isSubmitting}
               placeholder="https://example.com/logo.png"
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 ${
+              className={`input ${
                 isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
               }`}
             />
           </div>
           <div className="mt-4">
-            <label htmlFor="founded" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            <label htmlFor="founded" className="label">
               Founded Year
             </label>
             <input
               type="number" id="founded" name="founded"
               value={formData.founded} onChange={handleChange} disabled={isSubmitting}
               placeholder="e.g. 1876"
-              className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white ${
+              className={`input ${
                 errors.founded ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
               } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
@@ -187,7 +187,7 @@ const CreateClubPage: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Club Colors</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label htmlFor="primaryColor" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="primaryColor" className="label">
                 Primary Color *
               </label>
               <div className="flex items-center gap-3">
@@ -199,7 +199,7 @@ const CreateClubPage: React.FC = () => {
                 <input
                   type="text" name="primaryColor"
                   value={formData.primaryColor} onChange={handleChange} disabled={isSubmitting}
-                  className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white ${
+                  className={`input flex-1 ${
                     errors.primaryColor ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                 />
@@ -207,7 +207,7 @@ const CreateClubPage: React.FC = () => {
               {errors.primaryColor && <p className="mt-1 text-sm text-red-500">{errors.primaryColor}</p>}
             </div>
             <div>
-              <label htmlFor="secondaryColor" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="secondaryColor" className="label">
                 Secondary Color *
               </label>
               <div className="flex items-center gap-3">
@@ -219,7 +219,7 @@ const CreateClubPage: React.FC = () => {
                 <input
                   type="text" name="secondaryColor"
                   value={formData.secondaryColor} onChange={handleChange} disabled={isSubmitting}
-                  className={`flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white ${
+                  className={`input flex-1 ${
                     errors.secondaryColor ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   }`}
                 />
@@ -227,7 +227,7 @@ const CreateClubPage: React.FC = () => {
               {errors.secondaryColor && <p className="mt-1 text-sm text-red-500">{errors.secondaryColor}</p>}
             </div>
             <div>
-              <label htmlFor="accentColor" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="accentColor" className="label">
                 Accent Color
               </label>
               <div className="flex items-center gap-3">
@@ -239,7 +239,7 @@ const CreateClubPage: React.FC = () => {
                 <input
                   type="text" name="accentColor"
                   value={formData.accentColor} onChange={handleChange} disabled={isSubmitting}
-                  className="flex-1 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600"
+                  className="input flex-1"
                 />
               </div>
             </div>
@@ -260,56 +260,56 @@ const CreateClubPage: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Location</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label htmlFor="city" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="city" className="label">
                 City *
               </label>
               <input
                 type="text" id="city" name="city"
                 value={formData.city} onChange={handleChange} disabled={isSubmitting}
                 placeholder="e.g. Stoke-on-Trent"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white ${
+                className={`input ${
                   errors.city ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.city && <p className="mt-1 text-sm text-red-500">{errors.city}</p>}
             </div>
             <div>
-              <label htmlFor="country" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="country" className="label">
                 Country *
               </label>
               <input
                 type="text" id="country" name="country"
                 value={formData.country} onChange={handleChange} disabled={isSubmitting}
                 placeholder="e.g. England"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white ${
+                className={`input ${
                   errors.country ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.country && <p className="mt-1 text-sm text-red-500">{errors.country}</p>}
             </div>
             <div>
-              <label htmlFor="venue" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="venue" className="label">
                 Venue *
               </label>
               <input
                 type="text" id="venue" name="venue"
                 value={formData.venue} onChange={handleChange} disabled={isSubmitting}
                 placeholder="e.g. Vale Park"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white ${
+                className={`input ${
                   errors.venue ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                 } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
               />
               {errors.venue && <p className="mt-1 text-sm text-red-500">{errors.venue}</p>}
             </div>
             <div>
-              <label htmlFor="address" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="address" className="label">
                 Address
               </label>
               <input
                 type="text" id="address" name="address"
                 value={formData.address} onChange={handleChange} disabled={isSubmitting}
                 placeholder="e.g. Hamil Road, Burslem, ST6 1AW"
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 ${
+                className={`input ${
                   isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               />
@@ -322,40 +322,40 @@ const CreateClubPage: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">History & Ethos</h2>
           <div className="space-y-4">
             <div>
-              <label htmlFor="history" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="history" className="label">
                 History
               </label>
               <textarea
                 id="history" name="history" rows={4}
                 value={formData.history} onChange={handleChange} disabled={isSubmitting}
                 placeholder="A brief history of the club..."
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 ${
+                className={`input ${
                   isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               />
             </div>
             <div>
-              <label htmlFor="ethos" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="ethos" className="label">
                 Ethos
               </label>
               <textarea
                 id="ethos" name="ethos" rows={3}
                 value={formData.ethos} onChange={handleChange} disabled={isSubmitting}
                 placeholder="The club's ethos and values..."
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 ${
+                className={`input ${
                   isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               />
             </div>
             <div>
-              <label htmlFor="principles" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              <label htmlFor="principles" className="label">
                 Principles
               </label>
               <textarea
                 id="principles" name="principles" rows={4}
                 value={formData.principles} onChange={handleChange} disabled={isSubmitting}
                 placeholder="One principle per line..."
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:text-white border-gray-300 dark:border-gray-600 ${
+                className={`input ${
                   isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
                 }`}
               />

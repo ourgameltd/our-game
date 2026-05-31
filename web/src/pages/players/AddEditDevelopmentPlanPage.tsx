@@ -204,7 +204,7 @@ export default function AddEditDevelopmentPlanPage() {
           </p>
           <button
             onClick={() => navigate(Routes.clubPlayers(clubId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Back to Players
           </button>
@@ -226,7 +226,7 @@ export default function AddEditDevelopmentPlanPage() {
           </p>
           <button
             onClick={() => navigate(Routes.clubPlayers(clubId!))}
-            className="px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700"
+            className="btn btn-md btn-primary"
           >
             Back to Players
           </button>
@@ -392,7 +392,7 @@ export default function AddEditDevelopmentPlanPage() {
             <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Plan Details</h2>
             <div className="space-y-2">
               <div>
-                <label htmlFor="title" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="title" className="label">
                   Plan Title *
                 </label>
                 <input
@@ -403,7 +403,7 @@ export default function AddEditDevelopmentPlanPage() {
                   disabled={isSubmitting}
                   placeholder="e.g., Complete Forward Development - Q1 2025"
                   required
-                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                  className={`input ${
                     validationErrors.title ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
@@ -413,7 +413,7 @@ export default function AddEditDevelopmentPlanPage() {
               </div>
               
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="description" className="label">
                   Description *
                 </label>
                 <textarea
@@ -424,7 +424,7 @@ export default function AddEditDevelopmentPlanPage() {
                   placeholder="Provide an overview of what this development plan aims to achieve..."
                   rows={3}
                   required
-                  className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none ${
+                  className={`input resize-none ${
                     validationErrors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                   } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                 />
@@ -435,7 +435,7 @@ export default function AddEditDevelopmentPlanPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label htmlFor="periodStart" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="periodStart" className="label">
                     Period Start *
                   </label>
                   <input
@@ -445,7 +445,7 @@ export default function AddEditDevelopmentPlanPage() {
                     onChange={(e) => setPeriodStart(e.target.value)}
                     disabled={isSubmitting}
                     required
-                    className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                    className={`input ${
                       validationErrors.periodStart ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                     } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
@@ -454,7 +454,7 @@ export default function AddEditDevelopmentPlanPage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="periodEnd" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="periodEnd" className="label">
                     Period End *
                   </label>
                   <input
@@ -464,7 +464,7 @@ export default function AddEditDevelopmentPlanPage() {
                     onChange={(e) => setPeriodEnd(e.target.value)}
                     disabled={isSubmitting}
                     required
-                    className={`w-full px-4 py-2 border rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${
+                    className={`input ${
                       validationErrors.periodEnd ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
                     } ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   />
@@ -473,7 +473,7 @@ export default function AddEditDevelopmentPlanPage() {
                   )}
                 </div>
                 <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label htmlFor="status" className="label">
                     Status
                   </label>
                   <select
@@ -481,7 +481,7 @@ export default function AddEditDevelopmentPlanPage() {
                     value={status}
                     onChange={(e) => setStatus(e.target.value as DevelopmentPlanStatus)}
                     disabled={isSubmitting}
-                    className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`input ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {developmentPlanStatuses.map(s => (
                       <option key={s.value} value={s.value}>{s.label}</option>
@@ -531,7 +531,7 @@ export default function AddEditDevelopmentPlanPage() {
 
                   <div className="space-y-2">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      <label className="label">
                         Goal Description *
                       </label>
                       <input
@@ -541,13 +541,13 @@ export default function AddEditDevelopmentPlanPage() {
                         disabled={isSubmitting}
                         placeholder="e.g., Improve aerial duel success rate by 20%"
                         required
-                        className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`input ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                       />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="label">
                           Start Date *
                         </label>
                         <input
@@ -556,11 +556,11 @@ export default function AddEditDevelopmentPlanPage() {
                           onChange={(e) => updateGoal(goalIndex, 'startDate', e.target.value)}
                           disabled={isSubmitting}
                           required
-                          className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`input ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="label">
                           Target Date *
                         </label>
                         <input
@@ -569,11 +569,11 @@ export default function AddEditDevelopmentPlanPage() {
                           onChange={(e) => updateGoal(goalIndex, 'targetDate', e.target.value)}
                           disabled={isSubmitting}
                           required
-                          className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`input ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                       </div>
                       <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                        <label className="label">
                           Progress (%)
                         </label>
                         <input
@@ -583,7 +583,7 @@ export default function AddEditDevelopmentPlanPage() {
                           value={goal.progress}
                           onChange={(e) => updateGoal(goalIndex, 'progress', parseInt(e.target.value) || 0)}
                           disabled={isSubmitting}
-                          className={`w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          className={`input ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         />
                       </div>
                     </div>
@@ -591,7 +591,7 @@ export default function AddEditDevelopmentPlanPage() {
                     {/* Actions */}
                     <div>
                       <div className="flex items-center justify-between mb-2">
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label className="label">
                           Actions to Achieve Goal *
                         </label>
                         <button
@@ -647,7 +647,7 @@ export default function AddEditDevelopmentPlanPage() {
               disabled={isSubmitting}
               placeholder="Add any additional notes or observations about the player's progress..."
               rows={4}
-              className={`w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white resize-none ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+              className={`input resize-none ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
             />
           </div>
 
