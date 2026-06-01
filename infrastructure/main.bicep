@@ -12,9 +12,9 @@ param baseName string = 'ourgame'
 @description('Storage account SKU')
 param storageAccountSku string = 'Standard_LRS'
 
-@description('Default network access rule for the storage account network ACLs (Deny or Allow). Default is Deny for security.')
+@description('Default network access rule for the storage account network ACLs (Deny or Allow).')
 @allowed(['Allow', 'Deny'])
-param storageDefaultAction string = 'Deny'
+param storageDefaultAction string = 'Allow'
 
 @description('VAPID subject for Web Push notifications (e.g. mailto:michael@michaellaw.me)')
 param vapidSubject string = 'mailto:michael@michaellaw.me'
@@ -109,7 +109,7 @@ resource playerPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/c
   parent: blobService
   name: 'player-photos'
   properties: {
-    publicAccess: 'None'
+    publicAccess: 'Blob'
   }
 }
 
