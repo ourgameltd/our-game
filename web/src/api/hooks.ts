@@ -153,6 +153,7 @@ function useApiCall<T>(
 
   const fetchData = useCallback(async () => {
     if (!enabled) {
+      setData(null);
       setIsLoading(false);
       return;
     }
