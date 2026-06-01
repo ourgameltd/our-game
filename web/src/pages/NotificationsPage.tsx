@@ -245,31 +245,23 @@ export default function NotificationsPage() {
           )}
 
           {push.isSupported && push.isSubscribed && (
-            <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4 mb-4 flex flex-col sm:flex-row sm:items-center gap-3">
-              <div className="flex items-center gap-3 flex-1">
-                <div className="p-2 bg-green-100 dark:bg-green-800 rounded-lg flex-shrink-0">
-                  <Bell className="w-5 h-5 text-green-600 dark:text-green-400" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-green-900 dark:text-green-100">
-                    Push notifications are enabled
-                  </p>
-                  <p className="text-xs text-green-700 dark:text-green-300">
-                    You'll receive alerts on this device.
-                  </p>
-                </div>
-              </div>
+            <div className="flex justify-end mb-4">
               <button
                 onClick={push.unsubscribe}
                 disabled={push.isLoading}
-                className="btn btn-md btn-secondary gap-2 disabled:opacity-60 flex-shrink-0"
+                title="Push notifications enabled — click to disable"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-800 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800 transition-colors disabled:opacity-60 group"
               >
                 {push.isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
                 ) : (
-                  <BellOff className="w-4 h-4" />
+                  <>
+                    <Bell className="w-3.5 h-3.5 group-hover:hidden" />
+                    <BellOff className="w-3.5 h-3.5 hidden group-hover:block" />
+                  </>
                 )}
-                Disable notifications
+                <span className="group-hover:hidden">Notifications on</span>
+                <span className="hidden group-hover:inline">Disable</span>
               </button>
             </div>
           )}
