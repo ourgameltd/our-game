@@ -2,15 +2,16 @@ import { Link } from 'react-router-dom';
 import { Plus, AlertCircle, Search, ChevronDown, ChevronUp, Filter, Users } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { 
-  useTeamOverview, 
-  useAgeGroupPlayers, 
+import {
+  useTeamOverview,
+  useAgeGroupPlayers,
   useTeamPlayers,
   useAddTeamPlayer,
   useRemoveTeamPlayer,
   type AgeGroupPlayerDto,
   type TeamPlayerDto
 } from '@/api';
+import type { CompetencyBand } from '@/api/competencies';
 import PlayerCard from '@components/player/PlayerCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
@@ -50,6 +51,14 @@ export default function TeamPlayersPage() {
   // Mutations
   const addPlayerMutation = useAddTeamPlayer(teamId);
   const removePlayerMutation = useRemoveTeamPlayer(teamId);
+
+  // Band map keyed by player id
+  const playerBands = useMemo<Record<string, CompetencyBand | null>>(() => {
+    const players = ageGroupPlayersData.data || [];
+    return Object.fromEntries(
+      players.map((p: AgeGroupPlayerDto) => [p.id, p.overallBand ?? null])
+    );
+  }, [ageGroupPlayersData.data]);
 
   // Map API data to Player type and filter for team players
   const { teamPlayers, availablePlayers, squadNumberMap } = useMemo(() => {
@@ -337,9 +346,11 @@ export default function TeamPlayersPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {teamPlayers.map((player) => (
               <Link key={player.id} to={Routes.player(clubId!, ageGroupId!, player.id)}>
-                <PlayerCard 
+                <PlayerCard
                   player={player}
                   squadNumber={squadNumberMap[player.id]}
+                  detailDisplay="banding"
+                  competencyBand={playerBands[player.id]}
                   badges={
                     player.teamIds.length > 1 ? (
                       <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">

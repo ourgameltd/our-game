@@ -511,6 +511,7 @@ export interface AgeGroupPlayerDto {
   preferredPositions: string[];
   attributes?: AgeGroupPlayerAttributesDto;
   overallRating?: number;
+  overallBand?: 'Development' | 'Intermediate' | 'Advanced' | 'Elite';
   evaluations?: AgeGroupPlayerEvaluationDto[];
   ageGroupIds: string[];
   teamIds: string[];

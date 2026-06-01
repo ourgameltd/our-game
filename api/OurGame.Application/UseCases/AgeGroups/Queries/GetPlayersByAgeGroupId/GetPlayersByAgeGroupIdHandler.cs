@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetPlayersByAgeGroupId.DTOs;
+using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.AgeGroups.Queries.GetPlayersByAgeGroupId;
@@ -28,7 +29,7 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
         // Get all players for the age group
         var sql = query.IncludeArchived
             ? @"
-                SELECT 
+                SELECT
                     p.Id,
                     p.ClubId,
                     p.FirstName,
@@ -39,13 +40,14 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
                     p.AssociationId,
                     p.PreferredPositions,
                     p.OverallRating,
+                    p.OverallBand,
                     p.IsArchived
                 FROM Players p
                 INNER JOIN PlayerAgeGroups pag ON p.Id = pag.PlayerId
                 WHERE pag.AgeGroupId = {0}
                 ORDER BY p.FirstName, p.LastName"
             : @"
-                SELECT 
+                SELECT
                     p.Id,
                     p.ClubId,
                     p.FirstName,
@@ -56,6 +58,7 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
                     p.AssociationId,
                     p.PreferredPositions,
                     p.OverallRating,
+                    p.OverallBand,
                     p.IsArchived
                 FROM Players p
                 INNER JOIN PlayerAgeGroups pag ON p.Id = pag.PlayerId
@@ -247,6 +250,7 @@ public class GetPlayersByAgeGroupIdHandler : IRequestHandler<GetPlayersByAgeGrou
                     ? MapAttributes(attrs)
                     : new AgeGroupPlayerAttributesDto(),
                 OverallRating = p.OverallRating,
+                OverallBand = p.OverallBand,
                 Evaluations = evaluationsByPlayer.TryGetValue(p.Id, out var evals)
                     ? evals.Select(e => new AgeGroupPlayerEvaluationDto
                     {
@@ -362,6 +366,7 @@ class PlayerRawDto
     public string? AssociationId { get; set; }
     public string? PreferredPositions { get; set; }
     public int? OverallRating { get; set; }
+    public CompetencyBand? OverallBand { get; set; }
     public bool IsArchived { get; set; }
 }
 

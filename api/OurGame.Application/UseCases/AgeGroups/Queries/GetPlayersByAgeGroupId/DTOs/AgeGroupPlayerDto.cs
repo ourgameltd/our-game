@@ -1,3 +1,5 @@
+using OurGame.Persistence.Enums;
+
 namespace OurGame.Application.UseCases.AgeGroups.Queries.GetPlayersByAgeGroupId.DTOs;
 
 /// <summary>
@@ -16,6 +18,7 @@ public class AgeGroupPlayerDto
     public List<string> PreferredPositions { get; set; } = new();
     public AgeGroupPlayerAttributesDto Attributes { get; set; } = new();
     public int? OverallRating { get; set; }
+    public CompetencyBand? OverallBand { get; set; }
     public List<AgeGroupPlayerEvaluationDto> Evaluations { get; set; } = new();
     public List<Guid> AgeGroupIds { get; set; } = new();
     public List<Guid> TeamIds { get; set; } = new();

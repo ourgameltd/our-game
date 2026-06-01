@@ -3,14 +3,15 @@ import { useState, useMemo, useEffect } from 'react';
 import { ChevronDown, ChevronUp, Filter, Users } from 'lucide-react';
 import { useAgeGroupPlayers } from '@/api/hooks';
 import { usePageTitle } from '@/hooks/usePageTitle';
-import { 
-  apiClient, 
-  type ApiResponse, 
-  type AgeGroupDetailDto, 
+import {
+  apiClient,
+  type ApiResponse,
+  type AgeGroupDetailDto,
   type AgeGroupPlayerDto,
   type AgeGroupPlayerEvaluationDto,
   type AgeGroupPlayerEvaluationAttributeDto
 } from '@/api/client';
+import type { CompetencyBand } from '@/api/competencies';
 import PlayerCard from '@components/player/PlayerCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
@@ -61,6 +62,14 @@ export default function AgeGroupPlayersPage() {
   // Fetch players from API
   const { data: playersData, isLoading, error } = useAgeGroupPlayers(ageGroupId || '', showArchived);
   
+  // Band map keyed by player id, separate from the Player type
+  const playerBands = useMemo<Record<string, CompetencyBand | null>>(() => {
+    if (!playersData) return {};
+    return Object.fromEntries(
+      playersData.map((p: AgeGroupPlayerDto) => [p.id, p.overallBand ?? null])
+    );
+  }, [playersData]);
+
   // Map API data to Player type
   const ageGroupPlayers = useMemo<Player[]>(() => {
     if (!playersData) return [];
@@ -283,8 +292,10 @@ export default function AgeGroupPlayersPage() {
                 key={player.id}
                 to={Routes.player(clubId, ageGroupId, player.id)}
               >
-                <PlayerCard 
+                <PlayerCard
                   player={player}
+                  detailDisplay="banding"
+                  competencyBand={playerBands[player.id]}
                   badges={player.isArchived ? (
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
                       🗄️ Archived
