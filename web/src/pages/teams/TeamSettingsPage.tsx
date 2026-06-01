@@ -492,6 +492,8 @@ export default function TeamSettingsPage() {
               clubId={clubId}
               scope="team"
               scopeId={teamId}
+              currentFrameworkId={team?.competencyFrameworkId}
+              disabled={!ageGroup?.allowTeamOverride}
               hideSaveControls
               saveRef={competencySaveRef}
             />

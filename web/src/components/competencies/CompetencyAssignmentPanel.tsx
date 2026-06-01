@@ -46,7 +46,7 @@ export default function CompetencyAssignmentPanel({
   useEffect(() => { setAllowChildren(!!allowChildrenOverride); }, [allowChildrenOverride]);
 
   const handleSave = useCallback(async () => {
-    if (!selectedFrameworkId) return;
+    if (!selectedFrameworkId || disabled) return;
     const { ok } = await assign({
       scope,
       scopeId,
@@ -59,7 +59,7 @@ export default function CompetencyAssignmentPanel({
     if (ok) {
       addToast('success', 'Competency framework assignment saved');
     }
-  }, [addToast, allowChildren, assign, scope, scopeId, selectedFrameworkId, showOverrideToggle]);
+  }, [addToast, allowChildren, assign, disabled, scope, scopeId, selectedFrameworkId, showOverrideToggle]);
 
   useEffect(() => {
     if (!saveRef) return;

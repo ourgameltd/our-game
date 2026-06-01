@@ -393,6 +393,9 @@ export interface AgeGroupDetailDto {
   defaultSquadSize: number;
   description?: string;
   isArchived: boolean;
+  competencyFrameworkId?: string;
+  allowTeamOverride?: boolean;
+  clubAllowsAgeGroupOverride?: boolean;
 }
 
 export interface CreateAgeGroupRequest {
@@ -559,6 +562,7 @@ export interface TeamOverviewTeamDto {
   season: string;
   colors: TeamColorsDto;
   isArchived: boolean;
+  competencyFrameworkId?: string;
 }
 
 export interface TeamOverviewStatisticsDto {

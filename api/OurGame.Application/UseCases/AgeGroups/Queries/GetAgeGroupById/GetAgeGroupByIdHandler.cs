@@ -28,7 +28,7 @@ public class GetAgeGroupByIdHandler : IRequestHandler<GetAgeGroupByIdQuery, AgeG
     public async Task<AgeGroupDetailDto?> Handle(GetAgeGroupByIdQuery query, CancellationToken cancellationToken)
     {
         var sql = @"
-            SELECT 
+            SELECT
                 ag.Id,
                 ag.ClubId,
                 ag.Name,
@@ -39,8 +39,14 @@ public class GetAgeGroupByIdHandler : IRequestHandler<GetAgeGroupByIdQuery, AgeG
                 ag.DefaultSeason,
                 ag.DefaultSquadSize,
                 ag.Description,
-                ag.IsArchived
+                ag.IsArchived,
+                cfa.FrameworkId AS CompetencyFrameworkId,
+                CAST(COALESCE(ags.AllowTeamOverride, 0) AS BIT) AS AllowTeamOverride,
+                CAST(COALESCE(ccs.AllowAgeGroupOverride, 0) AS BIT) AS ClubAllowsAgeGroupOverride
             FROM AgeGroups ag
+            LEFT JOIN CompetencyFrameworkAssignments cfa ON cfa.AgeGroupId = ag.Id AND cfa.Scope = 2
+            LEFT JOIN AgeGroupCompetencySettings ags ON ags.AgeGroupId = ag.Id
+            LEFT JOIN ClubCompetencySettings ccs ON ccs.ClubId = ag.ClubId
             WHERE ag.Id = {0}";
 
         var ageGroup = await _db.Database
@@ -66,7 +72,10 @@ public class GetAgeGroupByIdHandler : IRequestHandler<GetAgeGroupByIdQuery, AgeG
             DefaultSeason = ageGroup.DefaultSeason ?? string.Empty,
             DefaultSquadSize = ageGroup.DefaultSquadSize,
             Description = ageGroup.Description,
-            IsArchived = ageGroup.IsArchived
+            IsArchived = ageGroup.IsArchived,
+            CompetencyFrameworkId = ageGroup.CompetencyFrameworkId,
+            AllowTeamOverride = ageGroup.AllowTeamOverride,
+            ClubAllowsAgeGroupOverride = ageGroup.ClubAllowsAgeGroupOverride,
         };
     }
 }
@@ -87,4 +96,7 @@ public class AgeGroupRawDto
     public int DefaultSquadSize { get; set; }
     public string? Description { get; set; }
     public bool IsArchived { get; set; }
+    public Guid? CompetencyFrameworkId { get; set; }
+    public bool AllowTeamOverride { get; set; }
+    public bool ClubAllowsAgeGroupOverride { get; set; }
 }

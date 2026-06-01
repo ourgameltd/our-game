@@ -16,4 +16,7 @@ public class AgeGroupDetailDto
     public int DefaultSquadSize { get; set; }
     public string? Description { get; set; }
     public bool IsArchived { get; set; }
+    public Guid? CompetencyFrameworkId { get; set; }
+    public bool AllowTeamOverride { get; set; }
+    public bool ClubAllowsAgeGroupOverride { get; set; }
 }

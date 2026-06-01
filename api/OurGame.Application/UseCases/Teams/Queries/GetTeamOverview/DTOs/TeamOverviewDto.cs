@@ -24,6 +24,7 @@ public class TeamOverviewTeamDto
     public string Season { get; set; } = string.Empty;
     public TeamColorsDto Colors { get; set; } = new();
     public bool IsArchived { get; set; }
+    public Guid? CompetencyFrameworkId { get; set; }
 }
 
 /// <summary>

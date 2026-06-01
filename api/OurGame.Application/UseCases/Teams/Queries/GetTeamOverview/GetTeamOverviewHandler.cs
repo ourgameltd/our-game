@@ -39,8 +39,10 @@ public class GetTeamOverviewHandler : IRequestHandler<GetTeamOverviewQuery, Team
                 t.Season,
                 t.PrimaryColor,
                 t.SecondaryColor,
-                t.IsArchived
+                t.IsArchived,
+                cfa.FrameworkId AS CompetencyFrameworkId
             FROM Teams t
+            LEFT JOIN CompetencyFrameworkAssignments cfa ON cfa.TeamId = t.Id AND cfa.Scope = 3
             WHERE t.Id = {0}";
 
         var team = await _db.Database
@@ -218,7 +220,8 @@ public class GetTeamOverviewHandler : IRequestHandler<GetTeamOverviewQuery, Team
                     Primary = team.PrimaryColor,
                     Secondary = team.SecondaryColor
                 },
-                IsArchived = team.IsArchived
+                IsArchived = team.IsArchived,
+                CompetencyFrameworkId = team.CompetencyFrameworkId,
             },
             Statistics = new TeamOverviewStatisticsDto
             {
@@ -307,6 +310,7 @@ public class TeamOverviewTeamRawDto
     public string? PrimaryColor { get; set; }
     public string? SecondaryColor { get; set; }
     public bool IsArchived { get; set; }
+    public Guid? CompetencyFrameworkId { get; set; }
 }
 
 /// <summary>

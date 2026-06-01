@@ -543,6 +543,9 @@ export default function AgeGroupSettingsPage() {
               clubId={clubId}
               scope="ageGroup"
               scopeId={ageGroupId}
+              currentFrameworkId={ageGroup?.competencyFrameworkId}
+              allowChildrenOverride={ageGroup?.allowTeamOverride}
+              disabled={!ageGroup?.clubAllowsAgeGroupOverride}
               showOverrideToggle
               hideSaveControls
               saveRef={competencySaveRef}
