@@ -321,7 +321,6 @@ const AgeGroupOverviewPage: React.FC = () => {
                 <TeamListCard
                   key={team.id}
                   team={team}
-                  club={clubModel}
                   ageGroup={ageGroupModel}
                   stats={teams[index].stats}
                   onClick={team.isArchived ? undefined : () => {

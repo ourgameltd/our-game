@@ -1,6 +1,6 @@
 import React, { ReactNode } from 'react';
-import { Team, Club, AgeGroup } from '@/types';
-import { getGradientColors, getContrastTextColorClass, getPerformanceColorClass } from '@utils/colorHelpers';
+import { Team, AgeGroup } from '@/types';
+import { getPerformanceColorClass } from '@utils/colorHelpers';
 
 interface TeamStats {
   playerCount: number;
@@ -15,7 +15,6 @@ interface TeamStats {
 
 interface TeamListCardProps {
   team: Team;
-  club: Club;
   ageGroup?: AgeGroup;
   stats: TeamStats;
   badges?: ReactNode;
@@ -23,18 +22,14 @@ interface TeamListCardProps {
   onClick?: () => void;
 }
 
-const TeamListCard: React.FC<TeamListCardProps> = ({ 
-  team, 
-  club,
+const TeamListCard: React.FC<TeamListCardProps> = ({
+  team,
   ageGroup,
   stats,
   badges,
   actions,
   onClick
 }) => {
-  const { primaryColor, secondaryColor } = getGradientColors(club, team);
-  const textColorClass = getContrastTextColorClass(primaryColor);
-
   return (
     <div
       className={`bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors overflow-hidden ${
@@ -44,23 +39,18 @@ const TeamListCard: React.FC<TeamListCardProps> = ({
     >
       {/* Mobile: Card Layout */}
       <div className="md:hidden">
-        {/* Gradient Header */}
-        <div 
-          className={`p-4 ${textColorClass} relative`}
-          style={{
-            backgroundImage: `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`,
-          }}
-        >
+        {/* Header */}
+        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
           <div className="flex items-start justify-between">
             <div>
-              <h3 className="text-xl font-bold">{team.name}</h3>
-              <p className="text-sm opacity-90 mt-1">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{team.name}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                 {ageGroup?.name && <span>{ageGroup.name} • </span>}
                 {team.level.charAt(0).toUpperCase() + team.level.slice(1)}
               </p>
             </div>
             <div className="flex flex-col items-end gap-1">
-              <span className={`badge bg-white/20 backdrop-blur-sm ${textColorClass} border border-white/30 text-xs`}>
+              <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs">
                 {team.level.charAt(0).toUpperCase() + team.level.slice(1)}
               </span>
               {team.isArchived && (
@@ -116,12 +106,7 @@ const TeamListCard: React.FC<TeamListCardProps> = ({
       {/* Desktop: Row Layout */}
       <div className="hidden md:flex md:items-center md:gap-4">
         {/* Color indicator */}
-        <div 
-          className="w-1 self-stretch rounded-full flex-shrink-0"
-          style={{
-            backgroundImage: `linear-gradient(180deg, ${primaryColor}, ${secondaryColor})`,
-          }}
-        />
+        <div className="w-1 self-stretch rounded-full flex-shrink-0 bg-primary-500 dark:bg-primary-400" />
 
         {/* Name & Info */}
         <div className="flex-1 min-w-0">

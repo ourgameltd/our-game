@@ -5,7 +5,7 @@ import TeamListCard from '@components/team/TeamListCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
-import { Team, Club, AgeGroup, SquadSize } from '@/types';
+import { Team, AgeGroup, SquadSize } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function TeamsListPage() {
@@ -15,7 +15,7 @@ export default function TeamsListPage() {
   const navigate = useNavigate();
   
   // Fetch data from API
-  const { data: club, isLoading: clubLoading, error: clubError } = useClubById(clubId);
+  const { isLoading: clubLoading, error: clubError } = useClubById(clubId);
   const { data: ageGroup, isLoading: ageGroupLoading, error: ageGroupError } = useAgeGroupById(ageGroupId);
   const { data: teamsData, isLoading: teamsLoading, error: teamsError } = useTeamsByAgeGroupId(ageGroupId);
 
@@ -61,29 +61,6 @@ export default function TeamsListPage() {
       </div>
     );
   }
-
-  // Map API DTOs to component types
-  const clubMapped: Club | null = club ? {
-    id: club.id || '',
-    name: club.name || '',
-    shortName: club.shortName || '',
-    logo: club.logo || '',
-    colors: {
-      primary: club.colors.primary || '',
-      secondary: club.colors.secondary || '',
-      accent: club.colors.accent || ''
-    },
-    founded: club.founded || 0,
-    location: {
-      city: club.location.city || '',
-      country: club.location.country || '',
-      venue: club.location.venue || '',
-      address: club.location.address
-    },
-    history: club.history,
-    ethos: club.ethos,
-    principles: club.principles || []
-  } : null;
 
   const ageGroupMapped: AgeGroup | null = ageGroup ? {
     id: ageGroup.id || '',
@@ -196,7 +173,6 @@ export default function TeamsListPage() {
                 <TeamListCard
                   key={team.id}
                   team={team}
-                  club={clubMapped!}
                   ageGroup={ageGroupMapped || undefined}
                   stats={{
                     playerCount: teamData?.stats.playerCount || 0,
