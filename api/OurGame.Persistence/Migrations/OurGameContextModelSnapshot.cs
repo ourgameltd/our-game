@@ -2339,6 +2339,9 @@ namespace OurGame.Persistence.Migrations
                     b.Property<bool>("IsArchived")
                         .HasColumnType("bit");
 
+                    b.Property<int?>("OverallBand")
+                        .HasColumnType("int");
+
                     b.Property<DateOnly?>("PeriodEnd")
                         .HasColumnType("date");
 

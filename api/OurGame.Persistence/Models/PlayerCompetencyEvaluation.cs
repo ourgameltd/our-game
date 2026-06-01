@@ -1,6 +1,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Models;
 
@@ -25,6 +26,8 @@ public partial class PlayerCompetencyEvaluation
     public DateOnly? PeriodEnd { get; set; }
 
     public bool IsArchived { get; set; }
+
+    public CompetencyBand? OverallBand { get; set; }
 
     public virtual Player Player { get; set; }
 

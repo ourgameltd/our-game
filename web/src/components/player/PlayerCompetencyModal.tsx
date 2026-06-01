@@ -3,7 +3,6 @@ import { Target, Dumbbell, Brain, Info, X } from 'lucide-react';
 import {
   CompetencyBand,
   COMPETENCY_BANDS,
-  GAME_FORMAT_LABELS,
   PlayerCompetencyBandDto,
   usePlayerCompetencies,
   useUpdatePlayerCompetencies,
@@ -173,25 +172,6 @@ export default function PlayerCompetencyModal({ playerId, playerName, onClose, o
               </section>
             );
           })}
-
-          {!isLoading && data && data.teamScores.length > 0 && (
-            <section>
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">Per-team scores</h3>
-              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
-                {data.teamScores.map((s) => (
-                  <li key={s.teamId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                    <div className="font-medium text-gray-900 dark:text-white">{s.teamName}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                      {GAME_FORMAT_LABELS[s.format]} · {s.frameworkName}
-                    </div>
-                    <div className="text-xs text-gray-700 dark:text-gray-300 mt-1">
-                      Base {s.baseScore.toFixed(2)} · Boosted {s.boostedScore.toFixed(2)} · <span className="font-medium">{s.band}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
 
           <section>
             <label htmlFor="coach-notes" className="label">

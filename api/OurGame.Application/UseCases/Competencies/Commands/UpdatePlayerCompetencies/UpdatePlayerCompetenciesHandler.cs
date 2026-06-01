@@ -74,9 +74,10 @@ public class UpdatePlayerCompetenciesHandler : IRequestHandler<UpdatePlayerCompe
         }
 
         // Snapshot the change as a historical evaluation row for audit trail.
+        PlayerCompetencyEvaluation? evaluation = null;
         if (coachId is not null && request.Dto.Bands.Count > 0)
         {
-            var evaluation = new PlayerCompetencyEvaluation
+            evaluation = new PlayerCompetencyEvaluation
             {
                 Id = Guid.NewGuid(),
                 PlayerId = request.PlayerId,
@@ -99,6 +100,15 @@ public class UpdatePlayerCompetenciesHandler : IRequestHandler<UpdatePlayerCompe
 
         // Synchronous recalculation: a single player is cheap to recompute.
         await _calculator.RecalculatePlayerScoresAsync(request.PlayerId, cancellationToken);
+
+        if (evaluation is not null)
+        {
+            evaluation.OverallBand = await _db.Players
+                .Where(p => p.Id == request.PlayerId)
+                .Select(p => p.OverallBand)
+                .FirstOrDefaultAsync(cancellationToken);
+            await _db.SaveChangesAsync(cancellationToken);
+        }
 
         return Unit.Value;
     }

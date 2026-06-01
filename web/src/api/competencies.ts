@@ -4,6 +4,8 @@
  * Endpoints:
  *   GET    /v1/players/{playerId}/competencies
  *   PUT    /v1/players/{playerId}/competencies
+ *   GET    /v1/players/{playerId}/competency-evaluations
+ *   PATCH  /v1/players/{playerId}/competency-evaluations/{evaluationId}
  *   GET    /v1/clubs/{clubId}/competency-frameworks
  *   GET    /v1/competency-frameworks/{id}
  *   POST   /v1/competency-frameworks
@@ -170,6 +172,23 @@ export interface SetCompetencyAssignmentRequest {
   allowTeamOverride?: boolean;
 }
 
+export interface EvaluationBandDto {
+  competencyId: string;
+  competencyName: string;
+  displayOrder: number;
+  band: CompetencyBand;
+}
+
+export interface PlayerCompetencyEvaluationSummaryDto {
+  id: string;
+  evaluatedAt: string;
+  coachName: string;
+  coachNotes: string;
+  overallBand?: CompetencyBand;
+  isArchived: boolean;
+  levels: EvaluationBandDto[];
+}
+
 // ---------- Client ----------
 
 function handleError(error: unknown): ApiResponse<never> {
@@ -244,6 +263,18 @@ export const competenciesClient = {
   setTeamAssignment: async (teamId: string, request: SetCompetencyAssignmentRequest): Promise<ApiResponse<void>> => {
     try {
       await axiosInstance.put(`/v1/teams/${teamId}/competency-assignment`, request);
+      return { success: true, statusCode: 204 } as ApiResponse<void>;
+    } catch (e) { return handleError(e); }
+  },
+  getPlayerCompetencyEvaluations: async (playerId: string): Promise<ApiResponse<PlayerCompetencyEvaluationSummaryDto[]>> => {
+    try {
+      const r = await axiosInstance.get<ApiResponse<PlayerCompetencyEvaluationSummaryDto[]>>(`/v1/players/${playerId}/competency-evaluations`);
+      return r.data;
+    } catch (e) { return handleError(e); }
+  },
+  archivePlayerCompetencyEvaluation: async (playerId: string, evaluationId: string, isArchived: boolean): Promise<ApiResponse<void>> => {
+    try {
+      await axiosInstance.patch(`/v1/players/${playerId}/competency-evaluations/${evaluationId}`, { isArchived });
       return { success: true, statusCode: 204 } as ApiResponse<void>;
     } catch (e) { return handleError(e); }
   },
@@ -372,5 +403,19 @@ export function useSetCompetencyAssignment() {
       if (scope === 'ageGroup') return competenciesClient.setAgeGroupAssignment(scopeId, request);
       return competenciesClient.setTeamAssignment(scopeId, request);
     },
+  );
+}
+
+export function usePlayerCompetencyEvaluations(playerId: string | undefined) {
+  return useQuery<PlayerCompetencyEvaluationSummaryDto[]>(
+    () => competenciesClient.getPlayerCompetencyEvaluations(playerId!),
+    [playerId],
+    !!playerId,
+  );
+}
+
+export function useArchivePlayerCompetencyEvaluation(playerId: string) {
+  return useMutation<{ evaluationId: string; isArchived: boolean }, void>(
+    ({ evaluationId, isArchived }) => competenciesClient.archivePlayerCompetencyEvaluation(playerId, evaluationId, isArchived),
   );
 }
