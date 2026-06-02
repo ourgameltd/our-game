@@ -366,6 +366,8 @@ export interface TrainingSession {
   }[];
   notes?: string; // Free text area for session plan and additional details
   status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
+  coachCount?: number;
+  confirmedCoachCount?: number;
 }
 
 export interface Drill {

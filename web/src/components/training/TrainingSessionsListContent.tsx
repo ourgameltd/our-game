@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { MapPin, Settings } from 'lucide-react';
 import { sampleDrills } from '@/data/training';
 import { Routes } from '@utils/routes';
@@ -38,15 +38,21 @@ export default function TrainingSessionsListContent({
   const totalExpected = (squadCount ?? 0) * pastSessions.length;
   const avgAttendance = totalExpected > 0 ? Math.round((totalAttendance / totalExpected) * 100) : 0;
 
+  const navigate = useNavigate();
+
   const SessionRow = ({ session }: { session: TrainingSession }) => {
     const sessionDate = new Date(session.date);
     const isPast = sessionDate < now;
     const drills = session.drillIds.map(id => sampleDrills.find(d => d.id === id)).filter(Boolean);
     const totalDrillTime = drills.reduce((acc, d) => acc + (d?.duration || 0), 0);
     const sessionTeamId = teamId || session.teamId;
+    const detailLink = Routes.teamTrainingSession(clubId, ageGroupId, sessionTeamId, session.id);
 
     return (
-      <div className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b">
+      <div
+        className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        onClick={() => navigate(detailLink)}
+      >
         <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-4">
           {/* Date & Time */}
           <div className="flex items-center gap-3 md:flex-shrink-0 md:w-[130px] md:order-1">
@@ -87,10 +93,18 @@ export default function TrainingSessionsListContent({
               </div>
             )}
 
-            {/* Drills Info */}
-            {drills.length > 0 && (
-              <div className="text-xs text-gray-500 dark:text-gray-500">
-                {drills.length} drill{drills.length !== 1 ? 's' : ''} • {totalDrillTime} mins total
+            {/* Drills + Coaches Info */}
+            {(drills.length > 0 || (session.coachCount ?? 0) > 0) && (
+              <div className="text-xs text-gray-500 dark:text-gray-500 flex items-center gap-2">
+                {drills.length > 0 && (
+                  <span>{drills.length} drill{drills.length !== 1 ? 's' : ''} • {totalDrillTime} mins total</span>
+                )}
+                {drills.length > 0 && (session.coachCount ?? 0) > 0 && (
+                  <span>·</span>
+                )}
+                {(session.coachCount ?? 0) > 0 && (
+                  <span>{session.coachCount} coach{session.coachCount !== 1 ? 'es' : ''}</span>
+                )}
               </div>
             )}
           </div>
@@ -117,13 +131,18 @@ export default function TrainingSessionsListContent({
           </div>
 
           {/* Status/Attendance */}
-          <div className="hidden md:flex md:order-5 md:flex-shrink-0 items-center gap-2 md:w-[120px] justify-end">
+          <div className="hidden md:flex md:order-5 md:flex-shrink-0 items-center gap-2 md:w-[200px] justify-end">
             {isPast && squadCount !== undefined && (
               <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded whitespace-nowrap">
                 {(session.attendance ?? []).filter(a => a.status === 'confirmed').length}/{squadCount}
               </span>
             )}
-            {!isPast && (
+            {(session.coachCount ?? 0) > 0 && (
+              <span className="text-xs px-2 py-0.5 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 rounded whitespace-nowrap">
+                {session.confirmedCoachCount ?? 0}/{session.coachCount}
+              </span>
+            )}
+            {!isPast && (session.coachCount ?? 0) === 0 && (
               <span className="text-xs px-2 py-0.5 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded whitespace-nowrap">
                 Scheduled
               </span>
@@ -135,10 +154,15 @@ export default function TrainingSessionsListContent({
             <div className="flex items-center gap-2">
               {isPast && squadCount !== undefined && (
                 <span className="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded whitespace-nowrap">
-                  {(session.attendance ?? []).filter(a => a.status === 'confirmed').length}/{squadCount} attended
+                  {(session.attendance ?? []).filter(a => a.status === 'confirmed').length}/{squadCount}
                 </span>
               )}
-              {!isPast && (
+              {(session.coachCount ?? 0) > 0 && (
+                <span className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 rounded whitespace-nowrap">
+                  {session.confirmedCoachCount ?? 0}/{session.coachCount}
+                </span>
+              )}
+              {!isPast && (session.coachCount ?? 0) === 0 && (
                 <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded whitespace-nowrap">
                   Scheduled
                 </span>

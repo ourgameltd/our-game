@@ -732,6 +732,8 @@ export interface TeamTrainingSessionDto {
   status: string;
   drillCount: number;
   attendanceCount: number;
+  coachCount: number;
+  confirmedCoachCount: number;
 }
 
 export interface AttendanceDto {

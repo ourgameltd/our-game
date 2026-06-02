@@ -69,4 +69,14 @@ public record TeamTrainingSessionDto
     /// Number of players who attended
     /// </summary>
     public int AttendanceCount { get; init; }
+
+    /// <summary>
+    /// Total number of coaches assigned to the session
+    /// </summary>
+    public int CoachCount { get; init; }
+
+    /// <summary>
+    /// Number of coaches who confirmed attendance
+    /// </summary>
+    public int ConfirmedCoachCount { get; init; }
 }

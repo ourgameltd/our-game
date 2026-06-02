@@ -23,7 +23,9 @@ const mapApiSessionToUiSession = (dto: TeamTrainingSessionDto): TrainingSession 
     status: a.status as 'confirmed' | 'declined' | 'maybe' | 'pending',
     notes: a.notes
   })),
-  status: dto.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled'
+  status: dto.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled',
+  coachCount: dto.coachCount,
+  confirmedCoachCount: dto.confirmedCoachCount,
 });
 
 export default function TrainingSessionsListPage() {

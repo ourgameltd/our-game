@@ -81,8 +81,10 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
                  FROM SessionDrills sd 
                  WHERE sd.SessionId = ts.Id) AS DrillCount,
                 (SELECT COUNT(DISTINCT sa.PlayerId)
-                 FROM SessionAttendances sa 
-                 WHERE sa.SessionId = ts.Id AND sa.Present = 1) AS AttendanceCount
+                 FROM SessionAttendances sa
+                 WHERE sa.SessionId = ts.Id AND sa.Present = 1) AS AttendanceCount,
+                (SELECT COUNT(*) FROM SessionCoaches sc WHERE sc.SessionId = ts.Id) AS CoachCount,
+                (SELECT COUNT(*) FROM SessionCoaches sc WHERE sc.SessionId = ts.Id AND sc.Status = 'confirmed') AS ConfirmedCoachCount
             FROM TrainingSessions ts
             WHERE ts.TeamId = @teamId";
 
@@ -157,7 +159,9 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
             Status = MapStatusToString(s.Status),
             IsLocked = s.IsLocked,
             DrillCount = s.DrillCount,
-            AttendanceCount = s.AttendanceCount
+            AttendanceCount = s.AttendanceCount,
+            CoachCount = s.CoachCount,
+            ConfirmedCoachCount = s.ConfirmedCoachCount
         }).ToList();
 
         return new TeamTrainingSessionsDto
@@ -289,4 +293,6 @@ public class TrainingSessionRaw
     public string? AttendanceString { get; set; }
     public int DrillCount { get; set; }
     public int AttendanceCount { get; set; }
+    public int CoachCount { get; set; }
+    public int ConfirmedCoachCount { get; set; }
 }
