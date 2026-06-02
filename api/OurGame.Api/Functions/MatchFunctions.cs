@@ -237,11 +237,31 @@ public class MatchFunctions
             return notFoundResponse;
         }
 
+        var scoreText = match.HomeScore.HasValue && match.AwayScore.HasValue
+            ? $"{match.HomeScore} – {match.AwayScore}"
+            : null;
+        var ogTitle = scoreText != null
+            ? $"{match.TeamName} {scoreText} {match.Opposition} | Match Report"
+            : $"{match.TeamName} vs {match.Opposition} | Match Report";
+        var ogDescription = scoreText != null
+            ? $"{match.TeamName} {scoreText} {match.Opposition} in {match.Competition}."
+            : $"{match.TeamName} vs {match.Opposition} in {match.Competition}.";
+        if (!string.IsNullOrWhiteSpace(match.Report.Summary))
+        {
+            var plain = match.Report.Summary.Length > 120
+                ? match.Report.Summary[..120].TrimEnd() + "…"
+                : match.Report.Summary;
+            ogDescription += $" {plain}";
+        }
+
         var dto = new PublishedMatchReportDto
         {
             MatchId = match.Id,
             ClubId = match.ClubId,
             ClubName = match.ClubName,
+            ClubLogo = match.ClubLogo,
+            ClubPrimaryColor = match.ClubPrimaryColor,
+            ClubSecondaryColor = match.ClubSecondaryColor,
             TeamName = match.TeamName,
             Opposition = match.Opposition,
             MatchDate = match.MatchDate,
@@ -251,10 +271,14 @@ public class MatchFunctions
             HomeScore = match.HomeScore,
             AwayScore = match.AwayScore,
             Summary = match.Report.Summary,
-            OgTitle = $"{match.TeamName} vs {match.Opposition} match report",
-            OgDescription = !string.IsNullOrWhiteSpace(match.Report.Summary)
-                ? match.Report.Summary
-                : $"{match.TeamName} vs {match.Opposition} in {match.Competition}."
+            PlayerOfMatchName = match.Report.PlayerOfMatchName,
+            PlayerOfMatchPhoto = match.Report.PlayerOfMatchPhoto,
+            Goals = match.Report.Goals
+                .Select(g => new PublishedGoalDto(g.ScorerName, g.Minute, g.IsPenalty))
+                .ToList(),
+            OgTitle = ogTitle,
+            OgDescription = ogDescription,
+            OgImage = match.ClubLogo
         };
 
         var response = req.CreateResponse(HttpStatusCode.OK);
@@ -632,6 +656,9 @@ public class PublishedMatchReportDto
     public Guid MatchId { get; set; }
     public Guid ClubId { get; set; }
     public string ClubName { get; set; } = string.Empty;
+    public string? ClubLogo { get; set; }
+    public string? ClubPrimaryColor { get; set; }
+    public string? ClubSecondaryColor { get; set; }
     public string TeamName { get; set; } = string.Empty;
     public string Opposition { get; set; } = string.Empty;
     public DateTime MatchDate { get; set; }
@@ -641,6 +668,12 @@ public class PublishedMatchReportDto
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
     public string? Summary { get; set; }
+    public string? PlayerOfMatchName { get; set; }
+    public string? PlayerOfMatchPhoto { get; set; }
+    public List<PublishedGoalDto> Goals { get; set; } = new();
     public string OgTitle { get; set; } = string.Empty;
     public string OgDescription { get; set; } = string.Empty;
+    public string? OgImage { get; set; }
 }
+
+public record PublishedGoalDto(string ScorerName, int? Minute, bool IsPenalty);

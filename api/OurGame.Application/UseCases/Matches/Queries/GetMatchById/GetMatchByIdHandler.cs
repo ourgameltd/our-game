@@ -34,6 +34,9 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 t.AgeGroupId,
                 t.ClubId,
                 cl.Name AS ClubName,
+                cl.Logo AS ClubLogo,
+                cl.PrimaryColor AS ClubPrimaryColor,
+                cl.SecondaryColor AS ClubSecondaryColor,
                 t.Name AS TeamName,
                 ag.Name AS AgeGroupName,
                 m.SeasonId,
@@ -295,6 +298,9 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             AgeGroupId = match.AgeGroupId,
             ClubId = match.ClubId,
             ClubName = match.ClubName ?? string.Empty,
+            ClubLogo = match.ClubLogo,
+            ClubPrimaryColor = match.ClubPrimaryColor,
+            ClubSecondaryColor = match.ClubSecondaryColor,
             TeamName = match.TeamName ?? string.Empty,
             AgeGroupName = match.AgeGroupName ?? string.Empty,
             SeasonId = match.SeasonId ?? string.Empty,
@@ -482,6 +488,9 @@ public class MatchRaw
     public Guid AgeGroupId { get; set; }
     public Guid ClubId { get; set; }
     public string? ClubName { get; set; }
+    public string? ClubLogo { get; set; }
+    public string? ClubPrimaryColor { get; set; }
+    public string? ClubSecondaryColor { get; set; }
     public string? TeamName { get; set; }
     public string? AgeGroupName { get; set; }
     public string? SeasonId { get; set; }

@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { Settings, Share2 } from 'lucide-react';
+import { Settings, Share2, FileText, CalendarPlus, Map } from 'lucide-react';
+import Markdown from 'react-markdown';
 import { useMatchReport, usePublishMatchReport } from '@/api/hooks';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
@@ -171,6 +172,30 @@ export default function MatchReportPage() {
     setIsPublished(nextPublishedState);
   };
 
+  const handleAddToCalendar = () => {
+    const meet = new Date(match.meetTime!);
+    const end = new Date(meet.getTime() + 2 * 60 * 60 * 1000);
+    const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
+    const ics = [
+      'BEGIN:VCALENDAR',
+      'VERSION:2.0',
+      'BEGIN:VEVENT',
+      `DTSTART:${fmt(meet)}`,
+      `DTEND:${fmt(end)}`,
+      `SUMMARY:${homeTeam} vs ${awayTeam}`,
+      `LOCATION:${match.location}`,
+      'END:VEVENT',
+      'END:VCALENDAR',
+    ].join('\r\n');
+    const blob = new Blob([ics], { type: 'text/calendar' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'match.ics';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">     
@@ -200,34 +225,77 @@ export default function MatchReportPage() {
           </div>
         )}
 
-        {isPublished && (
-          <div className="mb-4 rounded border border-green-200 bg-green-50 px-4 py-2 text-sm text-green-700 dark:border-green-800 dark:bg-green-900/20 dark:text-green-300">
-            Published at{' '}
-            <a className="underline" href={socialShareUrl} target="_blank" rel="noopener noreferrer">
-              {socialShareUrl}
-            </a>
-          </div>
-        )}
-
         {/* Match Header */}
         <div className="card mb-4">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                {homeTeam} vs {awayTeam}
-              </h1>
-              <div className="flex flex-wrap gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <span>📍 {match.location}</span>
-                <span>•</span>
+              <div className="flex items-center gap-2 mb-2">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+                  {homeTeam} vs {awayTeam}
+                </h1>
+                {isPublished && (
+                  <a
+                    href={socialShareUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="View Published Report"
+                    title="View Published Report"
+                    className="btn-sm btn-secondary p-1.5"
+                  >
+                    <FileText className="w-4 h-4" />
+                  </a>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>📅 {new Date(match.matchDate).toLocaleDateString()}</span>
                 {match.kickOffTime && (
                   <>
                     <span>•</span>
-                    <span>⏰ {new Date(match.kickOffTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>⚽ {new Date(match.kickOffTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </>
                 )}
                 <span>•</span>
                 <span>🏆 {match.competition}</span>
+                {match.weatherCondition && (
+                  <>
+                    <span>•</span>
+                    <span>🌤️ {match.weatherCondition}</span>
+                    {match.weatherTemperature && (
+                      <>
+                        <span>•</span>
+                        <span>🌡️ {match.weatherTemperature}°C</span>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <span>📍 {match.location}</span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(match.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open in Google Maps"
+                  title="Open in Google Maps"
+                  className="btn-sm btn-secondary p-1.5"
+                >
+                  <Map className="w-4 h-4" />
+                </a>
+                {match.meetTime && (
+                  <>
+                    <span>•</span>
+                    <span>🕐 Meet: {new Date(match.meetTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <button
+                      type="button"
+                      onClick={handleAddToCalendar}
+                      aria-label="Add to calendar"
+                      title="Add to calendar"
+                      className="btn-sm btn-secondary p-1.5"
+                    >
+                      <CalendarPlus className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
               </div>
             </div>
             {match.homeScore !== undefined && match.awayScore !== undefined && (
@@ -238,16 +306,11 @@ export default function MatchReportPage() {
               </div>
             )}
           </div>
-          
-          {match.weatherCondition && (
-            <div className="flex gap-2 text-sm text-gray-600 dark:text-gray-400">
-              <span>🌤️ {match.weatherCondition}</span>
-              {match.weatherTemperature && (
-                <>
-                  <span>•</span>
-                  <span>🌡️ {match.weatherTemperature}°C</span>
-                </>
-              )}
+
+          {match.notes && (
+            <div className="mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-600 dark:border-blue-400">
+              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Additional Info</p>
+              <p className="text-sm text-gray-700 dark:text-gray-300">{match.notes}</p>
             </div>
           )}
         </div>
@@ -474,9 +537,9 @@ export default function MatchReportPage() {
                 <div className="card mb-4">
                   <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Match Summary</h2>
                   {match.report.summary ? (
-                    <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                      {match.report.summary}
-                    </p>
+                    <div className="markdown-content">
+                      <Markdown>{match.report.summary}</Markdown>
+                    </div>
                   ) : (
                     <p className="text-gray-500 dark:text-gray-400 italic">
                       No match summary available yet.

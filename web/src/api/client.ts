@@ -2245,10 +2245,19 @@ export interface MatchDetailDto {
   attendance: MatchAttendanceDetailDto[];
 }
 
+export interface PublishedGoalDto {
+  scorerName: string;
+  minute?: number;
+  isPenalty: boolean;
+}
+
 export interface PublishedMatchReportDto {
   matchId: string;
   clubId: string;
   clubName: string;
+  clubLogo?: string;
+  clubPrimaryColor?: string;
+  clubSecondaryColor?: string;
   teamName: string;
   opposition: string;
   matchDate: string;
@@ -2258,8 +2267,12 @@ export interface PublishedMatchReportDto {
   homeScore?: number;
   awayScore?: number;
   summary?: string;
+  playerOfMatchName?: string;
+  playerOfMatchPhoto?: string;
+  goals?: PublishedGoalDto[];
   ogTitle: string;
   ogDescription: string;
+  ogImage?: string;
 }
 
 export interface MatchLineupDto {

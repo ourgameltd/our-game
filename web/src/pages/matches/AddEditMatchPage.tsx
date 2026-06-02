@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell, Pencil } from 'lucide-react';
+import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell, Pencil, Bold, Italic, Heading1, Heading2, Heading3, Heading4, List, ListOrdered, Quote } from 'lucide-react';
 const Timeline = ({ className, children }: { className?: string; children?: React.ReactNode }) => <ul className={className}>{children}</ul>;
 const TimelineItem = ({ className, children }: { className?: string; children?: React.ReactNode }) => <li className={className}>{children}</li>;
 const TimelineHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`flex items-center ${className ?? ''}`}>{children}</div>;
@@ -21,6 +21,7 @@ import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOve
 import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
+import Markdown from 'react-markdown';
 
 const supportedSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
 
@@ -383,6 +384,8 @@ export default function AddEditMatchPage() {
   const [homeScore, setHomeScore] = useState('');
   const [awayScore, setAwayScore] = useState('');
   const [summary, setSummary] = useState('');
+  const [summaryTab, setSummaryTab] = useState<'write' | 'preview'>('write');
+  const summaryRef = useRef<HTMLTextAreaElement>(null);
   
   // Lineup state - derive from MatchDetailDto.lineup.players (LineupPlayerDto[])
   const [startingPlayers, setStartingPlayers] = useState<StartingLineupPlayer[]>([]);
@@ -1580,6 +1583,34 @@ export default function AddEditMatchPage() {
   // Players available for events (goals/cards/injuries) - fallback to all team players when lineup is empty
   const playersForEvents = allPlayersInMatch.length > 0 ? allPlayersInMatch : (teamPlayers || []).map(p => p.id);
 
+  const wrapSelection = (before: string, after: string, placeholder: string) => {
+    const el = summaryRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const end = el.selectionEnd;
+    const selected = summary.slice(start, end) || placeholder;
+    const next = summary.slice(0, start) + before + selected + after + summary.slice(end);
+    setSummary(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      el.setSelectionRange(start + before.length, start + before.length + selected.length);
+    });
+  };
+
+  const prefixLine = (prefix: string) => {
+    const el = summaryRef.current;
+    if (!el) return;
+    const start = el.selectionStart;
+    const lineStart = summary.lastIndexOf('\n', start - 1) + 1;
+    const next = summary.slice(0, lineStart) + prefix + summary.slice(lineStart);
+    setSummary(next);
+    requestAnimationFrame(() => {
+      el.focus();
+      const pos = start + prefix.length;
+      el.setSelectionRange(pos, pos);
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">{/* Header */}
@@ -2047,18 +2078,62 @@ export default function AddEditMatchPage() {
 
               {/* Match Summary */}
               <div className="pt-4">
-                <div className="mb-2">
+                <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                     <span>📋</span> Match Summary
                   </h3>
+                  <div className="flex rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setSummaryTab('write')}
+                      className={`px-3 py-1 ${summaryTab === 'write' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                    >
+                      Write
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSummaryTab('preview')}
+                      className={`px-3 py-1 border-l border-gray-200 dark:border-gray-700 ${summaryTab === 'preview' ? 'bg-primary-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                    >
+                      Preview
+                    </button>
+                  </div>
                 </div>
-                <textarea
-                  value={summary}
-                  onChange={(e) => setSummary(e.target.value)}
-                  rows={5}
-                  className="input resize-y"
-                  placeholder="Write a summary of the match..."
-                />
+                {summaryTab === 'write' ? (
+                  <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div className="flex flex-wrap gap-0.5 p-1.5 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+                      <button type="button" onClick={() => wrapSelection('**', '**', 'bold text')} title="Bold" aria-label="Bold" className="btn-sm btn-secondary p-1.5"><Bold className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => wrapSelection('*', '*', 'italic text')} title="Italic" aria-label="Italic" className="btn-sm btn-secondary p-1.5"><Italic className="w-4 h-4" /></button>
+                      <div className="w-px self-stretch bg-gray-200 dark:bg-gray-600 mx-0.5" />
+                      <button type="button" onClick={() => prefixLine('# ')} title="Heading 1" aria-label="Heading 1" className="btn-sm btn-secondary p-1.5"><Heading1 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('## ')} title="Heading 2" aria-label="Heading 2" className="btn-sm btn-secondary p-1.5"><Heading2 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('### ')} title="Heading 3" aria-label="Heading 3" className="btn-sm btn-secondary p-1.5"><Heading3 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('#### ')} title="Heading 4" aria-label="Heading 4" className="btn-sm btn-secondary p-1.5"><Heading4 className="w-4 h-4" /></button>
+                      <div className="w-px self-stretch bg-gray-200 dark:bg-gray-600 mx-0.5" />
+                      <button type="button" onClick={() => prefixLine('- ')} title="Bullet list" aria-label="Bullet list" className="btn-sm btn-secondary p-1.5"><List className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('1. ')} title="Numbered list" aria-label="Numbered list" className="btn-sm btn-secondary p-1.5"><ListOrdered className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('> ')} title="Blockquote" aria-label="Blockquote" className="btn-sm btn-secondary p-1.5"><Quote className="w-4 h-4" /></button>
+                    </div>
+                    <textarea
+                      ref={summaryRef}
+                      value={summary}
+                      onChange={(e) => setSummary(e.target.value)}
+                      rows={8}
+                      className="w-full bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm font-mono resize-y focus:outline-none placeholder:text-gray-400 dark:placeholder:text-gray-500"
+                      placeholder="Write a summary of the match... Markdown is supported."
+                    />
+                  </div>
+                ) : (
+                  <div className="min-h-[12rem] rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2">
+                    {summary ? (
+                      <div className="markdown-content">
+                        <Markdown>{summary}</Markdown>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-400 dark:text-gray-500 italic">Nothing to preview yet.</p>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           )}

@@ -10,6 +10,9 @@ public record MatchDetailDto
     public Guid AgeGroupId { get; init; }
     public Guid ClubId { get; init; }
     public string ClubName { get; init; } = string.Empty;
+    public string? ClubLogo { get; init; }
+    public string? ClubPrimaryColor { get; init; }
+    public string? ClubSecondaryColor { get; init; }
     public string TeamName { get; init; } = string.Empty;
     public string AgeGroupName { get; init; } = string.Empty;
     public string SeasonId { get; init; } = string.Empty;
