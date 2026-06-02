@@ -44,9 +44,9 @@ export interface AddPlayerToTeamRequest {
   squadNumber: number;
 }
 
-// Invite Types
-export type InviteType = 0 | 1 | 2; // Coach=0, Player=1, Parent=2
-export type InviteStatus = 0 | 1 | 2 | 3; // Pending=0, Accepted=1, Expired=2, Revoked=3
+// Invite Types (backend serializes enums as strings via JsonStringEnumConverter)
+export type InviteType = 'Coach' | 'Player' | 'Parent';
+export type InviteStatus = 'Pending' | 'Accepted' | 'Expired' | 'Revoked';
 
 export interface InviteDetailsDto {
   code: string;

@@ -12,9 +12,9 @@ type InviteRole = {
 };
 
 const inviteRoles: InviteRole[] = [
-  { type: 0, label: 'Coach' },
-  { type: 1, label: 'Player' },
-  { type: 2, label: 'Player Parent' },
+  { type: 'Coach', label: 'Coach' },
+  { type: 'Player', label: 'Player' },
+  { type: 'Parent', label: 'Player Parent' },
 ];
 
 export default function AgeGroupInvitesPage() {
@@ -25,11 +25,11 @@ export default function AgeGroupInvitesPage() {
 
   const [isLoading, setIsLoading] = useState(true);
   const [ageGroupName, setAgeGroupName] = useState('Age Group');
-  const [invites, setInvites] = useState<Record<InviteType, InviteDto | null>>({ 0: null, 1: null, 2: null });
-  const [errors, setErrors] = useState<Record<InviteType, string>>({ 0: '', 1: '', 2: '' });
-  const [creating, setCreating] = useState<Record<InviteType, boolean>>({ 0: false, 1: false, 2: false });
-  const [regenerating, setRegenerating] = useState<Record<InviteType, boolean>>({ 0: false, 1: false, 2: false });
-  const [copied, setCopied] = useState<Record<InviteType, boolean>>({ 0: false, 1: false, 2: false });
+  const [invites, setInvites] = useState<Record<InviteType, InviteDto | null>>({ Coach: null, Player: null, Parent: null });
+  const [errors, setErrors] = useState<Record<InviteType, string>>({ Coach: '', Player: '', Parent: '' });
+  const [creating, setCreating] = useState<Record<InviteType, boolean>>({ Coach: false, Player: false, Parent: false });
+  const [regenerating, setRegenerating] = useState<Record<InviteType, boolean>>({ Coach: false, Player: false, Parent: false });
+  const [copied, setCopied] = useState<Record<InviteType, boolean>>({ Coach: false, Player: false, Parent: false });
 
   useEffect(() => {
     if (!clubId || !ageGroupId) return;
@@ -46,12 +46,12 @@ export default function AgeGroupInvitesPage() {
       }
 
       if (invitesResp.success && invitesResp.data) {
-        const updated = { 0: null, 1: null, 2: null } as Record<InviteType, InviteDto | null>;
+        const updated = { Coach: null, Player: null, Parent: null } as Record<InviteType, InviteDto | null>;
         for (const role of inviteRoles) {
           const existing = invitesResp.data.find(i =>
             i.type === role.type &&
             i.entityId === ageGroupId &&
-            i.status === 0 &&
+            i.status === 'Pending' &&
             i.isOpenInvite
           );
           if (existing) {
@@ -69,18 +69,18 @@ export default function AgeGroupInvitesPage() {
   const inviteLinks = useMemo(() => {
     const base = window.location.origin;
     return {
-      0: invites[0] ? `${base}${Routes.invite(invites[0].code)}` : '',
-      1: invites[1] ? `${base}${Routes.invite(invites[1].code)}` : '',
-      2: invites[2] ? `${base}${Routes.invite(invites[2].code)}` : '',
+      Coach: invites.Coach ? `${base}${Routes.invite(invites.Coach.code)}` : '',
+      Player: invites.Player ? `${base}${Routes.invite(invites.Player.code)}` : '',
+      Parent: invites.Parent ? `${base}${Routes.invite(invites.Parent.code)}` : '',
     } as Record<InviteType, string>;
   }, [invites]);
 
   const previewLinks = useMemo(() => {
     const base = window.location.origin;
     return {
-      0: invites[0] ? `${base}/api/v1/invites/${invites[0].code}/preview` : '',
-      1: invites[1] ? `${base}/api/v1/invites/${invites[1].code}/preview` : '',
-      2: invites[2] ? `${base}/api/v1/invites/${invites[2].code}/preview` : '',
+      Coach: invites.Coach ? `${base}/api/v1/invites/${invites.Coach.code}/preview` : '',
+      Player: invites.Player ? `${base}/api/v1/invites/${invites.Player.code}/preview` : '',
+      Parent: invites.Parent ? `${base}/api/v1/invites/${invites.Parent.code}/preview` : '',
     } as Record<InviteType, string>;
   }, [invites]);
 
@@ -163,7 +163,7 @@ export default function AgeGroupInvitesPage() {
                       <div className="min-w-0">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{role.label}</h3>
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          {role.type === 2
+                          {role.type === 'Parent'
                             ? 'Parents can link multiple players.'
                             : 'Users can link one account and switch if needed.'}
                         </p>

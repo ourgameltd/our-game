@@ -6,15 +6,11 @@ import { Routes } from '@/utils/routes';
 
 type PageState = 'LOADING' | 'READY' | 'SAVING' | 'SAVED' | 'ERROR';
 
-const INVITE_TYPE_LABELS: Record<number, string> = {
-  0: 'Coach',
-  1: 'Player',
-  2: 'Player Parent',
+const INVITE_TYPE_LABELS: Record<string, string> = {
+  Coach: 'Coach',
+  Player: 'Player',
+  Parent: 'Player Parent',
 };
-
-// InviteStatus enum values from the backend
-const INVITE_STATUS_EXPIRED = 3;
-const INVITE_STATUS_REVOKED = 2;
 
 export default function InviteAcceptPage() {
   const { code } = useParams<{ code: string }>();
@@ -54,10 +50,10 @@ export default function InviteAcceptPage() {
       const inv = inviteResponse.data;
       setInvite(inv);
 
-      if (inv.status === INVITE_STATUS_EXPIRED || inv.status === INVITE_STATUS_REVOKED) {
+      if (inv.status === 'Expired' || inv.status === 'Revoked') {
         setPageState('ERROR');
         setErrorMessage(
-          inv.status === INVITE_STATUS_EXPIRED
+          inv.status === 'Expired'
             ? 'This invite has expired. Please request a new link from your club.'
             : 'This invite has been revoked. Please request a new link from your club.'
         );
