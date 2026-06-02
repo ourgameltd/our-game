@@ -1674,6 +1674,64 @@ export function useNotifyMatch(matchId: string): {
   return { notifyMatch, isSubmitting, error };
 }
 
+export function useUpdateMyMatchAttendance(matchId: string): {
+  submit: (status: 'confirmed' | 'declined', playerId?: string) => Promise<ApiResponse<void>>;
+  isSubmitting: boolean;
+  error: ApiError | null;
+} {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const submit = useCallback(async (status: 'confirmed' | 'declined', playerId?: string): Promise<ApiResponse<void>> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const response = await apiClient.matches.updateMyAttendance(matchId, status, playerId);
+      if (!response.success) {
+        setError({ message: response.error?.message || 'Failed to update attendance', statusCode: response.error?.statusCode });
+      }
+      return response;
+    } catch (err) {
+      const apiError = { message: err instanceof Error ? err.message : 'An unexpected error occurred' };
+      setError(apiError);
+      return { success: false, error: apiError };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [matchId]);
+
+  return { submit, isSubmitting, error };
+}
+
+export function useUpdateMySessionAttendance(sessionId: string): {
+  submit: (status: 'confirmed' | 'declined', playerId?: string) => Promise<ApiResponse<void>>;
+  isSubmitting: boolean;
+  error: ApiError | null;
+} {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const submit = useCallback(async (status: 'confirmed' | 'declined', playerId?: string): Promise<ApiResponse<void>> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const response = await apiClient.trainingSessions.updateMyAttendance(sessionId, status, playerId);
+      if (!response.success) {
+        setError({ message: response.error?.message || 'Failed to update attendance', statusCode: response.error?.statusCode });
+      }
+      return response;
+    } catch (err) {
+      const apiError = { message: err instanceof Error ? err.message : 'An unexpected error occurred' };
+      setError(apiError);
+      return { success: false, error: apiError };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [sessionId]);
+
+  return { submit, isSubmitting, error };
+}
+
 // ============================================================
 // Tactic Mutation Hooks
 // ============================================================

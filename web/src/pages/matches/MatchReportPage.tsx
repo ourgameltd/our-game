@@ -2,11 +2,12 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import { Settings, Share2, FileText, CalendarPlus, Map } from 'lucide-react';
 import Markdown from 'react-markdown';
-import { useMatchReport, usePublishMatchReport } from '@/api/hooks';
+import { useMatchReport, usePublishMatchReport, useCurrentUser, useMyChildren, useUpdateMyMatchAttendance } from '@/api/hooks';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import AttendanceResponse from '@components/AttendanceResponse';
 
 export default function MatchReportPage() {
   const { matchId, clubId, ageGroupId, teamId } = useParams();
@@ -14,8 +15,21 @@ export default function MatchReportPage() {
   const { data: match, isLoading, error } = useMatchReport(matchId);
   const { publishMatchReport, isSubmitting } = usePublishMatchReport(matchId || '');
   const { setEntityName } = useNavigation();
+  const { data: currentUser } = useCurrentUser();
+  const { data: myChildren } = useMyChildren();
+  const { submit: submitAttendance, isSubmitting: attendanceSubmitting } = useUpdateMyMatchAttendance(matchId || '');
   const [publishError, setPublishError] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
+  // Track attendance status overrides after user responds
+  const [attendanceOverrides, setAttendanceOverrides] = useState<Record<string, string>>({});
+
+  const handleAttendanceRespond = async (status: 'confirmed' | 'declined', playerId?: string) => {
+    const key = playerId ?? (currentUser?.coachId ? 'coach' : 'player');
+    const res = await submitAttendance(status, playerId);
+    if (res.success) {
+      setAttendanceOverrides(prev => ({ ...prev, [key]: status }));
+    }
+  };
 
   usePageTitle(
     [
@@ -551,21 +565,70 @@ export default function MatchReportPage() {
           </>
         )}
 
-        {/* Upcoming match - no report yet */}
+        {/* Upcoming match — attendance response + "no report yet" notice */}
         {isUpcoming && (
-          <div className="card mt-4">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">📅</span>
-              <div>
-                <p className="text-gray-800 dark:text-gray-200 font-medium">
-                  Match Report Not Available
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  This match hasn't been played yet. The match report will be available after the match is completed.
-                </p>
+          <>
+            {/* Your Attendance */}
+            {(() => {
+              const children = myChildren ?? [];
+              const rows: { label?: string; status: string; playerId?: string }[] = [];
+
+              if (currentUser?.playerId) {
+                const rec = match.attendance.find(a => a.playerId === currentUser.playerId);
+                if (rec) rows.push({ status: attendanceOverrides['player'] ?? rec.status });
+              }
+
+              if (currentUser?.coachId) {
+                const rec = match.coaches.find(c => c.coachId === currentUser.coachId);
+                if (rec) rows.push({ status: attendanceOverrides['coach'] ?? rec.status });
+              }
+
+              for (const child of children) {
+                const rec = match.attendance.find(a => a.playerId === child.id);
+                if (rec) {
+                  rows.push({
+                    label: `${child.firstName} ${child.lastName}`,
+                    status: attendanceOverrides[child.id] ?? rec.status,
+                    playerId: child.id,
+                  });
+                }
+              }
+
+              if (rows.length === 0) return null;
+
+              return (
+                <div className="card mt-4">
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Your Attendance</h2>
+                  <div className="space-y-3">
+                    {rows.map((row, i) => (
+                      <AttendanceResponse
+                        key={i}
+                        status={row.status}
+                        onConfirm={() => handleAttendanceRespond('confirmed', row.playerId)}
+                        onDecline={() => handleAttendanceRespond('declined', row.playerId)}
+                        isSubmitting={attendanceSubmitting}
+                        label={row.label}
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            <div className="card mt-4">
+              <div className="flex items-center gap-3">
+                <span className="text-2xl">📅</span>
+                <div>
+                  <p className="text-gray-800 dark:text-gray-200 font-medium">
+                    Match Report Not Available
+                  </p>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    This match hasn't been played yet. The match report will be available after the match is completed.
+                  </p>
+                </div>
               </div>
             </div>
-          </div>
+          </>
         )}
       </main>
     </div>

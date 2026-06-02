@@ -106,6 +106,31 @@ public class GetMatchesByClubIdHandler : IRequestHandler<GetMatchesByClubIdQuery
             .SqlQueryRaw<MatchRawDto>(sql, parameters.ToArray())
             .ToListAsync(cancellationToken);
 
+        var matchIds = matches.Select(m => m.Id).ToList();
+
+        List<MatchAttendanceRaw> allAttendance = new();
+        List<MatchCoachAttendanceRaw> allCoaches = new();
+
+        if (matchIds.Count > 0)
+        {
+            allAttendance = await _db.MatchAttendances
+                .Where(a => matchIds.Contains(a.MatchId))
+                .Select(a => new MatchAttendanceRaw { MatchId = a.MatchId, PlayerId = a.PlayerId, Status = a.Status ?? string.Empty })
+                .ToListAsync(cancellationToken);
+
+            allCoaches = await _db.MatchCoaches
+                .Where(c => matchIds.Contains(c.MatchId))
+                .Select(c => new MatchCoachAttendanceRaw { MatchId = c.MatchId, CoachId = c.CoachId, Status = c.Status ?? string.Empty })
+                .ToListAsync(cancellationToken);
+        }
+
+        var attendanceByMatch = allAttendance
+            .GroupBy(a => a.MatchId)
+            .ToDictionary(g => g.Key, g => g.Select(a => new MatchAttendanceSummaryDto { PlayerId = a.PlayerId, Status = a.Status }).ToList());
+        var coachesByMatch = allCoaches
+            .GroupBy(c => c.MatchId)
+            .ToDictionary(g => g.Key, g => g.Select(c => new MatchCoachSummaryDto { CoachId = c.CoachId, Status = c.Status }).ToList());
+
         var result = matches.Select(m => new ClubMatchDto
         {
             Id = m.Id,
@@ -126,7 +151,9 @@ public class GetMatchesByClubIdHandler : IRequestHandler<GetMatchesByClubIdQuery
             Status = MapStatusToString(m.Status),
             IsLocked = m.IsLocked,
             WeatherCondition = m.WeatherCondition,
-            WeatherTemperature = m.WeatherTemperature
+            WeatherTemperature = m.WeatherTemperature,
+            Attendance = attendanceByMatch.TryGetValue(m.Id, out var att) ? att : new(),
+            Coaches = coachesByMatch.TryGetValue(m.Id, out var coaches) ? coaches : new(),
         }).ToList();
 
         return new ClubMatchesDto
@@ -147,6 +174,26 @@ public class GetMatchesByClubIdHandler : IRequestHandler<GetMatchesByClubIdQuery
             _ => "scheduled"
         };
     }
+}
+
+/// <summary>
+/// Internal helper for grouping attendance by match
+/// </summary>
+internal class MatchAttendanceRaw
+{
+    public Guid MatchId { get; set; }
+    public Guid PlayerId { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Internal helper for grouping coach attendance by match
+/// </summary>
+internal class MatchCoachAttendanceRaw
+{
+    public Guid MatchId { get; set; }
+    public Guid CoachId { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
 
 /// <summary>

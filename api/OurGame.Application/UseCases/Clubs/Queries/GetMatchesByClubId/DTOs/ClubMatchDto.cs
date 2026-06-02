@@ -24,6 +24,20 @@ public class ClubMatchDto
     public bool IsLocked { get; set; }
     public string? WeatherCondition { get; set; }
     public int? WeatherTemperature { get; set; }
+    public List<MatchAttendanceSummaryDto> Attendance { get; set; } = new();
+    public List<MatchCoachSummaryDto> Coaches { get; set; } = new();
+}
+
+public class MatchAttendanceSummaryDto
+{
+    public Guid PlayerId { get; set; }
+    public string Status { get; set; } = string.Empty;
+}
+
+public class MatchCoachSummaryDto
+{
+    public Guid CoachId { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
 
 /// <summary>

@@ -49,6 +49,7 @@ import MatchesListPage from '@pages/matches/MatchesListPage';
 import AddEditMatchPage from '@pages/matches/AddEditMatchPage';
 import AddEditTrainingSessionPage from '@pages/teams/AddEditTrainingSessionPage';
 import TrainingSessionsListPage from '@pages/teams/TrainingSessionsListPage';
+import TrainingSessionPage from '@pages/teams/TrainingSessionPage';
 // Hidden: Report Cards & Development Plans (not ready for release)
 // import PlayerReportCardPage from '@pages/players/PlayerReportCardPage';
 // import PlayerReportCardsPage from '@pages/players/PlayerReportCardsPage';
@@ -247,6 +248,7 @@ function AppContent() {
         {/* Training Sessions */}
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training" element={<TrainingSessionsListPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training/new" element={<AddEditTrainingSessionPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training/:sessionId" element={<TrainingSessionPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/training/:sessionId/edit" element={<AddEditTrainingSessionPage />} />
 
         {/* Tactics - Club Level */}

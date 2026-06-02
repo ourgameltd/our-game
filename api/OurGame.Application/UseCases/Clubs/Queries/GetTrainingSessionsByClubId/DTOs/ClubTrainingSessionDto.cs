@@ -18,8 +18,15 @@ public class ClubTrainingSessionDto
     public Guid? TemplateId { get; set; }
     public List<Guid> DrillIds { get; set; } = new();
     public List<AttendanceDto> Attendance { get; set; } = new();
+    public List<SessionCoachSummaryDto> Coaches { get; set; } = new();
     public string Status { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
+}
+
+public class SessionCoachSummaryDto
+{
+    public Guid CoachId { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
 
 /// <summary>

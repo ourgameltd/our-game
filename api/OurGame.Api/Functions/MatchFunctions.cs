@@ -15,6 +15,7 @@ using OurGame.Application.UseCases.Matches.Commands.UpdateMatch.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.SendMatchNotification;
+using OurGame.Application.UseCases.Matches.Commands.UpdateMyMatchAttendance;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 using System.Net;
@@ -652,6 +653,106 @@ public class MatchFunctions
             return errorResponse;
         }
     }
+
+    /// <summary>
+    /// Update the authenticated user's own attendance status for a match.
+    /// </summary>
+    [Function("UpdateMyMatchAttendance")]
+    [OpenApiOperation(
+        operationId: "UpdateMyMatchAttendance",
+        tags: new[] { "Matches" },
+        Summary = "Update my match attendance",
+        Description = "Updates the authenticated user's attendance status (confirmed or declined) for a match. Players update their own record; parents supply a playerId for their child; coaches update their coach record.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The match ID")]
+    [OpenApiRequestBody(
+        contentType: "application/json",
+        bodyType: typeof(UpdateMyMatchAttendanceRequest),
+        Required = true,
+        Description = "Attendance status update")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Attendance updated")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Attendance record not found")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.Forbidden,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Not authorised to update this attendance record")]
+    public async Task<HttpResponseData> UpdateMyMatchAttendance(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "v1/matches/{id}/my-attendance")] HttpRequestData req,
+        string id,
+        CancellationToken ct = default)
+    {
+        var authId = req.GetUserId();
+        if (string.IsNullOrEmpty(authId))
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+
+        if (!Guid.TryParse(id, out var matchGuid))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid match ID format", 400), ct);
+            return bad;
+        }
+
+        UpdateMyMatchAttendanceRequest? body;
+        try
+        {
+            body = await req.ReadFromJsonAsync<UpdateMyMatchAttendanceRequest>();
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid request body", 400), ct);
+            return bad;
+        }
+
+        if (body == null || string.IsNullOrWhiteSpace(body.Status) ||
+            (body.Status != "confirmed" && body.Status != "declined"))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Status must be 'confirmed' or 'declined'", 400), ct);
+            return bad;
+        }
+
+        try
+        {
+            await _mediator.Send(new UpdateMyMatchAttendanceCommand(matchGuid, authId, body.Status, body.PlayerId), ct);
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFound;
+        }
+        catch (ForbiddenException ex)
+        {
+            var forbidden = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbidden.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(ex.Message, 403), ct);
+            return forbidden;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating match attendance for {MatchId}", matchGuid);
+            var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("An error occurred", 500), ct);
+            return error;
+        }
+    }
+}
+
+public class UpdateMyMatchAttendanceRequest
+{
+    public string Status { get; set; } = string.Empty;
+    public Guid? PlayerId { get; set; }
 }
 
 public class PublishedMatchReportDto

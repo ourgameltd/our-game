@@ -894,6 +894,11 @@ export interface AgeGroupCoachDto {
 }
 
 // Club Training Session DTOs
+export interface SessionCoachSummaryDto {
+  coachId: string;
+  status: string;
+}
+
 export interface ClubTrainingSessionDto {
   id: string;
   teamId: string;
@@ -911,6 +916,7 @@ export interface ClubTrainingSessionDto {
     status: string;
     notes?: string;
   }[];
+  coaches: SessionCoachSummaryDto[];
   status: string;
 }
 
@@ -1063,6 +1069,16 @@ export interface UpdateAppliedTemplateRequest {
 }
 
 // Club Match DTOs
+export interface MatchAttendanceSummaryDto {
+  playerId: string;
+  status: string;
+}
+
+export interface MatchCoachSummaryDto {
+  coachId: string;
+  status: string;
+}
+
 export interface ClubMatchDto {
   id: string;
   teamId: string;
@@ -1082,6 +1098,8 @@ export interface ClubMatchDto {
   status: string;
   weatherCondition?: string;
   weatherTemperature?: number;
+  attendance: MatchAttendanceSummaryDto[];
+  coaches: MatchCoachSummaryDto[];
 }
 
 export interface ClubMatchesDto {
@@ -3889,6 +3907,18 @@ export const apiClient = {
         return handleApiError(error);
       }
     },
+
+    /**
+     * Update the authenticated user's own attendance status for a training session
+     */
+    updateMyAttendance: async (sessionId: string, status: 'confirmed' | 'declined', playerId?: string): Promise<ApiResponse<void>> => {
+      try {
+        await axiosInstance.patch(`/v1/training-sessions/${sessionId}/my-attendance`, { status, playerId });
+        return { success: true, statusCode: 204 };
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
   },
 
   matches: {
@@ -3974,6 +4004,18 @@ export const apiClient = {
     notify: async (matchId: string): Promise<ApiResponse<void>> => {
       try {
         await axiosInstance.post(`/v1/matches/${matchId}/notify`);
+        return { success: true, statusCode: 204 };
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Update the authenticated user's own attendance status for a match
+     */
+    updateMyAttendance: async (matchId: string, status: 'confirmed' | 'declined', playerId?: string): Promise<ApiResponse<void>> => {
+      try {
+        await axiosInstance.patch(`/v1/matches/${matchId}/my-attendance`, { status, playerId });
         return { success: true, statusCode: 204 };
       } catch (error) {
         return handleApiError(error);

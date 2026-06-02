@@ -11,6 +11,7 @@ using OurGame.Application.UseCases.TrainingSessions.Commands.CreateTrainingSessi
 using OurGame.Application.UseCases.TrainingSessions.Commands.CreateTrainingSession.DTOs;
 using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateTrainingSession;
 using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateTrainingSession.DTOs;
+using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateMySessionAttendance;
 using OurGame.Application.UseCases.TrainingSessions.Queries.GetTrainingSessionById;
 using OurGame.Application.UseCases.TrainingSessions.Queries.GetTrainingSessionById.DTOs;
 using System.Net;
@@ -345,4 +346,104 @@ public class TrainingSessionFunctions
             return errorResponse;
         }
     }
+
+    /// <summary>
+    /// Update the authenticated user's own attendance status for a training session.
+    /// </summary>
+    [Function("UpdateMySessionAttendance")]
+    [OpenApiOperation(
+        operationId: "UpdateMySessionAttendance",
+        tags: new[] { "TrainingSessions" },
+        Summary = "Update my session attendance",
+        Description = "Updates the authenticated user's attendance status (confirmed or declined) for a training session. Players update their own record; parents supply a playerId for their child; coaches update their coach record.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The training session ID")]
+    [OpenApiRequestBody(
+        contentType: "application/json",
+        bodyType: typeof(UpdateMySessionAttendanceRequest),
+        Required = true,
+        Description = "Attendance status update")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Attendance updated")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Attendance record not found")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.Forbidden,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Not authorised to update this attendance record")]
+    public async Task<HttpResponseData> UpdateMySessionAttendance(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "patch", Route = "v1/training-sessions/{id}/my-attendance")] HttpRequestData req,
+        string id,
+        CancellationToken ct = default)
+    {
+        var authId = req.GetUserId();
+        if (string.IsNullOrEmpty(authId))
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+
+        if (!Guid.TryParse(id, out var sessionGuid))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid session ID format", 400), ct);
+            return bad;
+        }
+
+        UpdateMySessionAttendanceRequest? body;
+        try
+        {
+            body = await req.ReadFromJsonAsync<UpdateMySessionAttendanceRequest>();
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid request body", 400), ct);
+            return bad;
+        }
+
+        if (body == null || string.IsNullOrWhiteSpace(body.Status) ||
+            (body.Status != "confirmed" && body.Status != "declined"))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Status must be 'confirmed' or 'declined'", 400), ct);
+            return bad;
+        }
+
+        try
+        {
+            await _mediator.Send(new UpdateMySessionAttendanceCommand(sessionGuid, authId, body.Status, body.PlayerId), ct);
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFound;
+        }
+        catch (ForbiddenException ex)
+        {
+            var forbidden = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbidden.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(ex.Message, 403), ct);
+            return forbidden;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error updating session attendance for {SessionId}", sessionGuid);
+            var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("An error occurred", 500), ct);
+            return error;
+        }
+    }
+}
+
+public class UpdateMySessionAttendanceRequest
+{
+    public string Status { get; set; } = string.Empty;
+    public Guid? PlayerId { get; set; }
 }

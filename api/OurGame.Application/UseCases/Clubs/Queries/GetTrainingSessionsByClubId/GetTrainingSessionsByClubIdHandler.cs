@@ -49,11 +49,11 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
                  FROM SessionDrills sd 
                  WHERE sd.SessionId = ts.Id) AS DrillIdsString,
                 (SELECT STRING_AGG(
-                    CAST(sa.PlayerId AS VARCHAR(36)) + '|' + 
-                    CAST(sa.Present AS VARCHAR(5)) + '|' + 
-                    ISNULL(sa.Notes, ''), 
-                    ';') 
-                 FROM SessionAttendances sa 
+                    CAST(sa.PlayerId AS VARCHAR(36)) + '|' +
+                    CASE WHEN sa.Present IS NULL THEN 'pending' WHEN sa.Present = 1 THEN 'confirmed' ELSE 'declined' END + '|' +
+                    ISNULL(sa.Notes, ''),
+                    ';')
+                 FROM SessionAttendances sa
                  WHERE sa.SessionId = ts.Id) AS AttendanceString
             FROM TrainingSessions ts
             INNER JOIN Teams t ON ts.TeamId = t.Id
@@ -110,6 +110,21 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
             .SqlQueryRaw<TrainingSessionRawDto>(sql, parameters.ToArray())
             .ToListAsync(cancellationToken);
 
+        var sessionIds = sessions.Select(s => s.Id).ToList();
+
+        List<SessionCoachRaw> allCoaches = new();
+        if (sessionIds.Count > 0)
+        {
+            allCoaches = await _db.SessionCoaches
+                .Where(c => sessionIds.Contains(c.SessionId))
+                .Select(c => new SessionCoachRaw { SessionId = c.SessionId, CoachId = c.CoachId, Status = c.Status ?? string.Empty })
+                .ToListAsync(cancellationToken);
+        }
+
+        var coachesBySession = allCoaches
+            .GroupBy(c => c.SessionId)
+            .ToDictionary(g => g.Key, g => g.Select(c => new SessionCoachSummaryDto { CoachId = c.CoachId, Status = c.Status }).ToList());
+
         var result = sessions.Select(s => new ClubTrainingSessionDto
         {
             Id = s.Id,
@@ -125,6 +140,7 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
             TemplateId = s.TemplateId,
             DrillIds = ParseDrillIds(s.DrillIdsString),
             Attendance = ParseAttendance(s.AttendanceString),
+            Coaches = coachesBySession.TryGetValue(s.Id, out var coaches) ? coaches : new(),
             Status = MapStatusToString(s.Status),
             IsLocked = s.IsLocked
         }).ToList();
@@ -183,13 +199,18 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
             var parts = entry.Split('|');
             if (parts.Length >= 2 && Guid.TryParse(parts[0], out var playerId))
             {
-                var isPresent = bool.TryParse(parts[1], out var present) && present;
+                var status = parts[1].ToLower() switch
+                {
+                    "confirmed" => "confirmed",
+                    "declined" => "declined",
+                    _ => "pending"
+                };
                 var notes = parts.Length > 2 ? parts[2] : null;
 
                 result.Add(new AttendanceDto
                 {
                     PlayerId = playerId,
-                    Status = isPresent ? "confirmed" : "declined",
+                    Status = status,
                     Notes = string.IsNullOrWhiteSpace(notes) ? null : notes
                 });
             }
@@ -209,6 +230,16 @@ public class GetTrainingSessionsByClubIdHandler : IRequestHandler<GetTrainingSes
             _ => "scheduled"
         };
     }
+}
+
+/// <summary>
+/// Internal helper for grouping coach attendance by session
+/// </summary>
+internal class SessionCoachRaw
+{
+    public Guid SessionId { get; set; }
+    public Guid CoachId { get; set; }
+    public string Status { get; set; } = string.Empty;
 }
 
 /// <summary>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PageTitle from '@components/common/PageTitle';
 import { Routes, areAllParamsValid } from '@utils/routes';
@@ -7,6 +7,7 @@ import { apiClient } from '@/api';
 import type { ClubMatchDto, ClubTrainingSessionDto } from '@/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import AttendanceResponse from '@components/AttendanceResponse';
 
 // Unified upcoming event type
 type UpcomingEvent = {
@@ -24,6 +25,16 @@ type UpcomingEvent = {
   | { type: 'match'; match: ClubMatchDto }
   | { type: 'training'; session: ClubTrainingSessionDto }
 );
+
+// A pending attendance action for the current user on an event
+type PendingItem = {
+  key: string;
+  event: UpcomingEvent;
+  currentStatus: string;
+  role: 'player' | 'coach' | 'parent';
+  playerId?: string;      // set for parent responses
+  playerName?: string;    // set for parent display
+};
 
 export default function ClubsListPage() {
   usePageTitle(['Dashboard']);
@@ -43,6 +54,10 @@ export default function ClubsListPage() {
   const [pastMatches, setPastMatches] = useState<Map<string, ClubMatchDto[]>>(new Map());
   const [upcomingTraining, setUpcomingTraining] = useState<Map<string, ClubTrainingSessionDto[]>>(new Map());
   const [eventsLoading, setEventsLoading] = useState(false);
+
+  // Local overrides for attendance status after user responds (optimistic updates)
+  const [statusOverrides, setStatusOverrides] = useState<Record<string, string>>({});
+  const [submittingKeys, setSubmittingKeys] = useState<Set<string>>(new Set());
 
   const myClubsList = myClubs ?? [];
   const myTeamsList = myTeams ?? [];
@@ -148,6 +163,107 @@ export default function ClubsListPage() {
     return events;
   }, [myClubsList, upcomingMatches, upcomingTraining]);
 
+  // Determine pending attendance items for the current user
+  const pendingItems = useMemo<PendingItem[]>(() => {
+    const items: PendingItem[] = [];
+
+    for (const event of upcomingEvents) {
+      if (event.type === 'match') {
+        const { match } = event;
+
+        // Player
+        if (currentUser?.playerId) {
+          const rec = match.attendance.find(a => a.playerId === currentUser.playerId);
+          if (rec) {
+            const key = `match:${match.id}:player`;
+            items.push({ key, event, role: 'player', currentStatus: statusOverrides[key] ?? rec.status });
+          }
+        }
+
+        // Coach
+        if (currentUser?.coachId) {
+          const rec = match.coaches.find(c => c.coachId === currentUser.coachId);
+          if (rec) {
+            const key = `match:${match.id}:coach`;
+            items.push({ key, event, role: 'coach', currentStatus: statusOverrides[key] ?? rec.status });
+          }
+        }
+
+        // Parent — one item per linked child in this match
+        for (const child of myChildrenList) {
+          const rec = match.attendance.find(a => a.playerId === child.id);
+          if (rec) {
+            const key = `match:${match.id}:child:${child.id}`;
+            items.push({
+              key, event, role: 'parent',
+              playerId: child.id,
+              playerName: `${child.firstName} ${child.lastName}`,
+              currentStatus: statusOverrides[key] ?? rec.status,
+            });
+          }
+        }
+      } else {
+        const { session } = event;
+
+        // Player
+        if (currentUser?.playerId) {
+          const rec = session.attendance.find(a => a.playerId === currentUser.playerId);
+          if (rec) {
+            const key = `session:${session.id}:player`;
+            items.push({ key, event, role: 'player', currentStatus: statusOverrides[key] ?? rec.status });
+          }
+        }
+
+        // Coach
+        if (currentUser?.coachId) {
+          const rec = session.coaches.find(c => c.coachId === currentUser.coachId);
+          if (rec) {
+            const key = `session:${session.id}:coach`;
+            items.push({ key, event, role: 'coach', currentStatus: statusOverrides[key] ?? rec.status });
+          }
+        }
+
+        // Parent
+        for (const child of myChildrenList) {
+          const rec = session.attendance.find(a => a.playerId === child.id);
+          if (rec) {
+            const key = `session:${session.id}:child:${child.id}`;
+            items.push({
+              key, event, role: 'parent',
+              playerId: child.id,
+              playerName: `${child.firstName} ${child.lastName}`,
+              currentStatus: statusOverrides[key] ?? rec.status,
+            });
+          }
+        }
+      }
+    }
+
+    return items;
+  }, [upcomingEvents, currentUser, myChildrenList, statusOverrides]);
+
+  const pendingOnlyItems = useMemo(
+    () => pendingItems.filter(i => i.currentStatus === 'pending'),
+    [pendingItems]
+  );
+
+  const handleRespond = useCallback(async (item: PendingItem, status: 'confirmed' | 'declined') => {
+    setSubmittingKeys(prev => new Set(prev).add(item.key));
+    try {
+      let res;
+      if (item.event.type === 'match') {
+        res = await apiClient.matches.updateMyAttendance(item.event.id, status, item.playerId);
+      } else {
+        res = await apiClient.trainingSessions.updateMyAttendance(item.event.id, status, item.playerId);
+      }
+      if (res.success) {
+        setStatusOverrides(prev => ({ ...prev, [item.key]: status }));
+      }
+    } finally {
+      setSubmittingKeys(prev => { const s = new Set(prev); s.delete(item.key); return s; });
+    }
+  }, []);
+
   // Previous results (past matches only, most recent first)
   const previousResults = useMemo(() => {
     const results: { clubId: string; clubName: string; match: ClubMatchDto }[] = [];
@@ -180,6 +296,16 @@ export default function ClubsListPage() {
     return { label: 'D', cls: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300' };
   };
 
+  // Return a status dot for the current user's attendance on an event (for the Upcoming table)
+  const getMyStatusDot = (event: UpcomingEvent): string | null => {
+    const key = event.type === 'match'
+      ? (currentUser?.playerId ? `match:${event.id}:player` : currentUser?.coachId ? `match:${event.id}:coach` : null)
+      : (currentUser?.playerId ? `session:${event.id}:player` : currentUser?.coachId ? `session:${event.id}:coach` : null);
+
+    const item = key ? pendingItems.find(i => i.key === key) : null;
+    return item?.currentStatus ?? null;
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -193,6 +319,53 @@ export default function ClubsListPage() {
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
             <p className="text-red-800 dark:text-red-200 font-medium">Failed to load clubs</p>
             <p className="text-red-600 dark:text-red-300 text-sm mt-1">{myClubsError.message}</p>
+          </div>
+        )}
+
+        {/* Awaiting Your Response */}
+        {!isLoading && !eventsLoading && pendingOnlyItems.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+              Awaiting Your Response
+            </h2>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm divide-y divide-gray-100 dark:divide-gray-700">
+              {pendingOnlyItems.map((item) => {
+                const isMatch = item.event.type === 'match';
+                return (
+                  <div key={item.key} className="px-4 py-3 flex flex-col sm:flex-row sm:items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-0.5">
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${isMatch ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300' : 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'}`}>
+                          {isMatch ? 'Match' : 'Training'}
+                        </span>
+                        <span className="text-sm font-medium text-gray-900 dark:text-white">
+                          {formatDate(item.event.date)} · {formatTime(item.event.date)}
+                        </span>
+                      </div>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {isMatch && item.event.type === 'match'
+                          ? <>{item.event.match.isHome ? 'vs' : '@'} {item.event.match.opposition} — {item.event.teamName}</>
+                          : <>Training — {item.event.teamName}</>
+                        }
+                        {item.playerName && (
+                          <span className="ml-1 text-primary-600 dark:text-primary-400 font-medium">
+                            ({item.playerName})
+                          </span>
+                        )}
+                      </p>
+                    </div>
+                    <div className="flex-shrink-0">
+                      <AttendanceResponse
+                        status={item.currentStatus}
+                        onConfirm={() => handleRespond(item, 'confirmed')}
+                        onDecline={() => handleRespond(item, 'declined')}
+                        isSubmitting={submittingKeys.has(item.key)}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         )}
 
@@ -220,7 +393,9 @@ export default function ClubsListPage() {
                       const isMatch = event.type === 'match';
                       const link = isMatch
                         ? Routes.matchReport(event.clubId, event.ageGroupId, event.teamId, event.id)
-                        : Routes.teamTrainingSessionEdit(event.clubId, event.ageGroupId, event.teamId, event.id);
+                        : Routes.teamTrainingSession(event.clubId, event.ageGroupId, event.teamId, event.id);
+
+                      const myStatus = getMyStatusDot(event);
 
                       return (
                         <tr key={`${event.type}-${event.id}`} className="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer" onClick={() => navigate(link)}>
@@ -237,12 +412,20 @@ export default function ClubsListPage() {
                             {event.clubName}
                           </td>
                           <td className="px-3 py-3">
-                            <Link to={link} className="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm">
-                              {isMatch && event.type === 'match'
-                                ? <>{event.match.isHome ? 'vs' : '@'} {event.match.opposition}</>
-                                : <>Training{event.type === 'training' && event.session.focusAreas.length > 0 ? ` — ${event.session.focusAreas.slice(0, 2).join(', ')}` : ''}</>
-                              }
-                            </Link>
+                            <div className="flex items-center gap-2">
+                              <Link to={link} className="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm" onClick={e => e.stopPropagation()}>
+                                {isMatch && event.type === 'match'
+                                  ? <>{event.match.isHome ? 'vs' : '@'} {event.match.opposition}</>
+                                  : <>Training{event.type === 'training' && event.session.focusAreas.length > 0 ? ` — ${event.session.focusAreas.slice(0, 2).join(', ')}` : ''}</>
+                                }
+                              </Link>
+                              {myStatus && myStatus !== 'pending' && (
+                                <span
+                                  className={`w-2 h-2 rounded-full flex-shrink-0 ${myStatus === 'confirmed' ? 'bg-green-500' : 'bg-red-500'}`}
+                                  title={myStatus === 'confirmed' ? 'You confirmed' : 'You declined'}
+                                />
+                              )}
+                            </div>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               {event.teamName}
                               {isMatch && event.type === 'match' && event.match.competition && ` · ${event.match.competition}`}
@@ -291,7 +474,7 @@ export default function ClubsListPage() {
                             <div className="font-medium text-gray-900 dark:text-white text-sm">{formatDate(m.date)}</div>
                           </td>
                           <td className="px-3 py-3">
-                            <Link to={link} className="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm">
+                            <Link to={link} className="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 font-medium text-sm" onClick={e => e.stopPropagation()}>
                               {m.isHome ? 'vs' : '@'} {m.opposition}
                             </Link>
                             <div className="text-xs text-gray-500 dark:text-gray-400">
