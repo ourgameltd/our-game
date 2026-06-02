@@ -2249,6 +2249,14 @@ export interface PublishedGoalDto {
   scorerName: string;
   minute?: number;
   isPenalty: boolean;
+  period?: string;
+}
+
+export interface PublishedCardDto {
+  playerName: string;
+  type: string;
+  minute?: number;
+  period?: string;
 }
 
 export interface PublishedMatchReportDto {
@@ -2270,6 +2278,7 @@ export interface PublishedMatchReportDto {
   playerOfMatchName?: string;
   playerOfMatchPhoto?: string;
   goals?: PublishedGoalDto[];
+  cards?: PublishedCardDto[];
   ogTitle: string;
   ogDescription: string;
   ogImage?: string;

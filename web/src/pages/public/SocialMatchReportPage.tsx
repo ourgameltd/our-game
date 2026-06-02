@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { usePublishedMatchReport } from '@/api';
 import { useSocialMetaTags } from '@/hooks/useSocialMetaTags';
 import { getContrastTextColor } from '@utils/colorHelpers';
-import type { PublishedGoalDto } from '@/api/client';
+import type { PublishedGoalDto, PublishedCardDto, PublishedMatchReportDto } from '@/api/client';
 
 const DEFAULT_PRIMARY = '#0284c7';   // primary-600
 const DEFAULT_SECONDARY = '#075985'; // primary-800
@@ -73,18 +73,83 @@ function ScoreDisplay({
   );
 }
 
-function GoalItem({ goal }: { goal: PublishedGoalDto }) {
-  return (
-    <div className="flex items-center gap-3 py-1">
-      <span className="inline-flex min-w-9 items-center justify-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-semibold text-gray-600 dark:bg-gray-700 dark:text-gray-300">
-        {goal.minute ?? '?'}'
-      </span>
-      <span className="text-sm text-gray-900 dark:text-white">
-        {goal.scorerName}
-        {goal.isPenalty && (
-          <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(pen)</span>
+const PERIOD_ORDER = ['first', 'second', 'third', 'etFirst', 'etSecond', 'penalties'];
+const PERIOD_LABELS: Record<string, string> = {
+  first: 'First Half',
+  second: 'Second Half',
+  third: 'Third Period',
+  etFirst: 'Extra Time — 1st Half',
+  etSecond: 'Extra Time — 2nd Half',
+  penalties: 'Penalty Shootout',
+};
+
+type MatchEvent =
+  | { kind: 'goal'; period: string; minute?: number; data: PublishedGoalDto }
+  | { kind: 'card'; period: string; minute?: number; data: PublishedCardDto };
+
+function buildEvents(data: PublishedMatchReportDto): Map<string, MatchEvent[]> {
+  const events: MatchEvent[] = [
+    ...(data.goals ?? []).map(g => ({
+      kind: 'goal' as const,
+      period: g.period ?? 'first',
+      minute: g.minute ?? undefined,
+      data: g,
+    })),
+    ...(data.cards ?? []).map(c => ({
+      kind: 'card' as const,
+      period: c.period ?? 'first',
+      minute: c.minute ?? undefined,
+      data: c,
+    })),
+  ];
+
+  events.sort((a, b) => {
+    const pa = PERIOD_ORDER.indexOf(a.period);
+    const pb = PERIOD_ORDER.indexOf(b.period);
+    if (pa !== pb) return pa - pb;
+    return (a.minute ?? 999) - (b.minute ?? 999);
+  });
+
+  const grouped = new Map<string, MatchEvent[]>();
+  for (const e of events) {
+    if (!grouped.has(e.period)) grouped.set(e.period, []);
+    grouped.get(e.period)!.push(e);
+  }
+  return grouped;
+}
+
+function EventRow({ event }: { event: MatchEvent }) {
+  if (event.kind === 'goal') {
+    const goal = event.data;
+    return (
+      <div className="flex items-center gap-3 py-1.5">
+        <span className="text-base leading-none">⚽</span>
+        <span className="text-sm text-gray-900 dark:text-white">
+          {goal.scorerName}
+          {goal.isPenalty && (
+            <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(pen)</span>
+          )}
+        </span>
+        {goal.minute != null && (
+          <span className="ml-auto text-xs tabular-nums text-gray-400 dark:text-gray-500">
+            {goal.minute}'
+          </span>
         )}
-      </span>
+      </div>
+    );
+  }
+
+  const card = event.data;
+  const isRed = card.type === 'red';
+  return (
+    <div className="flex items-center gap-3 py-1.5">
+      <span className={`h-4 w-3 shrink-0 rounded-sm ${isRed ? 'bg-red-500' : 'bg-yellow-400'}`} />
+      <span className="text-sm text-gray-900 dark:text-white">{card.playerName}</span>
+      {card.minute != null && (
+        <span className="ml-auto text-xs tabular-nums text-gray-400 dark:text-gray-500">
+          {card.minute}'
+        </span>
+      )}
     </div>
   );
 }
@@ -236,19 +301,28 @@ export default function SocialMatchReportPage() {
           </div>
         )}
 
-        {/* Goal scorers */}
-        {(data.goals ?? []).length > 0 && (
-          <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
-              Goals
-            </h2>
-            <div className="mt-2 divide-y divide-gray-100 dark:divide-gray-700">
-              {(data.goals ?? []).map((g, i) => (
-                <GoalItem key={i} goal={g} />
+        {/* Events */}
+        {(() => {
+          const grouped = buildEvents(data);
+          if (grouped.size === 0) return null;
+          return (
+            <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                Events
+              </h2>
+              {Array.from(grouped.entries()).map(([period, events]) => (
+                <div key={period} className="mt-3">
+                  <p className="mb-1 text-xs font-medium text-gray-400 dark:text-gray-500">
+                    {PERIOD_LABELS[period] ?? period}
+                  </p>
+                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {events.map((e, i) => <EventRow key={i} event={e} />)}
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* Match summary */}
         {data.summary && (

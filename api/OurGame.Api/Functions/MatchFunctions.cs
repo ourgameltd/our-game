@@ -274,7 +274,10 @@ public class MatchFunctions
             PlayerOfMatchName = match.Report.PlayerOfMatchName,
             PlayerOfMatchPhoto = match.Report.PlayerOfMatchPhoto,
             Goals = match.Report.Goals
-                .Select(g => new PublishedGoalDto(g.ScorerName, g.Minute, g.IsPenalty))
+                .Select(g => new PublishedGoalDto(g.ScorerName, g.Minute, g.IsPenalty, g.Period))
+                .ToList(),
+            Cards = match.Report.Cards
+                .Select(c => new PublishedCardDto(c.PlayerName, c.Type, c.Minute, c.Period))
                 .ToList(),
             OgTitle = ogTitle,
             OgDescription = ogDescription,
@@ -671,9 +674,11 @@ public class PublishedMatchReportDto
     public string? PlayerOfMatchName { get; set; }
     public string? PlayerOfMatchPhoto { get; set; }
     public List<PublishedGoalDto> Goals { get; set; } = new();
+    public List<PublishedCardDto> Cards { get; set; } = new();
     public string OgTitle { get; set; } = string.Empty;
     public string OgDescription { get; set; } = string.Empty;
     public string? OgImage { get; set; }
 }
 
-public record PublishedGoalDto(string ScorerName, int? Minute, bool IsPenalty);
+public record PublishedGoalDto(string ScorerName, int? Minute, bool IsPenalty, string? Period);
+public record PublishedCardDto(string PlayerName, string Type, int? Minute, string? Period);
