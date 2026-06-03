@@ -1,17 +1,17 @@
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { Settings, Share2, FileText, CalendarPlus, Map } from 'lucide-react';
+import { Share2, FileText, CalendarPlus, Map } from 'lucide-react';
 import Markdown from 'react-markdown';
 import { useMatchReport, usePublishMatchReport, useCurrentUser, useMyChildren, useUpdateMyMatchAttendance } from '@/api/hooks';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import PageTitle from '@components/common/PageTitle';
 import AttendanceResponse from '@components/AttendanceResponse';
 
 export default function MatchReportPage() {
   const { matchId, clubId, ageGroupId, teamId } = useParams();
-  const navigate = useNavigate();
   const { data: match, isLoading, error } = useMatchReport(matchId);
   const { publishMatchReport, isSubmitting } = usePublishMatchReport(matchId || '');
   const { setEntityName } = useNavigation();
@@ -86,9 +86,10 @@ export default function MatchReportPage() {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4">
-          {/* Action Button Skeleton */}
-          <div className="flex justify-end gap-3 mb-4">
-            <div className="h-10 w-24 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
+          {/* PageTitle Skeleton */}
+          <div className="flex items-center gap-3 mb-4">
+            <div className="h-9 w-9 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
+            <div className="h-7 w-56 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />
           </div>
 
           {/* Match Header Skeleton */}
@@ -212,8 +213,16 @@ export default function MatchReportPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <main className="mx-auto px-4 py-4">     
-        {/* Action Button */}
+      <main className="mx-auto px-4 py-4">
+        <PageTitle
+          title={`${homeTeam} vs ${awayTeam}`}
+          backLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
+          action={{
+            label: 'Settings',
+            href: Routes.matchEdit(clubId!, ageGroupId!, teamId!, matchId!),
+            icon: 'settings',
+          }}
+        />
         <div className="flex justify-end gap-3 mb-4">
           <button
             onClick={handlePublishToggle}
@@ -223,13 +232,6 @@ export default function MatchReportPage() {
           >
             <Share2 className="w-5 h-5" />
             {isPublished ? 'Unpublish' : 'Publish'}
-          </button>
-          <button
-            onClick={() => navigate(Routes.matchEdit(clubId!, ageGroupId!, teamId!, matchId!))}
-            className="btn-md btn-primary whitespace-nowrap flex items-center gap-2"
-            title="Settings"
-          >
-            <Settings className="w-5 h-5" />
           </button>
         </div>
 

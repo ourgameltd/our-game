@@ -10,6 +10,7 @@ import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { SessionDrill } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import PageTitle from '@components/common/PageTitle';
 import EquipmentSummary from '@components/training/EquipmentSummary';
 import { aggregateEquipmentStrings } from '@utils/equipmentFromDiagram';
 
@@ -544,21 +545,11 @@ export default function AddEditTrainingSessionPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
-        {/* Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-                  {isEditing ? 'Edit Training Session' : 'Add New Training Session'}
-                </h2>
-              </div>
-              <p className="text-gray-600 dark:text-gray-400">
-                {team.name} - {club.name}
-              </p>
-            </div>
-          </div>
-        </div>
+        <PageTitle
+          title={isEditing ? 'Edit Training Session' : 'Add New Training Session'}
+          subtitle={`${team.name} - ${club.name}`}
+          backLink={Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!)}
+        />
 
         {/* Tabs */}
         <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="card mb-4">

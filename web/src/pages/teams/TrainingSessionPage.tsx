@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { CalendarPlus, Settings } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { CalendarPlus } from 'lucide-react';
+import PageTitle from '@components/common/PageTitle';
 import { apiClient } from '@/api';
 import type { TrainingSessionDetailDto } from '@/api';
 import { useCurrentUser, useMyChildren, useUpdateMySessionAttendance } from '@/api/hooks';
@@ -11,7 +12,6 @@ import AttendanceResponse from '@components/AttendanceResponse';
 
 export default function TrainingSessionPage() {
   const { sessionId, clubId, ageGroupId, teamId } = useParams();
-  const navigate = useNavigate();
   const { setEntityName } = useNavigation();
 
   const [session, setSession] = useState<TrainingSessionDetailDto | null>(null);
@@ -140,26 +140,19 @@ export default function TrainingSessionPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
-
-        {/* Action button for coaches */}
-        {isCoach && clubId && ageGroupId && teamId && sessionId && (
-          <div className="flex justify-end gap-3 mb-4">
-            <button
-              onClick={() => navigate(Routes.teamTrainingSessionEdit(clubId, ageGroupId, teamId, sessionId))}
-              className="btn-md btn-primary whitespace-nowrap flex items-center gap-2"
-              title="Edit session"
-            >
-              <Settings className="w-5 h-5" />
-            </button>
-          </div>
-        )}
+        <PageTitle
+          title={`Training — ${session.teamName}`}
+          backLink={clubId && ageGroupId && teamId ? Routes.teamTrainingSessions(clubId, ageGroupId, teamId) : undefined}
+          action={isCoach && clubId && ageGroupId && teamId && sessionId ? {
+            label: 'Settings',
+            href: Routes.teamTrainingSessionEdit(clubId, ageGroupId, teamId, sessionId),
+            icon: 'settings',
+          } : undefined}
+        />
 
         {/* Session Header */}
         <div className="card mb-4">
           <div className="mb-2">
-            <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-              Training — {session.teamName}
-            </h1>
             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span>📅 {sessionDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
               {session.meetTime && (

@@ -1,15 +1,20 @@
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { usePlayerAlbum } from '@/api/hooks';
 import PageTitle from '@components/common/PageTitle';
 import ImageAlbum from '@components/player/ImageAlbum';
 import { PlayerImage } from '@/types';
 import { useState, useEffect } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { useAccessProfile } from '@/hooks/useAccessProfile';
+import { Routes } from '@utils/routes';
 
 export default function PlayerAlbumPage() {
   usePageTitle(['Player Album']);
 
-  const { playerId } = useParams();
+  const { playerId, clubId, ageGroupId, teamId } = useParams();
+  const location = useLocation();
+  const { profile } = useAccessProfile();
+  const isDeeplink = location.key === 'default';
   const { data: album, isLoading, error } = usePlayerAlbum(playerId);
   const [albumImages, setAlbumImages] = useState<PlayerImage[]>([]);
 
@@ -79,16 +84,27 @@ export default function PlayerAlbumPage() {
   // Extract first name from player name
   const firstName = album.playerName.split(' ')[0];
 
+  let backLink: string;
+  if (profile.isRestrictedLinkedAccount) {
+    backLink = Routes.dashboard();
+  } else if (isDeeplink) {
+    backLink = Routes.club(clubId!);
+  } else if (teamId && ageGroupId && clubId) {
+    backLink = Routes.teamPlayer(clubId, ageGroupId, teamId, playerId!);
+  } else if (ageGroupId && clubId) {
+    backLink = Routes.player(clubId, ageGroupId, playerId!);
+  } else {
+    backLink = Routes.clubPlayers(clubId!);
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
-        {/* Page Header */}
-        <div className="mb-4">
-          <PageTitle
-            title={`${album.playerName}'s Album`}
-            subtitle={`${albumImages.length} ${albumImages.length === 1 ? 'image' : 'images'}`}
-          />
-        </div>
+        <PageTitle
+          title={`${album.playerName}'s Album`}
+          subtitle={`${albumImages.length} ${albumImages.length === 1 ? 'image' : 'images'}`}
+          backLink={backLink}
+        />
 
         {/* Album Info Card - Only show when there are no images */}
         {albumImages.length === 0 && (

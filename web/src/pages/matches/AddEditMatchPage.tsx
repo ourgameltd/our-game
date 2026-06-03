@@ -16,6 +16,7 @@ import { weatherConditions, squadSizes, cardTypes, injurySeverities } from '@/co
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, Tactic, TacticalPositionOverride, TacticPrinciple } from '@/types';
 import { Routes } from '@utils/routes';
+import PageTitle from '@components/common/PageTitle';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
 import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch } from '@/api/hooks';
 import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
@@ -1613,37 +1614,30 @@ export default function AddEditMatchPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <main className="mx-auto px-4 py-4">{/* Header */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
-                {isEditing ? 'Edit Match' : 'Add New Match'}
-              </h2>
-              <p className="text-gray-600 dark:text-gray-400">
-                {team.team.name}
-              </p>
-            </div>
-            {isEditing && (
-              <div className="flex items-center gap-3">
-                {existingMatch?.status === 'completed' && (
-                  <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg font-medium">
-                    ✓ Completed
-                  </span>
-                )}
-                <button
-                  type="button"
-                  onClick={handleNotify}
-                  disabled={isNotifying}
-                  className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Bell className="w-4 h-4" />
-                  <span className="hidden sm:inline">{isNotifying ? 'Sending...' : 'Notify'}</span>
-                </button>
-              </div>
+      <main className="mx-auto px-4 py-4">
+        <PageTitle
+          title={isEditing ? 'Edit Match' : 'Add New Match'}
+          subtitle={team.team.name}
+          backLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
+        />
+        {isEditing && (
+          <div className="flex items-center gap-3 mb-4">
+            {existingMatch?.status === 'completed' && (
+              <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg font-medium">
+                ✓ Completed
+              </span>
             )}
+            <button
+              type="button"
+              onClick={handleNotify}
+              disabled={isNotifying}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="hidden sm:inline">{isNotifying ? 'Sending...' : 'Notify'}</span>
+            </button>
           </div>
-        </div>
+        )}
 
 
         {/* Tabs */}

@@ -312,6 +312,7 @@ const AddEditAgeGroupPage: React.FC = () => {
         <PageTitle
           title={isEditing ? 'Edit Age Group' : 'Add New Age Group'}
           subtitle={`${club!.name} - ${club!.location.city}`}
+          backLink={isEditing ? Routes.ageGroup(clubId!, ageGroupId!) : Routes.ageGroups(clubId!)}
         />
 
         {/* Form */}

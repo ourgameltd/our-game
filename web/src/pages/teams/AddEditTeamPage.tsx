@@ -304,6 +304,7 @@ const AddEditTeamPage: React.FC = () => {
         <PageTitle
           title={isEditing ? 'Edit Team' : 'Add New Team'}
           subtitle={`${club.name} - ${ageGroup.name}`}
+          backLink={isEditing ? Routes.team(clubId!, ageGroupId!, teamId!) : Routes.teams(clubId!, ageGroupId!)}
         />
         
         {/* Form */}
