@@ -157,6 +157,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId" element={<ClubOverviewPage />} />
         <Route path="/dashboard/:clubId/ethos" element={<ClubEthosPage />} />
         <Route path="/dashboard/:clubId/players" element={<ClubPlayersPage />} />
+        <Route path="/dashboard/:clubId/players/:playerId" element={<PlayerProfilePage />} />
         <Route path="/dashboard/:clubId/players/:playerId/settings" element={<ClubPlayerSettingsPage />} />
         <Route path="/dashboard/:clubId/players/:playerId/album" element={<PlayerAlbumPage />} />
         <Route path="/dashboard/:clubId/coaches" element={<ClubCoachesPage />} />

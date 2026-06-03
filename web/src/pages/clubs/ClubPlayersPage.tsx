@@ -483,7 +483,7 @@ export default function ClubPlayersPage() {
         {!playersLoading && filteredPlayers.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {filteredPlayers.map((player) => (
-              <Link key={player.id} to={player.ageGroupIds[0] ? Routes.player(clubId, player.ageGroupIds[0], player.id) : '#'}>
+              <Link key={player.id} to={Routes.clubPlayer(clubId, player.id)}>
                 <PlayerCard 
                   player={player}
                   detailDisplay="banding"

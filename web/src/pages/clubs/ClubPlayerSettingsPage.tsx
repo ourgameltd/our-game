@@ -270,6 +270,7 @@ export default function ClubPlayerSettingsPage() {
           title={isNewPlayer ? "Add New Player" : "Player Settings"}
           subtitle={isNewPlayer ? `Add a new player to ${club?.name}` : `Manage ${player!.firstName} ${player!.lastName}'s profile`}
           badge={!isNewPlayer && player!.isArchived ? "🗄️ Archived" : undefined}
+          backLink={isNewPlayer ? Routes.clubPlayers(clubId!) : Routes.clubPlayer(clubId!, playerId!)}
         />
         
         {!isNewPlayer && player!.isArchived && (

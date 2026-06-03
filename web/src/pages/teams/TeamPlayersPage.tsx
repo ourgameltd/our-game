@@ -345,7 +345,7 @@ export default function TeamPlayersPage() {
         {teamPlayers.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {teamPlayers.map((player) => (
-              <Link key={player.id} to={Routes.player(clubId!, ageGroupId!, player.id)}>
+              <Link key={player.id} to={Routes.teamPlayer(clubId!, ageGroupId!, teamId!, player.id)}>
                 <PlayerCard
                   player={player}
                   squadNumber={squadNumberMap[player.id]}

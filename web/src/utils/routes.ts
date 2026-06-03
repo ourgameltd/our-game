@@ -77,6 +77,10 @@ export class Routes {
     return `/dashboard/${validateParam(clubId, 'clubId')}/players`;
   }
 
+  static clubPlayer(clubId: string, playerId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/players/${validateParam(playerId, 'playerId')}`;
+  }
+
   static clubPlayerSettings(clubId: string, playerId: string): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}/players/${validateParam(playerId, 'playerId')}/settings`;
   }
