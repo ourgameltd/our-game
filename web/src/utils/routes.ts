@@ -113,6 +113,14 @@ export class Routes {
     return `/dashboard/${validateParam(clubId, 'clubId')}/competency-frameworks`;
   }
 
+  static ageGroupCompetencyFrameworks(clubId: string, ageGroupId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/competency-frameworks`;
+  }
+
+  static teamCompetencyFrameworks(clubId: string, ageGroupId: string, teamId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/competency-frameworks`;
+  }
+
   static competencyFramework(clubId: string, frameworkId: string): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}/competency-frameworks/${validateParam(frameworkId, 'frameworkId')}`;
   }

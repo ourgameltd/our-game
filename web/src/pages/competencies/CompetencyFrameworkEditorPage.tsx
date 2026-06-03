@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { CheckCircle2, AlertCircle, Save } from 'lucide-react';
 import PageTitle from '@/components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -29,7 +29,9 @@ const labelClass = 'label';
 
 export default function CompetencyFrameworkEditorPage() {
   const { clubId, frameworkId } = useParams();
+  const { state } = useLocation();
   const { addToast } = useToast();
+  const backPath = (state as { from?: string } | null)?.from ?? `/dashboard/${clubId}/competency-frameworks`;
 
   const { data: framework, isLoading, refetch } = useCompetencyFramework(frameworkId);
   const { mutate: saveFramework, isSubmitting, error } = useUpdateCompetencyFramework(frameworkId ?? '');
@@ -142,7 +144,7 @@ export default function CompetencyFrameworkEditorPage() {
               ? 'System default — read only. Clone to customise.'
               : 'Edit weightings and competency descriptions.'
           }
-          backLink={`/dashboard/${clubId}/competency-frameworks`}
+          backLink={backPath}
         />
 
         {framework.isSystemDefault && (

@@ -170,6 +170,8 @@ function AppContent() {
         <Route path="/dashboard/:clubId/settings" element={<ClubSettingsPage />} />
         <Route path="/dashboard/:clubId/competency-frameworks" element={<CompetencyFrameworksPage />} />
         <Route path="/dashboard/:clubId/competency-frameworks/:frameworkId" element={<CompetencyFrameworkEditorPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/competency-frameworks" element={<CompetencyFrameworksPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/competency-frameworks" element={<CompetencyFrameworksPage />} />
         {/* Hidden: Report Cards & Development Plans (not ready for release) */}
         {/* <Route path="/dashboard/:clubId/report-cards" element={<ClubReportCardsPage />} /> */}
         {/* <Route path="/dashboard/:clubId/development-plans" element={<ClubDevelopmentPlansPage />} /> */}

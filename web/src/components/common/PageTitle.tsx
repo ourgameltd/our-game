@@ -6,6 +6,7 @@ interface PageTitleProps {
   subtitle?: string;
   badge?: string | number;
   backLink?: string;
+  backState?: unknown;
   image?: {
     src?: string;
     alt: string;
@@ -22,7 +23,7 @@ interface PageTitleProps {
   };
 }
 
-export default function PageTitle({ title, subtitle, badge, backLink, image, action }: PageTitleProps) {
+export default function PageTitle({ title, subtitle, badge, backLink, backState, image, action }: PageTitleProps) {
   const getActionButtonClass = (variant: string = 'primary') => {
     const baseClass = 'btn btn-md';
     const variantClass = {
@@ -53,6 +54,7 @@ export default function PageTitle({ title, subtitle, badge, backLink, image, act
         {backLink && (
           <Link
             to={backLink}
+            state={backState}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />

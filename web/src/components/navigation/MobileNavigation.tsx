@@ -589,7 +589,7 @@ export default function MobileNavigation() {
                                 </li>
                                 <li className="mobile-nav-item">
                                   <Link
-                                    to={Routes.competencyFrameworks(clubId as string)}
+                                    to={Routes.ageGroupCompetencyFrameworks(clubId as string, ageGroupId as string)}
                                     className={`mobile-nav-link pl-8 ${location.pathname.includes('/competency-frameworks') ? 'active' : ''}`}
                                   >
                                     <Award className="mobile-nav-icon" />
@@ -784,7 +784,7 @@ export default function MobileNavigation() {
                                 </li>
                                 <li className="mobile-nav-item">
                                   <Link
-                                    to={Routes.competencyFrameworks(clubId as string)}
+                                    to={areAllParamsValid(clubId, ageGroupId) ? Routes.ageGroupCompetencyFrameworks(clubId as string, ageGroupId as string) : Routes.competencyFrameworks(clubId as string)}
                                     className={`mobile-nav-link pl-8 ${location.pathname.includes('/competency-frameworks') ? 'active' : ''}`}
                                   >
                                     <Award className="mobile-nav-icon" />
@@ -996,7 +996,7 @@ export default function MobileNavigation() {
                                 </li>
                                 <li className="mobile-nav-item">
                                   <Link
-                                    to={Routes.competencyFrameworks(clubId as string)}
+                                    to={Routes.teamCompetencyFrameworks(clubId as string, ageGroupId as string, teamId as string)}
                                     className={`mobile-nav-link pl-8 ${location.pathname.includes('/competency-frameworks') ? 'active' : ''}`}
                                   >
                                     <Award className="mobile-nav-icon" />

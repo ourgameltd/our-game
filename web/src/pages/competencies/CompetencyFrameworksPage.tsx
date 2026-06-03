@@ -156,9 +156,19 @@ function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: F
 
 export default function CompetencyFrameworksPage() {
   usePageTitle(['Competency Frameworks']);
-  const { clubId } = useParams();
+  const { clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
   const { addToast } = useToast();
+  const backLink = teamId && ageGroupId
+    ? Routes.team(clubId!, ageGroupId, teamId)
+    : ageGroupId
+    ? Routes.ageGroup(clubId!, ageGroupId)
+    : undefined;
+  const selfPath = teamId && ageGroupId
+    ? Routes.teamCompetencyFrameworks(clubId!, ageGroupId, teamId)
+    : ageGroupId
+    ? Routes.ageGroupCompetencyFrameworks(clubId!, ageGroupId)
+    : Routes.competencyFrameworks(clubId!);
 
   const { data, isLoading, refetch } = useClubCompetencyFrameworks(clubId);
   const { mutate: create, isSubmitting: isCreating } = useCreateCompetencyFramework();
@@ -194,12 +204,16 @@ export default function CompetencyFrameworksPage() {
     await refetch();
   };
 
-  const goTo = (id: string) => navigate(Routes.competencyFramework(clubId!, id));
+  const goTo = (id: string) => navigate(Routes.competencyFramework(clubId!, id), { state: { from: selfPath } });
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
-        <PageTitle title="Competency Frameworks" subtitle="All frameworks available to your club — system, club, age group, and team." />
+        <PageTitle
+          title="Competency Frameworks"
+          subtitle="All frameworks available to your club — system, club, age group, and team."
+          backLink={backLink}
+        />
 
         {!isLoading && (data ?? []).length === 0 ? (
           <EmptyState
