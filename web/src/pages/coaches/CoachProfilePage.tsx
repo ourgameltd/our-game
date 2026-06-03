@@ -315,11 +315,15 @@ export default function CoachProfilePage() {
                 <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Age Group Roles</h2>
                 <div className="space-y-2">
                   {coach.ageGroupCoordinatorRoles.map(r => (
-                    <div key={r.ageGroupId} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{r.ageGroupName}</span>
-                      {r.role && (
-                        <span className="badge-secondary text-xs">{getAgeGroupRoleLabel(r.role)}</span>
-                      )}
+                    <div key={r.ageGroupId} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                      <p className="font-medium text-gray-900 dark:text-white">
+                        {r.ageGroupName}
+                        {r.role && (
+                          <span className="text-xs text-primary-600 dark:text-primary-400 font-normal ml-2">
+                            {getAgeGroupRoleLabel(r.role)}
+                          </span>
+                        )}
+                      </p>
                     </div>
                   ))}
                 </div>

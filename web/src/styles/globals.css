@@ -142,6 +142,10 @@
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300;
   }
 
+  .badge-secondary {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-secondary-100 dark:bg-secondary-900/30 text-secondary-800 dark:text-secondary-300;
+  }
+
   .badge-danger {
     @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
   }
