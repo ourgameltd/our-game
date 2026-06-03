@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Users, Clock3, ListOrdered, Globe2, ClipboardList, X } from 'lucide-react';
+import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Clock3, ListOrdered, Globe2, ClipboardList, X } from 'lucide-react';
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
 import { getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
@@ -154,9 +154,12 @@ export default function DrillTemplatesListPage() {
     return Routes.drillTemplateNew(clubId!);
   };
 
-  const templates = templatesData?.templates || [];
-  const inheritedTemplates = templatesData?.inheritedTemplates || [];
   const isLoading = isLoadingClub || isLoadingTemplates;
+
+  const allTemplates = useMemo(() => [
+    ...(templatesData?.templates || []).map(t => ({ ...t, isInherited: false })),
+    ...(templatesData?.inheritedTemplates || []).map(t => ({ ...t, isInherited: true })),
+  ], [templatesData]);
 
   // Check if any filters are active
   const hasActiveFilters = searchTerm || categoryFilter !== 'all' || selectedAttributes.length > 0;
@@ -306,211 +309,110 @@ export default function DrillTemplatesListPage() {
           <TemplatesListSkeleton count={4} />
         )}
 
-        {/* Content - Scope Templates */}
+        {/* Combined Templates List */}
         {!isLoading && !error && (
-          <div className="space-y-6">
-            {/* Current Scope Templates */}
-            <div>
-              {templates.length > 0 ? (
-                <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-                  {templates.map((template: DrillTemplateListDto) => (
-                    <Link
-                      key={template.id}
-                      to={getTemplateRoute(template.id)}
-                      className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0"
-                    >
-                      <div className="flex items-stretch gap-3">
-                        <div className="w-1 self-stretch rounded-full shrink-0 bg-primary-500 dark:bg-primary-400" />
+          allTemplates.length > 0 ? (
+            <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+              {allTemplates.map((template) => {
+                const scopeLabel = template.scopeType === 'club' ? 'Club' : 'Age Group';
+                const categoryBadge = getCategoryBadge(template);
+                const rowClasses = template.isInherited
+                  ? 'block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 opacity-80 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0'
+                  : 'block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0';
 
-                        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 flex-1 min-w-0">
-                        {/* Name, Category, Description */}
-                        <div className="md:flex-1 md:min-w-0">
-                          <div className="flex flex-wrap items-start gap-2">
-                            <h3 className="text-base font-semibold text-gray-900 dark:text-white wrap-break-word leading-snug">
-                              {template.name}
-                            </h3>
-                            {(() => {
-                              const categoryBadge = getCategoryBadge(template);
-                              if (!categoryBadge) {
-                                return null;
-                              }
+                const content = (
+                  <div className="flex items-stretch gap-3">
+                    <div className={`w-1 self-stretch rounded-full shrink-0 ${template.isInherited ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary-500 dark:bg-primary-400'}`} />
 
-                              return (
-                                <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${categoryBadge.classes}`}>
-                                  {categoryBadge.label}
-                                </span>
-                              );
-                            })()}
-                          </div>
-
-                          <p className="mt-1 text-gray-600 dark:text-gray-400 text-sm line-clamp-2 md:line-clamp-1">
-                            {template.description || 'No description provided.'}
-                          </p>
-                        </div>
-
-                        {/* Stats */}
-                        <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:shrink-0">
-                          <span className="inline-flex items-center gap-1">
-                            <Clock3 className="w-4 h-4" />
-                            {template.totalDuration}m
-                          </span>
-                          <span className="inline-flex items-center gap-1">
-                            <ListOrdered className="w-4 h-4" />
-                            {template.drillIds.length}
-                          </span>
-                          {template.isPublic && (
-                            <span title="Shared session" aria-label="Shared session">
-                              <Globe2 className="w-4 h-4" />
+                    <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 flex-1 min-w-0">
+                      <div className="md:flex-1 md:min-w-0">
+                        <div className="flex flex-wrap items-start gap-2">
+                          <h3 className="text-base font-semibold text-gray-900 dark:text-white wrap-break-word leading-snug">
+                            {template.name}
+                          </h3>
+                          {template.isInherited && (
+                            <span className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
+                              {scopeLabel}
+                            </span>
+                          )}
+                          {categoryBadge && (
+                            <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${categoryBadge.classes}`}>
+                              {categoryBadge.label}
                             </span>
                           )}
                         </div>
-
-                        {/* Attributes - desktop only */}
-                        <div className="hidden md:flex flex-wrap gap-1 md:shrink-0 md:w-48">
-                          {template.attributes.slice(0, 2).map((attr, i) => (
-                            <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded truncate">
-                              {getAttributeLabel(attr)}
-                            </span>
-                          ))}
-                          {template.attributes.length > 2 && (
-                            <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-                              +{template.attributes.length - 2}
-                            </span>
-                          )}
-                        </div>
-
-                        {/* Attributes - mobile only */}
-                        <div className="flex md:hidden flex-wrap gap-1">
-                          {template.attributes.slice(0, 3).map((attr, i) => (
-                            <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded">
-                              {getAttributeLabel(attr)}
-                            </span>
-                          ))}
-                          {template.attributes.length > 3 && (
-                            <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-                              +{template.attributes.length - 3}
-                            </span>
-                          )}
-                        </div>
+                        <p className="mt-1 text-gray-600 dark:text-gray-400 text-sm line-clamp-2 md:line-clamp-1">
+                          {template.description || 'No description provided.'}
+                        </p>
                       </div>
+
+                      <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:shrink-0">
+                        <span className="inline-flex items-center gap-1">
+                          <Clock3 className="w-4 h-4" />
+                          {template.totalDuration}m
+                        </span>
+                        <span className="inline-flex items-center gap-1">
+                          <ListOrdered className="w-4 h-4" />
+                          {template.drillIds.length}
+                        </span>
+                        {template.isPublic && (
+                          <span title="Shared session" aria-label="Shared session">
+                            <Globe2 className="w-4 h-4" />
+                          </span>
+                        )}
                       </div>
-                    </Link>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  icon={ClipboardList}
-                  title="No sessions found"
-                  description={
-                    hasActiveFilters
-                      ? 'Try adjusting your filters'
-                      : 'Create your first session template to get started'
-                  }
-                />
-              )}
+
+                      <div className="hidden md:flex flex-wrap gap-1 md:shrink-0 md:w-48">
+                        {template.attributes.slice(0, 2).map((attr, i) => (
+                          <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded truncate">
+                            {getAttributeLabel(attr)}
+                          </span>
+                        ))}
+                        {template.attributes.length > 2 && (
+                          <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+                            +{template.attributes.length - 2}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex md:hidden flex-wrap gap-1">
+                        {template.attributes.slice(0, 3).map((attr, i) => (
+                          <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded">
+                            {getAttributeLabel(attr)}
+                          </span>
+                        ))}
+                        {template.attributes.length > 3 && (
+                          <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
+                            +{template.attributes.length - 3}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+
+                return template.isInherited ? (
+                  <div key={template.id} className={rowClasses}>
+                    {content}
+                  </div>
+                ) : (
+                  <Link key={template.id} to={getTemplateRoute(template.id)} className={rowClasses}>
+                    {content}
+                  </Link>
+                );
+              })}
             </div>
-
-            {/* Inherited Templates */}
-            {inheritedTemplates.length > 0 && (
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Inherited Sessions ({inheritedTemplates.length})
-                </h2>
-                <div className="grid grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-                  {inheritedTemplates.map((template: DrillTemplateListDto) => {
-                    const scopeLabel = template.scopeType === 'club' ? 'Club' : 'Age Group';
-                    
-                    return (
-                      <div
-                        key={template.id}
-                        className="block bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-4 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b md:last:border-b-0 opacity-75"
-                      >
-                        <div className="flex items-stretch gap-3">
-                          <div className="w-1 self-stretch rounded-full shrink-0 bg-gray-300 dark:bg-gray-600" />
-
-                          <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 flex-1 min-w-0">
-                          {/* Name and Category with scope badge */}
-                          <div className="md:flex-1 md:min-w-0">
-                            <div className="flex flex-wrap items-start gap-2">
-                              <h3 className="text-base font-semibold text-gray-900 dark:text-white wrap-break-word leading-snug">
-                                {template.name}
-                              </h3>
-                              <span className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
-                                {scopeLabel}
-                              </span>
-                              {(() => {
-                                const categoryBadge = getCategoryBadge(template);
-                                if (!categoryBadge) {
-                                  return null;
-                                }
-
-                                return (
-                                  <span className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${categoryBadge.classes}`}>
-                                    {categoryBadge.label}
-                                  </span>
-                                );
-                              })()}
-                            </div>
-
-                            <p className="mt-1 text-gray-600 dark:text-gray-400 text-sm line-clamp-2 md:line-clamp-1">
-                              {template.description || 'No description provided.'}
-                            </p>
-                          </div>
-
-                          {/* Stats */}
-                          <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400 md:shrink-0">
-                            <span className="inline-flex items-center gap-1">
-                              <Clock3 className="w-4 h-4" />
-                              {template.totalDuration}m
-                            </span>
-                            <span className="inline-flex items-center gap-1">
-                              <ListOrdered className="w-4 h-4" />
-                              {template.drillIds.length}
-                            </span>
-                            {template.isPublic && (
-                              <span title="Shared session" aria-label="Shared session">
-                                <Globe2 className="w-4 h-4" />
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Attributes - desktop only */}
-                          <div className="hidden md:flex flex-wrap gap-1 md:shrink-0 md:w-48">
-                            {template.attributes.slice(0, 2).map((attr, i) => (
-                              <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded truncate">
-                                {getAttributeLabel(attr)}
-                              </span>
-                            ))}
-                            {template.attributes.length > 2 && (
-                              <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-                                +{template.attributes.length - 2}
-                              </span>
-                            )}
-                          </div>
-
-                          {/* Attributes - mobile only */}
-                          <div className="flex md:hidden flex-wrap gap-1">
-                            {template.attributes.slice(0, 3).map((attr, i) => (
-                              <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded">
-                                {getAttributeLabel(attr)}
-                              </span>
-                            ))}
-                            {template.attributes.length > 3 && (
-                              <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-                                +{template.attributes.length - 3}
-                              </span>
-                            )}
-                          </div>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
+          ) : (
+            <EmptyState
+              icon={ClipboardList}
+              title="No sessions found"
+              description={
+                hasActiveFilters
+                  ? 'Try adjusting your filters'
+                  : 'Create your first session template to get started'
+              }
+            />
+          )
         )}
       </main>
     </div>
