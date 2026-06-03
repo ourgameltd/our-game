@@ -76,4 +76,28 @@ public class GetClubStatisticsHandlerTests
         Assert.Equal(1, result.GoalDifference);
         Assert.True(result.WinRate > 0);
     }
+
+    [Fact]
+    public async Task Handle_ExcludesMatchesOutsideEachAgeGroupCurrentSeason()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+
+        // Match in current season (2025-26) — should be counted
+        var currentMatchId = await db.SeedMatchAsync(teamId, "Current FC", MatchStatus.Completed, DateTime.UtcNow.AddDays(-7));
+        await db.Context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE Matches SET HomeScore = 2, AwayScore = 0 WHERE Id = {currentMatchId}");
+
+        // Match in old season — should be excluded
+        var oldMatchId = await db.SeedMatchAsync(teamId, "Old FC", MatchStatus.Completed, DateTime.UtcNow.AddDays(-400));
+        await db.Context.Database.ExecuteSqlInterpolatedAsync(
+            $"UPDATE Matches SET HomeScore = 5, AwayScore = 0, SeasonId = '2024-25' WHERE Id = {oldMatchId}");
+
+        var handler = new GetClubStatisticsHandler(db.Context);
+        var result = await handler.Handle(new GetClubStatisticsQuery(clubId), CancellationToken.None);
+
+        Assert.Equal(1, result.MatchesPlayed);
+        Assert.Equal(1, result.Wins);
+        Assert.Equal(2, result.GoalDifference); // only the 2-0 win counts
+    }
 }

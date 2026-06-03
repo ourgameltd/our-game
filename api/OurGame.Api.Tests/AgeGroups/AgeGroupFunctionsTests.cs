@@ -170,6 +170,54 @@ public class AgeGroupFunctionsTests
         Assert.Equal(18, payload.Data!.PlayerCount);
     }
 
+    [Fact]
+    public async Task GetAgeGroupStatistics_PassesSeasonToMediator_WhenSeasonQueryParamProvided()
+    {
+        var ageGroupId = Guid.NewGuid();
+        var expected = new AgeGroupStatisticsDto { PlayerCount = 5 };
+
+        GetAgeGroupStatisticsQuery? capturedQuery = null;
+        var mediator = new TestMediator();
+        mediator.Register<GetAgeGroupStatisticsQuery, AgeGroupStatisticsDto>((q, _) =>
+        {
+            capturedQuery = q;
+            return Task.FromResult(expected);
+        });
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("GET", $"https://localhost/v1/age-groups/{ageGroupId}/statistics?season=2024-25");
+
+        var response = await sut.GetAgeGroupStatistics(req, ageGroupId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(capturedQuery);
+        Assert.Equal("2024-25", capturedQuery!.Season);
+    }
+
+    [Fact]
+    public async Task GetAgeGroupStatistics_PassesNullSeasonToMediator_WhenSeasonQueryParamAbsent()
+    {
+        var ageGroupId = Guid.NewGuid();
+        var expected = new AgeGroupStatisticsDto { PlayerCount = 5 };
+
+        GetAgeGroupStatisticsQuery? capturedQuery = null;
+        var mediator = new TestMediator();
+        mediator.Register<GetAgeGroupStatisticsQuery, AgeGroupStatisticsDto>((q, _) =>
+        {
+            capturedQuery = q;
+            return Task.FromResult(expected);
+        });
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("GET", $"https://localhost/v1/age-groups/{ageGroupId}/statistics");
+
+        var response = await sut.GetAgeGroupStatistics(req, ageGroupId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(capturedQuery);
+        Assert.Null(capturedQuery!.Season);
+    }
+
     // ───────────────────────────────────────────────
     // GetPlayersByAgeGroupId
     // ───────────────────────────────────────────────

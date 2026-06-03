@@ -9,7 +9,7 @@ namespace OurGame.Application.UseCases.AgeGroups.Queries.GetAgeGroupStatistics;
 /// <summary>
 /// Query to get statistics for an age group
 /// </summary>
-public record GetAgeGroupStatisticsQuery(Guid AgeGroupId) : IQuery<AgeGroupStatisticsDto>;
+public record GetAgeGroupStatisticsQuery(Guid AgeGroupId, string? Season = null) : IQuery<AgeGroupStatisticsDto>;
 
 /// <summary>
 /// Handler for GetAgeGroupStatisticsQuery
@@ -25,15 +25,28 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
 
     public async Task<AgeGroupStatisticsDto> Handle(GetAgeGroupStatisticsQuery query, CancellationToken cancellationToken)
     {
-        // Get player count
+        // Resolve effective season
+        string effectiveSeason;
+        if (!string.IsNullOrWhiteSpace(query.Season))
+        {
+            effectiveSeason = query.Season;
+        }
+        else
+        {
+            var seasonSql = "SELECT CurrentSeason FROM AgeGroups WHERE Id = {0}";
+            var seasonResult = await _db.Database.SqlQueryRaw<SeasonRawDto>(seasonSql, query.AgeGroupId).FirstOrDefaultAsync(cancellationToken);
+            effectiveSeason = seasonResult?.CurrentSeason ?? string.Empty;
+        }
+
+        // Get player count for the effective season
         var playerCountSql = @"
-            SELECT COALESCE(COUNT(DISTINCT p.Id), 0) AS PlayerCount
-            FROM PlayerAgeGroups pag
-            INNER JOIN Players p ON p.Id = pag.PlayerId
-            WHERE pag.AgeGroupId = {0} AND p.IsArchived = 0";
+            SELECT COALESCE(COUNT(DISTINCT pt.PlayerId), 0) AS PlayerCount
+            FROM Teams t
+            INNER JOIN PlayerTeams pt ON pt.TeamId = t.Id
+            WHERE t.AgeGroupId = {0} AND t.Season = {1} AND t.IsArchived = 0";
 
         var playerCount = await _db.Database
-            .SqlQueryRaw<PlayerCountRawDto>(playerCountSql, query.AgeGroupId)
+            .SqlQueryRaw<PlayerCountRawDto>(playerCountSql, query.AgeGroupId, effectiveSeason)
             .FirstOrDefaultAsync(cancellationToken);
 
         // Get match statistics
@@ -48,11 +61,11 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
                 COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.HomeScore ELSE m.AwayScore END), 0) AS GoalsFor,
                 COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.AwayScore ELSE m.HomeScore END), 0) AS GoalsAgainst
             FROM Teams t
-            LEFT JOIN Matches m ON m.TeamId = t.Id
+            LEFT JOIN Matches m ON m.TeamId = t.Id AND m.SeasonId = {1}
             WHERE t.AgeGroupId = {0} AND t.IsArchived = 0";
 
         var matchStats = await _db.Database
-            .SqlQueryRaw<MatchStatsRawDto>(matchStatsSql, query.AgeGroupId)
+            .SqlQueryRaw<MatchStatsRawDto>(matchStatsSql, query.AgeGroupId, effectiveSeason)
             .FirstOrDefaultAsync(cancellationToken);
 
         var upcomingMatchesSql = @"
@@ -76,12 +89,13 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             INNER JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
             WHERE t.AgeGroupId = {0}
                 AND m.Status = 0
+                AND m.SeasonId = {1}
                 AND m.MatchDate >= GETUTCDATE()
                 AND t.IsArchived = 0
             ORDER BY m.MatchDate ASC";
 
         var upcomingMatches = await _db.Database
-            .SqlQueryRaw<AgeGroupMatchRawDto>(upcomingMatchesSql, query.AgeGroupId)
+            .SqlQueryRaw<AgeGroupMatchRawDto>(upcomingMatchesSql, query.AgeGroupId, effectiveSeason)
             .ToListAsync(cancellationToken);
 
         var recentResultsSql = @"
@@ -105,11 +119,12 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             INNER JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
             WHERE t.AgeGroupId = {0}
                 AND m.Status = 2
+                AND m.SeasonId = {1}
                 AND t.IsArchived = 0
             ORDER BY m.MatchDate DESC";
 
         var recentResults = await _db.Database
-            .SqlQueryRaw<AgeGroupMatchRawDto>(recentResultsSql, query.AgeGroupId)
+            .SqlQueryRaw<AgeGroupMatchRawDto>(recentResultsSql, query.AgeGroupId, effectiveSeason)
             .ToListAsync(cancellationToken);
 
         var topPerformersSql = @"
@@ -126,6 +141,7 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             INNER JOIN Players p ON pr.PlayerId = p.Id
             WHERE t.AgeGroupId = {0}
                 AND m.Status = 2
+                AND m.SeasonId = {1}
                 AND pr.Rating IS NOT NULL
                 AND p.IsArchived = 0
             GROUP BY pr.PlayerId, p.FirstName, p.LastName
@@ -133,7 +149,7 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             ORDER BY AverageRating DESC";
 
         var topPerformers = await _db.Database
-            .SqlQueryRaw<AgeGroupPerformerRawDto>(topPerformersSql, query.AgeGroupId)
+            .SqlQueryRaw<AgeGroupPerformerRawDto>(topPerformersSql, query.AgeGroupId, effectiveSeason)
             .ToListAsync(cancellationToken);
 
         var underperformingSql = @"
@@ -150,6 +166,7 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             INNER JOIN Players p ON pr.PlayerId = p.Id
             WHERE t.AgeGroupId = {0}
                 AND m.Status = 2
+                AND m.SeasonId = {1}
                 AND pr.Rating IS NOT NULL
                 AND p.IsArchived = 0
             GROUP BY pr.PlayerId, p.FirstName, p.LastName
@@ -157,7 +174,7 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             ORDER BY AverageRating ASC";
 
         var underperforming = await _db.Database
-            .SqlQueryRaw<AgeGroupPerformerRawDto>(underperformingSql, query.AgeGroupId)
+            .SqlQueryRaw<AgeGroupPerformerRawDto>(underperformingSql, query.AgeGroupId, effectiveSeason)
             .ToListAsync(cancellationToken);
 
         var wins = matchStats?.Wins ?? 0;
@@ -228,6 +245,14 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
             }).ToList()
         };
     }
+}
+
+/// <summary>
+/// DTO for season raw SQL query result
+/// </summary>
+public class SeasonRawDto
+{
+    public string? CurrentSeason { get; set; }
 }
 
 /// <summary>

@@ -446,10 +446,10 @@ export function useAgeGroupById(ageGroupId: string | undefined): UseApiState<Age
 /**
  * Hook to fetch age group statistics
  */
-export function useAgeGroupStatistics(ageGroupId: string | undefined): UseApiState<AgeGroupStatisticsDto> {
+export function useAgeGroupStatistics(ageGroupId: string | undefined, season?: string): UseApiState<AgeGroupStatisticsDto> {
   return useApiCall<AgeGroupStatisticsDto>(
-    () => apiClient.ageGroups.getStatistics(ageGroupId!),
-    [ageGroupId],
+    () => apiClient.ageGroups.getStatistics(ageGroupId!, season),
+    [ageGroupId, season],
     isValidId(ageGroupId)
   );
 }

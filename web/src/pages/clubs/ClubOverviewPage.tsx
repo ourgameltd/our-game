@@ -87,7 +87,7 @@ export default function ClubOverviewPage() {
           setAgeGroupsError(null);
 
           sortedAgeGroups.forEach(ag => {
-            apiClient.ageGroups.getStatistics(ag.id)
+            apiClient.ageGroups.getStatistics(ag.id, ag.season)
               .then((statsResponse) => {
                 if (statsResponse.success && statsResponse.data) {
                   setAgeGroupStats(prev => new Map(prev).set(ag.id, statsResponse.data!));

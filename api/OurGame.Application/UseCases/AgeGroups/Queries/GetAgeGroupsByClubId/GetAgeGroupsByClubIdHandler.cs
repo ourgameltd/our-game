@@ -76,7 +76,7 @@ public class GetAgeGroupsByClubIdHandler : IRequestHandler<GetAgeGroupsByClubIdQ
                         CASE WHEN m.IsHome = 1 THEN m.HomeScore - m.AwayScore ELSE m.AwayScore - m.HomeScore END 
                     END), 0) AS GoalDifference
                 FROM Teams t
-                LEFT JOIN Matches m ON m.TeamId = t.Id
+                LEFT JOIN Matches m ON m.TeamId = t.Id AND m.SeasonId = t.Season
                 WHERE t.IsArchived = 0
                 GROUP BY t.AgeGroupId
             ) matchStats ON matchStats.AgeGroupId = ag.Id

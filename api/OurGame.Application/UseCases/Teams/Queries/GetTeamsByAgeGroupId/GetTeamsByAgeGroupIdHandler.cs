@@ -50,7 +50,7 @@ public class GetTeamsByAgeGroupIdHandler : IRequestHandler<GetTeamsByAgeGroupIdQ
             FROM Teams t
             LEFT JOIN PlayerTeams pt ON pt.TeamId = t.Id
             LEFT JOIN TeamCoaches tc ON tc.TeamId = t.Id
-            LEFT JOIN Matches m ON m.TeamId = t.Id
+            LEFT JOIN Matches m ON m.TeamId = t.Id AND m.SeasonId = t.Season
             WHERE t.AgeGroupId = {0} AND t.IsArchived = 0
             GROUP BY t.Id, t.ClubId, t.AgeGroupId, t.Name, t.ShortName, t.Level, t.Season, t.PrimaryColor, t.SecondaryColor, t.IsArchived
             ORDER BY t.Name";

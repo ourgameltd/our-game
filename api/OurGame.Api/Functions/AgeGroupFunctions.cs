@@ -141,6 +141,7 @@ public class AgeGroupFunctions
     [Function("GetAgeGroupStatistics")]
     [OpenApiOperation(operationId: "GetAgeGroupStatistics", tags: new[] { "AgeGroups" }, Summary = "Get age group statistics", Description = "Retrieves comprehensive statistics for a specific age group")]
     [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The age group ID")]
+    [OpenApiParameter(name: "season", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Season identifier to filter statistics (e.g. '2025-26'). Defaults to the age group's current season.")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<AgeGroupStatisticsDto>), Description = "Statistics retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<AgeGroupStatisticsDto>), Description = "User not authenticated")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<AgeGroupStatisticsDto>), Description = "Invalid age group ID format")]
@@ -165,7 +166,8 @@ public class AgeGroupFunctions
             return badRequestResponse;
         }
 
-        var statistics = await _mediator.Send(new GetAgeGroupStatisticsQuery(ageGroupGuid));
+        var season = req.Query["season"];
+        var statistics = await _mediator.Send(new GetAgeGroupStatisticsQuery(ageGroupGuid, string.IsNullOrWhiteSpace(season) ? null : season));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<AgeGroupStatisticsDto>.SuccessResponse(statistics));

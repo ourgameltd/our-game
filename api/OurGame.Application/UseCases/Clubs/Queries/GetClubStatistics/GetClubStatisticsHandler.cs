@@ -54,8 +54,9 @@ public class GetClubStatisticsHandler : IRequestHandler<GetClubStatisticsQuery, 
                 COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.HomeScore ELSE m.AwayScore END), 0) AS GoalsFor,
                 COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.AwayScore ELSE m.HomeScore END), 0) AS GoalsAgainst
             FROM Teams t
-            LEFT JOIN Matches m ON m.TeamId = t.Id
-            WHERE t.ClubId = {0} AND t.IsArchived = 0";
+            INNER JOIN AgeGroups ag ON ag.Id = t.AgeGroupId AND ag.IsArchived = 0
+            LEFT JOIN Matches m ON m.TeamId = t.Id AND m.SeasonId = t.Season
+            WHERE t.ClubId = {0} AND t.IsArchived = 0 AND t.Season = ag.CurrentSeason";
 
         var matchStats = await _db.Database
             .SqlQueryRaw<MatchStatsRawDto>(matchStatsSql, query.ClubId)

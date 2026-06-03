@@ -3341,8 +3341,9 @@ export const apiClient = {
     /**
      * Get age group statistics
      */
-    getStatistics: async (ageGroupId: string): Promise<ApiResponse<AgeGroupStatisticsDto>> => {
-      const response = await axiosInstance.get<ApiResponse<AgeGroupStatisticsDto>>(`/v1/age-groups/${ageGroupId}/statistics`);
+    getStatistics: async (ageGroupId: string, season?: string): Promise<ApiResponse<AgeGroupStatisticsDto>> => {
+      const params = season ? `?season=${encodeURIComponent(season)}` : '';
+      const response = await axiosInstance.get<ApiResponse<AgeGroupStatisticsDto>>(`/v1/age-groups/${ageGroupId}/statistics${params}`);
       return response.data;
     },
 
