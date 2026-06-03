@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
 using OurGame.Application.UseCases.AgeGroups.Queries.GetCoachesByAgeGroupId.DTOs;
-using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.AgeGroups.Queries.GetCoachesByAgeGroupId;
@@ -40,9 +39,10 @@ public class GetCoachesByAgeGroupIdHandler : IRequestHandler<GetCoachesByAgeGrou
                 c.Phone,
                 c.AssociationId,
                 c.HasAccount,
-                c.Role,
                 c.Biography,
                 c.Specializations,
+                c.ClubRoles,
+                c.Badges,
                 c.IsArchived
             FROM Coaches c
             LEFT JOIN Users u ON u.Id = c.UserId
@@ -123,26 +123,14 @@ public class GetCoachesByAgeGroupIdHandler : IRequestHandler<GetCoachesByAgeGrou
                 Phone = c.Phone,
                 AssociationId = c.AssociationId,
                 HasAccount = c.HasAccount,
-                Role = ConvertRoleToString(c.Role),
                 Biography = c.Biography,
                 Specializations = ParseSpecializations(c.Specializations),
+                ClubRoles = ParseSpecializations(c.ClubRoles),
+                Badges = ParseSpecializations(c.Badges),
                 IsArchived = c.IsArchived,
                 Teams = teamsByCoach.GetValueOrDefault(c.Id, new List<AgeGroupCoachTeamDto>())
             })
             .ToList();
-    }
-
-    private static string ConvertRoleToString(int role)
-    {
-        return (CoachRole)role switch
-        {
-            CoachRole.HeadCoach => "head-coach",
-            CoachRole.AssistantCoach => "assistant-coach",
-            CoachRole.GoalkeeperCoach => "goalkeeper-coach",
-            CoachRole.FitnessCoach => "fitness-coach",
-            CoachRole.TechnicalCoach => "technical-coach",
-            _ => "head-coach"
-        };
     }
 
     private static List<string> ParseSpecializations(string? specializations)
@@ -190,9 +178,10 @@ class CoachRawDto
     public string? Phone { get; set; }
     public string? AssociationId { get; set; }
     public bool HasAccount { get; set; }
-    public int Role { get; set; }
     public string? Biography { get; set; }
     public string? Specializations { get; set; }
+    public string? ClubRoles { get; set; }
+    public string? Badges { get; set; }
     public bool IsArchived { get; set; }
 }
 

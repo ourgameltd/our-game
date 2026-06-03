@@ -6,6 +6,20 @@ import { mapApiRoleToUi } from '@/api/mappers';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
+// Skeleton for club roles / badges card
+function BadgesSkeleton() {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 animate-pulse">
+      <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
+      <div className="flex flex-wrap gap-2">
+        {[1, 2].map(i => (
+          <div key={i} className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Skeleton for the page title area
 function PageTitleSkeleton() {
   return (
@@ -187,11 +201,8 @@ export default function CoachProfilePage() {
     return [];
   };
 
-  const getRoleLabel = (role?: string, roleDisplay?: string): string => {
-    if (!role) {
-      return roleDisplay || 'Coach';
-    }
-
+  const getTeamRoleLabel = (role?: string, roleDisplay?: string): string => {
+    if (!role) return roleDisplay || 'Coach';
     const kebabRole = role.includes('-') ? role : mapApiRoleToUi(role);
     return coachRoleDisplay[kebabRole] || roleDisplay || role;
   };
@@ -205,7 +216,7 @@ export default function CoachProfilePage() {
         ) : (
           <PageTitle
             title={`${coach.firstName} ${coach.lastName}`}
-            subtitle={`${getRoleLabel(coach.role, coach.roleDisplay)} • ${subtitle}`}
+            subtitle={coach.clubRoles && coach.clubRoles.length > 0 ? `${coach.clubRoles[0]} • ${subtitle}` : subtitle}
             backLink={backLink}
             image={{
               src: coach.photo,
@@ -276,7 +287,7 @@ export default function CoachProfilePage() {
                         {team.ageGroupName} - {team.teamName}
                       </p>
                       <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        {getRoleLabel(team.role, team.roleDisplay)}
+                        {getTeamRoleLabel(team.role, team.roleDisplay)}
                       </p>
                     </div>
                   ))}
@@ -285,6 +296,42 @@ export default function CoachProfilePage() {
                 <p className="text-gray-600 dark:text-gray-400">Not assigned to any teams</p>
               )}
             </div>
+          )}
+
+          {/* Club Roles */}
+          {isLoading ? (
+            <BadgesSkeleton />
+          ) : (
+            coach && coach.clubRoles && coach.clubRoles.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Club Roles</h2>
+                <div className="flex flex-wrap gap-2">
+                  {coach.clubRoles.map((role, index) => (
+                    <span key={index} className="badge-secondary">
+                      {role}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )
+          )}
+
+          {/* Badges & Qualifications */}
+          {isLoading ? (
+            <BadgesSkeleton />
+          ) : (
+            coach && coach.badges && coach.badges.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Badges & Qualifications</h2>
+                <div className="flex flex-wrap gap-2">
+                  {coach.badges.map((badge, index) => (
+                    <span key={index} className="badge-secondary">
+                      {badge}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )
           )}
 
           {/* Specializations */}

@@ -69,13 +69,7 @@ export default function AgeGroupCoachesPage() {
 
   const mapCoachDtoToCoach = (dto: AgeGroupCoachDto): Coach => {
     const dateOfBirth = parseDateOfBirth(dto.dateOfBirth);
-
-    // Extract team IDs from teams array
     const teamIds = dto.teams.map(team => team.id);
-
-    // Ensure role is one of the valid Coach role types
-    const validRole = ['head-coach', 'assistant-coach', 'goalkeeper-coach', 'fitness-coach', 'technical-coach']
-      .includes(dto.role) ? dto.role : 'head-coach';
 
     return {
       id: dto.id,
@@ -89,7 +83,8 @@ export default function AgeGroupCoachesPage() {
       associationId: dto.associationId,
       hasAccount: dto.hasAccount,
       teamIds,
-      role: validRole as Coach['role'],
+      clubRoles: dto.clubRoles,
+      badges: dto.badges,
       biography: dto.biography,
       specializations: dto.specializations,
       isArchived: dto.isArchived

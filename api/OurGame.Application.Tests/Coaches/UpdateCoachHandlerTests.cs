@@ -2,7 +2,6 @@ using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Tests.TestInfrastructure;
 using OurGame.Application.UseCases.Coaches.Commands.UpdateCoachById;
 using OurGame.Application.UseCases.Coaches.Commands.UpdateCoachById.DTOs;
-using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 using Microsoft.EntityFrameworkCore;
 
@@ -17,9 +16,10 @@ public class UpdateCoachHandlerTests
         Phone = "0851234567",
         DateOfBirth = new DateOnly(1985, 6, 15),
         AssociationId = "FAI-001",
-        Role = "HeadCoach",
         Biography = "Experienced coach",
         Specializations = new[] { "Goalkeeping", "Set Pieces" },
+        ClubRoles = new[] { "Committee Member" },
+        Badges = new[] { "DBS Checked" },
         TeamIds = teamIds,
         Photo = "https://example.com/photo.jpg"
     };
@@ -35,21 +35,6 @@ public class UpdateCoachHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenInvalidRole_ThrowsValidationException()
-    {
-        await using var db = await TestDatabaseFactory.CreateAsync();
-        var clubId = await db.SeedClubAsync();
-        var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
-
-        var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
-        var dto = ValidDto() with { Role = "InvalidRole" };
-
-        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
-            handler.Handle(new UpdateCoachCommand(coachId, dto), CancellationToken.None));
-        Assert.Contains("Role", ex.Errors.Keys);
-    }
-
-    [Fact]
     public async Task Handle_WhenValid_UpdatesAndReturnsCoachDetail()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
@@ -62,7 +47,8 @@ public class UpdateCoachHandlerTests
         Assert.Equal(coachId, result.Id);
         Assert.Equal("Updated", result.FirstName);
         Assert.Equal("Coach", result.LastName);
-        Assert.Equal("HeadCoach", result.Role);
+        Assert.Equal(new List<string> { "Committee Member" }, result.ClubRoles);
+        Assert.Equal(new List<string> { "DBS Checked" }, result.Badges);
         Assert.Equal("Experienced coach", result.Biography);
         Assert.Equal(new List<string> { "Goalkeeping", "Set Pieces" }, result.Specializations);
         Assert.Equal(clubId, result.ClubId);
@@ -85,23 +71,19 @@ public class UpdateCoachHandlerTests
         Assert.Equal(teamId, result.TeamAssignments[0].TeamId);
     }
 
-    [Theory]
-    [InlineData("HeadCoach")]
-    [InlineData("AssistantCoach")]
-    [InlineData("GoalkeeperCoach")]
-    [InlineData("FitnessCoach")]
-    [InlineData("TechnicalCoach")]
-    public async Task Handle_AllValidCoachRoles(string role)
+    [Fact]
+    public async Task Handle_EmptyClubRolesAndBadges_ParsesEmpty()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
         var (coachId, _) = await db.SeedCoachAsync(clubId: clubId);
 
         var handler = new UpdateCoachHandler(db.Context, new StubBlobStorageService());
-        var dto = ValidDto() with { Role = role };
+        var dto = ValidDto() with { ClubRoles = Array.Empty<string>(), Badges = Array.Empty<string>() };
         var result = await handler.Handle(new UpdateCoachCommand(coachId, dto), CancellationToken.None);
 
-        Assert.Equal(role, result.Role);
+        Assert.Empty(result.ClubRoles);
+        Assert.Empty(result.Badges);
     }
 
     [Fact]

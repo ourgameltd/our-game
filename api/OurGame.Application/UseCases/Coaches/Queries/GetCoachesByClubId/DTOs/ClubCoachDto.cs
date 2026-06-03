@@ -15,7 +15,8 @@ public class ClubCoachDto
     public string? Phone { get; set; }
     public string? AssociationId { get; set; }
     public bool HasAccount { get; set; }
-    public string Role { get; set; } = string.Empty;
+    public List<string> ClubRoles { get; set; } = new();
+    public List<string> Badges { get; set; } = new();
     public string? Biography { get; set; }
     public List<string> Specializations { get; set; } = new();
     public bool IsArchived { get; set; }

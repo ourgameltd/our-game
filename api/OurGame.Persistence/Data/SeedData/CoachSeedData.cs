@@ -1,5 +1,4 @@
 using OurGame.Persistence.Models;
-using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -30,7 +29,8 @@ public static class CoachSeedData
                 Phone = string.Empty,
                 AssociationId = UserSeedData.GetSafeCoachAssociationId("Michael Robertson"),
                 HasAccount = false,
-                Role = CoachRole.HeadCoach,
+                ClubRoles = null,
+                Badges = null,
                 Biography = "Seeded legacy coach used by tactic seed data.",
                 Specializations = "[]",
                 UserId = null,
@@ -63,7 +63,8 @@ public static class CoachSeedData
                 Phone = UserSeedData.NormalizePhone(admin.Phone),
                 AssociationId = UserSeedData.GetSafeCoachAssociationId(admin.Name, admin.AssociationId),
                 HasAccount = isMichaelLaw,
-                Role = CoachRole.HeadCoach,
+                ClubRoles = null,
+                Badges = null,
                 Biography = "Seeded from Vale of Leven administrator data.",
                 Specializations = "[]",
                 UserId = isMichaelLaw ? UserSeedData.MichaelLaw_Id : null,

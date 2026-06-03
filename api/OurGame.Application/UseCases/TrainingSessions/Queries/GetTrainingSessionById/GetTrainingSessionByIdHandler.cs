@@ -93,14 +93,13 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
             .SqlQueryRaw<SessionAttendanceRaw>(attendanceSql, query.Id)
             .ToListAsync(cancellationToken);
 
-        // 4. Fetch session coaches with coach names, roles, and attendance
+        // 4. Fetch session coaches with coach names and attendance
         var coachesSql = @"
             SELECT
                 sc.Id,
                 sc.CoachId,
                 c.FirstName AS CoachFirstName,
                 c.LastName AS CoachLastName,
-                c.Role AS CoachRole,
                 sc.Status AS CoachStatus,
                 sc.Notes AS CoachNotes
             FROM SessionCoaches sc
@@ -174,7 +173,7 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
                 CoachId = c.CoachId,
                 FirstName = c.CoachFirstName ?? string.Empty,
                 LastName = c.CoachLastName ?? string.Empty,
-                Role = MapCoachRoleToString(c.CoachRole),
+                Role = string.Empty,
                 Status = c.CoachStatus ?? "pending",
                 Notes = c.CoachNotes
             }).ToList(),
@@ -227,19 +226,6 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
             3 => "Drill",
             4 => "Drill",
             _ => "Drill"
-        };
-    }
-
-    private static string MapCoachRoleToString(int role)
-    {
-        return role switch
-        {
-            0 => "head-coach",
-            1 => "assistant-coach",
-            2 => "goalkeeper-coach",
-            3 => "fitness-coach",
-            4 => "technical-coach",
-            _ => "assistant-coach"
         };
     }
 
@@ -368,7 +354,6 @@ public class SessionCoachRaw
     public Guid CoachId { get; set; }
     public string? CoachFirstName { get; set; }
     public string? CoachLastName { get; set; }
-    public int CoachRole { get; set; }
     public string? CoachStatus { get; set; }
     public string? CoachNotes { get; set; }
 }

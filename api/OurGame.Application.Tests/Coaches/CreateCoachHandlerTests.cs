@@ -14,9 +14,10 @@ public class CreateCoachHandlerTests
         Phone = "0851234567",
         DateOfBirth = new DateOnly(1951, 3, 4),
         AssociationId = "seed-assoc-kenny",
-        Role = "HeadCoach",
         Biography = "Legendary coach",
         Specializations = new[] { "Attacking", "Set Pieces" },
+        ClubRoles = new[] { "Head of Coaching" },
+        Badges = new[] { "First Aider" },
         TeamIds = teamIds,
     };
 
@@ -31,19 +32,6 @@ public class CreateCoachHandlerTests
     }
 
     [Fact]
-    public async Task Handle_WhenInvalidRole_ThrowsValidationException()
-    {
-        await using var db = await TestDatabaseFactory.CreateAsync();
-        var clubId = await db.SeedClubAsync();
-        var handler = new CreateCoachHandler(db.Context, new StubBlobStorageService());
-        var dto = ValidDto() with { Role = "NotARole" };
-
-        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
-            handler.Handle(new CreateCoachCommand(clubId, dto), CancellationToken.None));
-        Assert.Contains("Role", ex.Errors.Keys);
-    }
-
-    [Fact]
     public async Task Handle_WhenValid_CreatesAndReturnsCoachDetail()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
@@ -55,7 +43,8 @@ public class CreateCoachHandlerTests
         Assert.NotEqual(Guid.Empty, result.Id);
         Assert.Equal("Kenny", result.FirstName);
         Assert.Equal("Dalglish", result.LastName);
-        Assert.Equal("HeadCoach", result.Role);
+        Assert.Equal(new List<string> { "Head of Coaching" }, result.ClubRoles);
+        Assert.Equal(new List<string> { "First Aider" }, result.Badges);
         Assert.Equal("seed-assoc-kenny", result.AssociationId);
         Assert.Equal("Legendary coach", result.Biography);
         Assert.Equal(new List<string> { "Attacking", "Set Pieces" }, result.Specializations);

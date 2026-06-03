@@ -34,7 +34,6 @@ public class CreateInviteHandlerTests
             UserId = null,
             FirstName = "Unlinked",
             LastName = "Coach",
-            Role = CoachRole.HeadCoach,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });
@@ -231,7 +230,6 @@ public class CreateInviteHandlerTests
             UserId = null,
             FirstName = "Dup",
             LastName = "Coach",
-            Role = CoachRole.HeadCoach,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });
@@ -279,7 +277,6 @@ public class CreateInviteHandlerTests
             UserId = null,
             FirstName = "No",
             LastName = "Club",
-            Role = CoachRole.HeadCoach,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });

@@ -1,8 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { useCoach, useClubTeams, useClubCoaches, useUpdateCoach, useCreateCoach, UpdateCoachRequest, CreateCoachRequest, ClubTeamDto } from '@/api';
-import { mapApiRoleToUi, mapUiRoleToApi } from '@/api/mappers';
-import { coachRoles } from '@data/referenceData';
+import { clubRoleSuggestions, coachBadgeSuggestions } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
@@ -110,7 +109,8 @@ export default function CoachSettingsPage() {
   const [phone, setPhone] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [associationId, setAssociationId] = useState('');
-  const [role, setRole] = useState('assistant-coach');
+  const [clubRoles, setClubRoles] = useState<string[]>([]);
+  const [badges, setBadges] = useState<string[]>([]);
   const [biography, setBiography] = useState('');
   const [specializations, setSpecializations] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -130,7 +130,8 @@ export default function CoachSettingsPage() {
         coach.dateOfBirth ? new Date(coach.dateOfBirth).toISOString().split('T')[0] : ''
       );
       setAssociationId(coach.associationId || '');
-      setRole(mapApiRoleToUi(coach.role || 'AssistantCoach'));
+      setClubRoles(coach.clubRoles ?? []);
+      setBadges(coach.badges ?? []);
       setBiography(coach.biography || '');
       setSpecializations(coach.specializations ?? []);
       setSelectedTeams(coach.teams?.map(t => t.teamId) || []);
@@ -232,9 +233,10 @@ export default function CoachSettingsPage() {
         phone: phone || undefined,
         dateOfBirth: dateOfBirth || undefined,
         associationId: associationId || undefined,
-        role: mapUiRoleToApi(role),
         biography: biography || undefined,
         specializations,
+        clubRoles,
+        badges,
         teamIds: selectedTeams,
         photo: photo || undefined,
       };
@@ -259,9 +261,10 @@ export default function CoachSettingsPage() {
       phone: phone || undefined,
       dateOfBirth: dateOfBirth || undefined,
       associationId: associationId || undefined,
-      role: mapUiRoleToApi(role),
       biography: biography || undefined,
       specializations,
+      clubRoles,
+      badges,
       teamIds: selectedTeams,
       photo: photo || undefined,
       removeLinkedEmergencyContactIds: removeLinkedEmergencyContactIds.length > 0 ? removeLinkedEmergencyContactIds : undefined,
@@ -316,7 +319,6 @@ export default function CoachSettingsPage() {
     }
   };
 
-  const roleOptions = coachRoles;
   const teamGroups = groupTeamsByAgeGroup(allTeams || []);
 
   // Extract unique specializations from all club coaches for typeahead options
@@ -601,23 +603,6 @@ export default function CoachSettingsPage() {
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="label">
-                    Role *
-                  </label>
-                  <select
-                    value={role}
-                    onChange={(e) => setRole(e.target.value)}
-                    required
-                    className="input"
-                  >
-                    {roleOptions.map(option => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="label">
                     Association ID
                   </label>
                   <input
@@ -628,6 +613,34 @@ export default function CoachSettingsPage() {
                     className="input"
                   />
                 </div>
+              </div>
+              <div className="mt-4">
+                <MultiSelectTypeahead
+                  label="Club Roles"
+                  options={[
+                    ...new Set([
+                      ...clubRoleSuggestions,
+                      ...(clubCoaches ?? []).flatMap(c => c.clubRoles ?? [])
+                    ])
+                  ].sort()}
+                  value={clubRoles}
+                  onChange={setClubRoles}
+                  placeholder="Select or add club roles..."
+                />
+              </div>
+              <div className="mt-4">
+                <MultiSelectTypeahead
+                  label="Badges & Qualifications"
+                  options={[
+                    ...new Set([
+                      ...coachBadgeSuggestions,
+                      ...(clubCoaches ?? []).flatMap(c => c.badges ?? [])
+                    ])
+                  ].sort()}
+                  value={badges}
+                  onChange={setBadges}
+                  placeholder="Select or add badges..."
+                />
               </div>
               <div className="mt-4">
                 <MultiSelectTypeahead

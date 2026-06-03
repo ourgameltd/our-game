@@ -13,8 +13,8 @@ export type { WeatherCondition, CardType, InjurySeverity } from '../constants/re
 export { teamLevels, squadSizes } from '../constants/referenceData';
 export type { TeamLevel, AgeGroupLevel, SquadSizeValue } from '../constants/referenceData';
 
-// Coach roles - re-exported from shared constants
-export { coachRoles } from '../constants/referenceData';
+// Coach roles (team-level) and club role/badge suggestions - re-exported from shared constants
+export { coachRoles, clubRoleSuggestions, coachBadgeSuggestions } from '../constants/referenceData';
 export type { CoachRoleValue } from '../constants/referenceData';
 
 // Player attributes and link types - imported from constants for local use

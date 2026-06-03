@@ -3,7 +3,6 @@ import { Plus, ChevronDown, ChevronUp, Filter, UserCog, Search } from 'lucide-re
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
 import type { ClubCoachDto, ClubTeamDto } from '@/api';
-import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { useRequiredParams } from '@utils/routeParams';
 import CoachCard from '@components/coach/CoachCard';
@@ -58,7 +57,8 @@ function mapApiCoachToCoach(apiCoach: ClubCoachDto): Coach {
     phone: apiCoach.phone || '',
     associationId: apiCoach.associationId,
     hasAccount: apiCoach.hasAccount,
-    role: apiCoach.role as Coach['role'],
+    clubRoles: apiCoach.clubRoles,
+    badges: apiCoach.badges,
     biography: apiCoach.biography,
     specializations: apiCoach.specializations,
     teamIds: apiCoach.teams.map(t => t.id),
@@ -130,11 +130,11 @@ export default function ClubCoachesPage() {
     return apiCoaches.map(mapApiCoachToCoach);
   }, [apiCoaches]);
 
-  // Get unique roles from all coaches
+  // Get unique club roles from all coaches
   const allRoles = useMemo(() => {
     const roles = new Set<string>();
     allCoaches.forEach(coach => {
-      roles.add(coach.role);
+      coach.clubRoles?.forEach(r => roles.add(r));
     });
     return Array.from(roles).sort();
   }, [allCoaches]);
@@ -165,9 +165,9 @@ export default function ClubCoachesPage() {
         }
       }
 
-      // Role filter
+      // Club role filter
       if (filterRole) {
-        if (coach.role !== filterRole) {
+        if (!coach.clubRoles?.includes(filterRole)) {
           return false;
         }
       }
@@ -335,7 +335,7 @@ export default function ClubCoachesPage() {
               >
                 <option value="">All Roles</option>
                 {allRoles.map(role => (
-                  <option key={role} value={role}>{coachRoleDisplay[role] || role}</option>
+                  <option key={role} value={role}>{role}</option>
                 ))}
               </select>
             </div>
@@ -367,7 +367,7 @@ export default function ClubCoachesPage() {
               )}
               {filterRole && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300 rounded text-sm">
-                  Role: {coachRoleDisplay[filterRole] || filterRole}
+                  Role: {filterRole}
                   <button onClick={() => setFilterRole('')} className="hover:text-secondary-900 dark:hover:text-secondary-100">×</button>
                 </span>
               )}

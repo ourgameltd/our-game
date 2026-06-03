@@ -1,5 +1,4 @@
 import { Coach } from '@/types';
-import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { ReactNode } from 'react';
 import { calculateAge } from '@/utils/dateOfBirth';
 
@@ -44,7 +43,7 @@ export default function CoachCard({ coach, onClick, badges, actions }: CoachCard
                 {coach.firstName} {coach.lastName}
               </h3>
               <p className="text-sm font-medium text-secondary-600 dark:text-secondary-400">
-                {coachRoleDisplay[coach.role]}
+                {coach.clubRoles?.[0] ?? ''}
               </p>
             </div>
             
@@ -63,7 +62,7 @@ export default function CoachCard({ coach, onClick, badges, actions }: CoachCard
 
           {/* Role - desktop only (separate column) */}
           <p className="hidden md:block text-sm font-medium text-secondary-600 dark:text-secondary-400 md:w-32 md:shrink-0 md:order-3">
-            {coachRoleDisplay[coach.role]}
+            {coach.clubRoles?.[0] ?? ''}
           </p>
 
           {/* Age */}

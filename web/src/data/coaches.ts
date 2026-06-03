@@ -13,7 +13,7 @@ export const sampleCoaches: Coach[] = [
     phone: '+44 7700 900123',
     associationId: 'SFA-24781',
     hasAccount: true,
-    role: 'head-coach',
+    clubRoles: ['Head of Coaching'],
     biography: 'Experienced youth coach with over 15 years developing young talent. Former professional player with Vale of Leven FC and passionate about grassroots football development.',
     specializations: ['Youth Development', 'Tactical Training', 'Team Building'],
     teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d'], // 2014 Reds
@@ -29,7 +29,7 @@ export const sampleCoaches: Coach[] = [
     phone: '+44 7700 900124',
     associationId: 'SFA-31245',
     hasAccount: false,
-    role: 'assistant-coach',
+    clubRoles: [],
     biography: 'Dedicated assistant coach with expertise in fitness and conditioning. Former semi-professional player committed to player welfare and development.',
     specializations: ['Fitness Training', 'Player Welfare', 'Set Pieces'],
     teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d'], // 2014 Reds
@@ -45,7 +45,7 @@ export const sampleCoaches: Coach[] = [
     phone: '+44 7700 900125',
     associationId: 'SFA-28934',
     hasAccount: true,
-    role: 'goalkeeper-coach',
+    clubRoles: [],
     biography: 'Former professional goalkeeper with over 200 appearances. Specializes in goalkeeper development and technical training for all age groups.',
     specializations: ['Goalkeeper Training', 'Shot Stopping', 'Distribution'],
     teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e'], // 2014 Reds & Blues
@@ -61,7 +61,7 @@ export const sampleCoaches: Coach[] = [
     phone: '+44 7700 900126',
     associationId: 'SFA-34567',
     hasAccount: false,
-    role: 'head-coach',
+    clubRoles: ['Head of Coaching'],
     biography: 'Young and dynamic coach with a focus on modern coaching methodologies. Passionate about developing well-rounded players both on and off the pitch.',
     specializations: ['Technical Skills', 'Game Intelligence', 'Youth Psychology'],
     teamIds: ['b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e'], // 2014 Blues
@@ -77,7 +77,7 @@ export const sampleCoaches: Coach[] = [
     phone: '+44 7700 900127',
     associationId: 'SFA-21456',
     hasAccount: true,
-    role: 'head-coach',
+    clubRoles: ['Head of Coaching'],
     biography: 'Veteran coach with extensive experience in Scottish football. Known for developing young talent and building strong team cultures.',
     specializations: ['Team Leadership', 'Defensive Organization', 'Match Analysis'],
     teamIds: ['1a2b3c4d-5e6f-a7b8-c9d0-e1f2a3b4c5d6'], // Senior Team
@@ -93,7 +93,7 @@ export const sampleCoaches: Coach[] = [
     phone: '+44 7700 900128',
     associationId: 'SFA-32789',
     hasAccount: false,
-    role: 'fitness-coach',
+    clubRoles: [],
     biography: 'Sports science specialist focusing on youth player physical development and injury prevention.',
     specializations: ['Physical Development', 'Injury Prevention', 'Nutrition'],
     teamIds: ['a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', 'c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f'], // Multiple teams

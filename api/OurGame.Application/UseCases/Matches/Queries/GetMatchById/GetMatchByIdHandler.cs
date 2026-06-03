@@ -136,7 +136,6 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 c.FirstName,
                 c.LastName,
                 c.Photo,
-                c.Role,
                 mc.Status,
                 mc.Notes
             FROM MatchCoaches mc
@@ -405,7 +404,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 FirstName = c.FirstName ?? string.Empty,
                 LastName = c.LastName ?? string.Empty,
                 Photo = c.Photo,
-                Role = MapCoachRoleToString(c.Role),
+                Role = string.Empty,
                 Status = c.Status ?? "pending",
                 Notes = string.IsNullOrEmpty(c.Notes) ? null : c.Notes
             }).ToList(),
@@ -441,19 +440,6 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             3 => "postponed",
             4 => "cancelled",
             _ => "scheduled"
-        };
-    }
-
-    private static string MapCoachRoleToString(int role)
-    {
-        return role switch
-        {
-            0 => "head-coach",
-            1 => "assistant-coach",
-            2 => "goalkeeper-coach",
-            3 => "fitness-coach",
-            4 => "technical-coach",
-            _ => "assistant-coach"
         };
     }
 
@@ -545,7 +531,6 @@ public class MatchCoachRaw
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Photo { get; set; }
-    public int Role { get; set; }
     public string? Status { get; set; }
     public string? Notes { get; set; }
 }

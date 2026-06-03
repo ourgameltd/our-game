@@ -57,7 +57,33 @@ export const injurySeverities = [
 
 export type InjurySeverity = typeof injurySeverities[number]['value'];
 
-// Coach roles
+// Club-level organizational roles
+export const clubRoleSuggestions = [
+  'Chairman',
+  'Vice Chairman',
+  'Committee Member',
+  'Secretary',
+  'Treasurer',
+  'Head of Coaching',
+  'Child Wellbeing Officer',
+  'Welfare Officer',
+  'Volunteer',
+] as const;
+
+// Coach badge/qualification suggestions
+export const coachBadgeSuggestions = [
+  'First Aider',
+  'DBS Checked',
+  'Safeguarding Level 1',
+  'Safeguarding Level 2',
+  'UEFA C License',
+  'UEFA B License',
+  'UEFA A License',
+  'FA Level 1',
+  'FA Level 2',
+] as const;
+
+// Coach roles (used for team-level coaching assignments)
 export const coachRoles = [
   { value: 'head-coach', label: 'Head Coach' },
   { value: 'assistant-coach', label: 'Assistant Coach' },

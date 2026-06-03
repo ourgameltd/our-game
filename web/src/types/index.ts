@@ -255,7 +255,8 @@ export interface Coach {
   associationId?: string; // FA, UEFA, or other football association registration ID
   hasAccount?: boolean; // Whether the coach has been associated with an account in the backend IDP
   teamIds: string[]; // Can be assigned to multiple teams
-  role: 'head-coach' | 'assistant-coach' | 'goalkeeper-coach' | 'fitness-coach' | 'technical-coach';
+  clubRoles?: string[]; // Club-level organizational roles (e.g. Chairman, Head of Coaching)
+  badges?: string[]; // Badges and qualifications (e.g. First Aider, DBS Checked)
   biography?: string;
   specializations?: string[]; // e.g., ['Youth Development', 'Tactical Analysis', 'Goalkeeping']
   isArchived?: boolean; // Whether the coach is archived

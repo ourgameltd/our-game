@@ -94,7 +94,6 @@ public class GetInviteLinkOptionsHandlerTests
             UserId = null,
             FirstName = "Jane",
             LastName = "Doe",
-            Role = CoachRole.HeadCoach,
             CreatedAt = DateTime.UtcNow,
             UpdatedAt = DateTime.UtcNow
         });

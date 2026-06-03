@@ -2,11 +2,13 @@ import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import { Plus, Loader2, AlertCircle, Search, UserCog } from 'lucide-react';
 import { useTeamOverview, useTeamCoaches, useClubCoaches, useAssignTeamCoach, useRemoveTeamCoach } from '@/api/hooks';
+import { apiClient } from '@/api';
 import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
-import { mapUiRoleToApi } from '@/api/mappers';
+import { mapUiRoleToApi, mapApiRoleToUi } from '@/api/mappers';
+import { coachRoles } from '@/constants/referenceData';
 import { useRequiredParams } from '@utils/routeParams';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -42,12 +44,13 @@ export default function TeamCoachesPage() {
   // Mutation hooks
   const { assignCoach, isSubmitting: isAssigning, error: assignError } = useAssignTeamCoach(teamId);
   const { removeCoach, isSubmitting: isRemoving, error: removeError } = useRemoveTeamCoach(teamId);
-  
   // Local state
   const [showAddModal, setShowAddModal] = useState(false);
   const [removingCoachId, setRemovingCoachId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modalSearchQuery, setModalSearchQuery] = useState('');
+  const [modalRoles, setModalRoles] = useState<Record<string, string>>({});
+  const [updatingRoleCoachId, setUpdatingRoleCoachId] = useState<string | null>(null);
 
   // Only show skeleton on initial load, not during background refetches
   const isInitialLoading = (teamLoading && !teamOverview) || (coachesLoading && !teamCoaches?.length);
@@ -144,17 +147,31 @@ export default function TeamCoachesPage() {
     coach => !safeTeamCoaches.some(tc => tc.id === coach.id)
   );
 
-  const handleAssignCoach = async (coachId: string, role: string) => {
+  const handleAssignCoach = async (coachId: string) => {
+    const uiRole = modalRoles[coachId] || 'assistant-coach';
     try {
       await assignCoach({
         coachId,
-        role: mapUiRoleToApi(role) // Convert UI role (head-coach) to API role (HeadCoach)
+        role: mapUiRoleToApi(uiRole)
       });
       await refetchTeamCoaches();
       setSuccessMessage('Coach assigned successfully');
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
       console.error('Failed to assign coach:', err);
+    }
+  };
+
+  const handleUpdateRole = async (coachId: string, uiRole: string) => {
+    if (!teamId) return;
+    setUpdatingRoleCoachId(coachId);
+    try {
+      await apiClient.teams.updateCoachRole(teamId, coachId, { role: mapUiRoleToApi(uiRole) });
+      await refetchTeamCoaches();
+    } catch (err) {
+      console.error('Failed to update coach role:', err);
+    } finally {
+      setUpdatingRoleCoachId(null);
     }
   };
 
@@ -260,15 +277,22 @@ export default function TeamCoachesPage() {
                       phone: '',
                       associationId: coach.associationId,
                       teamIds: [],
-                      role: coach.role as any || 'assistant-coach',
                       isArchived: coach.isArchived
                     }}
                     badges={
-                      coach.role && (
-                        <span className="bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 text-xs px-2 py-1 rounded-full">
-                          {coach.role}
-                        </span>
-                      )
+                      <div onClick={e => e.preventDefault()} className="flex items-center gap-1">
+                        <select
+                          value={mapApiRoleToUi(coach.role || 'AssistantCoach')}
+                          onChange={e => handleUpdateRole(coach.id, e.target.value)}
+                          disabled={updatingRoleCoachId === coach.id || team.isArchived}
+                          className="text-xs border border-gray-200 dark:border-gray-600 rounded-full px-2 py-0.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
+                        >
+                          {coachRoles.map(r => (
+                            <option key={r.value} value={r.value}>{r.label}</option>
+                          ))}
+                        </select>
+                        {updatingRoleCoachId === coach.id && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
+                      </div>
                     }
                     actions={
                       !team.isArchived ? (
@@ -412,8 +436,8 @@ export default function TeamCoachesPage() {
                             {coach.firstName} {coach.lastName}
                           </p>
                           <div className="flex items-center gap-2">
-                            {coach.role && (
-                              <span className="text-xs text-gray-500 dark:text-gray-400">{coach.role}</span>
+                            {coach.clubRoles && coach.clubRoles.length > 0 && (
+                              <span className="text-xs text-gray-500 dark:text-gray-400">{coach.clubRoles[0]}</span>
                             )}
                             {coach.teams && coach.teams.length > 0 && (
                               <span className="badge-primary text-[10px] px-1.5 py-0.5">
@@ -422,18 +446,30 @@ export default function TeamCoachesPage() {
                             )}
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleAssignCoach(coach.id, 'assistant-coach')}
-                          disabled={isAssigning}
-                          className="bg-green-500 text-white p-1.5 rounded-full hover:bg-green-600 transition-colors flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                          title="Assign to team"
-                        >
-                          {isAssigning ? (
-                            <Loader2 className="w-4 h-4 animate-spin" />
-                          ) : (
-                            <Plus className="w-4 h-4" />
-                          )}
-                        </button>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          <select
+                            value={modalRoles[coach.id] || 'assistant-coach'}
+                            onChange={e => setModalRoles(prev => ({ ...prev, [coach.id]: e.target.value }))}
+                            disabled={isAssigning}
+                            className="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
+                          >
+                            {coachRoles.map(r => (
+                              <option key={r.value} value={r.value}>{r.label}</option>
+                            ))}
+                          </select>
+                          <button
+                            onClick={() => handleAssignCoach(coach.id)}
+                            disabled={isAssigning}
+                            className="bg-green-500 text-white p-1.5 rounded-full hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title="Assign to team"
+                          >
+                            {isAssigning ? (
+                              <Loader2 className="w-4 h-4 animate-spin" />
+                            ) : (
+                              <Plus className="w-4 h-4" />
+                            )}
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>

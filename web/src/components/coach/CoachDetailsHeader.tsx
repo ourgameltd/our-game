@@ -1,6 +1,5 @@
 import { Coach } from '@/types';
 import { Link } from 'react-router-dom';
-import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { calculateAge } from '@/utils/dateOfBirth';
 
 interface CoachDetailsHeaderProps {
@@ -34,7 +33,9 @@ export default function CoachDetailsHeader({
           {coach.firstName} {coach.lastName}
         </h1>
         <div className="flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
-          <span className="font-medium text-secondary-600 dark:text-secondary-400">{coachRoleDisplay[coach.role]}</span>
+          {coach.clubRoles && coach.clubRoles.length > 0 && (
+            <span className="font-medium text-secondary-600 dark:text-secondary-400">{coach.clubRoles[0]}</span>
+          )}
           {age !== null && (
             <>
               <span>•</span>

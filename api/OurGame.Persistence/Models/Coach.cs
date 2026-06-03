@@ -2,7 +2,6 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
-using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Models;
 
@@ -26,11 +25,13 @@ public partial class Coach
 
     public bool HasAccount { get; set; }
 
-    public CoachRole Role { get; set; }
-
     public string Biography { get; set; }
 
     public string Specializations { get; set; }
+
+    public string ClubRoles { get; set; }
+
+    public string Badges { get; set; }
 
     public Guid? UserId { get; set; }
 

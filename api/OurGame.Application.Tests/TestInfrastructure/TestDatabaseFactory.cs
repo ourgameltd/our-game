@@ -187,7 +187,6 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
         string authId = "coach-auth",
         string firstName = "John",
         string lastName = "Coach",
-        CoachRole role = CoachRole.HeadCoach,
         bool isArchived = false)
     {
         var userId = await SeedUserAsync(authId);
@@ -201,7 +200,6 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
             UserId = userId,
             FirstName = firstName,
             LastName = lastName,
-            Role = role,
             IsArchived = isArchived,
             CreatedAt = now,
             UpdatedAt = now

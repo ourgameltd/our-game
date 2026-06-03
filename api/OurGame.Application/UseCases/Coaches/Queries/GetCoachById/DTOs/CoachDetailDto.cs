@@ -53,9 +53,14 @@ public class CoachDetailDto
     public bool HasAccount { get; set; }
 
     /// <summary>
-    /// The coach's role (e.g. HeadCoach, AssistantCoach)
+    /// The coach's club-level organizational roles (e.g. Chairman, Head of Coaching)
     /// </summary>
-    public string Role { get; set; } = string.Empty;
+    public List<string> ClubRoles { get; set; } = new();
+
+    /// <summary>
+    /// The coach's badges and qualifications (e.g. First Aider, DBS Checked)
+    /// </summary>
+    public List<string> Badges { get; set; } = new();
 
     /// <summary>
     /// The coach's biography

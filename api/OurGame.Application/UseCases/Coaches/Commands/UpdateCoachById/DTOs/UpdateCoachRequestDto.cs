@@ -40,14 +40,6 @@ public record UpdateCoachRequestDto
     public string? AssociationId { get; init; }
 
     /// <summary>
-    /// Coach's role (e.g. HeadCoach, AssistantCoach, GoalkeeperCoach, FitnessCoach, TechnicalCoach).
-    /// Must match a valid CoachRole enum value.
-    /// </summary>
-    [Required]
-    [StringLength(50)]
-    public string Role { get; init; } = string.Empty;
-
-    /// <summary>
     /// Coach's biography / about section.
     /// </summary>
     [StringLength(2000)]
@@ -58,6 +50,16 @@ public record UpdateCoachRequestDto
     /// Stored as a comma-separated string in the database.
     /// </summary>
     public string[] Specializations { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Club-level organizational roles (e.g. ["Chairman", "Head of Coaching"]).
+    /// </summary>
+    public string[] ClubRoles { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Badges and qualifications (e.g. ["First Aider", "DBS Checked"]).
+    /// </summary>
+    public string[] Badges { get; init; } = Array.Empty<string>();
 
     /// <summary>
     /// Team IDs this coach is assigned to.

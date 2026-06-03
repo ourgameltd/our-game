@@ -811,9 +811,10 @@ export interface ClubCoachDto {
   phone?: string;
   associationId?: string;
   hasAccount: boolean;
-  role: string;
   biography?: string;
   specializations: string[];
+  clubRoles: string[];
+  badges: string[];
   isArchived: boolean;
   teams: ClubCoachTeamDto[];
 }
@@ -845,17 +846,10 @@ export interface CoachDetailDto {
   phone?: string;
   associationId?: string;
   hasAccount: boolean;
-  role: string;
-  roleDisplay: string;
   biography?: string;
   specializations: string[];
-  certifications: {
-    name: string;
-    issuer?: string;
-    dateObtained?: string;
-    expiryDate?: string;
-  }[];
-  yearsExperience?: number;
+  clubRoles: string[];
+  badges: string[];
   isArchived: boolean;
   teams: CoachTeamAssignmentDto[];
   ageGroupCoordinatorRoles: CoachAgeGroupCoordinatorDto[];
@@ -888,9 +882,10 @@ export interface AgeGroupCoachDto {
   phone?: string;
   associationId?: string;
   hasAccount: boolean;
-  role: string;
   biography?: string;
   specializations: string[];
+  clubRoles: string[];
+  badges: string[];
   isArchived: boolean;
   teams: AgeGroupCoachTeamDto[];
 }
@@ -2196,9 +2191,10 @@ export interface UpdateCoachRequest {
   phone?: string;
   dateOfBirth?: string;
   associationId?: string;
-  role: string;
   biography?: string;
   specializations: string[];
+  clubRoles: string[];
+  badges: string[];
   teamIds: string[];
   photo?: string;
   removeLinkedEmergencyContactIds?: string[];
@@ -2211,9 +2207,10 @@ export interface CreateCoachRequest {
   phone?: string;
   dateOfBirth?: string;
   associationId?: string;
-  role: string;
   biography?: string;
   specializations: string[];
+  clubRoles: string[];
+  badges: string[];
   teamIds: string[];
   photo?: string;
 }

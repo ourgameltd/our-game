@@ -32,7 +32,7 @@ public class GetCoachByIdHandlerTests
         Assert.Equal("Jane", result.FirstName);
         Assert.Equal("Smith", result.LastName);
         Assert.Equal(clubId, result.ClubId);
-        Assert.Equal("HeadCoach", result.Role);
+        Assert.Empty(result.ClubRoles);
         Assert.False(result.IsArchived);
     }
 

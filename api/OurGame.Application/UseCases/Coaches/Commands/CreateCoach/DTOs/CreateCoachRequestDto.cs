@@ -20,14 +20,14 @@ public record CreateCoachRequestDto
     [StringLength(50)]
     public string? AssociationId { get; init; }
 
-    [Required]
-    [StringLength(50)]
-    public string Role { get; init; } = string.Empty;
-
     [StringLength(2000)]
     public string? Biography { get; init; }
 
     public string[] Specializations { get; init; } = Array.Empty<string>();
+
+    public string[] ClubRoles { get; init; } = Array.Empty<string>();
+
+    public string[] Badges { get; init; } = Array.Empty<string>();
 
     public Guid[] TeamIds { get; init; } = Array.Empty<Guid>();
 
