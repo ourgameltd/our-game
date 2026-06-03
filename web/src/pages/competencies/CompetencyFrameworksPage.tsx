@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Copy, Pencil, Trash2, Award, ChevronRight } from 'lucide-react';
 import PageTitle from '@/components/common/PageTitle';
@@ -47,6 +47,10 @@ interface FrameworkRowProps {
 
 function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: FrameworkRowProps) {
   const indicatorClass = framework.isSystemDefault ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary-500 dark:bg-primary-400';
+  const scopeLabel = framework.isSystemDefault ? 'System'
+    : framework.scope === 'AgeGroup' ? 'Age Group'
+    : framework.scope === 'Team' ? 'Team'
+    : 'Club';
 
   return (
     <div
@@ -100,11 +104,9 @@ function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: F
             <button onClick={onView} className="font-semibold text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 transition-colors truncate">
               {framework.name}
             </button>
-            {framework.isSystemDefault && (
-              <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">
-                System
-              </span>
-            )}
+            <span className="shrink-0 text-[10px] font-bold uppercase tracking-wider bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">
+              {scopeLabel}
+            </span>
           </div>
           {framework.description && (
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{framework.description}</p>
@@ -164,9 +166,6 @@ export default function CompetencyFrameworksPage() {
 
   const [cloningId, setCloningId] = useState<string | null>(null);
 
-  const systemFrameworks = useMemo(() => (data ?? []).filter((f) => f.isSystemDefault), [data]);
-  const clubFrameworks = useMemo(() => (data ?? []).filter((f) => !f.isSystemDefault), [data]);
-
   const handleClone = async (source: CompetencyFrameworkListItemDto) => {
     if (!clubId) return;
     setCloningId(source.id);
@@ -200,55 +199,31 @@ export default function CompetencyFrameworksPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
-        <PageTitle title="Competency Frameworks" subtitle="System defaults and club-owned frameworks." />
+        <PageTitle title="Competency Frameworks" subtitle="All frameworks available to your club — system, club, age group, and team." />
 
-        {/* System defaults */}
-        <section className="mb-6">
-          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
-            System defaults
-          </h2>
+        {!isLoading && (data ?? []).length === 0 ? (
+          <EmptyState
+            icon={Award}
+            title="No frameworks found"
+            description="No competency frameworks are available for your club yet."
+          />
+        ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
             {isLoading
-              ? [...Array(2)].map((_, i) => <FrameworkRowSkeleton key={i} />)
-              : systemFrameworks.map((f) => (
+              ? [...Array(3)].map((_, i) => <FrameworkRowSkeleton key={i} />)
+              : (data ?? []).map((f) => (
                   <FrameworkRow
                     key={f.id}
                     framework={f}
                     busy={cloningId === f.id || isCreating}
                     onView={() => goTo(f.id)}
                     onClone={() => handleClone(f)}
+                    onEdit={!f.isSystemDefault ? () => goTo(f.id) : undefined}
+                    onArchive={!f.isSystemDefault ? () => handleArchive(f) : undefined}
                   />
                 ))}
           </div>
-        </section>
-
-        {/* Club frameworks */}
-        <section>
-          <h2 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2 px-1">
-            Club frameworks
-          </h2>
-          {!isLoading && clubFrameworks.length === 0 ? (
-            <EmptyState
-              icon={Award}
-              title="No custom frameworks yet"
-              description="Clone a system framework to start customising it for your club."
-            />
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-3 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-              {isLoading
-                ? [...Array(2)].map((_, i) => <FrameworkRowSkeleton key={i} />)
-                : clubFrameworks.map((f) => (
-                    <FrameworkRow
-                      key={f.id}
-                      framework={f}
-                      onView={() => goTo(f.id)}
-                      onEdit={() => goTo(f.id)}
-                      onArchive={() => handleArchive(f)}
-                    />
-                  ))}
-            </div>
-          )}
-        </section>
+        )}
       </main>
     </div>
   );
