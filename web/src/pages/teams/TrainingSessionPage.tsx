@@ -8,7 +8,6 @@ import { useNavigation } from '@/contexts/NavigationContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { Routes } from '@/utils/routes';
 import AttendanceResponse from '@components/AttendanceResponse';
-import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 
 export default function TrainingSessionPage() {
   const { sessionId, clubId, ageGroupId, teamId } = useParams();
@@ -138,19 +137,6 @@ export default function TrainingSessionPage() {
     }
   }
 
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      confirmed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300',
-      declined: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300',
-      pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300',
-    };
-    return (
-      <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${map[status] ?? map.pending}`}>
-        {status}
-      </span>
-    );
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
@@ -231,33 +217,6 @@ export default function TrainingSessionPage() {
           </div>
         )}
 
-        {/* Coaching Staff */}
-        {session.coaches.length > 0 && (
-          <div className="card mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Coaching Staff</h2>
-            <div className="grid md:grid-cols-2 gap-3">
-              {session.coaches.map(coach => (
-                <div key={coach.id} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                  <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                    {coach.firstName[0]}{coach.lastName[0]}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 dark:text-white truncate">
-                      {coach.firstName} {coach.lastName}
-                    </p>
-                    <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                      {coachRoleDisplay[coach.role] || coach.role}
-                    </p>
-                  </div>
-                  <div className="flex-shrink-0">
-                    {statusBadge(coach.status)}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
         {/* Drills */}
         {session.drills.length > 0 && (
           <div className="card mb-4">
@@ -284,22 +243,6 @@ export default function TrainingSessionPage() {
           </div>
         )}
 
-        {/* Player Attendance */}
-        {session.attendance.length > 0 && (
-          <div className="card mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Squad Attendance</h2>
-            <div className="space-y-2">
-              {session.attendance.map(att => (
-                <div key={att.id} className="flex items-center justify-between py-2 px-1 border-b border-gray-100 dark:border-gray-700 last:border-0">
-                  <span className="text-sm text-gray-900 dark:text-white">
-                    {att.firstName} {att.lastName}
-                  </span>
-                  {statusBadge(att.status)}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </main>
     </div>
   );
