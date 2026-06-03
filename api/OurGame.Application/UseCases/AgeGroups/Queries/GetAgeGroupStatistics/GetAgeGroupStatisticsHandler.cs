@@ -33,7 +33,9 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
         }
         else
         {
-            var seasonSql = "SELECT CurrentSeason FROM AgeGroups WHERE Id = {0}";
+            // Derive effective season from the most recent team season rather than the
+            // potentially-stale AgeGroups.CurrentSeason field.
+            var seasonSql = "SELECT MAX(t.Season) AS CurrentSeason FROM Teams t WHERE t.AgeGroupId = {0} AND t.IsArchived = 0";
             var seasonResult = await _db.Database.SqlQueryRaw<SeasonRawDto>(seasonSql, query.AgeGroupId).FirstOrDefaultAsync(cancellationToken);
             effectiveSeason = seasonResult?.CurrentSeason ?? string.Empty;
         }
@@ -58,8 +60,10 @@ public class GetAgeGroupStatisticsHandler : IRequestHandler<GetAgeGroupStatistic
                 COUNT(CASE WHEN m.Status = 2 AND m.HomeScore = m.AwayScore THEN 1 END) AS Draws,
                 COUNT(CASE WHEN m.Status = 2 AND m.IsHome = 1 AND m.HomeScore < m.AwayScore THEN 1 
                            WHEN m.Status = 2 AND m.IsHome = 0 AND m.AwayScore < m.HomeScore THEN 1 END) AS Losses,
-                COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.HomeScore ELSE m.AwayScore END), 0) AS GoalsFor,
-                COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.AwayScore ELSE m.HomeScore END), 0) AS GoalsAgainst
+                COALESCE(SUM(CASE WHEN m.Status = 2 AND m.IsHome = 1 THEN m.HomeScore
+                                  WHEN m.Status = 2 AND m.IsHome = 0 THEN m.AwayScore ELSE 0 END), 0) AS GoalsFor,
+                COALESCE(SUM(CASE WHEN m.Status = 2 AND m.IsHome = 1 THEN m.AwayScore
+                                  WHEN m.Status = 2 AND m.IsHome = 0 THEN m.HomeScore ELSE 0 END), 0) AS GoalsAgainst
             FROM Teams t
             LEFT JOIN Matches m ON m.TeamId = t.Id AND m.SeasonId = {1}
             WHERE t.AgeGroupId = {0} AND t.IsArchived = 0";

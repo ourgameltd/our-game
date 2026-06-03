@@ -51,10 +51,18 @@ public class GetClubStatisticsHandler : IRequestHandler<GetClubStatisticsQuery, 
                 COUNT(CASE WHEN m.Status = 2 AND m.HomeScore = m.AwayScore THEN 1 END) AS Draws,
                 COUNT(CASE WHEN m.Status = 2 AND m.IsHome = 1 AND m.HomeScore < m.AwayScore THEN 1 
                            WHEN m.Status = 2 AND m.IsHome = 0 AND m.AwayScore < m.HomeScore THEN 1 END) AS Losses,
-                COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.HomeScore ELSE m.AwayScore END), 0) AS GoalsFor,
-                COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.AwayScore ELSE m.HomeScore END), 0) AS GoalsAgainst
+                COALESCE(SUM(CASE WHEN m.Status = 2 AND m.IsHome = 1 THEN m.HomeScore
+                                  WHEN m.Status = 2 AND m.IsHome = 0 THEN m.AwayScore ELSE 0 END), 0) AS GoalsFor,
+                COALESCE(SUM(CASE WHEN m.Status = 2 AND m.IsHome = 1 THEN m.AwayScore
+                                  WHEN m.Status = 2 AND m.IsHome = 0 THEN m.HomeScore ELSE 0 END), 0) AS GoalsAgainst
             FROM Teams t
-            INNER JOIN AgeGroups ag ON ag.Id = t.AgeGroupId AND ag.IsArchived = 0
+            INNER JOIN (
+                SELECT ag2.Id, MAX(tt.Season) AS CurrentSeason
+                FROM AgeGroups ag2
+                INNER JOIN Teams tt ON tt.AgeGroupId = ag2.Id AND tt.IsArchived = 0
+                WHERE ag2.IsArchived = 0
+                GROUP BY ag2.Id
+            ) ag ON ag.Id = t.AgeGroupId
             LEFT JOIN Matches m ON m.TeamId = t.Id AND m.SeasonId = t.Season
             WHERE t.ClubId = {0} AND t.IsArchived = 0 AND t.Season = ag.CurrentSeason";
 

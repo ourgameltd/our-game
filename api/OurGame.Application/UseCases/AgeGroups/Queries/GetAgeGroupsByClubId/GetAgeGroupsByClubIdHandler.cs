@@ -37,7 +37,10 @@ public class GetAgeGroupsByClubIdHandler : IRequestHandler<GetAgeGroupsByClubIdQ
                 ag.Name,
                 ag.Code,
                 ag.Level,
-                ag.CurrentSeason,
+                COALESCE(
+                    (SELECT MAX(tt.Season) FROM Teams tt WHERE tt.AgeGroupId = ag.Id AND tt.IsArchived = 0),
+                    ag.CurrentSeason
+                ) AS CurrentSeason,
                 ag.Seasons,
                 ag.DefaultSeason,
                 ag.DefaultSquadSize,
