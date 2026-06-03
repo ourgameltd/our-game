@@ -383,6 +383,7 @@ export default function AddEditMatchPage() {
   // Match result state
   const [homeScore, setHomeScore] = useState('');
   const [awayScore, setAwayScore] = useState('');
+  const [matchStatus, setMatchStatus] = useState<'scheduled' | 'in-progress' | 'completed' | 'postponed' | 'cancelled'>('scheduled');
   const [summary, setSummary] = useState('');
   const [summaryTab, setSummaryTab] = useState<'write' | 'preview'>('write');
   const summaryRef = useRef<HTMLTextAreaElement>(null);
@@ -544,6 +545,7 @@ export default function AddEditMatchPage() {
       setTemperature(existingMatch.weatherTemperature?.toString() || '');
       setHomeScore(existingMatch.homeScore?.toString() || '');
       setAwayScore(existingMatch.awayScore?.toString() || '');
+      setMatchStatus((existingMatch.status as 'scheduled' | 'in-progress' | 'completed' | 'postponed' | 'cancelled') || 'scheduled');
       setSummary(existingMatch.report?.summary || '');
       const usedPositionIndices = new Set<number>();
       setStartingPlayers(
@@ -643,6 +645,7 @@ export default function AddEditMatchPage() {
       setTemperature('');
       setHomeScore('');
       setAwayScore('');
+      setMatchStatus('scheduled');
       setSummary('');
       setStartingPlayers([]);
       setSubstitutes([]);
@@ -1486,7 +1489,7 @@ export default function AddEditMatchPage() {
       goalkeeperKitId: goalkeeperKit || undefined,
       homeScore: homeScore ? parseInt(homeScore) : undefined,
       awayScore: awayScore ? parseInt(awayScore) : undefined,
-      status: existingMatch?.status || 'scheduled',
+      status: matchStatus,
       weatherCondition: weather || undefined,
       weatherTemperature: temperature ? parseFloat(temperature) : undefined,
       lineup: {
@@ -2005,6 +2008,23 @@ export default function AddEditMatchPage() {
                     className="input disabled:opacity-50 disabled:cursor-not-allowed"
                     placeholder="0"
                   />
+                </div>
+
+                <div>
+                  <label className="label">
+                    Match Status
+                  </label>
+                  <select
+                    value={matchStatus}
+                    onChange={(e) => setMatchStatus(e.target.value as typeof matchStatus)}
+                    className="input"
+                  >
+                    <option value="scheduled">Scheduled</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                    <option value="postponed">Postponed</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
                 </div>
               </div>
 

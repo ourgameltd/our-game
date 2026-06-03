@@ -37,22 +37,32 @@ public class GetTeamsByAgeGroupIdHandler : IRequestHandler<GetTeamsByAgeGroupIdQ
                 t.PrimaryColor,
                 t.SecondaryColor,
                 t.IsArchived,
-                COALESCE(COUNT(DISTINCT pt.PlayerId), 0) AS PlayerCount,
-                COALESCE(COUNT(DISTINCT tc.CoachId), 0) AS CoachCount,
+                COALESCE(pc.PlayerCount, 0) AS PlayerCount,
+                COALESCE(cc.CoachCount, 0) AS CoachCount,
                 COUNT(CASE WHEN m.Status = 2 THEN 1 END) AS MatchesPlayed,
                 COUNT(CASE WHEN m.Status = 2 AND m.IsHome = 1 AND m.HomeScore > m.AwayScore THEN 1 
                            WHEN m.Status = 2 AND m.IsHome = 0 AND m.AwayScore > m.HomeScore THEN 1 END) AS Wins,
                 COUNT(CASE WHEN m.Status = 2 AND m.HomeScore = m.AwayScore THEN 1 END) AS Draws,
                 COUNT(CASE WHEN m.Status = 2 AND m.IsHome = 1 AND m.HomeScore < m.AwayScore THEN 1 
                            WHEN m.Status = 2 AND m.IsHome = 0 AND m.AwayScore < m.HomeScore THEN 1 END) AS Losses,
-                COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.HomeScore ELSE m.AwayScore END), 0) AS GoalsFor,
-                COALESCE(SUM(CASE WHEN m.IsHome = 1 THEN m.AwayScore ELSE m.HomeScore END), 0) AS GoalsAgainst
+                COALESCE(SUM(CASE WHEN m.Status = 2 AND m.IsHome = 1 THEN m.HomeScore
+                                  WHEN m.Status = 2 AND m.IsHome = 0 THEN m.AwayScore ELSE 0 END), 0) AS GoalsFor,
+                COALESCE(SUM(CASE WHEN m.Status = 2 AND m.IsHome = 1 THEN m.AwayScore
+                                  WHEN m.Status = 2 AND m.IsHome = 0 THEN m.HomeScore ELSE 0 END), 0) AS GoalsAgainst
             FROM Teams t
-            LEFT JOIN PlayerTeams pt ON pt.TeamId = t.Id
-            LEFT JOIN TeamCoaches tc ON tc.TeamId = t.Id
+            LEFT JOIN (
+                SELECT TeamId, COUNT(DISTINCT PlayerId) AS PlayerCount
+                FROM PlayerTeams
+                GROUP BY TeamId
+            ) pc ON pc.TeamId = t.Id
+            LEFT JOIN (
+                SELECT TeamId, COUNT(DISTINCT CoachId) AS CoachCount
+                FROM TeamCoaches
+                GROUP BY TeamId
+            ) cc ON cc.TeamId = t.Id
             LEFT JOIN Matches m ON m.TeamId = t.Id AND m.SeasonId = t.Season
             WHERE t.AgeGroupId = {0} AND t.IsArchived = 0
-            GROUP BY t.Id, t.ClubId, t.AgeGroupId, t.Name, t.ShortName, t.Level, t.Season, t.PrimaryColor, t.SecondaryColor, t.IsArchived
+            GROUP BY t.Id, t.ClubId, t.AgeGroupId, t.Name, t.ShortName, t.Level, t.Season, t.PrimaryColor, t.SecondaryColor, t.IsArchived, pc.PlayerCount, cc.CoachCount
             ORDER BY t.Name";
 
         var teamData = await _db.Database
