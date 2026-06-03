@@ -14,4 +14,9 @@ public class CoachAgeGroupCoordinatorDto
     /// The name of the age group
     /// </summary>
     public string AgeGroupName { get; set; } = string.Empty;
+
+    /// <summary>
+    /// The coach's role in this age group (e.g. HeadCoach, AssistantCoach)
+    /// </summary>
+    public string Role { get; set; } = string.Empty;
 }

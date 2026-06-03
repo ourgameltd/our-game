@@ -5,6 +5,7 @@ import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { mapApiRoleToUi } from '@/api/mappers';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { Star } from 'lucide-react';
 
 // Skeleton for club roles / badges card
 function BadgesSkeleton() {
@@ -201,10 +202,10 @@ export default function CoachProfilePage() {
     return [];
   };
 
-  const getTeamRoleLabel = (role?: string, roleDisplay?: string): string => {
-    if (!role) return roleDisplay || 'Coach';
+  const getAgeGroupRoleLabel = (role?: string): string => {
+    if (!role) return '';
     const kebabRole = role.includes('-') ? role : mapApiRoleToUi(role);
-    return coachRoleDisplay[kebabRole] || roleDisplay || role;
+    return coachRoleDisplay[kebabRole] || role;
   };
 
   return (
@@ -216,7 +217,12 @@ export default function CoachProfilePage() {
         ) : (
           <PageTitle
             title={`${coach.firstName} ${coach.lastName}`}
-            subtitle={coach.clubRoles && coach.clubRoles.length > 0 ? `${coach.clubRoles[0]} • ${subtitle}` : subtitle}
+            subtitle={(() => {
+            const ageGroupRole = coach.ageGroupCoordinatorRoles?.[0];
+            if (ageGroupRole?.role) return `${getAgeGroupRoleLabel(ageGroupRole.role)} • ${subtitle}`;
+            if (coach.clubRoles?.[0]) return `${coach.clubRoles[0]} • ${subtitle}`;
+            return subtitle;
+          })()}
             backLink={backLink}
             image={{
               src: coach.photo,
@@ -286,9 +292,11 @@ export default function CoachProfilePage() {
                       <p className="font-medium text-gray-900 dark:text-white">
                         {team.ageGroupName} - {team.teamName}
                       </p>
-                      <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
-                        {getTeamRoleLabel(team.role, team.roleDisplay)}
-                      </p>
+                      {team.isPrimary && (
+                        <p className="text-xs text-primary-600 dark:text-primary-400 mt-1 flex items-center gap-1">
+                          <Star className="w-3 h-3 fill-current" /> Primary
+                        </p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -296,6 +304,27 @@ export default function CoachProfilePage() {
                 <p className="text-gray-600 dark:text-gray-400">Not assigned to any teams</p>
               )}
             </div>
+          )}
+
+          {/* Age Group Roles */}
+          {isLoading ? (
+            <BadgesSkeleton />
+          ) : (
+            coach && coach.ageGroupCoordinatorRoles && coach.ageGroupCoordinatorRoles.length > 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+                <h2 className="text-lg font-bold mb-4 text-gray-900 dark:text-white">Age Group Roles</h2>
+                <div className="space-y-2">
+                  {coach.ageGroupCoordinatorRoles.map(r => (
+                    <div key={r.ageGroupId} className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700 dark:text-gray-300">{r.ageGroupName}</span>
+                      {r.role && (
+                        <span className="badge-secondary text-xs">{getAgeGroupRoleLabel(r.role)}</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )
           )}
 
           {/* Club Roles */}

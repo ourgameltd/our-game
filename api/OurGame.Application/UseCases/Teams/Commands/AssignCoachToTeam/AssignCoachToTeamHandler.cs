@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
-using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 using TeamCoachDto = OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId.DTOs.TeamCoachDto;
 
@@ -23,13 +22,6 @@ public class AssignCoachToTeamHandler : IRequestHandler<AssignCoachToTeamCommand
     {
         var dto = command.Dto;
         var teamId = command.TeamId;
-
-        // Parse and validate role
-        if (!Enum.TryParse<CoachRole>(dto.Role, ignoreCase: true, out var role))
-        {
-            throw new ValidationException("Role",
-                "Invalid role. Must be one of: headcoach, assistantcoach, goalkeepercoach, fitnesscoach, technicalcoach.");
-        }
 
         // Validate team exists and get its club
         var teamResult = await _db.Database
@@ -92,11 +84,11 @@ public class AssignCoachToTeamHandler : IRequestHandler<AssignCoachToTeamCommand
         // Insert team coach assignment
         var newAssignmentId = Guid.NewGuid();
         var now = DateTime.UtcNow;
-        var roleInt = (int)role;
+        var isPrimary = dto.IsPrimary;
 
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
-            INSERT INTO TeamCoaches (Id, TeamId, CoachId, Role, AssignedAt)
-            VALUES ({newAssignmentId}, {teamId}, {dto.CoachId}, {roleInt}, {now})
+            INSERT INTO TeamCoaches (Id, TeamId, CoachId, IsPrimary, AssignedAt)
+            VALUES ({newAssignmentId}, {teamId}, {dto.CoachId}, {isPrimary}, {now})
         ", cancellationToken);
 
         // Query back the assigned coach details
@@ -108,7 +100,7 @@ public class AssignCoachToTeamHandler : IRequestHandler<AssignCoachToTeamCommand
                     c.FirstName,
                     c.LastName,
                     c.Photo,
-                    tc.Role,
+                    tc.IsPrimary,
                     c.IsArchived
                 FROM Coaches c
                 INNER JOIN TeamCoaches tc ON tc.CoachId = c.Id
@@ -121,8 +113,6 @@ public class AssignCoachToTeamHandler : IRequestHandler<AssignCoachToTeamCommand
             throw new Exception("Failed to retrieve assigned coach.");
         }
 
-        var roleName = Enum.GetName(typeof(CoachRole), result.Role) ?? CoachRole.AssistantCoach.ToString();
-
         return new TeamCoachDto
         {
             Id = result.Id,
@@ -130,7 +120,7 @@ public class AssignCoachToTeamHandler : IRequestHandler<AssignCoachToTeamCommand
             FirstName = result.FirstName ?? string.Empty,
             LastName = result.LastName ?? string.Empty,
             PhotoUrl = result.Photo,
-            Role = roleName,
+            IsPrimary = result.IsPrimary,
             IsArchived = result.IsArchived
         };
     }
@@ -174,6 +164,6 @@ internal class TeamCoachQueryResult
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Photo { get; set; }
-    public int Role { get; set; }
+    public bool IsPrimary { get; set; }
     public bool IsArchived { get; set; }
 }

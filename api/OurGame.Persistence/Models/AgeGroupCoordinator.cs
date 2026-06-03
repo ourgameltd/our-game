@@ -2,6 +2,7 @@
 #nullable disable
 using System;
 using System.Collections.Generic;
+using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Models;
 
@@ -12,6 +13,8 @@ public partial class AgeGroupCoordinator
     public Guid AgeGroupId { get; set; }
 
     public Guid CoachId { get; set; }
+
+    public CoachRole Role { get; set; }
 
     public virtual AgeGroup AgeGroup { get; set; }
 

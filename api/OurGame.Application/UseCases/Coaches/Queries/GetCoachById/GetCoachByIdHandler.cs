@@ -68,7 +68,7 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
                 t.Name AS TeamName,
                 ag.Id AS AgeGroupId,
                 ag.Name AS AgeGroupName,
-                tc.Role AS TeamRole
+                tc.IsPrimary AS TeamIsPrimary
             FROM TeamCoaches tc
             INNER JOIN Teams t ON t.Id = tc.TeamId
             INNER JOIN AgeGroups ag ON ag.Id = t.AgeGroupId
@@ -83,7 +83,8 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
         var coordinatorSql = @"
             SELECT
                 ag.Id AS AgeGroupId,
-                ag.Name AS AgeGroupName
+                ag.Name AS AgeGroupName,
+                agc.Role AS CoordinatorRole
             FROM AgeGroupCoordinators agc
             INNER JOIN AgeGroups ag ON ag.Id = agc.AgeGroupId
             WHERE agc.CoachId = {0}
@@ -155,14 +156,15 @@ public class GetCoachByIdHandler : IRequestHandler<GetCoachByIdQuery, CoachDetai
                 TeamName = t.TeamName ?? string.Empty,
                 AgeGroupId = t.AgeGroupId,
                 AgeGroupName = t.AgeGroupName ?? string.Empty,
-                Role = Enum.IsDefined(typeof(CoachRole), t.TeamRole)
-                    ? ((CoachRole)t.TeamRole).ToString()
-                    : "AssistantCoach"
+                IsPrimary = t.TeamIsPrimary
             }).ToList(),
             CoordinatorRoles = coordinatorRoles.Select(cr => new CoachAgeGroupCoordinatorDto
             {
                 AgeGroupId = cr.AgeGroupId,
-                AgeGroupName = cr.AgeGroupName ?? string.Empty
+                AgeGroupName = cr.AgeGroupName ?? string.Empty,
+                Role = Enum.IsDefined(typeof(CoachRole), cr.CoordinatorRole)
+                    ? ((CoachRole)cr.CoordinatorRole).ToString()
+                    : string.Empty
             }).ToList(),
             CreatedAt = coach.CreatedAt,
             UpdatedAt = coach.UpdatedAt,
@@ -249,13 +251,14 @@ public class TeamAssignmentRaw
     public string? TeamName { get; set; }
     public Guid AgeGroupId { get; set; }
     public string? AgeGroupName { get; set; }
-    public int TeamRole { get; set; }
+    public bool TeamIsPrimary { get; set; }
 }
 
 public class CoordinatorRoleRaw
 {
     public Guid AgeGroupId { get; set; }
     public string? AgeGroupName { get; set; }
+    public int CoordinatorRole { get; set; }
 }
 
 public class CoachEmergencyContactRaw

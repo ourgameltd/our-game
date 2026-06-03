@@ -1,7 +1,9 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useCoach, useClubTeams, useClubCoaches, useUpdateCoach, useCreateCoach, UpdateCoachRequest, CreateCoachRequest, ClubTeamDto } from '@/api';
-import { clubRoleSuggestions, coachBadgeSuggestions } from '@/constants/referenceData';
+import { useCoach, useClubTeams, useClubCoaches, useUpdateCoach, useCreateCoach, UpdateCoachRequest, CreateCoachRequest, ClubTeamDto, AgeGroupRoleRequest } from '@/api';
+import { useAgeGroupsByClubId } from '@/api/hooks';
+import { clubRoleSuggestions, coachBadgeSuggestions, coachRoles } from '@/constants/referenceData';
+import { mapUiRoleToApi, mapApiRoleToUi } from '@/api/mappers';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
@@ -94,12 +96,13 @@ export default function CoachSettingsPage() {
   );
   const { data: allTeams, isLoading: isLoadingTeams } = useClubTeams(clubId);
   const { data: clubCoaches, isLoading: isLoadingClubCoaches } = useClubCoaches(clubId);
+  const { data: ageGroups, isLoading: isLoadingAgeGroups } = useAgeGroupsByClubId(clubId);
   const { updateCoach, isSubmitting: isUpdating, error: updateError } = useUpdateCoach(isNewCoach ? '' : coachId || '');
   const { createCoach, isSubmitting: isCreating, error: createError } = useCreateCoach(clubId || '');
   const isSubmitting = isNewCoach ? isCreating : isUpdating;
   const submitError = isNewCoach ? createError : updateError;
 
-  const isLoading = isLoadingCoach || isLoadingTeams || isLoadingClubCoaches;
+  const isLoading = isLoadingCoach || isLoadingTeams || isLoadingClubCoaches || isLoadingAgeGroups;
 
   // Form state
   const [formInitialized, setFormInitialized] = useState(false);
@@ -111,6 +114,7 @@ export default function CoachSettingsPage() {
   const [associationId, setAssociationId] = useState('');
   const [clubRoles, setClubRoles] = useState<string[]>([]);
   const [badges, setBadges] = useState<string[]>([]);
+  const [ageGroupRoles, setAgeGroupRoles] = useState<Record<string, string>>({}); // ageGroupId → role
   const [biography, setBiography] = useState('');
   const [specializations, setSpecializations] = useState<string[]>([]);
   const [selectedTeams, setSelectedTeams] = useState<string[]>([]);
@@ -132,6 +136,11 @@ export default function CoachSettingsPage() {
       setAssociationId(coach.associationId || '');
       setClubRoles(coach.clubRoles ?? []);
       setBadges(coach.badges ?? []);
+      const agRolesMap: Record<string, string> = {};
+      coach.ageGroupCoordinatorRoles?.forEach(r => {
+        if (r.role) agRolesMap[r.ageGroupId] = mapApiRoleToUi(r.role);
+      });
+      setAgeGroupRoles(agRolesMap);
       setBiography(coach.biography || '');
       setSpecializations(coach.specializations ?? []);
       setSelectedTeams(coach.teams?.map(t => t.teamId) || []);
@@ -227,6 +236,10 @@ export default function CoachSettingsPage() {
 
   const handleSave = async () => {
     if (isNewCoach) {
+      const ageGroupRolesList: AgeGroupRoleRequest[] = Object.entries(ageGroupRoles)
+        .filter(([, role]) => role)
+        .map(([ageGroupId, role]) => ({ ageGroupId, role: mapUiRoleToApi(role) }));
+
       const request: CreateCoachRequest = {
         firstName,
         lastName,
@@ -238,6 +251,7 @@ export default function CoachSettingsPage() {
         clubRoles,
         badges,
         teamIds: selectedTeams,
+        ageGroupRoles: ageGroupRolesList,
         photo: photo || undefined,
       };
 
@@ -255,6 +269,10 @@ export default function CoachSettingsPage() {
 
     const unlinkCoachAccount = !!coach?.hasAccount && isLinkedAccountRemoved('coach', coach.id);
 
+    const ageGroupRolesList: AgeGroupRoleRequest[] = Object.entries(ageGroupRoles)
+      .filter(([, role]) => role)
+      .map(([ageGroupId, role]) => ({ ageGroupId, role: mapUiRoleToApi(role) }));
+
     const request: UpdateCoachRequest = {
       firstName,
       lastName,
@@ -266,6 +284,7 @@ export default function CoachSettingsPage() {
       clubRoles,
       badges,
       teamIds: selectedTeams,
+      ageGroupRoles: ageGroupRolesList,
       photo: photo || undefined,
       removeLinkedEmergencyContactIds: removeLinkedEmergencyContactIds.length > 0 ? removeLinkedEmergencyContactIds : undefined,
       unlinkCoachAccount,
@@ -665,6 +684,50 @@ export default function CoachSettingsPage() {
                 placeholder="Brief biography about the coach..."
                 className="input"
               />
+            </div>
+
+            {/* Age Group Roles */}
+            <div className="card">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                Age Group Roles
+              </h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                Assign a coaching role per age group (Head Coach, Assistant Coach, etc.)
+              </p>
+              {(ageGroups || []).length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                  No age groups available.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {(ageGroups || [])
+                    .filter(ag => !ag.isArchived)
+                    .sort((a, b) => a.name.localeCompare(b.name))
+                    .map(ag => (
+                      <div key={ag.id} className="flex items-center gap-3">
+                        <label className="w-32 text-sm font-medium text-gray-700 dark:text-gray-300 shrink-0 truncate" title={ag.name}>
+                          {ag.name}
+                        </label>
+                        <select
+                          value={ageGroupRoles[ag.id] || ''}
+                          onChange={e => setAgeGroupRoles(prev => {
+                            const next = { ...prev };
+                            if (e.target.value) next[ag.id] = e.target.value;
+                            else delete next[ag.id];
+                            return next;
+                          })}
+                          className="input flex-1 max-w-xs"
+                        >
+                          <option value="">No role</option>
+                          {coachRoles.map(r => (
+                            <option key={r.value} value={r.value}>{r.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ))
+                  }
+                </div>
+              )}
             </div>
 
             {/* Team Assignments */}

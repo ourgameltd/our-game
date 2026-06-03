@@ -191,6 +191,7 @@ export type {
   UpdateTeamRequest,
   UpdateCoachRequest,
   CreateCoachRequest,
+  AgeGroupRoleRequest,
 } from './client';
 
 // React hooks

@@ -56,13 +56,23 @@ public class CreateCoachHandler : IRequestHandler<CreateCoachCommand, CoachDetai
                     {false}, {false}, {now}, {now})
         ", cancellationToken);
 
-        var defaultTeamRoleInt = (int)CoachRole.AssistantCoach;
         foreach (var teamId in dto.TeamIds)
         {
             var tcId = Guid.NewGuid();
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO TeamCoaches (Id, CoachId, TeamId, Role, AssignedAt)
-                VALUES ({tcId}, {newId}, {teamId}, {defaultTeamRoleInt}, {now})
+                INSERT INTO TeamCoaches (Id, CoachId, TeamId, IsPrimary, AssignedAt)
+                VALUES ({tcId}, {newId}, {teamId}, {false}, {now})
+            ", cancellationToken);
+        }
+
+        foreach (var agRole in dto.AgeGroupRoles)
+        {
+            if (!Enum.TryParse<CoachRole>(agRole.Role, ignoreCase: true, out var parsedRole)) continue;
+            var agcId = Guid.NewGuid();
+            var roleInt = (int)parsedRole;
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                INSERT INTO AgeGroupCoordinators (Id, AgeGroupId, CoachId, Role)
+                VALUES ({agcId}, {agRole.AgeGroupId}, {newId}, {roleInt})
             ", cancellationToken);
         }
 
@@ -102,7 +112,7 @@ public class CreateCoachHandler : IRequestHandler<CreateCoachCommand, CoachDetai
                     t.Name AS TeamName,
                     ag.Id AS AgeGroupId,
                     ag.Name AS AgeGroupName,
-                    tc.Role AS TeamRole
+                    tc.IsPrimary AS TeamIsPrimary
                 FROM TeamCoaches tc
                 INNER JOIN Teams t ON t.Id = tc.TeamId
                 INNER JOIN AgeGroups ag ON ag.Id = t.AgeGroupId
@@ -134,9 +144,7 @@ public class CreateCoachHandler : IRequestHandler<CreateCoachCommand, CoachDetai
                 TeamName = t.TeamName ?? string.Empty,
                 AgeGroupId = t.AgeGroupId,
                 AgeGroupName = t.AgeGroupName ?? string.Empty,
-                Role = Enum.IsDefined(typeof(CoachRole), t.TeamRole)
-                    ? ((CoachRole)t.TeamRole).ToString()
-                    : "AssistantCoach"
+                IsPrimary = t.TeamIsPrimary
             }).ToList(),
             CoordinatorRoles = new List<CoachAgeGroupCoordinatorDto>(),
             CreatedAt = coach.CreatedAt,
@@ -185,7 +193,7 @@ internal class CreatedTeamAssignmentRaw
     public string? TeamName { get; set; }
     public Guid AgeGroupId { get; set; }
     public string? AgeGroupName { get; set; }
-    public int TeamRole { get; set; }
+    public bool TeamIsPrimary { get; set; }
 }
 
 #endregion

@@ -14,8 +14,7 @@ public record AssignCoachToTeamRequestDto
     public Guid CoachId { get; init; }
 
     /// <summary>
-    /// The role of the coach on this team (e.g., "headcoach", "assistantcoach", "goalkeepercoach", "fitnesscoach", "technicalcoach")
+    /// Whether this coach is the primary coach for this team
     /// </summary>
-    [Required]
-    public string Role { get; init; } = string.Empty;
+    public bool IsPrimary { get; init; } = false;
 }

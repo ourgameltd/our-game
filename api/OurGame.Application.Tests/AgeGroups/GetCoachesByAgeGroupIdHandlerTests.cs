@@ -30,7 +30,7 @@ public class GetCoachesByAgeGroupIdHandlerTests
             Id = Guid.NewGuid(),
             TeamId = teamId,
             CoachId = coachId,
-            Role = 0
+            IsPrimary = false
         });
         await db.Context.SaveChangesAsync();
 
@@ -53,7 +53,7 @@ public class GetCoachesByAgeGroupIdHandlerTests
             Id = Guid.NewGuid(),
             TeamId = teamId,
             CoachId = coachId,
-            Role = 0
+            IsPrimary = false
         });
         await db.Context.SaveChangesAsync();
 

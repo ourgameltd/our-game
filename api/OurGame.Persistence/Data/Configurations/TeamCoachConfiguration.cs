@@ -11,7 +11,8 @@ public class TeamCoachConfiguration : IEntityTypeConfiguration<TeamCoach>
         builder.ToTable("TeamCoaches");
         builder.HasKey(tc => new { tc.TeamId, tc.CoachId });
         
-        builder.Property(tc => tc.Role)
-            .IsRequired();
+        builder.Property(tc => tc.IsPrimary)
+            .IsRequired()
+            .HasDefaultValue(false);
     }
 }

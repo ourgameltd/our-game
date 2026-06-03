@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using OurGame.Application.UseCases.Coaches.DTOs;
 
 namespace OurGame.Application.UseCases.Coaches.Commands.UpdateCoachById.DTOs;
 
@@ -60,6 +61,12 @@ public record UpdateCoachRequestDto
     /// Badges and qualifications (e.g. ["First Aider", "DBS Checked"]).
     /// </summary>
     public string[] Badges { get; init; } = Array.Empty<string>();
+
+    /// <summary>
+    /// Age group role assignments for this coach (AgeGroupId + role).
+    /// Rebuilds AgeGroupCoordinator records for this coach.
+    /// </summary>
+    public AgeGroupRoleDto[] AgeGroupRoles { get; init; } = Array.Empty<AgeGroupRoleDto>();
 
     /// <summary>
     /// Team IDs this coach is assigned to.

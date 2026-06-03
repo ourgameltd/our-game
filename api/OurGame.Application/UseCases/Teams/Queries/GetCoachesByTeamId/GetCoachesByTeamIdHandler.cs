@@ -2,7 +2,6 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
 using OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId.DTOs;
-using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId;
@@ -33,12 +32,12 @@ public class GetCoachesByTeamIdHandler : IRequestHandler<GetCoachesByTeamIdQuery
                 c.FirstName,
                 c.LastName,
                 c.Photo,
-                tc.Role,
+                tc.IsPrimary,
                 c.IsArchived
             FROM TeamCoaches tc
             INNER JOIN Coaches c ON c.Id = tc.CoachId
             WHERE tc.TeamId = {0}
-            ORDER BY tc.Role, c.LastName, c.FirstName";
+            ORDER BY tc.IsPrimary DESC, c.LastName, c.FirstName";
 
         var rows = await _db.Database
             .SqlQueryRaw<TeamCoachRawDto>(sql, query.TeamId)
@@ -51,7 +50,7 @@ public class GetCoachesByTeamIdHandler : IRequestHandler<GetCoachesByTeamIdQuery
             FirstName = r.FirstName ?? string.Empty,
             LastName = r.LastName ?? string.Empty,
             PhotoUrl = r.Photo,
-            Role = Enum.GetName(typeof(CoachRole), r.Role) ?? CoachRole.AssistantCoach.ToString(),
+            IsPrimary = r.IsPrimary,
             IsArchived = r.IsArchived
         }).ToList();
     }
@@ -67,6 +66,6 @@ public class TeamCoachRawDto
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Photo { get; set; }
-    public int Role { get; set; }
+    public bool IsPrimary { get; set; }
     public bool IsArchived { get; set; }
 }

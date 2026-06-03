@@ -7,8 +7,6 @@ import CoachCard from '@components/coach/CoachCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@utils/routes';
-import { mapUiRoleToApi, mapApiRoleToUi } from '@/api/mappers';
-import { coachRoles } from '@/constants/referenceData';
 import { useRequiredParams } from '@utils/routeParams';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
@@ -49,7 +47,7 @@ export default function TeamCoachesPage() {
   const [removingCoachId, setRemovingCoachId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [modalSearchQuery, setModalSearchQuery] = useState('');
-  const [modalRoles, setModalRoles] = useState<Record<string, string>>({});
+  const [modalPrimary, setModalPrimary] = useState<Record<string, boolean>>({});
   const [updatingRoleCoachId, setUpdatingRoleCoachId] = useState<string | null>(null);
 
   // Only show skeleton on initial load, not during background refetches
@@ -148,11 +146,11 @@ export default function TeamCoachesPage() {
   );
 
   const handleAssignCoach = async (coachId: string) => {
-    const uiRole = modalRoles[coachId] || 'assistant-coach';
+    const isPrimary = !!modalPrimary[coachId];
     try {
       await assignCoach({
         coachId,
-        role: mapUiRoleToApi(uiRole)
+        isPrimary
       });
       await refetchTeamCoaches();
       setSuccessMessage('Coach assigned successfully');
@@ -162,14 +160,14 @@ export default function TeamCoachesPage() {
     }
   };
 
-  const handleUpdateRole = async (coachId: string, uiRole: string) => {
+  const handleUpdatePrimary = async (coachId: string, isPrimary: boolean) => {
     if (!teamId) return;
     setUpdatingRoleCoachId(coachId);
     try {
-      await apiClient.teams.updateCoachRole(teamId, coachId, { role: mapUiRoleToApi(uiRole) });
+      await apiClient.teams.updateCoachRole(teamId, coachId, { isPrimary });
       await refetchTeamCoaches();
     } catch (err) {
-      console.error('Failed to update coach role:', err);
+      console.error('Failed to update coach primary status:', err);
     } finally {
       setUpdatingRoleCoachId(null);
     }
@@ -280,17 +278,17 @@ export default function TeamCoachesPage() {
                       isArchived: coach.isArchived
                     }}
                     badges={
-                      <div onClick={e => e.preventDefault()} className="flex items-center gap-1">
-                        <select
-                          value={mapApiRoleToUi(coach.role || 'AssistantCoach')}
-                          onChange={e => handleUpdateRole(coach.id, e.target.value)}
-                          disabled={updatingRoleCoachId === coach.id || team.isArchived}
-                          className="text-xs border border-gray-200 dark:border-gray-600 rounded-full px-2 py-0.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
-                        >
-                          {coachRoles.map(r => (
-                            <option key={r.value} value={r.value}>{r.label}</option>
-                          ))}
-                        </select>
+                      <div onClick={e => e.preventDefault()} className="flex items-center gap-2">
+                        <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                          <input
+                            type="checkbox"
+                            checked={!!coach.isPrimary}
+                            onChange={e => handleUpdatePrimary(coach.id, e.target.checked)}
+                            disabled={updatingRoleCoachId === coach.id || team.isArchived}
+                            className="w-3.5 h-3.5 text-primary-600 rounded focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
+                          />
+                          <span className="text-xs text-gray-600 dark:text-gray-400">Primary</span>
+                        </label>
                         {updatingRoleCoachId === coach.id && <Loader2 className="w-3 h-3 animate-spin text-gray-400" />}
                       </div>
                     }
@@ -447,16 +445,16 @@ export default function TeamCoachesPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
-                          <select
-                            value={modalRoles[coach.id] || 'assistant-coach'}
-                            onChange={e => setModalRoles(prev => ({ ...prev, [coach.id]: e.target.value }))}
-                            disabled={isAssigning}
-                            className="text-xs border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 focus:outline-none focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
-                          >
-                            {coachRoles.map(r => (
-                              <option key={r.value} value={r.value}>{r.label}</option>
-                            ))}
-                          </select>
+                          <label className="flex items-center gap-1.5 cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={!!modalPrimary[coach.id]}
+                              onChange={e => setModalPrimary(prev => ({ ...prev, [coach.id]: e.target.checked }))}
+                              disabled={isAssigning}
+                              className="w-3.5 h-3.5 text-primary-600 rounded focus:ring-1 focus:ring-primary-500 disabled:opacity-50"
+                            />
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Primary</span>
+                          </label>
                           <button
                             onClick={() => handleAssignCoach(coach.id)}
                             disabled={isAssigning}

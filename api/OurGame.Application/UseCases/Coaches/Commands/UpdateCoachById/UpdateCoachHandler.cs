@@ -105,19 +105,48 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
                 .ExecuteDeleteAsync(cancellationToken);
         }
 
-        // 4. Rebuild TeamCoaches join table (delete existing, insert new)
-        await _db.Database.ExecuteSqlInterpolatedAsync($@"
-            DELETE FROM TeamCoaches WHERE CoachId = {coachId}
-        ", cancellationToken);
+        // 4. Rebuild TeamCoaches — remove deassigned teams, add new ones (preserve IsPrimary for existing)
+        var incomingTeamIds = dto.TeamIds.ToHashSet();
 
-        var defaultTeamRoleInt = (int)CoachRole.AssistantCoach;
-        foreach (var teamId in dto.TeamIds)
+        // Fetch existing assignments to know which ones to keep/drop
+        var existingTeamCoaches = await _db.Database
+            .SqlQueryRaw<ExistingTeamCoachRaw>(
+                "SELECT TeamId, IsPrimary FROM TeamCoaches WHERE CoachId = {0}", coachId)
+            .ToListAsync(cancellationToken);
+
+        var existingTeamIds = existingTeamCoaches.Select(x => x.TeamId).ToHashSet();
+
+        // Remove teams no longer in the list
+        foreach (var tc in existingTeamCoaches.Where(x => !incomingTeamIds.Contains(x.TeamId)))
+        {
+            var teamIdToRemove = tc.TeamId;
+            await _db.Database.ExecuteSqlInterpolatedAsync(
+                $"DELETE FROM TeamCoaches WHERE CoachId = {coachId} AND TeamId = {teamIdToRemove}",
+                cancellationToken);
+        }
+
+        // Add newly assigned teams (with IsPrimary = false by default)
+        foreach (var teamId in incomingTeamIds.Where(id => !existingTeamIds.Contains(id)))
         {
             var tcId = Guid.NewGuid();
-            var assignedAt = now;
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO TeamCoaches (Id, CoachId, TeamId, Role, AssignedAt)
-                VALUES ({tcId}, {coachId}, {teamId}, {defaultTeamRoleInt}, {assignedAt})
+                INSERT INTO TeamCoaches (Id, CoachId, TeamId, IsPrimary, AssignedAt)
+                VALUES ({tcId}, {coachId}, {teamId}, {false}, {now})
+            ", cancellationToken);
+        }
+
+        // 4b. Rebuild AgeGroupCoordinators
+        await _db.Database.ExecuteSqlInterpolatedAsync(
+            $"DELETE FROM AgeGroupCoordinators WHERE CoachId = {coachId}", cancellationToken);
+
+        foreach (var agRole in dto.AgeGroupRoles)
+        {
+            if (!Enum.TryParse<CoachRole>(agRole.Role, ignoreCase: true, out var parsedRole)) continue;
+            var agcId = Guid.NewGuid();
+            var roleInt = (int)parsedRole;
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                INSERT INTO AgeGroupCoordinators (Id, AgeGroupId, CoachId, Role)
+                VALUES ({agcId}, {agRole.AgeGroupId}, {coachId}, {roleInt})
             ", cancellationToken);
         }
 
@@ -155,7 +184,7 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
             throw new NotFoundException("Coach", coachId.ToString());
         }
 
-        // 6. Fetch updated team assignments
+        // 5. Fetch updated team assignments
         var teams = await _db.Database
             .SqlQueryRaw<UpdatedTeamAssignmentRaw>(@"
                 SELECT
@@ -163,7 +192,7 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
                     t.Name AS TeamName,
                     ag.Id AS AgeGroupId,
                     ag.Name AS AgeGroupName,
-                    tc.Role AS TeamRole
+                    tc.IsPrimary AS TeamIsPrimary
                 FROM TeamCoaches tc
                 INNER JOIN Teams t ON t.Id = tc.TeamId
                 INNER JOIN AgeGroups ag ON ag.Id = t.AgeGroupId
@@ -172,12 +201,13 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
             ", coachId)
             .ToListAsync(cancellationToken);
 
-        // 7. Fetch coordinator age groups
+        // 6. Fetch coordinator age groups
         var coordinatorRoles = await _db.Database
             .SqlQueryRaw<UpdatedCoordinatorRoleRaw>(@"
                 SELECT
                     ag.Id AS AgeGroupId,
-                    ag.Name AS AgeGroupName
+                    ag.Name AS AgeGroupName,
+                    agc.Role AS CoordinatorRole
                 FROM AgeGroupCoordinators agc
                 INNER JOIN AgeGroups ag ON ag.Id = agc.AgeGroupId
                 WHERE agc.CoachId = {0}
@@ -185,7 +215,7 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
             ", coachId)
             .ToListAsync(cancellationToken);
 
-        // 8. Fetch linked emergency-contact accounts
+        // 7. Fetch linked emergency-contact accounts
         var linkedAccountsData = await _db.Database
             .SqlQueryRaw<UpdatedCoachLinkedAccountRaw>(@"
                 SELECT
@@ -238,14 +268,15 @@ public class UpdateCoachHandler : IRequestHandler<UpdateCoachCommand, CoachDetai
                 TeamName = t.TeamName ?? string.Empty,
                 AgeGroupId = t.AgeGroupId,
                 AgeGroupName = t.AgeGroupName ?? string.Empty,
-                Role = Enum.IsDefined(typeof(CoachRole), t.TeamRole)
-                    ? ((CoachRole)t.TeamRole).ToString()
-                    : "AssistantCoach"
+                IsPrimary = t.TeamIsPrimary
             }).ToList(),
             CoordinatorRoles = coordinatorRoles.Select(cr => new CoachAgeGroupCoordinatorDto
             {
                 AgeGroupId = cr.AgeGroupId,
-                AgeGroupName = cr.AgeGroupName ?? string.Empty
+                AgeGroupName = cr.AgeGroupName ?? string.Empty,
+                Role = Enum.IsDefined(typeof(CoachRole), cr.CoordinatorRole)
+                    ? ((CoachRole)cr.CoordinatorRole).ToString()
+                    : string.Empty
             }).ToList(),
             CreatedAt = coach.CreatedAt,
             UpdatedAt = coach.UpdatedAt,
@@ -328,7 +359,7 @@ internal class UpdatedTeamAssignmentRaw
     public string? TeamName { get; set; }
     public Guid AgeGroupId { get; set; }
     public string? AgeGroupName { get; set; }
-    public int TeamRole { get; set; }
+    public bool TeamIsPrimary { get; set; }
 }
 
 /// <summary>
@@ -338,6 +369,16 @@ internal class UpdatedCoordinatorRoleRaw
 {
     public Guid AgeGroupId { get; set; }
     public string? AgeGroupName { get; set; }
+    public int CoordinatorRole { get; set; }
+}
+
+/// <summary>
+/// Raw SQL projection for existing team coach assignments (used to preserve IsPrimary).
+/// </summary>
+internal class ExistingTeamCoachRaw
+{
+    public Guid TeamId { get; set; }
+    public bool IsPrimary { get; set; }
 }
 
 /// <summary>

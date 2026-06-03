@@ -1,5 +1,4 @@
 using OurGame.Persistence.Models;
-using OurGame.Persistence.Enums;
 
 namespace OurGame.Persistence.Data.SeedData;
 
@@ -19,7 +18,7 @@ public static class TeamCoachSeedData
             Id = UserSeedData.CreateDeterministicGuid($"team-coach|{TeamSeedData.NormalizeTeamName(admin.Team)}|{UserSeedData.NormalizeName(admin.Name)}"),
             TeamId = TeamSeedData.GetTeamIdByName(admin.Team),
             CoachId = CoachSeedData.GetCoachIdByAdminName(admin.Name),
-            Role = CoachRole.HeadCoach,
+            IsPrimary = true,
             AssignedAt = now
         }).ToList();
     }

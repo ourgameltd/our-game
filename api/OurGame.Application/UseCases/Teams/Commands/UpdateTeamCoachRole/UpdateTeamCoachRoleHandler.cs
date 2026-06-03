@@ -1,7 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
-using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
 using TeamCoachDto = OurGame.Application.UseCases.Teams.Queries.GetCoachesByTeamId.DTOs.TeamCoachDto;
 
@@ -25,13 +24,6 @@ public class UpdateTeamCoachRoleHandler : IRequestHandler<UpdateTeamCoachRoleCom
         var teamId = command.TeamId;
         var coachId = command.CoachId;
 
-        // Parse and validate role
-        if (!Enum.TryParse<CoachRole>(dto.Role, ignoreCase: true, out var role))
-        {
-            throw new ValidationException("Role",
-                "Invalid role. Must be one of: headcoach, assistantcoach, goalkeepercoach, fitnesscoach, technicalcoach.");
-        }
-
         // Validate assignment exists
         var assignmentExists = await _db.Database
             .SqlQueryRaw<TeamCoachAssignmentResult>(@"
@@ -47,12 +39,12 @@ public class UpdateTeamCoachRoleHandler : IRequestHandler<UpdateTeamCoachRoleCom
                 $"Coach assignment not found for team {teamId} and coach {coachId}");
         }
 
-        // Update the role
-        var roleInt = (int)role;
+        // Update IsPrimary
+        var isPrimary = dto.IsPrimary;
 
         var rowsAffected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
             UPDATE TeamCoaches
-            SET Role = {roleInt}
+            SET IsPrimary = {isPrimary}
             WHERE TeamId = {teamId} AND CoachId = {coachId}
         ", cancellationToken);
 
@@ -71,7 +63,7 @@ public class UpdateTeamCoachRoleHandler : IRequestHandler<UpdateTeamCoachRoleCom
                     c.FirstName,
                     c.LastName,
                     c.Photo,
-                    tc.Role,
+                    tc.IsPrimary,
                     c.IsArchived
                 FROM Coaches c
                 INNER JOIN TeamCoaches tc ON tc.CoachId = c.Id
@@ -84,8 +76,6 @@ public class UpdateTeamCoachRoleHandler : IRequestHandler<UpdateTeamCoachRoleCom
             throw new Exception("Failed to retrieve updated coach.");
         }
 
-        var roleName = Enum.GetName(typeof(CoachRole), result.Role) ?? CoachRole.AssistantCoach.ToString();
-
         return new TeamCoachDto
         {
             Id = result.Id,
@@ -93,7 +83,7 @@ public class UpdateTeamCoachRoleHandler : IRequestHandler<UpdateTeamCoachRoleCom
             FirstName = result.FirstName ?? string.Empty,
             LastName = result.LastName ?? string.Empty,
             PhotoUrl = result.Photo,
-            Role = roleName,
+            IsPrimary = result.IsPrimary,
             IsArchived = result.IsArchived
         };
     }
@@ -117,6 +107,6 @@ internal class TeamCoachQueryResult
     public string? FirstName { get; set; }
     public string? LastName { get; set; }
     public string? Photo { get; set; }
-    public int Role { get; set; }
+    public bool IsPrimary { get; set; }
     public bool IsArchived { get; set; }
 }

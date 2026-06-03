@@ -26,7 +26,7 @@ public class CoachTeamAssignmentDto
     public string AgeGroupName { get; set; } = string.Empty;
 
     /// <summary>
-    /// The coach's role on this team (derived from the coach's global role)
+    /// Whether this coach is the primary coach for this team
     /// </summary>
-    public string Role { get; set; } = string.Empty;
+    public bool IsPrimary { get; set; }
 }

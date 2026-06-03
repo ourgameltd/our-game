@@ -185,7 +185,7 @@ export interface TeamCoachDto {
   lastName?: string;
   photoUrl?: string;
   associationId?: string;
-  role?: string;
+  isPrimary?: boolean;
   isArchived?: boolean;
 }
 
@@ -825,13 +825,13 @@ export interface CoachTeamAssignmentDto {
   teamName: string;
   ageGroupId: string;
   ageGroupName: string;
-  role: string;
-  roleDisplay: string;
+  isPrimary: boolean;
 }
 
 export interface CoachAgeGroupCoordinatorDto {
   ageGroupId: string;
   ageGroupName: string;
+  role: string;
 }
 
 export interface CoachDetailDto {
@@ -2185,6 +2185,11 @@ export interface ArchiveAgeGroupRequest {
   isArchived: boolean;
 }
 
+export interface AgeGroupRoleRequest {
+  ageGroupId: string;
+  role: string; // 'HeadCoach' | 'AssistantCoach' | 'GoalkeeperCoach' | 'FitnessCoach' | 'TechnicalCoach'
+}
+
 export interface UpdateCoachRequest {
   firstName: string;
   lastName: string;
@@ -2196,6 +2201,7 @@ export interface UpdateCoachRequest {
   clubRoles: string[];
   badges: string[];
   teamIds: string[];
+  ageGroupRoles: AgeGroupRoleRequest[];
   photo?: string;
   removeLinkedEmergencyContactIds?: string[];
   unlinkCoachAccount?: boolean;
@@ -2212,16 +2218,17 @@ export interface CreateCoachRequest {
   clubRoles: string[];
   badges: string[];
   teamIds: string[];
+  ageGroupRoles: AgeGroupRoleRequest[];
   photo?: string;
 }
 
 export interface AssignTeamCoachRequest {
   coachId: string;
-  role: string; // 'HeadCoach' | 'AssistantCoach' | 'GoalkeeperCoach' | 'FitnessCoach' | 'TechnicalCoach'
+  isPrimary: boolean;
 }
 
 export interface UpdateTeamCoachRoleRequest {
-  role: string; // 'HeadCoach' | 'AssistantCoach' | 'GoalkeeperCoach' | 'FitnessCoach' | 'TechnicalCoach'
+  isPrimary: boolean;
 }
 
 // Match Detail DTOs

@@ -363,14 +363,14 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
     //  TeamCoach assignment
     // ────────────────────────────────────────────
 
-    public async Task SeedTeamCoachAsync(Guid teamId, Guid coachId, CoachRole role = CoachRole.HeadCoach)
+    public async Task SeedTeamCoachAsync(Guid teamId, Guid coachId, CoachRole _ = CoachRole.HeadCoach, bool isPrimary = false)
     {
         Context.TeamCoaches.Add(new TeamCoach
         {
             Id = Guid.NewGuid(),
             TeamId = teamId,
             CoachId = coachId,
-            Role = role,
+            IsPrimary = isPrimary,
             AssignedAt = DateTime.UtcNow
         });
         await Context.SaveChangesAsync();

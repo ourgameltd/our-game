@@ -6,7 +6,6 @@ import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, us
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest, DrillListDto, DrillTemplateListDto } from '@/api/client';
 import { sessionDurations } from '@/data/referenceData';
 import { drillCategories, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
-import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@utils/routes';
 import { SessionDrill } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -1132,7 +1131,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                                 {coach.firstName || ''} {coach.lastName || ''}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {coach.role ? coachRoleDisplay[coach.role] : 'Coach'}
+                                {coach.isPrimary ? 'Primary Coach' : 'Coach'}
                               </p>
                             </div>
                           </div>
@@ -1422,7 +1421,7 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                             {coach.firstName} {coach.lastName}
                           </p>
                           <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                            {coachRoleDisplay[coach.role || '']}
+                            {coach.isPrimary ? 'Primary Coach' : 'Coach'}
                           </p>
                         </div>
                         <Plus className="w-5 h-5 text-green-600 dark:text-green-400" />

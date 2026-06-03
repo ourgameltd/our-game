@@ -36,7 +36,7 @@ public class GetCoachesByTeamIdHandlerTests
         Assert.Equal(coachId, coach.Id);
         Assert.Equal("Jane", coach.FirstName);
         Assert.Equal("Smith", coach.LastName);
-        Assert.Equal("HeadCoach", coach.Role);
+        Assert.False(coach.IsPrimary);
         Assert.False(coach.IsArchived);
     }
 

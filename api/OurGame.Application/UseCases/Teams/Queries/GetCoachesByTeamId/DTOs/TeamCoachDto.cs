@@ -31,9 +31,9 @@ public class TeamCoachDto
     public string? PhotoUrl { get; set; }
 
     /// <summary>
-    /// The coach's role (e.g. HeadCoach, AssistantCoach, GoalkeeperCoach)
+    /// Whether this coach is the primary coach for this team
     /// </summary>
-    public string Role { get; set; } = string.Empty;
+    public bool IsPrimary { get; set; }
 
     /// <summary>
     /// Whether the coach has been archived

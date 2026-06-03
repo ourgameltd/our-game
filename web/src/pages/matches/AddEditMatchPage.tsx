@@ -13,7 +13,6 @@ import HealingIcon from '@mui/icons-material/Healing';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { getResolvedPositions, ResolvedPosition } from '@/data/tactics';
 import { weatherConditions, squadSizes, cardTypes, injurySeverities } from '@/constants/referenceData';
-import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, Tactic, TacticalPositionOverride, TacticPrinciple } from '@/types';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
@@ -2949,7 +2948,7 @@ export default function AddEditMatchPage() {
                                 {coach.firstName || ''} {coach.lastName || ''}
                               </p>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {coach.role ? coachRoleDisplay[coach.role] : 'Coach'}
+                                {coach.isPrimary ? 'Primary Coach' : 'Coach'}
                               </p>
                             </div>
                           </div>
@@ -3242,7 +3241,7 @@ export default function AddEditMatchPage() {
                             {coach.firstName || ''} {coach.lastName || ''}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
-                            {coach.role ? coachRoleDisplay[coach.role] : 'Coach'}
+                            {coach.isPrimary ? 'Primary Coach' : 'Coach'}
                           </p>
                         </div>
                         <Plus className="w-5 h-5 text-green-600 dark:text-green-400" />
