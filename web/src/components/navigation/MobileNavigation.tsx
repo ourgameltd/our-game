@@ -400,6 +400,42 @@ export default function MobileNavigation() {
         </div>
 
         <div className="mobile-nav-drawer-content">
+          {/* Parent breadcrumb links - stacked above current level nav */}
+          {(currentLevel === 'team' || currentLevel === 'ageGroup') && (
+            <ul className="mobile-nav-menu">
+              {club && isValidParam(clubId) && (
+                <li className="mobile-nav-item">
+                  <Link
+                    to={Routes.club(clubId as string)}
+                    className="mobile-nav-link opacity-70 hover:opacity-100"
+                  >
+                    {club.logo ? (
+                      <img
+                        src={club.logo}
+                        alt={`${club.name} logo`}
+                        className="w-5 h-5 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600 flex-shrink-0"
+                      />
+                    ) : (
+                      <Home className="mobile-nav-icon" />
+                    )}
+                    <span className="mobile-nav-text">{club.shortName}</span>
+                  </Link>
+                </li>
+              )}
+              {ageGroup && areAllParamsValid(clubId, ageGroupId) && currentLevel !== 'ageGroup' && (
+                <li className="mobile-nav-item">
+                  <Link
+                    to={Routes.ageGroup(clubId as string, ageGroupId as string)}
+                    className="mobile-nav-link opacity-70 hover:opacity-100"
+                  >
+                    <Users className="mobile-nav-icon" />
+                    <span className="mobile-nav-text">{ageGroup.name}</span>
+                  </Link>
+                </li>
+              )}
+            </ul>
+          )}
+
           {/* Hierarchical Navigation */}
           <ul className="mobile-nav-menu">
             {/* Age Group Level - Show full options only if we're at age group level */}
@@ -411,7 +447,7 @@ export default function MobileNavigation() {
                       to={Routes.ageGroup(clubId as string, ageGroupId as string)}
                       className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-4">
                         <Users className="w-5 h-5 text-primary-600 dark:text-primary-400" />
                         {ageGroup.name}
                       </h3>
@@ -580,7 +616,7 @@ export default function MobileNavigation() {
                       to={Routes.club(clubId as string)}
                       className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-4">
                         {club.logo ? (
                           <img 
                             src={club.logo} 
@@ -775,7 +811,7 @@ export default function MobileNavigation() {
                       to={Routes.team(clubId as string, ageGroupId as string, teamId as string)}
                       className="flex-1 block px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                     >
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-4">
                         <div 
                           className="w-5 h-5 rounded flex items-center justify-center text-[8px] font-bold"
                           style={{ 
@@ -978,69 +1014,6 @@ export default function MobileNavigation() {
               </li>
             )}
           </ul>
-
-          {/* Breadcrumb navigation to parent levels - only show if there are parent links */}
-          {(currentLevel === 'team' || currentLevel === 'ageGroup') && (
-            <>
-              <div className="mobile-nav-divider"></div>
-              <div className="px-6 py-2">
-                <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                  Navigate To
-                </h3>
-              </div>
-              <ul className="mobile-nav-menu">
-                {club && isValidParam(clubId) && (
-                  <li className="mobile-nav-item">
-                    <Link 
-                      to={Routes.club(clubId as string)}
-                      className="mobile-nav-link"
-                    >
-                      {club.logo ? (
-                        <img 
-                          src={club.logo} 
-                          alt={`${club.name} logo`}
-                          className="w-5 h-5 rounded-lg object-cover border-2 border-gray-300 dark:border-gray-600 flex-shrink-0"
-                        />
-                      ) : (
-                        <Home className="mobile-nav-icon" />
-                      )}
-                      <span className="mobile-nav-text">{club.shortName}</span>
-                    </Link>
-                  </li>
-                )}
-                {ageGroup && areAllParamsValid(clubId, ageGroupId) && currentLevel !== 'ageGroup' && (
-                  <li className="mobile-nav-item">
-                    <Link 
-                      to={Routes.ageGroup(clubId as string, ageGroupId as string)}
-                      className="mobile-nav-link"
-                    >
-                      <Users className="mobile-nav-icon" />
-                      <span className="mobile-nav-text">{ageGroup.name}</span>
-                    </Link>
-                  </li>
-                )}
-                {team && areAllParamsValid(clubId, ageGroupId, teamId) && currentLevel !== 'team' && (
-                  <li className="mobile-nav-item">
-                    <Link 
-                      to={Routes.team(clubId as string, ageGroupId as string, teamId as string)}
-                      className="mobile-nav-link"
-                    >
-                      <div 
-                        className="w-5 h-5 rounded flex items-center justify-center text-[8px] font-bold flex-shrink-0"
-                        style={{ 
-                          backgroundColor: team.colors?.primary || club?.colors.primary || '#6366F1',
-                          color: team.colors?.primary === '#F3F4F6' ? '#1F2937' : '#FFFFFF'
-                        }}
-                      >
-                        {team.shortName || team.name.substring(0, 2).toUpperCase()}
-                      </div>
-                      <span className="mobile-nav-text">{team.name}</span>
-                    </Link>
-                  </li>
-                )}
-              </ul>
-            </>
-          )}
 
           {/* Only show divider if the primary menu above has content */}
           {(location.pathname !== '/dashboard'
