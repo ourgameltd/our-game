@@ -5,12 +5,10 @@ import { apiClient } from '@/api';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import type {
   AgeGroupDetailDto,
-  AgeGroupStatisticsDto,
   TeamWithStatsDto,
   ClubDetailDto
 } from '@/api';
-import type { AgeGroup, Club, Team, SquadSize, Match } from '@/types';
-import MatchesCard from '../../components/matches/MatchesCard';
+import type { AgeGroup, Club, Team, SquadSize } from '@/types';
 import TeamListCard from '../../components/team/TeamListCard';
 import PageTitle from '../../components/common/PageTitle';
 import EmptyState from '../../components/common/EmptyState';
@@ -34,9 +32,6 @@ const AgeGroupOverviewPage: React.FC = () => {
   const [teams, setTeams] = useState<TeamWithStatsDto[]>([]);
   const [teamsLoading, setTeamsLoading] = useState(true);
   const [teamsError, setTeamsError] = useState<string | null>(null);
-
-  const [stats, setStats] = useState<AgeGroupStatisticsDto | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
 
   usePageTitle(['Club', ageGroup?.name ?? 'Age Group', 'Overview']);
 
@@ -91,17 +86,6 @@ const AgeGroupOverviewPage: React.FC = () => {
       })
       .finally(() => setTeamsLoading(false));
 
-    setStatsLoading(true);
-    apiClient.ageGroups.getStatistics(ageGroupId)
-      .then((response) => {
-        if (response.success && response.data) {
-          setStats(response.data);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch statistics:', err);
-      })
-      .finally(() => setStatsLoading(false));
   }, [clubId, ageGroupId]);
 
   const normalizeLevel = (level: string): 'youth' | 'amateur' | 'reserve' | 'senior' => {
@@ -111,27 +95,6 @@ const AgeGroupOverviewPage: React.FC = () => {
     }
     return 'youth';
   };
-
-  const toDate = (value?: string) => (value ? new Date(value) : undefined);
-
-  type AgeGroupMatchSummary = AgeGroupStatisticsDto['upcomingMatches'][number];
-
-  const toMatch = (match: AgeGroupMatchSummary, status: Match['status']): Match => ({
-    id: match.id,
-    teamId: match.teamId,
-    opposition: match.opposition,
-    date: new Date(match.date),
-    meetTime: toDate(match.meetTime),
-    kickOffTime: toDate(match.kickOffTime) ?? new Date(match.date),
-    location: match.location || '',
-    isHome: match.isHome,
-    competition: match.competition || '',
-    status,
-    score: match.score ? { home: match.score.home, away: match.score.away } : undefined
-  });
-
-  const upcomingMatches = stats?.upcomingMatches.map(match => toMatch(match, 'scheduled')) ?? [];
-  const previousResults = stats?.previousResults.map(match => toMatch(match, 'completed')) ?? [];
 
   const ageGroupModel: AgeGroup | null = ageGroup
     ? {
@@ -300,7 +263,10 @@ const AgeGroupOverviewPage: React.FC = () => {
                   key={team.id}
                   team={team}
                   ageGroup={ageGroupModel}
-                  stats={teams[index].stats}
+                  stats={{
+                    playerCount: teams[index].stats.playerCount,
+                    coachCount: teams[index].stats.coachCount
+                  }}
                   onClick={team.isArchived ? undefined : () => {
                     if (clubId && ageGroupId) {
                       navigate(Routes.team(clubId, ageGroupId, team.id));
@@ -328,46 +294,8 @@ const AgeGroupOverviewPage: React.FC = () => {
           )}
         </div>
 
-      <div className="grid md:grid-cols-2 gap-4 mb-4">
-        {statsLoading ? (
-          Array.from({ length: 2 }).map((_, index) => (
-            <div key={index} className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-          ))
-        ) : (
-          <>
-            <MatchesCard 
-              type="upcoming"
-              matches={upcomingMatches}
-              limit={3}
-              showTeamInfo={true}
-              getTeamInfo={(match) => ({
-                teamName: stats?.upcomingMatches.find(m => m.id === match.id)?.teamName || 'Unknown',
-                ageGroupName: stats?.upcomingMatches.find(m => m.id === match.id)?.ageGroupName || 'Unknown'
-              })}
-              getMatchLink={(matchId, match) => {
-                if (!clubId || !ageGroupId) return '#';
-                return Routes.matchReport(clubId, ageGroupId, match.teamId, matchId);
-              }}
-            />
-            <MatchesCard 
-              type="results"
-              matches={previousResults}
-              limit={3}
-              showTeamInfo={true}
-              getTeamInfo={(match) => ({
-                teamName: stats?.previousResults.find(m => m.id === match.id)?.teamName || 'Unknown',
-                ageGroupName: stats?.previousResults.find(m => m.id === match.id)?.ageGroupName || 'Unknown'
-              })}
-              getMatchLink={(matchId, match) => {
-                if (!clubId || !ageGroupId) return '#';
-                return Routes.matchReport(clubId, ageGroupId, match.teamId, matchId);
-              }}
-            />
-          </>
-        )}
-      </div>
 
-      </main>
+</main>
     </div>
   );
 };

@@ -529,15 +529,6 @@ export default function MobileNavigation() {
                               <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                                 <li className="mobile-nav-item">
                                   <Link
-                                    to={Routes.teams(clubId as string, ageGroupId as string)}
-                                    className={`mobile-nav-link pl-8 ${isActive(Routes.teams(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
-                                  >
-                                    <Users className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Teams</span>
-                                  </Link>
-                                </li>
-                                <li className="mobile-nav-item">
-                                  <Link
                                     to={Routes.ageGroupInvites(clubId as string, ageGroupId as string)}
                                     className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroupInvites(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
                                   >
@@ -645,15 +636,6 @@ export default function MobileNavigation() {
                         <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
                           <li className="mobile-nav-item">
                             <Link
-                              to={Routes.ageGroups(clubId as string)}
-                              className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroups(clubId as string)) ? 'active' : ''}`}
-                            >
-                              <Users className="mobile-nav-icon" />
-                              <span className="mobile-nav-text">Age Groups</span>
-                            </Link>
-                          </li>
-                          <li className="mobile-nav-item">
-                            <Link
                               to={Routes.clubEthos(clubId as string)}
                               className={`mobile-nav-link pl-8 ${isActive(Routes.clubEthos(clubId as string)) ? 'active' : ''}`}
                             >
@@ -713,15 +695,6 @@ export default function MobileNavigation() {
                             </button>
                             {isManagementExpanded && (
                               <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.ageGroups(clubId as string)}
-                                    className={`mobile-nav-link pl-8 ${isActive(Routes.ageGroups(clubId as string)) ? 'active' : ''}`}
-                                  >
-                                    <Users className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Age Groups</span>
-                                  </Link>
-                                </li>
                                 <li className="mobile-nav-item">
                                   <Link
                                     to={Routes.clubEthos(clubId as string)}

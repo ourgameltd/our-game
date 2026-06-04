@@ -5,12 +5,12 @@ import { getPerformanceColorClass } from '@utils/colorHelpers';
 interface AgeGroupStats {
   teamCount: number;
   playerCount: number;
-  matchesPlayed: number;
-  wins: number;
-  draws: number;
-  losses: number;
-  winRate: number;
-  goalDifference: number;
+  matchesPlayed?: number;
+  wins?: number;
+  draws?: number;
+  losses?: number;
+  winRate?: number;
+  goalDifference?: number;
 }
 
 interface AgeGroupListCardProps {
@@ -21,8 +21,8 @@ interface AgeGroupListCardProps {
   actions?: ReactNode;
 }
 
-const AgeGroupListCard: React.FC<AgeGroupListCardProps> = ({ 
-  ageGroup, 
+const AgeGroupListCard: React.FC<AgeGroupListCardProps> = ({
+  ageGroup,
   club: _club,
   stats,
   badges,
@@ -34,145 +34,74 @@ const AgeGroupListCard: React.FC<AgeGroupListCardProps> = ({
 
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors overflow-hidden ${
+      className={`bg-white dark:bg-gray-800 rounded-lg md:rounded-none px-4 py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors overflow-hidden ${
         ageGroup.isArchived ? 'opacity-75' : ''
       }`}
     >
-      {/* Mobile: Card Layout */}
-      <div className="md:hidden flex items-stretch">
-        <div className={`w-1 self-stretch rounded-full shrink-0 ${indicatorClass}`} />
-        <div className="flex-1 min-w-0">
-          <div className="p-4 bg-white dark:bg-gray-800 relative border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-start justify-between">
-              <div>
-                <h3 className="text-xl font-bold text-gray-900 dark:text-white">{ageGroup.name}</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{ageGroup.description}</p>
-              </div>
-              {ageGroup.isArchived && (
-                <span className="badge bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs shrink-0">
-                  🗄️ Archived
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Stats Grid */}
-          <div className="p-4">
-            <div className="grid grid-cols-4 gap-3 mb-4">
-              <div className="text-center">
-                <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.teamCount}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Teams</div>
-              </div>
-              <div className="text-center">
-                <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.playerCount}</div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Players</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-xl font-bold ${getPerformanceColorClass(stats.winRate, 'winRate')}`}>
-                  {stats.winRate}%
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Win Rate</div>
-              </div>
-              <div className="text-center">
-                <div className={`text-xl font-bold ${getPerformanceColorClass(stats.goalDifference, 'goalDifference')}`}>
-                  {stats.goalDifference >= 0 ? '+' : ''}{stats.goalDifference}
-                </div>
-                <div className="text-xs text-gray-500 dark:text-gray-400">Goal Diff</div>
-              </div>
-            </div>
-
-            {/* W-D-L Record */}
-            <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
-              <div className="text-sm">
-                <span className="font-semibold text-green-600 dark:text-green-400">{stats.wins}W</span>
-                <span className="mx-2 text-gray-400">-</span>
-                <span className="font-semibold text-gray-600 dark:text-gray-400">{stats.draws}D</span>
-                <span className="mx-2 text-gray-400">-</span>
-                <span className="font-semibold text-red-600 dark:text-red-400">{stats.losses}L</span>
-              </div>
-              <span className="text-primary-600 dark:text-primary-400 font-semibold text-sm">
-                View →
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Desktop: Row Layout */}
-      <div className="hidden md:flex md:items-center md:gap-4">
-        {/* Color indicator */}
+      <div className="flex items-center gap-3">
+        {/* Indicator */}
         <div className={`w-1 self-stretch rounded-full shrink-0 ${indicatorClass}`} />
 
         {/* Name & Description */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+            <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
               {ageGroup.name}
-            </h3>
+            </span>
+            {ageGroup.isArchived && (
+              <span className="hidden sm:inline-flex badge bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs shrink-0">
+                🗄️ Archived
+              </span>
+            )}
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-            {ageGroup.description}
-          </p>
+          {ageGroup.description && (
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{ageGroup.description}</p>
+          )}
         </div>
 
-        {/* Teams */}
-        <div className="shrink-0 w-15 text-center">
-          <div className="text-lg font-bold text-gray-900 dark:text-white">{stats.teamCount}</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Teams</div>
-        </div>
-
-        {/* Players */}
-        <div className="shrink-0 w-15 text-center">
-          <div className="text-lg font-bold text-gray-900 dark:text-white">{stats.playerCount}</div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Players</div>
-        </div>
-
-        {/* W-D-L */}
-        <div className="shrink-0 w-22.5 text-center">
-          <div className="text-sm">
-            <span className="font-semibold text-green-600 dark:text-green-400">{stats.wins}</span>
-            <span className="mx-1 text-gray-400">-</span>
-            <span className="font-semibold text-gray-500 dark:text-gray-400">{stats.draws}</span>
-            <span className="mx-1 text-gray-400">-</span>
-            <span className="font-semibold text-red-600 dark:text-red-400">{stats.losses}</span>
+        {/* Counts */}
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-center min-w-[36px]">
+            <div className="text-sm font-semibold text-gray-900 dark:text-white">{stats.teamCount}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Teams</div>
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">W - D - L</div>
+          <div className="text-center min-w-[36px]">
+            <div className="text-sm font-semibold text-gray-900 dark:text-white">{stats.playerCount}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Players</div>
+          </div>
+
+          {stats.wins !== undefined && (
+            <>
+              <div className="hidden sm:block text-center min-w-[52px]">
+                <div className="text-xs font-medium">
+                  <span className="text-green-600 dark:text-green-400">{stats.wins}</span>
+                  <span className="mx-0.5 text-gray-400">-</span>
+                  <span className="text-gray-500 dark:text-gray-400">{stats.draws}</span>
+                  <span className="mx-0.5 text-gray-400">-</span>
+                  <span className="text-red-600 dark:text-red-400">{stats.losses}</span>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">W-D-L</div>
+              </div>
+              <div className="hidden md:block text-center min-w-[44px]">
+                <div className={`text-sm font-semibold ${getPerformanceColorClass(stats.winRate ?? 0, 'winRate')}`}>
+                  {stats.winRate}%
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Win Rate</div>
+              </div>
+              <div className="hidden md:block text-center min-w-[32px]">
+                <div className={`text-sm font-semibold ${getPerformanceColorClass(stats.goalDifference ?? 0, 'goalDifference')}`}>
+                  {(stats.goalDifference ?? 0) >= 0 ? '+' : ''}{stats.goalDifference}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">GD</div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Win Rate */}
-        <div className="shrink-0 w-15 text-center">
-          <div className={`text-lg font-bold ${getPerformanceColorClass(stats.winRate, 'winRate')}`}>
-            {stats.winRate}%
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">Win Rate</div>
-        </div>
+        {badges && <div className="shrink-0 flex items-center gap-2">{badges}</div>}
+        {actions && <div className="shrink-0 flex items-center gap-2">{actions}</div>}
 
-        {/* Goal Difference */}
-        <div className="shrink-0 w-12.5 text-center">
-          <div className={`text-lg font-bold ${getPerformanceColorClass(stats.goalDifference, 'goalDifference')}`}>
-            {stats.goalDifference >= 0 ? '+' : ''}{stats.goalDifference}
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">GD</div>
-        </div>
-
-        {/* Badges */}
-        {badges && (
-          <div className="shrink-0 flex items-center gap-2">
-            {badges}
-          </div>
-        )}
-
-        {/* Actions */}
-        {actions && (
-          <div className="shrink-0 flex items-center gap-2">
-            {actions}
-          </div>
-        )}
-
-        {/* Arrow indicator */}
-        <div className="shrink-0">
-          <span className="text-gray-400 dark:text-gray-500">→</span>
-        </div>
+        <span className="text-gray-400 dark:text-gray-500 shrink-0">→</span>
       </div>
     </div>
   );

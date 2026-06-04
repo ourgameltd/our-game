@@ -5,12 +5,9 @@ import { Plus, Users } from 'lucide-react';
 import { apiClient } from '@/api';
 import type {
   ClubDetailDto,
-  ClubStatisticsDto,
-  AgeGroupListDto,
-  AgeGroupStatisticsDto
+  AgeGroupListDto
 } from '@/api';
 import type { SquadSize } from '@/types';
-import MatchesCard from '@components/matches/MatchesCard';
 import AgeGroupListCard from '@components/ageGroup/AgeGroupListCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
@@ -27,14 +24,9 @@ export default function ClubOverviewPage() {
   const [clubLoading, setClubLoading] = useState(true);
   const [clubError, setClubError] = useState<string | null>(null);
 
-  const [stats, setStats] = useState<ClubStatisticsDto | null>(null);
-  const [statsLoading, setStatsLoading] = useState(true);
-
   const [ageGroups, setAgeGroups] = useState<AgeGroupListDto[]>([]);
   const [ageGroupsLoading, setAgeGroupsLoading] = useState(true);
   const [ageGroupsError, setAgeGroupsError] = useState<string | null>(null);
-
-  const [ageGroupStats, setAgeGroupStats] = useState<Map<string, AgeGroupStatisticsDto>>(new Map());
 
   usePageTitle([club?.name ?? 'Club', 'Overview'], !!club);
 
@@ -57,18 +49,6 @@ export default function ClubOverviewPage() {
       })
       .finally(() => setClubLoading(false));
 
-    setStatsLoading(true);
-    apiClient.clubs.getClubStatistics(clubId)
-      .then((response) => {
-        if (response.success && response.data) {
-          setStats(response.data);
-        }
-      })
-      .catch((err) => {
-        console.error('Failed to fetch statistics:', err);
-      })
-      .finally(() => setStatsLoading(false));
-
     setAgeGroupsLoading(true);
     apiClient.clubs.getAgeGroups(clubId, false)
       .then((response) => {
@@ -77,20 +57,7 @@ export default function ClubOverviewPage() {
             .filter(ag => !ag.isArchived)
             .sort((a, b) => a.name.localeCompare(b.name));
           setAgeGroups(sortedAgeGroups);
-          setAgeGroupStats(new Map());
           setAgeGroupsError(null);
-
-          sortedAgeGroups.forEach(ag => {
-            apiClient.ageGroups.getStatistics(ag.id, ag.season)
-              .then((statsResponse) => {
-                if (statsResponse.success && statsResponse.data) {
-                  setAgeGroupStats(prev => new Map(prev).set(ag.id, statsResponse.data!));
-                }
-              })
-              .catch((err) => {
-                console.error(`Failed to fetch stats for age group ${ag.id}:`, err);
-              });
-          });
         } else {
           setAgeGroupsError(response.error?.message || 'Failed to load age groups');
         }
@@ -122,7 +89,7 @@ export default function ClubOverviewPage() {
     );
   }
 
-  if (clubLoading || statsLoading || ageGroupsLoading) {
+  if (clubLoading || ageGroupsLoading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <main className="mx-auto px-4 py-4 animate-pulse">
@@ -145,12 +112,6 @@ export default function ClubOverviewPage() {
               ))}
             </div>
           </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {Array.from({ length: 2 }).map((_, index) => (
-              <div key={index} className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-            ))}
-          </div>
         </main>
       </div>
     );
@@ -171,39 +132,6 @@ export default function ClubOverviewPage() {
     }
     return 'youth';
   };
-
-  const toDate = (value?: string) => (value ? new Date(value) : undefined);
-
-  const upcomingMatches = stats?.upcomingMatches.map(m => ({
-    id: m.id,
-    teamId: m.teamId,
-    opposition: m.opposition,
-    date: new Date(m.date),
-    meetTime: toDate(m.meetTime),
-    kickOffTime: toDate(m.kickOffTime) ?? new Date(m.date),
-    location: m.location || '',
-    isHome: m.isHome,
-    competition: m.competition || '',
-    status: 'scheduled' as const,
-    score: undefined
-  })) ?? [];
-
-  const previousResults = stats?.previousResults.map(m => ({
-    id: m.id,
-    teamId: m.teamId,
-    opposition: m.opposition,
-    date: new Date(m.date),
-    meetTime: toDate(m.meetTime),
-    kickOffTime: toDate(m.kickOffTime) ?? new Date(m.date),
-    location: m.location || '',
-    isHome: m.isHome,
-    competition: m.competition || '',
-    status: 'completed' as const,
-    score: m.score ? {
-      home: m.score.home,
-      away: m.score.away
-    } : undefined
-  })) ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -240,63 +168,53 @@ export default function ClubOverviewPage() {
             </div>
           ) : ageGroups.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-              {ageGroups.map(ageGroup => {
-                const agStats = ageGroupStats.get(ageGroup.id);
-                
-                return (
-                  <Link
-                    key={ageGroup.id}
-                    to={Routes.ageGroup(clubId, ageGroup.id)}
-                    className="block"
-                  >
-                    <AgeGroupListCard
-                      ageGroup={{
-                        id: ageGroup.id,
-                        clubId: ageGroup.clubId,
-                        name: ageGroup.name,
-                        code: ageGroup.code,
-                        level: normalizeLevel(ageGroup.level),
-                        season: ageGroup.season,
-                        seasons: ageGroup.seasons,
-                        defaultSeason: ageGroup.defaultSeason,
-                        defaultSquadSize: [4, 5, 7, 9, 11].includes(ageGroup.defaultSquadSize)
-                          ? (ageGroup.defaultSquadSize as SquadSize)
-                          : undefined,
-                        description: ageGroup.description,
-                        coordinatorIds: [],
-                        isArchived: ageGroup.isArchived
-                      }}
-                      club={{
-                        id: club.id,
-                        name: club.name,
-                        shortName: club.shortName,
-                        logo: club.logo ?? '',
-                        colors: {
-                          primary: club.colors.primary,
-                          secondary: club.colors.secondary,
-                          accent: club.colors.accent
-                        },
-                        location: club.location,
-                        founded: club.founded ?? 0,
-                        history: club.history,
-                        ethos: club.ethos,
-                        principles: club.principles,
-                        kits: []
-                      }}
-                      stats={{
-                        teamCount: ageGroup.teamCount,
-                        playerCount: agStats?.playerCount ?? 0,
-                        matchesPlayed: agStats?.matchesPlayed ?? 0,
-                        wins: agStats?.wins ?? 0,
-                        draws: agStats?.draws ?? 0,
-                        losses: agStats?.losses ?? 0,
-                        winRate: agStats?.winRate ?? 0,
-                        goalDifference: agStats?.goalDifference ?? 0
-                      }}
-                    />
-                  </Link>
-                );
-              })}
+              {ageGroups.map(ageGroup => (
+                <Link
+                  key={ageGroup.id}
+                  to={Routes.ageGroup(clubId, ageGroup.id)}
+                  className="block"
+                >
+                  <AgeGroupListCard
+                    ageGroup={{
+                      id: ageGroup.id,
+                      clubId: ageGroup.clubId,
+                      name: ageGroup.name,
+                      code: ageGroup.code,
+                      level: normalizeLevel(ageGroup.level),
+                      season: ageGroup.season,
+                      seasons: ageGroup.seasons,
+                      defaultSeason: ageGroup.defaultSeason,
+                      defaultSquadSize: [4, 5, 7, 9, 11].includes(ageGroup.defaultSquadSize)
+                        ? (ageGroup.defaultSquadSize as SquadSize)
+                        : undefined,
+                      description: ageGroup.description,
+                      coordinatorIds: [],
+                      isArchived: ageGroup.isArchived
+                    }}
+                    club={{
+                      id: club.id,
+                      name: club.name,
+                      shortName: club.shortName,
+                      logo: club.logo ?? '',
+                      colors: {
+                        primary: club.colors.primary,
+                        secondary: club.colors.secondary,
+                        accent: club.colors.accent
+                      },
+                      location: club.location,
+                      founded: club.founded ?? 0,
+                      history: club.history,
+                      ethos: club.ethos,
+                      principles: club.principles,
+                      kits: []
+                    }}
+                    stats={{
+                      teamCount: ageGroup.teamCount,
+                      playerCount: ageGroup.playerCount ?? 0
+                    }}
+                  />
+                </Link>
+              ))}
             </div>
           ) : (
             <EmptyState
@@ -315,46 +233,6 @@ export default function ClubOverviewPage() {
           )}
         </div>
 
-        {stats && (
-          <div className="grid md:grid-cols-2 gap-4">
-            <MatchesCard 
-              type="upcoming"
-              matches={upcomingMatches}
-              limit={3}
-              viewAllLink={Routes.clubMatches(clubId)}
-              showTeamInfo={true}
-              getTeamInfo={(match) => ({
-                teamName: stats.upcomingMatches.find(m => m.id === match.id)?.teamName || 'Unknown',
-                ageGroupName: stats.upcomingMatches.find(m => m.id === match.id)?.ageGroupName || 'Unknown'
-              })}
-              getMatchLink={(matchId) => {
-                const matchData = stats.upcomingMatches.find(m => m.id === matchId);
-                if (matchData) {
-                  return Routes.matchReport(clubId, matchData.ageGroupId, matchData.teamId, matchId);
-                }
-                return '#';
-              }}
-            />
-            <MatchesCard 
-              type="results"
-              matches={previousResults}
-              limit={3}
-              viewAllLink={Routes.clubMatches(clubId)}
-              showTeamInfo={true}
-              getTeamInfo={(match) => ({
-                teamName: stats.previousResults.find(m => m.id === match.id)?.teamName || 'Unknown',
-                ageGroupName: stats.previousResults.find(m => m.id === match.id)?.ageGroupName || 'Unknown'
-              })}
-              getMatchLink={(matchId) => {
-                const matchData = stats.previousResults.find(m => m.id === matchId);
-                if (matchData) {
-                  return Routes.matchReport(clubId, matchData.ageGroupId, matchData.teamId, matchId);
-                }
-                return '#';
-              }}
-            />
-          </div>
-        )}
       </main>
     </div>
   );

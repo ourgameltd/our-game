@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell, Pencil, Bold, Italic, Heading1, Heading2, Heading3, Heading4, List, ListOrdered, Quote } from 'lucide-react';
+import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell, Pencil, Bold, Italic, Heading1, Heading2, Heading3, Heading4, List, ListOrdered, Quote, Share2 } from 'lucide-react';
 const Timeline = ({ className, children }: { className?: string; children?: React.ReactNode }) => <ul className={className}>{children}</ul>;
 const TimelineItem = ({ className, children }: { className?: string; children?: React.ReactNode }) => <li className={className}>{children}</li>;
 const TimelineHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`flex items-center ${className ?? ''}`}>{children}</div>;
@@ -17,7 +17,7 @@ import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, 
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch } from '@/api/hooks';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch, usePublishMatchReport } from '@/api/hooks';
 import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
@@ -287,6 +287,7 @@ export default function AddEditMatchPage() {
   const { createMatch, isSubmitting: isCreating, error: createError } = useCreateMatch();
   const { updateMatch, isSubmitting: isUpdating, error: updateError } = useUpdateMatch(matchId || '');
   const { notifyMatch, isSubmitting: isNotifying } = useNotifyMatch(matchId || '');
+  const { publishMatchReport, isSubmitting: isPublishing } = usePublishMatchReport(matchId || '');
   
   // Get available seasons from age group
   const availableSeasons = ageGroup?.seasons || [];
@@ -411,6 +412,9 @@ export default function AddEditMatchPage() {
   // Attendance state - derive from team players, not from DTO (attendance not in MatchDetailDto)
   const [attendance, setAttendance] = useState<{ playerId: string; status: 'confirmed' | 'declined' | 'pending'; notes?: string }[]>([]);
   const [coachAttendance, setCoachAttendance] = useState<{ coachId: string; status: 'confirmed' | 'declined' | 'pending'; notes?: string }[]>([]);
+
+  const [isPublished, setIsPublished] = useState(false);
+  const [publishError, setPublishError] = useState<string | null>(null);
 
   const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report' | 'attendance'>('details');
   const [showWeatherSection, setShowWeatherSection] = useState(false);
@@ -624,6 +628,7 @@ export default function AddEditMatchPage() {
       setPlayerOfTheMatch(existingMatch.report?.playerOfMatchId || '');
       setCaptainId(existingMatch.report?.captainId || '');
       setNotes(existingMatch.notes || '');
+      setIsPublished(existingMatch.isPublished ?? false);
       setAssignedCoachIds(
         (existingMatch.coaches || []).map(c => c.coachId).filter((id): id is string => id !== undefined)
       );
@@ -1436,6 +1441,17 @@ export default function AddEditMatchPage() {
     }
   };
 
+  const handlePublishToggle = async () => {
+    setPublishError(null);
+    const nextPublishedState = !isPublished;
+    const response = await publishMatchReport(nextPublishedState);
+    if (!response.success) {
+      setPublishError(response.error?.message || 'Failed to update publish status.');
+      return;
+    }
+    setIsPublished(nextPublishedState);
+  };
+
   const handleNotify = async () => {
     const response = await notifyMatch();
     if (response.success) {
@@ -1622,22 +1638,11 @@ export default function AddEditMatchPage() {
           subtitle={team.team.name}
           backLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
         />
-        {isEditing && (
+        {isEditing && existingMatch?.status === 'completed' && (
           <div className="flex items-center gap-3 mb-4">
-            {existingMatch?.status === 'completed' && (
-              <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg font-medium">
-                ✓ Completed
-              </span>
-            )}
-            <button
-              type="button"
-              onClick={handleNotify}
-              disabled={isNotifying}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Bell className="w-4 h-4" />
-              <span className="hidden sm:inline">{isNotifying ? 'Sending...' : 'Notify'}</span>
-            </button>
+            <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg font-medium">
+              ✓ Completed
+            </span>
           </div>
         )}
 
@@ -3189,20 +3194,51 @@ export default function AddEditMatchPage() {
 
           {/* Action Buttons */}
           <div className="mt-4">
-            <div className="flex justify-end">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              {/* Left side - Publish + Notify */}
+              {isEditing && (
+                <div className="flex flex-col gap-1">
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={handlePublishToggle}
+                      disabled={isPublishing}
+                      className="btn btn-md btn-secondary gap-2"
+                      title={isPublished ? 'Unpublish report' : 'Publish report'}
+                    >
+                      <Share2 className="w-4 h-4" />
+                      {isPublished ? 'Unpublish' : 'Publish'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleNotify}
+                      disabled={isNotifying}
+                      className="btn btn-md btn-secondary gap-2"
+                      title="Send notifications to players and coaches"
+                    >
+                      <Bell className="w-4 h-4" />
+                      {isNotifying ? 'Sending...' : 'Notify'}
+                    </button>
+                  </div>
+                  {publishError && (
+                    <p className="text-xs text-red-600 dark:text-red-400">{publishError}</p>
+                  )}
+                </div>
+              )}
+
               {/* Right side - Standard form actions */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+              <div className="flex flex-col sm:flex-row gap-2 sm:ml-auto">
                 <button
                   type="button"
                   onClick={() => navigate(Routes.matches(clubId!, ageGroupId!, teamId!))}
-                  className="px-4 sm:px-6 py-2 text-sm sm:text-base border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  className="btn btn-md btn-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-4 sm:px-6 py-2 text-sm sm:text-base bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-green-600"
+                  className="btn btn-md btn-success"
                 >
                   {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Match'}
                 </button>

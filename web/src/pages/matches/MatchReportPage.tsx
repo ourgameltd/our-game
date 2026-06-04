@@ -1,8 +1,8 @@
 import { useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
-import { Share2, FileText, CalendarPlus, Map } from 'lucide-react';
+import { FileText, CalendarPlus, Map } from 'lucide-react';
 import Markdown from 'react-markdown';
-import { useMatchReport, usePublishMatchReport, useCurrentUser, useMyChildren, useUpdateMyMatchAttendance } from '@/api/hooks';
+import { useMatchReport, useCurrentUser, useMyChildren, useUpdateMyMatchAttendance } from '@/api/hooks';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { coachRoleDisplay } from '@/constants/coachRoleDisplay';
 import { Routes } from '@/utils/routes';
@@ -13,12 +13,10 @@ import AttendanceResponse from '@components/AttendanceResponse';
 export default function MatchReportPage() {
   const { matchId, clubId, ageGroupId, teamId } = useParams();
   const { data: match, isLoading, error } = useMatchReport(matchId);
-  const { publishMatchReport, isSubmitting } = usePublishMatchReport(matchId || '');
   const { setEntityName } = useNavigation();
   const { data: currentUser } = useCurrentUser();
   const { data: myChildren } = useMyChildren();
   const { submit: submitAttendance, isSubmitting: attendanceSubmitting } = useUpdateMyMatchAttendance(matchId || '');
-  const [publishError, setPublishError] = useState<string | null>(null);
   const [isPublished, setIsPublished] = useState(false);
   // Track attendance status overrides after user responds
   const [attendanceOverrides, setAttendanceOverrides] = useState<Record<string, string>>({});
@@ -169,24 +167,6 @@ export default function MatchReportPage() {
   const startingEleven = match.lineup?.players.filter(p => p.isStarting) || [];
   const substitutes = match.lineup?.players.filter(p => !p.isStarting) || [];
 
-  const handlePublishToggle = async () => {
-    if (!matchId || !clubId || !ageGroupId || !teamId) {
-      return;
-    }
-
-    setPublishError(null);
-
-    const nextPublishedState = !isPublished;
-    const response = await publishMatchReport(nextPublishedState);
-
-    if (!response.success) {
-      setPublishError(response.error?.message || 'Failed to update publish status.');
-      return;
-    }
-
-    setIsPublished(nextPublishedState);
-  };
-
   const handleAddToCalendar = () => {
     const meet = new Date(match.meetTime!);
     const end = new Date(meet.getTime() + 2 * 60 * 60 * 1000);
@@ -223,45 +203,25 @@ export default function MatchReportPage() {
             icon: 'settings',
           }}
         />
-        <div className="flex justify-end gap-3 mb-4">
-          <button
-            onClick={handlePublishToggle}
-            disabled={isSubmitting || !match.report}
-            className="btn-md btn-secondary whitespace-nowrap flex items-center gap-2 disabled:opacity-50"
-            title="Publish report"
-          >
-            <Share2 className="w-5 h-5" />
-            {isPublished ? 'Unpublish' : 'Publish'}
-          </button>
-        </div>
-
-        {publishError && (
-          <div className="mb-4 rounded border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
-            {publishError}
-          </div>
-        )}
-
-        {/* Match Header */}
+        {/* Game Details */}
         <div className="card mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Game Details</h2>
+            {isPublished && (
+              <a
+                href={socialShareUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View Published Report"
+                title="View Published Report"
+                className="btn-sm btn-secondary btn-icon"
+              >
+                <FileText className="w-4 h-4" />
+              </a>
+            )}
+          </div>
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {homeTeam} vs {awayTeam}
-                </h1>
-                {isPublished && (
-                  <a
-                    href={socialShareUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="View Published Report"
-                    title="View Published Report"
-                    className="btn-sm btn-secondary btn-icon"
-                  >
-                    <FileText className="w-4 h-4" />
-                  </a>
-                )}
-              </div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>📅 {new Date(match.matchDate).toLocaleDateString()}</span>
                 {match.kickOffTime && (
@@ -314,7 +274,7 @@ export default function MatchReportPage() {
                 )}
               </div>
             </div>
-            {match.homeScore !== undefined && match.awayScore !== undefined && (
+            {match.homeScore != null && match.awayScore != null && (
               <div className="flex items-center gap-4 mt-4 md:mt-0">
                 <span className="text-4xl font-bold text-gray-900 dark:text-white">
                   {match.homeScore} - {match.awayScore}
@@ -573,7 +533,7 @@ export default function MatchReportPage() {
             {/* Your Attendance */}
             {(() => {
               const children = myChildren ?? [];
-              const rows: { label?: string; status: string; playerId?: string }[] = [];
+              const rows: { label?: string; photo?: string; initials?: string; status: string; playerId?: string }[] = [];
 
               if (currentUser?.playerId) {
                 const rec = match.attendance.find(a => a.playerId === currentUser.playerId);
@@ -582,14 +542,19 @@ export default function MatchReportPage() {
 
               if (currentUser?.coachId) {
                 const rec = match.coaches.find(c => c.coachId === currentUser.coachId);
-                if (rec) rows.push({ status: attendanceOverrides['coach'] ?? rec.status });
+                if (rec) rows.push({
+                  photo: currentUser.photo || undefined,
+                  initials: `${currentUser.firstName[0]}${currentUser.lastName[0]}`,
+                  status: attendanceOverrides['coach'] ?? rec.status,
+                });
               }
 
               for (const child of children) {
                 const rec = match.attendance.find(a => a.playerId === child.id);
                 if (rec) {
                   rows.push({
-                    label: `${child.firstName} ${child.lastName}`,
+                    photo: child.photo,
+                    initials: `${child.firstName[0]}${child.lastName[0]}`,
                     status: attendanceOverrides[child.id] ?? rec.status,
                     playerId: child.id,
                   });
@@ -610,6 +575,8 @@ export default function MatchReportPage() {
                         onDecline={() => handleAttendanceRespond('declined', row.playerId)}
                         isSubmitting={attendanceSubmitting}
                         label={row.label}
+                        photo={row.photo}
+                        initials={row.initials}
                       />
                     ))}
                   </div>

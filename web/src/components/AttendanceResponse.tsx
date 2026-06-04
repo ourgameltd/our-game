@@ -4,6 +4,8 @@ interface AttendanceResponseProps {
   onDecline: () => void;
   isSubmitting: boolean;
   label?: string;
+  photo?: string;
+  initials?: string;
 }
 
 const statusConfig = {
@@ -21,14 +23,22 @@ const statusConfig = {
   },
 };
 
-export default function AttendanceResponse({ status, onConfirm, onDecline, isSubmitting, label }: AttendanceResponseProps) {
+export default function AttendanceResponse({ status, onConfirm, onDecline, isSubmitting, label, photo, initials }: AttendanceResponseProps) {
   const config = statusConfig[status as keyof typeof statusConfig] ?? statusConfig.pending;
 
   return (
     <div className="flex items-center gap-2 flex-wrap">
-      {label && (
+      {(photo || initials) ? (
+        photo ? (
+          <img src={photo} alt={label} className="w-8 h-8 rounded-full object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-8 h-8 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+            {initials}
+          </div>
+        )
+      ) : label ? (
         <span className="text-sm text-gray-600 dark:text-gray-400 mr-1">{label}:</span>
-      )}
+      ) : null}
       <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${config.badge}`}>
         {config.text}
       </span>

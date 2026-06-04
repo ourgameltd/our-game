@@ -114,7 +114,7 @@ export default function TrainingSessionPage() {
   const children = myChildren ?? [];
 
   // Build my attendance rows
-  const myAttendanceRows: { label?: string; status: string; playerId?: string }[] = [];
+  const myAttendanceRows: { label?: string; photo?: string; initials?: string; status: string; playerId?: string }[] = [];
 
   if (currentUser?.playerId) {
     const rec = session.attendance.find(a => a.playerId === currentUser.playerId);
@@ -123,14 +123,19 @@ export default function TrainingSessionPage() {
 
   if (currentUser?.coachId) {
     const rec = session.coaches.find(c => c.coachId === currentUser.coachId);
-    if (rec) myAttendanceRows.push({ status: attendanceOverrides['coach'] ?? rec.status });
+    if (rec) myAttendanceRows.push({
+      photo: currentUser.photo || undefined,
+      initials: `${currentUser.firstName[0]}${currentUser.lastName[0]}`,
+      status: attendanceOverrides['coach'] ?? rec.status,
+    });
   }
 
   for (const child of children) {
     const rec = session.attendance.find(a => a.playerId === child.id);
     if (rec) {
       myAttendanceRows.push({
-        label: `${child.firstName} ${child.lastName}`,
+        photo: child.photo,
+        initials: `${child.firstName[0]}${child.lastName[0]}`,
         status: attendanceOverrides[child.id] ?? rec.status,
         playerId: child.id,
       });
@@ -150,8 +155,9 @@ export default function TrainingSessionPage() {
           } : undefined}
         />
 
-        {/* Session Header */}
+        {/* Session Details */}
         <div className="card mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Session Details</h2>
           <div className="mb-2">
             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span>📅 {sessionDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
@@ -204,6 +210,8 @@ export default function TrainingSessionPage() {
                   onDecline={() => handleAttendanceRespond('declined', row.playerId)}
                   isSubmitting={attendanceSubmitting}
                   label={row.label}
+                  photo={row.photo}
+                  initials={row.initials}
                 />
               ))}
             </div>

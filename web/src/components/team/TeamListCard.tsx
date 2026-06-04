@@ -5,12 +5,12 @@ import { getPerformanceColorClass } from '@utils/colorHelpers';
 interface TeamStats {
   playerCount: number;
   coachCount: number;
-  matchesPlayed: number;
-  wins: number;
-  draws: number;
-  losses: number;
-  winRate: number;
-  goalDifference: number;
+  matchesPlayed?: number;
+  wins?: number;
+  draws?: number;
+  losses?: number;
+  winRate?: number;
+  goalDifference?: number;
 }
 
 interface TeamListCardProps {
@@ -32,156 +32,79 @@ const TeamListCard: React.FC<TeamListCardProps> = ({
 }) => {
   return (
     <div
-      className={`bg-white dark:bg-gray-800 rounded-lg md:rounded-none p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors overflow-hidden ${
+      className={`bg-white dark:bg-gray-800 rounded-lg md:rounded-none px-4 py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b last:border-b-0 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors overflow-hidden ${
         team.isArchived ? 'opacity-75' : ''
       } ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
-      {/* Mobile: Card Layout */}
-      <div className="md:hidden">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-start justify-between">
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 dark:text-white">{team.name}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                {ageGroup?.name && <span>{ageGroup.name} • </span>}
-                {team.level.charAt(0).toUpperCase() + team.level.slice(1)}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs">
-                {team.level.charAt(0).toUpperCase() + team.level.slice(1)}
-              </span>
-              {team.isArchived && (
-                <span className="badge bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs">
-                  🗄️ Archived
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Grid */}
-        <div className="p-4">
-          <div className="grid grid-cols-4 gap-3 mb-4">
-            <div className="text-center">
-              <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.playerCount}</div>
-              <div className="text-xs text-gray-500">Players</div>
-            </div>
-            <div className="text-center">
-              <div className="text-xl font-bold text-gray-900 dark:text-white">{stats.coachCount}</div>
-              <div className="text-xs text-gray-500">Coaches</div>
-            </div>
-            <div className="text-center">
-              <div className={`text-xl font-bold ${getPerformanceColorClass(stats.winRate, 'winRate')}`}>
-                {stats.winRate}%
-              </div>
-              <div className="text-xs text-gray-500">Win Rate</div>
-            </div>
-            <div className="text-center">
-              <div className={`text-xl font-bold ${getPerformanceColorClass(stats.goalDifference, 'goalDifference')}`}>
-                {stats.goalDifference >= 0 ? '+' : ''}{stats.goalDifference}
-              </div>
-              <div className="text-xs text-gray-500">Goal Diff</div>
-            </div>
-          </div>
-
-          {/* W-D-L Record */}
-          <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm">
-              <span className="font-semibold text-green-600 dark:text-green-400">{stats.wins}W</span>
-              <span className="mx-2 text-gray-400">-</span>
-              <span className="font-semibold text-gray-600 dark:text-gray-400">{stats.draws}D</span>
-              <span className="mx-2 text-gray-400">-</span>
-              <span className="font-semibold text-red-600 dark:text-red-400">{stats.losses}L</span>
-            </div>
-            <span className="text-primary-600 dark:text-primary-400 font-semibold text-sm">
-              View →
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Desktop: Row Layout */}
-      <div className="hidden md:flex md:items-center md:gap-4">
-        {/* Color indicator */}
-        <div className="w-1 self-stretch rounded-full flex-shrink-0 bg-primary-500 dark:bg-primary-400" />
+      <div className="flex items-center gap-3">
+        {/* Indicator */}
+        <div className="w-1 self-stretch rounded-full shrink-0 bg-primary-500 dark:bg-primary-400" />
 
         {/* Name & Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+            <span className="text-sm font-semibold text-gray-900 dark:text-white truncate">
               {team.name}
-            </h3>
-            <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs">
+            </span>
+            <span className="hidden sm:inline-flex badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs shrink-0">
               {team.level.charAt(0).toUpperCase() + team.level.slice(1)}
             </span>
+            {team.isArchived && (
+              <span className="hidden sm:inline-flex badge bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs shrink-0">
+                🗄️ Archived
+              </span>
+            )}
           </div>
           <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-            {ageGroup?.name && <span>{ageGroup.name} • </span>}
+            {ageGroup?.name && <span>{ageGroup.name} · </span>}
             Season: {team.season}
           </p>
         </div>
 
-        {/* Players */}
-        <div className="flex-shrink-0 w-[60px] text-center">
-          <div className="text-lg font-bold text-gray-900 dark:text-white">{stats.playerCount}</div>
-          <div className="text-xs text-gray-500">Players</div>
-        </div>
-
-        {/* Coaches */}
-        <div className="flex-shrink-0 w-[60px] text-center">
-          <div className="text-lg font-bold text-gray-900 dark:text-white">{stats.coachCount}</div>
-          <div className="text-xs text-gray-500">Coaches</div>
-        </div>
-
-        {/* W-D-L */}
-        <div className="flex-shrink-0 w-[90px] text-center">
-          <div className="text-sm">
-            <span className="font-semibold text-green-600 dark:text-green-400">{stats.wins}</span>
-            <span className="mx-1 text-gray-400">-</span>
-            <span className="font-semibold text-gray-500 dark:text-gray-400">{stats.draws}</span>
-            <span className="mx-1 text-gray-400">-</span>
-            <span className="font-semibold text-red-600 dark:text-red-400">{stats.losses}</span>
+        {/* Counts */}
+        <div className="flex items-center gap-4 shrink-0">
+          <div className="text-center min-w-[36px]">
+            <div className="text-sm font-semibold text-gray-900 dark:text-white">{stats.playerCount}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Players</div>
           </div>
-          <div className="text-xs text-gray-500">W - D - L</div>
+          <div className="text-center min-w-[36px]">
+            <div className="text-sm font-semibold text-gray-900 dark:text-white">{stats.coachCount}</div>
+            <div className="text-xs text-gray-500 dark:text-gray-400">Coaches</div>
+          </div>
+
+          {stats.wins !== undefined && (
+            <>
+              <div className="hidden sm:block text-center min-w-[52px]">
+                <div className="text-xs font-medium">
+                  <span className="text-green-600 dark:text-green-400">{stats.wins}</span>
+                  <span className="mx-0.5 text-gray-400">-</span>
+                  <span className="text-gray-500 dark:text-gray-400">{stats.draws}</span>
+                  <span className="mx-0.5 text-gray-400">-</span>
+                  <span className="text-red-600 dark:text-red-400">{stats.losses}</span>
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">W-D-L</div>
+              </div>
+              <div className="hidden md:block text-center min-w-[44px]">
+                <div className={`text-sm font-semibold ${getPerformanceColorClass(stats.winRate ?? 0, 'winRate')}`}>
+                  {stats.winRate}%
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">Win Rate</div>
+              </div>
+              <div className="hidden md:block text-center min-w-[32px]">
+                <div className={`text-sm font-semibold ${getPerformanceColorClass(stats.goalDifference ?? 0, 'goalDifference')}`}>
+                  {(stats.goalDifference ?? 0) >= 0 ? '+' : ''}{stats.goalDifference}
+                </div>
+                <div className="text-xs text-gray-500 dark:text-gray-400">GD</div>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Win Rate */}
-        <div className="flex-shrink-0 w-[60px] text-center">
-          <div className={`text-lg font-bold ${getPerformanceColorClass(stats.winRate, 'winRate')}`}>
-            {stats.winRate}%
-          </div>
-          <div className="text-xs text-gray-500">Win Rate</div>
-        </div>
+        {badges && <div className="shrink-0 flex items-center gap-2">{badges}</div>}
+        {actions && <div className="shrink-0 flex items-center gap-2">{actions}</div>}
 
-        {/* Goal Difference */}
-        <div className="flex-shrink-0 w-[50px] text-center">
-          <div className={`text-lg font-bold ${getPerformanceColorClass(stats.goalDifference, 'goalDifference')}`}>
-            {stats.goalDifference >= 0 ? '+' : ''}{stats.goalDifference}
-          </div>
-          <div className="text-xs text-gray-500">GD</div>
-        </div>
-
-        {/* Badges */}
-        {badges && (
-          <div className="flex-shrink-0 flex items-center gap-2">
-            {badges}
-          </div>
-        )}
-
-        {/* Actions */}
-        {actions && (
-          <div className="flex-shrink-0 flex items-center gap-2">
-            {actions}
-          </div>
-        )}
-
-        {/* Arrow indicator */}
-        <div className="flex-shrink-0">
-          <span className="text-gray-400 dark:text-gray-500">→</span>
-        </div>
+        <span className="text-gray-400 dark:text-gray-500 shrink-0">→</span>
       </div>
     </div>
   );
