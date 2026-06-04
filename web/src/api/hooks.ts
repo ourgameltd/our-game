@@ -1674,6 +1674,38 @@ export function useNotifyMatch(matchId: string): {
   return { notifyMatch, isSubmitting, error };
 }
 
+export function useNotifyTrainingSession(sessionId: string): {
+  notifySession: () => Promise<ApiResponse<void>>;
+  isSubmitting: boolean;
+  error: ApiError | null;
+} {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const notifySession = useCallback(async (): Promise<ApiResponse<void>> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.trainingSessions.notify(sessionId);
+      if (!response.success) {
+        setError({
+          message: response.error?.message || 'Failed to send notifications',
+          statusCode: response.error?.statusCode,
+        });
+      }
+      return response;
+    } catch (err) {
+      const apiError = { message: err instanceof Error ? err.message : 'An unexpected error occurred' };
+      setError(apiError);
+      return { success: false, error: apiError };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [sessionId]);
+
+  return { notifySession, isSubmitting, error };
+}
+
 export function useUpdateMyMatchAttendance(matchId: string): {
   submit: (status: 'confirmed' | 'declined', playerId?: string) => Promise<ApiResponse<void>>;
   isSubmitting: boolean;

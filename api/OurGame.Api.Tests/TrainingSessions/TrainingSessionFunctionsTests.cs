@@ -9,6 +9,7 @@ using OurGame.Application.UseCases.TrainingSessions.Commands.CreateTrainingSessi
 using OurGame.Application.UseCases.TrainingSessions.Commands.CreateTrainingSession.DTOs;
 using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateTrainingSession;
 using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateTrainingSession.DTOs;
+using OurGame.Application.UseCases.TrainingSessions.Commands.SendTrainingSessionNotification;
 
 namespace OurGame.Api.Tests.TrainingSessions;
 
@@ -422,6 +423,71 @@ public class TrainingSessionFunctionsTests
         Assert.Equal(200, payload.StatusCode);
         Assert.NotNull(payload.Data);
         Assert.Equal(expected.Id, payload.Data!.Id);
+    }
+
+    // ── NotifyTrainingSession ────────────────────────────────────────────
+
+    [Fact]
+    public async Task NotifyTrainingSession_ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        var sessionId = Guid.NewGuid();
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("POST", $"https://localhost/v1/training-sessions/{sessionId}/notify");
+
+        var response = await sut.NotifyTrainingSession(req, sessionId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task NotifyTrainingSession_ReturnsBadRequest_WhenIdIsNotValidGuid()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var sut = BuildSut(new TestMediator());
+        var req = CreateAuthedRequest("POST", "https://localhost/v1/training-sessions/not-a-guid/notify", authId);
+
+        var response = await sut.NotifyTrainingSession(req, "not-a-guid");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<object>(response);
+        Assert.False(payload.Success);
+        Assert.Equal(400, payload.StatusCode);
+        Assert.Equal("Invalid session ID format", payload.Error?.Message);
+    }
+
+    [Fact]
+    public async Task NotifyTrainingSession_ReturnsNotFound_WhenSessionNotFound()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var sessionId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<SendTrainingSessionNotificationCommand>((_, _) =>
+            throw new NotFoundException("TrainingSession", sessionId));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/training-sessions/{sessionId}/notify", authId);
+
+        var response = await sut.NotifyTrainingSession(req, sessionId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task NotifyTrainingSession_ReturnsNoContent_WhenSuccessful()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var sessionId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<SendTrainingSessionNotificationCommand>((_, _) => Task.CompletedTask);
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/training-sessions/{sessionId}/notify", authId);
+
+        var response = await sut.NotifyTrainingSession(req, sessionId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
     }
 
     // ── Helpers ─────────────────────────────────────────────────────────

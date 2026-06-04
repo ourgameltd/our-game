@@ -12,6 +12,7 @@ using OurGame.Application.UseCases.TrainingSessions.Commands.CreateTrainingSessi
 using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateTrainingSession;
 using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateTrainingSession.DTOs;
 using OurGame.Application.UseCases.TrainingSessions.Commands.UpdateMySessionAttendance;
+using OurGame.Application.UseCases.TrainingSessions.Commands.SendTrainingSessionNotification;
 using OurGame.Application.UseCases.TrainingSessions.Queries.GetTrainingSessionById;
 using OurGame.Application.UseCases.TrainingSessions.Queries.GetTrainingSessionById.DTOs;
 using System.Net;
@@ -438,6 +439,61 @@ public class TrainingSessionFunctions
             var error = req.CreateResponse(HttpStatusCode.InternalServerError);
             await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("An error occurred", 500), ct);
             return error;
+        }
+    }
+
+    // ── NotifyTrainingSession ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Send push notifications to all players, parents and coaches assigned to a training session.
+    /// </summary>
+    [Function("NotifyTrainingSession")]
+    [OpenApiOperation(
+        operationId: "NotifyTrainingSession",
+        tags: new[] { "TrainingSessions" },
+        Summary = "Notify training session participants",
+        Description = "Sends a push notification to all players in the attendance list, their parents, and assigned coaches for the session.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The training session ID")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Notifications sent")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Training session not found")]
+    public async Task<HttpResponseData> NotifyTrainingSession(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/training-sessions/{id}/notify")] HttpRequestData req,
+        string id,
+        CancellationToken ct = default)
+    {
+        var userId = req.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+        }
+
+        if (!Guid.TryParse(id, out var sessionGuid))
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid session ID format", 400), ct);
+            return badRequest;
+        }
+
+        try
+        {
+            await _mediator.Send(new SendTrainingSessionNotificationCommand(sessionGuid), ct);
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFound;
         }
     }
 }

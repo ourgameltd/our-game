@@ -3926,6 +3926,15 @@ export const apiClient = {
         return handleApiError(error);
       }
     },
+
+    notify: async (sessionId: string): Promise<ApiResponse<void>> => {
+      try {
+        await axiosInstance.post(`/v1/training-sessions/${sessionId}/notify`);
+        return { success: true, statusCode: 204 };
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
   },
 
   matches: {

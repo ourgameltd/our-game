@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useToast } from '@/contexts/ToastContext';
-import { ClipboardList, Users, Plus, MapPin, X, Link as LinkIcon, Clock, Calendar, ExternalLink, CirclePlay, Camera, Globe, BookOpen, FileText, Loader2, ChevronUp, Package, Eye } from 'lucide-react';
-import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById, useDrillsByScope, useDrillTemplatesByScope } from '@/api/hooks';
+import { ClipboardList, Users, Plus, MapPin, X, Link as LinkIcon, Clock, Calendar, ExternalLink, CirclePlay, Camera, Globe, BookOpen, FileText, Loader2, ChevronUp, Package, Eye, Bell } from 'lucide-react';
+import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById, useDrillsByScope, useDrillTemplatesByScope, useNotifyTrainingSession } from '@/api/hooks';
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest, DrillListDto, DrillTemplateListDto } from '@/api/client';
 import { sessionDurations } from '@/data/referenceData';
 import { drillCategories, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
@@ -27,6 +27,7 @@ export default function AddEditTrainingSessionPage() {
   const { data: playersData, isLoading: playersLoading } = useTeamPlayers(teamId);
   const { data: coachesData, isLoading: coachesLoading } = useTeamCoaches(teamId);
   const { data: club, isLoading: clubLoading } = useClubById(clubId);
+  const { notifySession, isSubmitting: isNotifying } = useNotifyTrainingSession(sessionId || '');
 
   // Fetch drills and templates from API
   const { data: drillsData, isLoading: drillsLoading } = useDrillsByScope(clubId, ageGroupId, teamId);
@@ -338,6 +339,15 @@ export default function AddEditTrainingSessionPage() {
       ));
     } else {
       setAttendance([...attendance, { playerId, status: 'pending', notes: note || undefined }]);
+    }
+  };
+
+  const handleNotify = async () => {
+    const response = await notifySession();
+    if (response.success) {
+      addToast('success', 'Notifications sent to players, parents and coaches');
+    } else {
+      addToast('error', response.error?.message || 'Failed to send notifications');
     }
   };
 
@@ -1352,9 +1362,20 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
 
           {/* Action Buttons */}
           <div className="mt-4">
-            <div className="flex flex-col sm:flex-row sm:justify-end gap-4">
-              {/* Right side - Standard form actions */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+            <div className="flex flex-col sm:flex-row sm:justify-between gap-4">
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={handleNotify}
+                  disabled={isNotifying}
+                  className="btn btn-md btn-secondary gap-2"
+                  title="Send push notifications to players, parents and coaches"
+                >
+                  <Bell className="w-4 h-4" />
+                  {isNotifying ? 'Sending...' : 'Notify'}
+                </button>
+              )}
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 sm:ml-auto">
                 <button
                   type="button"
                   onClick={() => navigate(Routes.teamTrainingSessions(clubId!, ageGroupId!, teamId!))}
