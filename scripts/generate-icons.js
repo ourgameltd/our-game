@@ -1,126 +1,198 @@
 #!/usr/bin/env node
-// Generates PWA icons and favicon from docs/logo/logo-light.svg
+// Generates PWA icons and favicons from docs/logo/logo-light.svg
 // Requires: rsvg-convert (brew install librsvg)
+//
+// Outputs:
+//   web/public/icons/             light  (white bg, blue logo)
+//   web/public/icons/dark/        dark   (navy bg, white logo)
+//   web/public/icons/transparent/ transparent (no bg, blue logo)
+//   web/public/favicon.svg        SVG favicon  (transparent)
+//   web/public/favicon.ico        multi-size ICO (16/32/48, transparent)
+//   web/public/icons/favicon-{16,32,48}x*.png   transparent
+//   web/public/icons/favicon-dark-{16,32,48}x*.png  transparent, white logo
 
-const fs = require('fs');
+const fs   = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 
-const ROOT = path.resolve(__dirname, '..');
-const LOGO_SVG = path.join(ROOT, 'docs/logo/logo-light.svg');
+const ROOT      = path.resolve(__dirname, '..');
+const LOGO_SVG  = path.join(ROOT, 'docs/logo/logo-light.svg');
 const ICONS_DIR = path.join(ROOT, 'web/public/icons');
-const FAVICON_PATH = path.join(ROOT, 'web/public/favicon.ico');
 
-const logoContent = fs.readFileSync(LOGO_SVG, 'utf8');
-// Strip the outer <svg ...> wrapper so we can re-embed the paths
-const innerSVG = logoContent
+// ── Parse logo inner content ──────────────────────────────────────────────────
+
+const logoRaw = fs.readFileSync(LOGO_SVG, 'utf8');
+const innerSVG = logoRaw
   .replace(/<\?xml[^>]*\?>\s*/g, '')
   .replace(/<!DOCTYPE[^>]*>\s*/g, '')
   .replace(/^<svg[^>]*>/, '')
   .replace(/<\/svg>\s*$/, '')
   .trim();
 
-// Wrapper that embeds the logo in a padded, rounded-corner square
-function makeWrapper(bg, logoFill) {
-  // The logo viewBox is "262 34 500 500" — we use a nested svg to handle this cleanly
-  // logoFill: null = keep original colours, 'white' = override fills to white
-  const filter = logoFill === 'white'
-    ? `<defs>
-        <filter id="white-fill" color-interpolation-filters="sRGB">
-          <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
-        </filter>
-      </defs>`
-    : '';
-  const filterAttr = logoFill === 'white' ? ' filter="url(#white-fill)"' : '';
+// ── Coordinate constants ──────────────────────────────────────────────────────
+// Logo content centre and tight square bounds (calculated from circle extents).
+// Using a single-layer SVG with <g> avoids nested-SVG clipping bugs in rsvg-convert.
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  ${filter}
-  <rect width="512" height="512" rx="90" fill="${bg}"/>
-  <svg x="56" y="56" width="400" height="400" viewBox="262 34 500 500"${filterAttr}>
-    ${innerSVG}
-  </svg>
-</svg>`;
-}
+const CX   = 512.01;   // horizontal centre of logo content
+const CY   = 284.00;   // vertical centre of logo content
+const HALF = 226.72;   // half of square side (437.45/2 + 4px margin ≈ 222.73 + 4 = 226.73)
 
-// Maskable variant: more padding so the logo stays in the safe zone
-function makeMaskable(bg, logoFill) {
-  const filter = logoFill === 'white'
-    ? `<defs>
-        <filter id="white-fill" color-interpolation-filters="sRGB">
-          <feColorMatrix type="matrix" values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
-        </filter>
-      </defs>`
-    : '';
-  const filterAttr = logoFill === 'white' ? ' filter="url(#white-fill)"' : '';
+// Standard viewBox: square, centred on logo, 4px margin around content
+const VX = +(CX - HALF).toFixed(2);  // 285.29
+const VY = +(CY - HALF).toFixed(2);  //  57.28
+const VS = +(HALF * 2).toFixed(2);   // 453.44 (square side)
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
-  ${filter}
-  <rect width="512" height="512" fill="${bg}"/>
-  <svg x="96" y="96" width="320" height="320" viewBox="262 34 500 500"${filterAttr}>
-    ${innerSVG}
-  </svg>
-</svg>`;
-}
+// ── Colours ───────────────────────────────────────────────────────────────────
 
-const SIZES = [72, 96, 128, 144, 152, 192, 384, 512];
-
-// Colours
 const LIGHT_BG = '#ffffff';
-const DARK_BG  = '#0c4a6e';   // matches manifest background_color
+const DARK_BG  = '#0c4a6e';
 
-function writeAndConvert(svgContent, outPath, size) {
-  const tmpSvg = outPath.replace(/\.png$/, '_tmp.svg');
-  fs.writeFileSync(tmpSvg, svgContent);
-  execSync(`rsvg-convert -w ${size} -h ${size} -o "${outPath}" "${tmpSvg}"`);
-  fs.unlinkSync(tmpSvg);
+// ── Colour filter (blue → white) ─────────────────────────────────────────────
+
+const WHITE_FILTER = `<defs>
+  <filter id="wf" color-interpolation-filters="sRGB">
+    <feColorMatrix type="matrix"
+      values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
+  </filter>
+</defs>`;
+
+// ── SVG builders (no nested <svg>, just <g> inside one viewport) ──────────────
+
+// Standard icon: rounded-rect background, logo filling ~88% of canvas
+function makeIcon(bg, white) {
+  const rx = (VS * 0.18).toFixed(1);  // ~iOS corner radius
+  const fa = white ? ` filter="url(#wf)"` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VX} ${VY} ${VS} ${VS}">
+  ${white ? WHITE_FILTER : ''}
+  <rect x="${VX}" y="${VY}" width="${VS}" height="${VS}" rx="${rx}" fill="${bg}"/>
+  <g${fa}>${innerSVG}</g>
+</svg>`;
 }
 
-// --- Light icons (white background, original blue logo) ---
-console.log('Generating light icons...');
-for (const size of SIZES) {
-  const isMaskable = size === 192 || size === 512;
-  const svg = isMaskable
-    ? makeMaskable(LIGHT_BG, null)
-    : makeWrapper(LIGHT_BG, null);
-  writeAndConvert(svg, path.join(ICONS_DIR, `icon-${size}x${size}.png`), size);
+// Maskable icon: full-bleed background, logo in safe zone (~78% of canvas)
+// Safe zone = 80% circle; padding = 11% per side
+function makeMaskable(bg, white) {
+  const pad  = +(VS * 0.11).toFixed(2);
+  const mx   = +(VX - pad).toFixed(2);
+  const my   = +(VY - pad).toFixed(2);
+  const ms   = +(VS + pad * 2).toFixed(2);
+  const fa   = white ? ` filter="url(#wf)"` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${mx} ${my} ${ms} ${ms}">
+  ${white ? WHITE_FILTER : ''}
+  <rect x="${mx}" y="${my}" width="${ms}" height="${ms}" fill="${bg}"/>
+  <g${fa}>${innerSVG}</g>
+</svg>`;
+}
+
+// Transparent icon: no background, logo fills canvas with 2px breathing room
+function makeTransparent(white) {
+  const fa = white ? ` filter="url(#wf)"` : '';
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${VX} ${VY} ${VS} ${VS}">
+  ${white ? WHITE_FILTER : ''}
+  <g${fa}>${innerSVG}</g>
+</svg>`;
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function mkdirp(dir) { fs.mkdirSync(dir, { recursive: true }); }
+
+function convert(svgContent, outPath, size) {
+  const tmp = outPath + '.__tmp__.svg';
+  fs.writeFileSync(tmp, svgContent);
+  execSync(`rsvg-convert -w ${size} -h ${size} -o "${outPath}" "${tmp}"`);
+  fs.unlinkSync(tmp);
+}
+
+// ── Sizes ─────────────────────────────────────────────────────────────────────
+
+const APP_SIZES     = [72, 96, 128, 144, 152, 192, 384, 512];
+const FAVICON_SIZES = [16, 32, 48];
+const MASKABLE      = new Set([192, 512]);
+
+// ── 1. Light (white bg, blue logo) ───────────────────────────────────────────
+
+console.log('Light icons (white background)...');
+mkdirp(ICONS_DIR);
+for (const size of APP_SIZES) {
+  const svg = MASKABLE.has(size) ? makeMaskable(LIGHT_BG, false) : makeIcon(LIGHT_BG, false);
+  convert(svg, path.join(ICONS_DIR, `icon-${size}x${size}.png`), size);
   console.log(`  icon-${size}x${size}.png`);
 }
 
-// --- Dark icons (dark background, white logo) ---
-console.log('Generating dark icons...');
-fs.mkdirSync(path.join(ICONS_DIR, 'dark'), { recursive: true });
-for (const size of SIZES) {
-  const isMaskable = size === 192 || size === 512;
-  const svg = isMaskable
-    ? makeMaskable(DARK_BG, 'white')
-    : makeWrapper(DARK_BG, 'white');
-  writeAndConvert(svg, path.join(ICONS_DIR, 'dark', `icon-${size}x${size}.png`), size);
+// ── 2. Dark (navy bg, white logo) ────────────────────────────────────────────
+
+console.log('Dark icons (navy background)...');
+mkdirp(path.join(ICONS_DIR, 'dark'));
+for (const size of APP_SIZES) {
+  const svg = MASKABLE.has(size) ? makeMaskable(DARK_BG, true) : makeIcon(DARK_BG, true);
+  convert(svg, path.join(ICONS_DIR, 'dark', `icon-${size}x${size}.png`), size);
   console.log(`  dark/icon-${size}x${size}.png`);
 }
 
-// --- Favicon: embed the SVG directly as favicon.svg, also make a 32x32 PNG ---
-console.log('Generating favicon...');
-// SVG favicon (modern browsers)
-const faviconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="262 34 500 500">
-  ${innerSVG}
-</svg>`;
-fs.writeFileSync(path.join(ROOT, 'web/public/favicon.svg'), faviconSvg);
+// ── 3. Transparent (no bg, blue logo) ────────────────────────────────────────
+
+console.log('Transparent icons...');
+mkdirp(path.join(ICONS_DIR, 'transparent'));
+for (const size of APP_SIZES) {
+  convert(makeTransparent(false), path.join(ICONS_DIR, 'transparent', `icon-${size}x${size}.png`), size);
+  console.log(`  transparent/icon-${size}x${size}.png`);
+}
+
+// ── 4. Favicons ───────────────────────────────────────────────────────────────
+
+console.log('Favicons...');
+
+// SVG favicon — the original SVG as-is (already has tight viewBox)
+fs.copyFileSync(LOGO_SVG, path.join(ROOT, 'web/public/favicon.svg'));
 console.log('  favicon.svg');
 
-// 32x32 PNG for legacy favicon.ico via sips
-const favicon32Path = path.join(ICONS_DIR, 'favicon-32x32.png');
-const favicon16Path = path.join(ICONS_DIR, 'favicon-16x16.png');
-const faviconWrapSvg = makeWrapper(LIGHT_BG, null);
-const tmpFavicon = path.join(ICONS_DIR, 'favicon_tmp.svg');
-fs.writeFileSync(tmpFavicon, faviconWrapSvg);
-execSync(`rsvg-convert -w 32 -h 32 -o "${favicon32Path}" "${tmpFavicon}"`);
-execSync(`rsvg-convert -w 16 -h 16 -o "${favicon16Path}" "${tmpFavicon}"`);
-fs.unlinkSync(tmpFavicon);
-console.log('  favicon-32x32.png, favicon-16x16.png');
+// Transparent PNGs (16, 32, 48)
+for (const size of FAVICON_SIZES) {
+  convert(makeTransparent(false), path.join(ICONS_DIR, `favicon-${size}x${size}.png`), size);
+  console.log(`  favicon-${size}x${size}.png`);
+}
 
-// Combine 16+32 into a .ico using sips (macOS)
-// sips can't make multi-size .ico directly, so copy the 32x32 as .ico
-execSync(`cp "${favicon32Path}" "${FAVICON_PATH}"`);
-console.log('  favicon.ico (32x32)');
+// Dark transparent PNGs (16, 32, 48) — white logo for dark browser chrome
+for (const size of FAVICON_SIZES) {
+  convert(makeTransparent(true), path.join(ICONS_DIR, `favicon-dark-${size}x${size}.png`), size);
+  console.log(`  favicon-dark-${size}x${size}.png`);
+}
 
-console.log('\nDone. All icons written to web/public/icons/');
+// favicon.ico — real multi-size ICO (16/32/48, transparent)
+const icoScript = `
+import struct, sys, os
+
+sizes = [16, 32, 48]
+icons_dir = sys.argv[1]
+out_path  = sys.argv[2]
+
+pngs = []
+for s in sizes:
+    p = os.path.join(icons_dir, f'favicon-{s}x{s}.png')
+    with open(p, 'rb') as f:
+        pngs.append(f.read())
+
+count = len(pngs)
+header = struct.pack('<HHH', 0, 1, count)
+offset = 6 + count * 16
+entries = b''
+for s, data in zip(sizes, pngs):
+    w = s if s < 256 else 0
+    h = s if s < 256 else 0
+    entries += struct.pack('<BBBBHHII', w, h, 0, 0, 1, 32, len(data), offset)
+    offset += len(data)
+
+with open(out_path, 'wb') as f:
+    f.write(header + entries)
+    for data in pngs:
+        f.write(data)
+print('  favicon.ico (16/32/48px, transparent)')
+`;
+
+const icoScriptPath = path.join(ICONS_DIR, '_ico.py');
+fs.writeFileSync(icoScriptPath, icoScript);
+execSync(`python3 "${icoScriptPath}" "${ICONS_DIR}" "${path.join(ROOT, 'web/public/favicon.ico')}"`);
+fs.unlinkSync(icoScriptPath);
+
+console.log('\nDone.');
