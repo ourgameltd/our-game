@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { UserCog } from 'lucide-react';
+import { UserCog, Filter, X } from 'lucide-react';
 import { apiClient } from '@/api';
 import type { AgeGroupCoachDto, AgeGroupDetailDto } from '@/api';
 import type { Coach } from '@/types';
@@ -26,6 +26,7 @@ export default function AgeGroupCoachesPage() {
   const [coaches, setCoaches] = useState<Coach[]>([]);
   const [coachesLoading, setCoachesLoading] = useState(true);
   const [coachesError, setCoachesError] = useState<string | null>(null);
+  const [nameFilter, setNameFilter] = useState('');
 
   useEffect(() => {
     if (!clubId || !ageGroupId) return;
@@ -91,6 +92,12 @@ export default function AgeGroupCoachesPage() {
     };
   };
 
+  const filteredCoaches = useMemo(() => {
+    if (!nameFilter.trim()) return coaches;
+    const q = nameFilter.toLowerCase();
+    return coaches.filter(c => `${c.firstName} ${c.lastName}`.toLowerCase().includes(q));
+  }, [coaches, nameFilter]);
+
   // Invalid parameters state
   if (!clubId || !ageGroupId) {
     return (
@@ -134,6 +141,31 @@ export default function AgeGroupCoachesPage() {
           </div>
         )}
 
+        {/* Filter */}
+        {!coachesLoading && !coachesError && (
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+              <input
+                type="text"
+                placeholder="Filter coaches by name..."
+                value={nameFilter}
+                onChange={(e) => setNameFilter(e.target.value)}
+                className="flex-1 py-0.5 text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
+              />
+              {nameFilter && (
+                <button
+                  onClick={() => setNameFilter('')}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                  title="Clear filter"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Coaches List */}
         {coachesError ? (
           <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -141,14 +173,25 @@ export default function AgeGroupCoachesPage() {
             <p className="text-red-600 dark:text-red-300 text-sm mt-1">{coachesError}</p>
           </div>
         ) : coachesLoading ? (
-          <div className="animate-pulse space-y-3">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
+              <div key={index} className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 last:border-0 animate-pulse">
+                <div className="w-1 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+                <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-1" />
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20" />
+                </div>
+              </div>
             ))}
           </div>
-        ) : coaches.length > 0 && clubId && ageGroupId ? (
+        ) : coaches.length > 0 && filteredCoaches.length === 0 ? (
+          <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p className="text-gray-600 dark:text-gray-400">No coaches match "{nameFilter}"</p>
+          </div>
+        ) : filteredCoaches.length > 0 && clubId && ageGroupId ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-            {coaches.map((coach) => (
+            {filteredCoaches.map((coach) => (
               <Link key={coach.id} to={Routes.ageGroupCoach(clubId, ageGroupId, coach.id)}>
                 <CoachCard coach={coach} />
               </Link>

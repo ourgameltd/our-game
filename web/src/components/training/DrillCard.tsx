@@ -90,10 +90,11 @@ export default function DrillCard({ drill, href, editHref, isInherited }: DrillC
 
       <Link
         to={editHref}
-        className="btn-sm btn-primary absolute bottom-2 right-2 p-1.5!"
+        className="btn-sm btn-primary btn-icon absolute bottom-2 right-2"
         title="Edit drill"
+        aria-label="Edit drill"
       >
-        <Settings className="w-3.5 h-3.5" />
+        <Settings className="w-4 h-4" />
       </Link>
     </div>
   );

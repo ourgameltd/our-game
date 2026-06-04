@@ -82,16 +82,6 @@ public static class NotificationSeedData
                 Message = "You have a new message regarding player development plans.",
                 Url = "/notifications",
                 CreatedAt = now.AddMinutes(-45)
-            },
-            new Notification
-            {
-                Id = UserSeedData.CreateDeterministicGuid("notification|michael|kit-order"),
-                UserId = UserSeedData.MichaelLaw_Id,
-                Type = "announcement",
-                Title = "Kit orders closing soon",
-                Message = "Final call for this season's kit orders — closes at end of week.",
-                Url = "/dashboard",
-                CreatedAt = now.AddMinutes(-10)
             }
         };
     }

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { Shirt } from 'lucide-react';
 import { Kit } from '@/types';
+import { ClubKitDto } from '@/api/client';
 import { CreateTeamKitRequest, UpdateTeamKitRequest } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
@@ -14,19 +16,35 @@ import {
 import KitBuilder from '@/components/kit/KitBuilder';
 import KitCard from '@/components/kit/KitCard';
 import PageTitle from '@components/common/PageTitle';
+import EmptyState from '@components/common/EmptyState';
 
-// Skeleton component for kit card loading state
+function mapClubKitToKit(apiKit: ClubKitDto): Kit {
+  return {
+    id: apiKit.id,
+    name: apiKit.name,
+    type: apiKit.type,
+    shirtColor: apiKit.shirtColor,
+    shortsColor: apiKit.shortsColor,
+    socksColor: apiKit.socksColor,
+    season: apiKit.season,
+    isActive: apiKit.isActive,
+  };
+}
+
 function KitCardSkeleton() {
   return (
-    <div className="card-hover animate-pulse">
-      <div className="flex items-center gap-4">
-        <div className="flex gap-1.5 shrink-0">
-          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
-          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
-          <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+    <div className="bg-white dark:bg-gray-800 p-3 md:p-4 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b animate-pulse">
+      <div className="flex items-stretch gap-3">
+        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div className="flex-1 min-w-0 flex items-center gap-4">
+          <div className="flex gap-1.5 shrink-0">
+            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
+          </div>
+          <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
+          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
-        <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
-        <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
     </div>
   );
@@ -36,22 +54,18 @@ export default function TeamKitsPage() {
   usePageTitle(['Team Kits']);
 
   const { teamId } = useParams();
-  
-  // API hooks
+
   const { data: teamKitsData, isLoading: kitsLoading, error: kitsError } = useTeamKits(teamId);
   const { data: teamOverview, isLoading: overviewLoading, error: overviewError } = useTeamOverview(teamId);
-  const { data: clubKits, isLoading: clubKitsLoading, error: clubKitsError } = useClubKits(teamOverview?.team.clubId);
-  
-  // Mutation hooks
+  const { data: clubKitsData, isLoading: clubKitsLoading, error: clubKitsError } = useClubKits(teamOverview?.team.clubId);
+
   const { createKit, error: createError } = useCreateTeamKit(teamId);
   const { updateKit, error: updateError } = useUpdateTeamKit(teamId);
   const { deleteKit, error: deleteError } = useDeleteTeamKit(teamId);
-  
-  // Local UI state
+
   const [showBuilder, setShowBuilder] = useState(false);
   const [editingKit, setEditingKit] = useState<Kit | undefined>();
 
-  // Handle team not found
   if (!overviewLoading && (overviewError || !teamOverview)) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -66,11 +80,13 @@ export default function TeamKitsPage() {
 
   const team = teamOverview?.team;
   const teamKits = teamKitsData?.kits || [];
+  const clubKits = (clubKitsData || []).map(mapClubKitToKit);
   const isArchived = team?.isArchived || false;
+  const isLoading = overviewLoading || kitsLoading || clubKitsLoading;
+  const hasError = kitsError || clubKitsError;
 
   const handleSaveKit = async (kitData: Omit<Kit, 'id'>) => {
     if (editingKit) {
-      // Update existing kit
       const request: UpdateTeamKitRequest = {
         name: kitData.name,
         type: kitData.type,
@@ -86,7 +102,6 @@ export default function TeamKitsPage() {
         setEditingKit(undefined);
       }
     } else {
-      // Create new kit
       const request: CreateTeamKitRequest = {
         name: kitData.name,
         type: kitData.type,
@@ -105,17 +120,13 @@ export default function TeamKitsPage() {
   };
 
   const handleEditKit = (kit: Kit) => {
-    if (isArchived) {
-      return;
-    }
+    if (isArchived) return;
     setEditingKit(kit);
     setShowBuilder(true);
   };
 
   const handleDeleteKit = async (kitId: string) => {
-    if (isArchived) {
-      return;
-    }
+    if (isArchived) return;
     if (confirm('Are you sure you want to delete this kit?')) {
       await deleteKit(kitId);
     }
@@ -132,7 +143,7 @@ export default function TeamKitsPage() {
         <div className="flex items-center gap-2 mb-4">
           <div className="grow">
             <PageTitle
-              title={overviewLoading ? 'Loading...' : `${team?.name} - Kit Management`}
+              title={overviewLoading ? 'Loading...' : `${team?.name} - Kits`}
               subtitle="Manage team-specific kits"
               action={!showBuilder && !isArchived && !overviewLoading ? {
                 label: 'Create Kit',
@@ -149,7 +160,6 @@ export default function TeamKitsPage() {
           )}
         </div>
 
-        {/* Archived Notice */}
         {isArchived && (
           <div className="mb-4 p-4 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-lg">
             <p className="text-sm text-orange-800 dark:text-orange-300">
@@ -158,7 +168,6 @@ export default function TeamKitsPage() {
           </div>
         )}
 
-        {/* Kit Builder */}
         {showBuilder && (
           <div className="mb-4">
             <KitBuilder
@@ -166,8 +175,6 @@ export default function TeamKitsPage() {
               onSave={handleSaveKit}
               onCancel={handleCancel}
             />
-            
-            {/* Inline errors for mutations */}
             {(createError || updateError) && (
               <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mt-4">
                 <p className="text-red-700 dark:text-red-300">
@@ -178,118 +185,69 @@ export default function TeamKitsPage() {
           </div>
         )}
 
-        {/* Team Kits Section */}
         {!showBuilder && (
           <>
-            <div className="mb-4">
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Team Kits
-              </h3>
+            {deleteError && (
+              <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mb-4">
+                <p className="text-red-700 dark:text-red-300">{deleteError.message}</p>
+              </div>
+            )}
 
-              {/* Loading state for team kits */}
-              {kitsLoading && (
-                <div className="flex flex-col gap-2">
-                  {[1, 2, 3].map((i) => (
-                    <KitCardSkeleton key={i} />
-                  ))}
-                </div>
-              )}
+            {isLoading && (
+              <div className="grid grid-cols-1 gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+                {[1, 2, 3, 4].map((i) => (
+                  <KitCardSkeleton key={i} />
+                ))}
+              </div>
+            )}
 
-              {/* Error state for team kits */}
-              {!kitsLoading && kitsError && (
-                <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                  <p className="text-red-700 dark:text-red-300">{kitsError.message}</p>
-                </div>
-              )}
+            {!isLoading && hasError && (
+              <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
+                <p className="text-red-700 dark:text-red-300">
+                  {kitsError?.message || clubKitsError?.message}
+                </p>
+              </div>
+            )}
 
-              {/* Delete error */}
-              {deleteError && (
-                <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mb-4">
-                  <p className="text-red-700 dark:text-red-300">{deleteError.message}</p>
-                </div>
-              )}
+            {!isLoading && !hasError && teamKits.length === 0 && clubKits.length === 0 && (
+              <EmptyState
+                icon={Shirt}
+                title="No kits yet"
+                description="No kits have been created for this team or club yet."
+                action={
+                  !isArchived ? (
+                    <button onClick={() => setShowBuilder(true)} className="btn-success">
+                      Create First Kit
+                    </button>
+                  ) : undefined
+                }
+              />
+            )}
 
-              {/* Empty state */}
-              {!kitsLoading && !kitsError && teamKits.length === 0 && (
-                <div className="card bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
-                  <div className="flex items-start gap-3">
-                    <span className="text-2xl">ℹ️</span>
-                    <div>
-                      <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                        No team-specific kits
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        Create team-specific kits or use the club's kits below. Team kits will take priority 
-                        over club kits when scheduling matches.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Team kits grid */}
-              {!kitsLoading && !kitsError && teamKits.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  {teamKits.map((kit) => (
-                    <KitCard
-                      key={kit.id}
-                      kit={kit}
-                      onEdit={() => handleEditKit(kit)}
-                      onDelete={() => handleDeleteKit(kit.id)}
-                      showActions={!isArchived}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Club Kits Section */}
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
-                Available Club Kits
-              </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                These kits are defined at the club level and available to all teams.
-              </p>
-
-              {/* Loading state for club kits */}
-              {clubKitsLoading && (
-                <div className="flex flex-col gap-2">
-                  {[1, 2, 3].map((i) => (
-                    <KitCardSkeleton key={i} />
-                  ))}
-                </div>
-              )}
-
-              {/* Error state for club kits */}
-              {!clubKitsLoading && clubKitsError && (
-                <div className="card bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800">
-                  <p className="text-red-700 dark:text-red-300">{clubKitsError.message}</p>
-                </div>
-              )}
-
-              {/* Empty state for club kits */}
-              {!clubKitsLoading && !clubKitsError && (!clubKits || clubKits.length === 0) && (
-                <div className="card bg-gray-50 dark:bg-gray-800/50">
-                  <p className="text-sm text-gray-600 dark:text-gray-400">
-                    No club kits available.
-                  </p>
-                </div>
-              )}
-
-              {/* Club kits grid */}
-              {!clubKitsLoading && !clubKitsError && clubKits && clubKits.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  {clubKits.map((kit) => (
-                    <KitCard
-                      key={kit.id}
-                      kit={kit}
-                      showActions={false}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+            {!isLoading && !hasError && (teamKits.length > 0 || clubKits.length > 0) && (
+              <div className="grid grid-cols-1 gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+                {teamKits.map((kit) => (
+                  <KitCard
+                    key={kit.id}
+                    kit={kit}
+                    isInherited={false}
+                    onEdit={() => handleEditKit(kit)}
+                    onDelete={() => handleDeleteKit(kit.id)}
+                    showActions={!isArchived}
+                    variant="list"
+                  />
+                ))}
+                {clubKits.map((kit) => (
+                  <KitCard
+                    key={kit.id}
+                    kit={kit}
+                    isInherited={true}
+                    showActions={false}
+                    variant="list"
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </main>

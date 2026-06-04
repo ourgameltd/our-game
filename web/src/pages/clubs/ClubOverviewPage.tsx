@@ -226,9 +226,11 @@ export default function ClubOverviewPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white">Age Groups</h3>
             <Link
               to={Routes.ageGroupNew(clubId)}
-              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+              className="btn-sm btn-success btn-icon"
+              title="Add age group"
+              aria-label="Add age group"
             >
-              <Plus className="w-5 h-5" />
+              <Plus className="w-4 h-4" />
             </Link>
           </div>
           

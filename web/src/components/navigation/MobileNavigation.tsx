@@ -235,7 +235,7 @@ export default function MobileNavigation() {
       if (path.includes('/matches')) return { title: 'Matches', image: null };
       if (path.includes('/training')) return { title: 'Training', image: null };
       if (path.endsWith('/statistics')) return { title: 'Statistics', image: null };
-      if (path.includes('/kit')) return { title: 'Kit Orders', image: null };
+      if (path.includes('/kit')) return { title: 'Kits', image: null };
       if (path.includes('/drill-templates')) return { title: 'Sessions', image: null };
       if (path.includes('/drills')) return { title: 'Drills', image: null };
       if (path.includes('/tactics')) return { title: 'Formations', image: null };
@@ -266,7 +266,7 @@ export default function MobileNavigation() {
       if (path.includes('/players')) return { title: 'Players', image: club.logo };
       if (path.includes('/coaches')) return { title: 'Coaches', image: club.logo };
       if (path.includes('/ethos')) return { title: 'Club Ethos', image: club.logo };
-      if (path.includes('/kit')) return { title: 'Kit Management', image: club.logo };
+      if (path.includes('/kit')) return { title: 'Kits', image: club.logo };
       if (path.includes('/competency-frameworks')) return { title: 'Competency Frameworks', image: club.logo };
       if (path.includes('/drill-templates')) return { title: 'Sessions', image: club.logo };
       if (path.includes('/drills')) return { title: 'Drills', image: club.logo };

@@ -273,9 +273,11 @@ const AgeGroupOverviewPage: React.FC = () => {
             {!isArchived && clubId && ageGroupId && (
               <Link
                 to={Routes.teamNew(clubId, ageGroupId)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center gap-2"
+                className="btn-sm btn-success btn-icon"
+                title="Add team"
+                aria-label="Add team"
               >
-                <Plus className="w-5 h-5" />
+                <Plus className="w-4 h-4" />
               </Link>
             )}
           </div>

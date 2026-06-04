@@ -166,7 +166,7 @@ export default function ClubKitsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
         <PageTitle
-          title={clubLoading ? 'Loading...' : (isKitDetailPage ? `${club?.name} - ${selectedKit?.name || 'Kit'}` : `${club?.name} - Kit Management`)}
+          title={clubLoading ? 'Loading...' : (isKitDetailPage ? `${club?.name} - ${selectedKit?.name || 'Kit'}` : `${club?.name} - Kits`)}
           subtitle={isKitDetailPage ? 'Edit kit details and manage deletion from this page' : 'Manage club kits that can be used by all teams'}
           backLink={isKitDetailPage && clubId ? Routes.clubKits(clubId) : undefined}
           action={!isKitDetailPage && !showBuilder && !kitsLoading ? {
@@ -245,6 +245,7 @@ export default function ClubKitsPage() {
                 <KitCard
                   key={kit.id}
                   kit={kit}
+                  isInherited={false}
                   onClick={() => navigate(Routes.clubKit(clubId!, kit.id))}
                   showActions={false}
                   variant="list"

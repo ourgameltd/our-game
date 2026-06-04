@@ -1,5 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { X } from 'lucide-react';
 import { apiClient } from '@api/client';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
@@ -349,9 +350,9 @@ export default function AddEditReportCardPage() {
                     <button
                       type="button"
                       onClick={() => removeStrength(index)}
-                      className="px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      className="btn-sm btn-outline-danger btn-icon"
                     >
-                      ✕
+                      <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -388,9 +389,9 @@ export default function AddEditReportCardPage() {
                     <button
                       type="button"
                       onClick={() => removeImprovement(index)}
-                      className="px-3 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                      className="btn-sm btn-outline-danger btn-icon"
                     >
-                      ✕
+                      <X className="w-4 h-4" />
                     </button>
                   )}
                 </div>
@@ -445,9 +446,11 @@ export default function AddEditReportCardPage() {
                       <button
                         type="button"
                         onClick={() => removeSimilarPlayer(index)}
-                        className="px-2 py-1 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                        className="btn-sm btn-outline-danger btn-icon"
+                        aria-label="Remove player"
+                        title="Remove player"
                       >
-                        ✕
+                        <X className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">

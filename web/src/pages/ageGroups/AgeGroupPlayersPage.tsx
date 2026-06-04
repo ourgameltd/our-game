@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo, useEffect } from 'react';
-import { ChevronDown, ChevronUp, Filter, Users } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, Users, X } from 'lucide-react';
 import { useAgeGroupPlayers } from '@/api/hooks';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
@@ -29,6 +29,7 @@ export default function AgeGroupPlayersPage() {
   
   const [showArchived, setShowArchived] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [nameFilter, setNameFilter] = useState('');
   
   // Fetch age group details
   const [ageGroup, setAgeGroup] = useState<{ name: string } | null>(null);
@@ -146,6 +147,12 @@ export default function AgeGroupPlayersPage() {
     }));
   }, [playersData]);
 
+  const filteredAgeGroupPlayers = useMemo(() => {
+    if (!nameFilter.trim()) return ageGroupPlayers;
+    const q = nameFilter.toLowerCase();
+    return ageGroupPlayers.filter(p => `${p.firstName} ${p.lastName}`.toLowerCase().includes(q));
+  }, [ageGroupPlayers, nameFilter]);
+
   // Invalid parameters state
   if (!clubId || !ageGroupId) {
     return (
@@ -247,25 +254,41 @@ export default function AgeGroupPlayersPage() {
 
         {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="w-full flex items-center justify-between text-left"
-          >
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {showArchived && (
-                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  1 active
-                </span>
-              )}
-            </div>
-            {showFilters ? (
-              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Filter players by name..."
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              className="flex-1 py-0.5 text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
+            />
+            {nameFilter && (
+              <button
+                onClick={() => setNameFilter('')}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                title="Clear filter"
+              >
+                <X className="w-4 h-4" />
+              </button>
             )}
-          </button>
+            {showArchived && (
+              <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                1 active
+              </span>
+            )}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              title="More filters"
+            >
+              {showFilters ? (
+                <ChevronUp className="w-5 h-5" />
+              ) : (
+                <ChevronDown className="w-5 h-5" />
+              )}
+            </button>
+          </div>
 
           {showFilters && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
@@ -285,9 +308,14 @@ export default function AgeGroupPlayersPage() {
         </div>
 
         {/* Players List */}
-        {ageGroupPlayers.length > 0 && clubId && ageGroupId && (
+        {ageGroupPlayers.length > 0 && filteredAgeGroupPlayers.length === 0 && (
+          <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+            <p className="text-gray-600 dark:text-gray-400">No players match "{nameFilter}"</p>
+          </div>
+        )}
+        {filteredAgeGroupPlayers.length > 0 && clubId && ageGroupId && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-            {ageGroupPlayers.map((player) => (
+            {filteredAgeGroupPlayers.map((player) => (
               <Link
                 key={player.id}
                 to={Routes.player(clubId, ageGroupId, player.id)}
@@ -306,7 +334,7 @@ export default function AgeGroupPlayersPage() {
             ))}
           </div>
         )}
-        {ageGroupPlayers.length === 0 && (
+        {ageGroupPlayers.length === 0 && !nameFilter && (
           <EmptyState
             icon={Users}
             title="No players in this age group yet"

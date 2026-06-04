@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Copy, Pencil, Trash2, Award, ChevronRight } from 'lucide-react';
+import { Copy, Loader2, Pencil, Trash2, Award, ChevronRight } from 'lucide-react';
 import PageTitle from '@/components/common/PageTitle';
 import EmptyState from '@/components/common/EmptyState';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -73,13 +73,13 @@ function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: F
               <span className="text-xs text-gray-500 dark:text-gray-400">{framework.assignmentCount} assignment{framework.assignmentCount !== 1 ? 's' : ''}</span>
               <div className="flex items-center gap-2">
                 {onEdit && (
-                  <button onClick={onEdit} className="btn-sm btn-secondary gap-1.5">
-                    <Pencil className="w-4 h-4" /> Edit
+                  <button onClick={onEdit} className="btn-sm btn-secondary btn-icon" aria-label="Edit framework" title="Edit framework">
+                    <Pencil className="w-4 h-4" />
                   </button>
                 )}
                 {onClone && (
-                  <button onClick={onClone} disabled={busy} className="btn-sm btn-secondary gap-1.5">
-                    <Copy className="w-4 h-4" /> {busy ? 'Cloning…' : 'Clone'}
+                  <button onClick={onClone} disabled={busy} className="btn-sm btn-secondary btn-icon" aria-label="Clone framework" title="Clone framework">
+                    {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
                   </button>
                 )}
                 {onArchive && (
@@ -124,18 +124,22 @@ function FrameworkRow({ framework, busy, onView, onClone, onEdit, onArchive }: F
           {onEdit && (
             <button
               onClick={onEdit}
-              className="btn-sm btn-secondary gap-1.5"
+              className="btn-sm btn-secondary btn-icon"
+              aria-label="Edit framework"
+              title="Edit framework"
             >
-              <Pencil className="w-4 h-4" /> Edit
+              <Pencil className="w-4 h-4" />
             </button>
           )}
           {onClone && (
             <button
               onClick={onClone}
               disabled={busy}
-              className="btn-sm btn-secondary gap-1.5"
+              className="btn-sm btn-secondary btn-icon"
+              aria-label="Clone framework"
+              title="Clone framework"
             >
-              <Copy className="w-4 h-4" /> {busy ? 'Cloning…' : 'Clone'}
+              {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Copy className="w-4 h-4" />}
             </button>
           )}
           {onArchive && (

@@ -256,7 +256,7 @@ export default function MatchReportPage() {
                     rel="noopener noreferrer"
                     aria-label="View Published Report"
                     title="View Published Report"
-                    className="btn-sm btn-secondary p-1.5"
+                    className="btn-sm btn-secondary btn-icon"
                   >
                     <FileText className="w-4 h-4" />
                   </a>
@@ -293,7 +293,7 @@ export default function MatchReportPage() {
                   rel="noopener noreferrer"
                   aria-label="Open in Google Maps"
                   title="Open in Google Maps"
-                  className="btn-sm btn-secondary p-1.5"
+                  className="btn-sm btn-secondary btn-icon"
                 >
                   <Map className="w-4 h-4" />
                 </a>
@@ -306,7 +306,7 @@ export default function MatchReportPage() {
                       onClick={handleAddToCalendar}
                       aria-label="Add to calendar"
                       title="Add to calendar"
-                      className="btn-sm btn-secondary p-1.5"
+                      className="btn-sm btn-secondary btn-icon"
                     >
                       <CalendarPlus className="w-4 h-4" />
                     </button>

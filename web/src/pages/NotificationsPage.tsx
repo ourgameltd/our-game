@@ -178,10 +178,11 @@ export default function NotificationsPage() {
                 {!notification.isRead && (
                   <button
                     onClick={(e) => { e.stopPropagation(); void markAsRead(notification.id); }}
-                    className="btn-sm btn-secondary gap-1.5 flex-shrink-0"
+                    className="btn-sm btn-secondary btn-icon flex-shrink-0"
+                    aria-label="Mark as read"
+                    title="Mark as read"
                   >
                     <Check className="w-4 h-4" />
-                    Mark as read
                   </button>
                 )}
               </div>
@@ -278,12 +279,11 @@ export default function NotificationsPage() {
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 mb-4 flex justify-end">
               <button
                 onClick={() => void markAllAsRead()}
-                className="btn-sm btn-primary gap-1.5"
+                className="btn-sm btn-primary btn-icon"
+                aria-label="Mark all as read"
+                title="Mark all as read"
               >
-                <span className="flex items-center gap-2">
-                  <CheckCheck className="w-4 h-4" />
-                  Mark All as Read
-                </span>
+                <CheckCheck className="w-4 h-4" />
               </button>
             </div>
           )}

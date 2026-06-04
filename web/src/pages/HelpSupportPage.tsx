@@ -56,7 +56,7 @@ const faqs: FAQItem[] = [
   {
     id: '6',
     question: 'How do I order kits for my team?',
-    answer: 'Go to your team\'s page and select "Kit Orders". You can choose from available kit designs, customize if needed, and submit orders for your squad members.',
+    answer: 'Go to your team\'s page and select "Kits". You can choose from available kit designs, customize if needed, and submit orders for your squad members.',
     category: 'Kits'
   },
   {

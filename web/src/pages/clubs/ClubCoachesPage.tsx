@@ -15,31 +15,20 @@ import { parseDateOfBirth } from '@/utils/dateOfBirth';
 // Skeleton component for coach card loading state
 function CoachCardSkeleton() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 md:rounded-none md:shadow-none md:p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b flex flex-col md:flex-row md:items-center md:gap-4 animate-pulse">
-      <div className="flex items-center gap-3 mb-3 md:mb-0 md:shrink-0 md:order-1">
-        <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-700" />
-        <div className="flex-1 min-w-0 md:hidden">
-          <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-          <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-3 md:rounded-none md:shadow-none md:p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b flex items-center gap-2 md:gap-4 animate-pulse">
+      <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+      <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+      <div className="flex-1 min-w-0 md:hidden">
+        <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-1" />
+        <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
-      <div className="hidden md:flex md:items-baseline md:gap-2 md:min-w-48 md:shrink-0 md:order-2">
-        <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="hidden md:block md:w-44 md:shrink-0">
+        <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
-      <div className="hidden md:block md:w-24 md:shrink-0 md:order-3">
-        <div className="h-4 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+      <div className="hidden md:block md:w-32 md:shrink-0">
+        <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
-      <div className="mb-3 md:mb-0 md:w-32 md:shrink-0 md:order-4">
-        <div className="flex flex-wrap gap-1">
-          <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
-          <div className="h-5 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-      </div>
-      <div className="md:flex-1 md:order-5">
-        <div className="hidden md:flex md:gap-4 md:justify-end">
-          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-      </div>
+      <div className="hidden md:block md:flex-1" />
     </div>
   );
 }
@@ -260,40 +249,46 @@ export default function ClubCoachesPage() {
 
         {/* Search and Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="w-full flex items-center justify-between text-left"
-          >
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {(searchName || filterRole || filterAgeGroup || filterTeam || showArchived) && (
-                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {[searchName ? 1 : 0, filterRole ? 1 : 0, filterAgeGroup ? 1 : 0, filterTeam ? 1 : 0, showArchived ? 1 : 0].reduce((a, b) => a + b, 0)} active
-                </span>
-              )}
-            </div>
-            {showFilters ? (
-              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Filter coaches by name..."
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              className="flex-1 py-0.5 text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
+            />
+            {searchName && (
+              <button
+                onClick={() => setSearchName('')}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                title="Clear search"
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
             )}
-          </button>
+            {(filterRole || filterAgeGroup || filterTeam || showArchived) && (
+              <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                {[filterRole ? 1 : 0, filterAgeGroup ? 1 : 0, filterTeam ? 1 : 0, showArchived ? 1 : 0].reduce((a, b) => a + b, 0)} active
+              </span>
+            )}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              title="More filters"
+            >
+              {showFilters ? (
+                <ChevronUp className="w-5 h-5" />
+              ) : (
+                <ChevronDown className="w-5 h-5" />
+              )}
+            </button>
+          </div>
 
           {showFilters && !coachesLoading && (
             <>
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <div>
-              <label className="label">Search Name</label>
-              <input
-                type="text"
-                placeholder="Search by name..."
-                value={searchName}
-                onChange={(e) => setSearchName(e.target.value)}
-                className="input"
-              />
-            </div>
             <div>
               <label className="label">Age Group</label>
               <select 
@@ -356,15 +351,9 @@ export default function ClubCoachesPage() {
           </div>
           
           {/* Active filters display and clear */}
-          {(searchName || filterRole || filterAgeGroup || filterTeam) && (
+          {(filterRole || filterAgeGroup || filterTeam) && (
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
               <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
-              {searchName && (
-                <span className="inline-flex items-center gap-1 px-2 py-1 bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300 rounded text-sm">
-                  Name: {searchName}
-                  <button onClick={() => setSearchName('')} className="hover:text-secondary-900 dark:hover:text-secondary-100">×</button>
-                </span>
-              )}
               {filterRole && (
                 <span className="inline-flex items-center gap-1 px-2 py-1 bg-secondary-100 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300 rounded text-sm">
                   Role: {filterRole}

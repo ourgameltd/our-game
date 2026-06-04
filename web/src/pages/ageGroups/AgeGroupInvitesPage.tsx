@@ -200,7 +200,7 @@ export default function AgeGroupInvitesPage() {
                           onClick={() => copyLink(role.type)}
                           title={copied[role.type] ? 'Copied' : 'Copy link'}
                           aria-label="Copy invite link"
-                          className={`btn-sm gap-1.5 p-1.5 shrink-0 ${copied[role.type] ? 'btn-success' : 'btn-secondary'}`}
+                          className={`btn-sm btn-icon shrink-0 ${copied[role.type] ? 'btn-success' : 'btn-secondary'}`}
                         >
                           {copied[role.type] ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                         </button>

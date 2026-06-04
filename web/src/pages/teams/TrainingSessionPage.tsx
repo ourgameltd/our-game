@@ -159,7 +159,7 @@ export default function TrainingSessionPage() {
                 <>
                   <span>•</span>
                   <span>🕐 Meet: {new Date(session.meetTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  <button type="button" onClick={handleAddToCalendar} className="btn-sm btn-secondary p-1.5" title="Add to calendar">
+                  <button type="button" onClick={handleAddToCalendar} className="btn-sm btn-secondary btn-icon" title="Add to calendar">
                     <CalendarPlus className="w-4 h-4" />
                   </button>
                 </>

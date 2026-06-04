@@ -157,7 +157,9 @@ Group related fields in a bordered card. Space sections with `space-y-6` on the 
 
 ## Small Action Buttons
 
-All small action buttons use `.btn-sm` paired with a semantic colour variant. Icon size is `w-4 h-4`. When showing icon + label text, add `gap-1.5` to the button.
+All small action buttons use `.btn-sm` paired with a semantic colour variant. Icon size is `w-4 h-4`. **Icon-only is the standard** — always use `p-1.5` padding and include both `aria-label` and `title` for accessibility. Only Save, Cancel, and Archive buttons show text labels.
+
+PageTitle header actions (`btn btn-md`) also use icon-only with `p-2` padding.
 
 ### Colour Convention
 
@@ -174,24 +176,14 @@ All small action buttons use `.btn-sm` paired with a semantic colour variant. Ic
 
 ### Examples
 
-**Icon + label (standard):**
-```tsx
-<button type="button" className="btn-sm btn-secondary gap-1.5">
-  <Pencil className="w-4 h-4" />
-  Edit
-</button>
+**Icon-only (standard — add `btn-icon`, must include `aria-label` and `title`):**
 
-<button type="button" className="btn-sm btn-danger gap-1.5">
-  <Trash2 className="w-4 h-4" />
-  Delete
-</button>
-```
+`btn-icon` applies `padding: 0.5rem !important`, producing a 32 × 32 px button that matches the height of a same-size text button. Never use ad-hoc `p-1.5` or `p-2` overrides on icon buttons.
 
-**Icon-only (must include `aria-label` and `title`):**
 ```tsx
 <button
   type="button"
-  className="btn-sm btn-secondary p-1.5"
+  className="btn-sm btn-secondary btn-icon"
   aria-label="Edit item"
   title="Edit item"
 >
@@ -200,11 +192,25 @@ All small action buttons use `.btn-sm` paired with a semantic colour variant. Ic
 
 <button
   type="button"
-  className="btn-sm btn-secondary p-1.5"
-  aria-label="Copy link"
-  title="Copy link"
+  className="btn-sm btn-danger btn-icon"
+  aria-label="Delete item"
+  title="Delete item"
 >
-  <Copy className="w-4 h-4" />
+  <Trash2 className="w-4 h-4" />
+</button>
+```
+
+PageTitle header actions use `btn btn-md btn-icon` (same padding, larger base class for prominence).
+
+**With text label (only Save, Cancel, Archive):**
+```tsx
+<button type="button" className="btn btn-md btn-primary">
+  Save Changes
+</button>
+
+<button type="button" className="btn-sm btn-danger gap-1.5">
+  <Trash2 className="w-4 h-4" />
+  Archive
 </button>
 ```
 

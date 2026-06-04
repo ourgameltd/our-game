@@ -136,10 +136,11 @@ export default function TacticCard({ tactic, href, editHref, inheritedFrom }: Ta
       {/* Edit button — sibling link, not nested inside the main link */}
       <Link
         to={editHref}
-        className="btn-sm btn-primary absolute bottom-2 right-2 p-1.5!"
+        className="btn-sm btn-primary btn-icon absolute bottom-2 right-2"
         title="Edit tactic"
+        aria-label="Edit tactic"
       >
-        <Settings className="w-3.5 h-3.5" />
+        <Settings className="w-4 h-4" />
       </Link>
     </div>
   );

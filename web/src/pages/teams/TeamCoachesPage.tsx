@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { useState } from 'react';
-import { Plus, Loader2, AlertCircle, Search, UserCog } from 'lucide-react';
+import { useState, useMemo } from 'react';
+import { Plus, Loader2, AlertCircle, Search, UserCog, Filter, X } from 'lucide-react';
 import { useTeamOverview, useTeamCoaches, useClubCoaches, useAssignTeamCoach, useRemoveTeamCoach } from '@/api/hooks';
 import { apiClient } from '@/api';
 import CoachCard from '@components/coach/CoachCard';
@@ -43,6 +43,7 @@ export default function TeamCoachesPage() {
   const { assignCoach, isSubmitting: isAssigning, error: assignError } = useAssignTeamCoach(teamId);
   const { removeCoach, isSubmitting: isRemoving, error: removeError } = useRemoveTeamCoach(teamId);
   // Local state
+  const [nameFilter, setNameFilter] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [removingCoachId, setRemovingCoachId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -52,6 +53,14 @@ export default function TeamCoachesPage() {
 
   // Only show skeleton on initial load, not during background refetches
   const isInitialLoading = (teamLoading && !teamOverview) || (coachesLoading && !teamCoaches?.length);
+
+  const safeTeamCoaches = teamCoaches || [];
+
+  const filteredTeamCoaches = useMemo(() => {
+    if (!nameFilter.trim()) return safeTeamCoaches;
+    const q = nameFilter.toLowerCase();
+    return safeTeamCoaches.filter(c => `${c.firstName} ${c.lastName}`.toLowerCase().includes(q));
+  }, [safeTeamCoaches, nameFilter]);
 
   // Parameter validation error
   if (paramError) {
@@ -116,15 +125,14 @@ export default function TeamCoachesPage() {
           </div>
           
           {/* Coaches List Skeleton */}
-          <div className="space-y-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-4 animate-pulse">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
-                  <div className="flex-1">
-                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-1/4 mb-2"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/3"></div>
-                  </div>
+              <div key={i} className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 last:border-0 animate-pulse">
+                <div className="w-1 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+                <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-1"></div>
+                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
                 </div>
               </div>
             ))}
@@ -140,7 +148,6 @@ export default function TeamCoachesPage() {
 
   // Get coaches from club who aren't already assigned to this team
   const safeClubCoaches = clubCoaches || [];
-  const safeTeamCoaches = teamCoaches || [];
   const availableCoaches = safeClubCoaches.filter(
     coach => !safeTeamCoaches.some(tc => tc.id === coach.id)
   );
@@ -257,11 +264,39 @@ export default function TeamCoachesPage() {
           </div>
         )}
 
+        {/* Filter */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Filter coaches by name..."
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              className="flex-1 py-0.5 text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
+            />
+            {nameFilter && (
+              <button
+                onClick={() => setNameFilter('')}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                title="Clear filter"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+        </div>
+
         {/* All Coaches */}
-        {safeTeamCoaches.length > 0 && (
+        {safeTeamCoaches.length > 0 && filteredTeamCoaches.length === 0 && (
+          <div className="text-center py-8 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 mb-4">
+            <p className="text-gray-600 dark:text-gray-400">No coaches match "{nameFilter}"</p>
+          </div>
+        )}
+        {filteredTeamCoaches.length > 0 && (
           <div className="mb-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-              {safeTeamCoaches.filter((coach): coach is typeof coach & { id: string } => coach.id !== undefined).map((coach) => (
+              {filteredTeamCoaches.filter((coach): coach is typeof coach & { id: string } => coach.id !== undefined).map((coach) => (
                 <Link key={coach.id} to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
                   <CoachCard 
                     coach={{
@@ -321,7 +356,7 @@ export default function TeamCoachesPage() {
           </div>
         )}
 
-        {safeTeamCoaches.length === 0 && (
+        {safeTeamCoaches.length === 0 && !nameFilter && (
           <EmptyState
             icon={UserCog}
             title="No coaches assigned yet"

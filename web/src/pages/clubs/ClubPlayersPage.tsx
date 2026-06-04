@@ -311,40 +311,47 @@ export default function ClubPlayersPage() {
 
         {/* Search and Filter */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="w-full flex items-center justify-between text-left"
-          >
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {(searchName || filterAgeGroup || filterPosition || filterTeam || filterBanding || showArchived) && (
-                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {[searchName ? 1 : 0, filterAgeGroup ? 1 : 0, filterPosition ? 1 : 0, filterTeam ? 1 : 0, filterBanding ? 1 : 0, showArchived ? 1 : 0].reduce((a, b) => a + b, 0)} active
-                </span>
-              )}
-            </div>
-            {showFilters ? (
-              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Filter players by name..."
+              value={searchName}
+              onChange={(e) => setSearchName(e.target.value)}
+              className="flex-1 py-0.5 text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
+            />
+            {searchName && (
+              <button
+                onClick={() => setSearchName('')}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                title="Clear search"
+              >
+                <Search className="w-4 h-4 hidden" />
+                <span className="text-lg leading-none">×</span>
+              </button>
             )}
-          </button>
+            {(filterAgeGroup || filterPosition || filterTeam || filterBanding || showArchived) && (
+              <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                {[filterAgeGroup ? 1 : 0, filterPosition ? 1 : 0, filterTeam ? 1 : 0, filterBanding ? 1 : 0, showArchived ? 1 : 0].reduce((a, b) => a + b, 0)} active
+              </span>
+            )}
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              title="More filters"
+            >
+              {showFilters ? (
+                <ChevronUp className="w-5 h-5" />
+              ) : (
+                <ChevronDown className="w-5 h-5" />
+              )}
+            </button>
+          </div>
 
           {showFilters && !playersLoading && (
             <>
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="grid md:grid-cols-5 gap-4">
-                  <div>
-                    <label className="label">Search Name</label>
-                    <input
-                      type="text"
-                      placeholder="Search by name..."
-                      value={searchName}
-                      onChange={(e) => setSearchName(e.target.value)}
-                      className="input"
-                    />
-                  </div>
+                <div className="grid md:grid-cols-4 gap-4">
                   <div>
                     <label className="label">Age Group</label>
                     <select 
@@ -419,15 +426,9 @@ export default function ClubPlayersPage() {
               </div>
           
               {/* Active filters display and clear */}
-              {(searchName || filterAgeGroup || filterPosition || filterTeam || filterBanding) && (
+              {(filterAgeGroup || filterPosition || filterTeam || filterBanding) && (
                 <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
-                  {searchName && (
-                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm">
-                      Name: {searchName}
-                      <button onClick={() => setSearchName('')} className="hover:text-primary-900 dark:hover:text-primary-100">×</button>
-                    </span>
-                  )}
                   {filterAgeGroup && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm">
                       Age: {allAgeGroups.find(ag => ag.id === filterAgeGroup)?.name || filterAgeGroup}

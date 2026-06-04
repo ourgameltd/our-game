@@ -2115,17 +2115,17 @@ export default function AddEditMatchPage() {
                 {summaryTab === 'write' ? (
                   <div className="rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
                     <div className="flex flex-wrap gap-0.5 p-1.5 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
-                      <button type="button" onClick={() => wrapSelection('**', '**', 'bold text')} title="Bold" aria-label="Bold" className="btn-sm btn-secondary p-1.5"><Bold className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => wrapSelection('*', '*', 'italic text')} title="Italic" aria-label="Italic" className="btn-sm btn-secondary p-1.5"><Italic className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => wrapSelection('**', '**', 'bold text')} title="Bold" aria-label="Bold" className="btn-sm btn-secondary btn-icon"><Bold className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => wrapSelection('*', '*', 'italic text')} title="Italic" aria-label="Italic" className="btn-sm btn-secondary btn-icon"><Italic className="w-4 h-4" /></button>
                       <div className="w-px self-stretch bg-gray-200 dark:bg-gray-600 mx-0.5" />
-                      <button type="button" onClick={() => prefixLine('# ')} title="Heading 1" aria-label="Heading 1" className="btn-sm btn-secondary p-1.5"><Heading1 className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => prefixLine('## ')} title="Heading 2" aria-label="Heading 2" className="btn-sm btn-secondary p-1.5"><Heading2 className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => prefixLine('### ')} title="Heading 3" aria-label="Heading 3" className="btn-sm btn-secondary p-1.5"><Heading3 className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => prefixLine('#### ')} title="Heading 4" aria-label="Heading 4" className="btn-sm btn-secondary p-1.5"><Heading4 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('# ')} title="Heading 1" aria-label="Heading 1" className="btn-sm btn-secondary btn-icon"><Heading1 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('## ')} title="Heading 2" aria-label="Heading 2" className="btn-sm btn-secondary btn-icon"><Heading2 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('### ')} title="Heading 3" aria-label="Heading 3" className="btn-sm btn-secondary btn-icon"><Heading3 className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('#### ')} title="Heading 4" aria-label="Heading 4" className="btn-sm btn-secondary btn-icon"><Heading4 className="w-4 h-4" /></button>
                       <div className="w-px self-stretch bg-gray-200 dark:bg-gray-600 mx-0.5" />
-                      <button type="button" onClick={() => prefixLine('- ')} title="Bullet list" aria-label="Bullet list" className="btn-sm btn-secondary p-1.5"><List className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => prefixLine('1. ')} title="Numbered list" aria-label="Numbered list" className="btn-sm btn-secondary p-1.5"><ListOrdered className="w-4 h-4" /></button>
-                      <button type="button" onClick={() => prefixLine('> ')} title="Blockquote" aria-label="Blockquote" className="btn-sm btn-secondary p-1.5"><Quote className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('- ')} title="Bullet list" aria-label="Bullet list" className="btn-sm btn-secondary btn-icon"><List className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('1. ')} title="Numbered list" aria-label="Numbered list" className="btn-sm btn-secondary btn-icon"><ListOrdered className="w-4 h-4" /></button>
+                      <button type="button" onClick={() => prefixLine('> ')} title="Blockquote" aria-label="Blockquote" className="btn-sm btn-secondary btn-icon"><Quote className="w-4 h-4" /></button>
                     </div>
                     <textarea
                       ref={summaryRef}

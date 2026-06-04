@@ -49,7 +49,7 @@ export default function PageTitle({ title, subtitle, badge, backLink, backState,
   };
 
   return (
-    <div className="flex items-center justify-between mb-4 w-full">
+    <div className="flex items-center justify-between gap-4 mb-4 w-full">
       <div className="flex items-center gap-3">
         {backLink && (
           <Link
@@ -93,20 +93,20 @@ export default function PageTitle({ title, subtitle, badge, backLink, backState,
         action.href ? (
           <Link
             to={action.href}
-            className={`${getActionButtonClass(action.variant)} whitespace-nowrap flex items-center gap-1.5`}
+            className={`${getActionButtonClass(action.variant)} btn-icon`}
             title={action.title || action.label}
+            aria-label={action.title || action.label}
           >
             {renderActionIcon(action.icon)}
-            {action.label}
           </Link>
         ) : (
           <button
             onClick={action.onClick}
-            className={`${getActionButtonClass(action.variant)} whitespace-nowrap flex items-center gap-1.5`}
+            className={`${getActionButtonClass(action.variant)} btn-icon`}
             title={action.title || action.label}
+            aria-label={action.title || action.label}
           >
             {renderActionIcon(action.icon)}
-            {action.label}
           </button>
         )
       )}

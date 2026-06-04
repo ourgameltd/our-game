@@ -91,7 +91,7 @@ This repository contains the frontend demonstration of the football club portal.
 
 - Mobile app development for iOS and Android
 - Real-time notifications for matches, training, and updates
-- Payment processing for membership fees and kit orders
+- Payment processing for membership fees and kits
 - Fan engagement features
 - Parent portal for youth player management
 

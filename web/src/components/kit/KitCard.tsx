@@ -8,6 +8,7 @@ interface KitCardProps {
   onDelete?: () => void;
   showActions?: boolean;
   variant?: 'card' | 'list';
+  isInherited?: boolean;
 }
 
 function ColorSwatch({ color, label }: { color: string; label: string }) {
@@ -27,6 +28,7 @@ export default function KitCard({
   onDelete,
   showActions = true,
   variant = 'card',
+  isInherited,
 }: KitCardProps) {
   const containerClass = variant === 'list'
     ? `bg-white dark:bg-gray-800 p-3 md:p-4 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors ${onClick ? 'cursor-pointer' : ''} ${!kit.isActive ? 'opacity-60' : ''}`
@@ -40,7 +42,9 @@ export default function KitCard({
       <div className="flex items-stretch gap-3">
         <div
           className={`w-1 self-stretch rounded-full shrink-0 ${
-            kit.isActive ? 'bg-primary-500 dark:bg-primary-400' : 'bg-gray-300 dark:bg-gray-600'
+            isInherited !== undefined
+              ? isInherited ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary-500 dark:bg-primary-400'
+              : kit.isActive ? 'bg-primary-500 dark:bg-primary-400' : 'bg-gray-300 dark:bg-gray-600'
           }`}
         />
 
@@ -65,6 +69,11 @@ export default function KitCard({
             </span>
 
             {/* Status */}
+            {isInherited && (
+              <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shrink-0">
+                Inherited
+              </span>
+            )}
             {!kit.isActive && (
               <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 shrink-0">
                 Inactive
@@ -78,24 +87,22 @@ export default function KitCard({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="btn-sm btn-secondary gap-1.5"
+                    className="btn-sm btn-secondary btn-icon"
                     aria-label={`Edit ${kit.name}`}
                     title={`Edit ${kit.name}`}
                   >
                     <Pencil className="w-4 h-4" />
-                    Edit
                   </button>
                 )}
                 {onDelete && (
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="btn-sm btn-danger gap-1.5"
+                    className="btn-sm btn-danger btn-icon"
                     aria-label={`Delete ${kit.name}`}
                     title={`Delete ${kit.name}`}
                   >
                     <Trash2 className="w-4 h-4" />
-                    Delete
                   </button>
                 )}
               </div>
@@ -116,6 +123,11 @@ export default function KitCard({
                   <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{kit.type} kit</span>
                 </div>
               </div>
+              {isInherited && (
+                <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 shrink-0 ml-2">
+                  Inherited
+                </span>
+              )}
               {!kit.isActive && (
                 <span className="badge bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 shrink-0 ml-2">
                   Inactive
@@ -129,24 +141,22 @@ export default function KitCard({
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onEdit(); }}
-                    className="btn-sm btn-secondary gap-1.5 flex-1 justify-center"
+                    className="btn-sm btn-secondary btn-icon flex-1 justify-center"
                     aria-label={`Edit ${kit.name}`}
                     title={`Edit ${kit.name}`}
                   >
                     <Pencil className="w-4 h-4" />
-                    Edit
                   </button>
                 )}
                 {onDelete && (
                   <button
                     type="button"
                     onClick={(e) => { e.stopPropagation(); onDelete(); }}
-                    className="btn-sm btn-danger gap-1.5 flex-1 justify-center"
+                    className="btn-sm btn-danger btn-icon flex-1 justify-center"
                     aria-label={`Delete ${kit.name}`}
                     title={`Delete ${kit.name}`}
                   >
                     <Trash2 className="w-4 h-4" />
-                    Delete
                   </button>
                 )}
               </div>
