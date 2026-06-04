@@ -561,7 +561,8 @@ export default function AddEditTrainingSessionPage() {
         />
 
         {/* Tabs */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="card mb-4">
+        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }}>
+        <div className="card mb-4">
           <div className="flex justify-evenly sm:justify-start sm:flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
             <button
               type="button"
@@ -1359,6 +1360,8 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
               </div>
             </div>
           )}
+
+        </div>
 
           {/* Action Buttons */}
           <div className="mt-4">

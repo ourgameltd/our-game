@@ -2233,6 +2233,15 @@ export interface UpdateTeamCoachRoleRequest {
 
 // Match Detail DTOs
 
+export interface MatchKitDto {
+  id: string;
+  name: string;
+  type: string;
+  shirtColor: string;
+  shortsColor: string;
+  socksColor: string;
+}
+
 export interface MatchDetailDto {
   id: string;
   teamId: string;
@@ -2253,6 +2262,8 @@ export interface MatchDetailDto {
   primaryKitId?: string;
   secondaryKitId?: string;
   goalkeeperKitId?: string;
+  primaryKit?: MatchKitDto;
+  goalkeeperKit?: MatchKitDto;
   homeScore?: number;
   awayScore?: number;
   status: string;

@@ -857,6 +857,11 @@ export default function AddEditMatchPage() {
     return player?.squadNumber;
   };
 
+  const getPlayerPhotoUrl = (playerId: string): string | undefined => {
+    const player = (teamPlayers || []).find(p => p.id === playerId);
+    return player?.photoUrl || undefined;
+  };
+
   const getPositionLabelForSlot = (positionIndex: number, fallback?: PlayerPosition): string => {
     return lineupSlotsByPositionIndex.get(positionIndex)?.positionLabel || fallback || `Slot ${positionIndex + 1}`;
   };
@@ -1648,7 +1653,7 @@ export default function AddEditMatchPage() {
 
 
         {/* Tabs */}
-        <form onSubmit={(e) => { e.preventDefault(); handleSave(); }} className="card mb-4">
+        <div className="card mb-4">
           <div className="flex justify-evenly sm:justify-start sm:flex-wrap gap-2 border-b border-gray-200 dark:border-gray-700 pb-4">
             <button
               type="button"
@@ -2278,8 +2283,8 @@ export default function AddEditMatchPage() {
                         ? 'bg-green-50 dark:bg-green-900/20'
                         : 'bg-gray-50 dark:bg-gray-700';
                       return (
-                        <div key={player.playerId} className={`flex items-center justify-between p-3 rounded-lg ${bgClass} ${statusRing}`}>
-                          <div className="flex items-center gap-3">
+                        <div key={player.playerId} className={`flex items-center justify-between p-2 sm:p-3 rounded-lg ${bgClass} ${statusRing}`}>
+                          <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                             <input
                               type="number"
                               min="1"
@@ -2287,20 +2292,20 @@ export default function AddEditMatchPage() {
                               value={player.squadNumber ?? ''}
                               onChange={(e) => handleUpdateStartingPlayerSquadNumber(player.playerId, e.target.value)}
                               placeholder="#"
-                              className="w-10 h-7 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="w-10 h-7 shrink-0 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               title="Squad number for this match (can differ from team default)"
                             />
-                            <span className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
+                            <span className="shrink-0 px-1.5 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded text-xs font-semibold">
                               {getPositionLabelForSlot(player.positionIndex, player.positionLabel)}
                             </span>
                             {playerData?.photoUrl && (
-                              <img 
-                                src={playerData.photoUrl} 
+                              <img
+                                src={playerData.photoUrl}
                                 alt={getPlayerName(player.playerId)}
-                                className="w-8 h-8 rounded-full object-cover"
+                                className="hidden sm:block w-8 h-8 shrink-0 rounded-full object-cover"
                               />
                             )}
-                            <span className="text-gray-900 dark:text-white font-medium">
+                            <span className="text-gray-900 dark:text-white font-medium truncate min-w-0">
                               {getPlayerName(player.playerId)}
                               {isCaptain && <span className="ml-1 text-amber-500" title="Captain">©</span>}
                             </span>
@@ -2414,8 +2419,8 @@ export default function AddEditMatchPage() {
                         ? 'bg-green-50 dark:bg-green-900/20'
                         : 'bg-gray-50 dark:bg-gray-700';
                     return (
-                      <div key={sub.playerId} className={`flex items-center justify-between ${bgClass} p-3 rounded-lg ${statusRing}`}>
-                        <div className="flex items-center gap-3">
+                      <div key={sub.playerId} className={`flex items-center justify-between ${bgClass} p-2 sm:p-3 rounded-lg ${statusRing}`}>
+                        <div className="flex items-center gap-2 min-w-0 flex-1 overflow-hidden">
                           <input
                             type="number"
                             min="1"
@@ -2423,17 +2428,17 @@ export default function AddEditMatchPage() {
                             value={sub.squadNumber ?? ''}
                             onChange={(e) => handleUpdateSubstituteSquadNumber(sub.playerId, e.target.value)}
                             placeholder="#"
-                            className="w-10 h-7 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-10 h-7 shrink-0 bg-gray-900 dark:bg-gray-100 rounded text-center text-white dark:text-gray-900 text-xs font-bold border-0 focus:ring-2 focus:ring-primary-500 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                             title="Squad number for this match (can differ from team default)"
                           />
                           {playerData?.photoUrl && (
-                            <img 
-                              src={playerData.photoUrl} 
+                            <img
+                              src={playerData.photoUrl}
                               alt={getPlayerName(sub.playerId)}
-                              className="w-8 h-8 rounded-full object-cover"
+                              className="hidden sm:block w-8 h-8 shrink-0 rounded-full object-cover"
                             />
                           )}
-                          <span className="text-gray-900 dark:text-white font-medium">
+                          <span className="text-gray-900 dark:text-white font-medium truncate min-w-0">
                             {getPlayerName(sub.playerId)}
                           </span>
                         </div>
@@ -2532,6 +2537,7 @@ export default function AddEditMatchPage() {
                         showInheritance={false}
                         selectedPlayers={startingPlayers}
                         getPlayerName={getPlayerName}
+                        getPlayerPhotoUrl={getPlayerPhotoUrl}
                         showPlayerNames={true}
                         interactive={true}
                         onPositionClick={handlePlayerClickForSwap}
@@ -2559,6 +2565,7 @@ export default function AddEditMatchPage() {
                         showInheritance={false}
                         selectedPlayers={startingPlayers}
                         getPlayerName={getPlayerName}
+                        getPlayerPhotoUrl={getPlayerPhotoUrl}
                         showPlayerNames={true}
                         interactive={true}
                         onPositionClick={handlePlayerClickForSwap}
@@ -3192,60 +3199,62 @@ export default function AddEditMatchPage() {
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className="mt-4">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-              {/* Left side - Publish + Notify */}
-              {isEditing && (
-                <div className="flex flex-col gap-1">
-                  <div className="flex flex-col sm:flex-row gap-2">
-                    <button
-                      type="button"
-                      onClick={handlePublishToggle}
-                      disabled={isPublishing}
-                      className="btn btn-md btn-secondary gap-2"
-                      title={isPublished ? 'Unpublish report' : 'Publish report'}
-                    >
-                      <Share2 className="w-4 h-4" />
-                      {isPublished ? 'Unpublish' : 'Publish'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleNotify}
-                      disabled={isNotifying}
-                      className="btn btn-md btn-secondary gap-2"
-                      title="Send notifications to players and coaches"
-                    >
-                      <Bell className="w-4 h-4" />
-                      {isNotifying ? 'Sending...' : 'Notify'}
-                    </button>
-                  </div>
-                  {publishError && (
-                    <p className="text-xs text-red-600 dark:text-red-400">{publishError}</p>
-                  )}
-                </div>
-              )}
+        </div>
 
-              {/* Right side - Standard form actions */}
-              <div className="flex flex-col sm:flex-row gap-2 sm:ml-auto">
-                <button
-                  type="button"
-                  onClick={() => navigate(Routes.matches(clubId!, ageGroupId!, teamId!))}
-                  className="btn btn-md btn-secondary"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSaving}
-                  className="btn btn-md btn-success"
-                >
-                  {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Match'}
-                </button>
+        {/* Action Buttons */}
+        <div className="mt-4 mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            {/* Left side - Publish + Notify */}
+            {isEditing && (
+              <div className="flex flex-col gap-1">
+                <div className="flex flex-col sm:flex-row gap-2">
+                  <button
+                    type="button"
+                    onClick={handlePublishToggle}
+                    disabled={isPublishing}
+                    className="btn btn-md btn-secondary gap-2"
+                    title={isPublished ? 'Unpublish report' : 'Publish report'}
+                  >
+                    <Share2 className="w-4 h-4" />
+                    {isPublished ? 'Unpublish' : 'Publish'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleNotify}
+                    disabled={isNotifying}
+                    className="btn btn-md btn-secondary gap-2"
+                    title="Send notifications to players and coaches"
+                  >
+                    <Bell className="w-4 h-4" />
+                    {isNotifying ? 'Sending...' : 'Notify'}
+                  </button>
+                </div>
+                {publishError && (
+                  <p className="text-xs text-red-600 dark:text-red-400">{publishError}</p>
+                )}
               </div>
+            )}
+
+            {/* Right side - Standard form actions */}
+            <div className="flex flex-col sm:flex-row gap-2 sm:ml-auto">
+              <button
+                type="button"
+                onClick={() => navigate(Routes.matches(clubId!, ageGroupId!, teamId!))}
+                className="btn btn-md btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="btn btn-md btn-success"
+              >
+                {isSaving ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Match'}
+              </button>
             </div>
           </div>
-        </form>
+        </div>
       </main>
 
       {/* Coach Selection Modal */}

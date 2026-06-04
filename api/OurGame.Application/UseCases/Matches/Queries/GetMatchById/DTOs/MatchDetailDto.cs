@@ -27,6 +27,8 @@ public record MatchDetailDto
     public Guid? PrimaryKitId { get; init; }
     public Guid? SecondaryKitId { get; init; }
     public Guid? GoalkeeperKitId { get; init; }
+    public MatchKitDto? PrimaryKit { get; init; }
+    public MatchKitDto? GoalkeeperKit { get; init; }
     public int? HomeScore { get; init; }
     public int? AwayScore { get; init; }
     public string Status { get; init; } = string.Empty;
@@ -179,4 +181,17 @@ public record MatchSubstitutionDetailDto
     public string PlayerOutName { get; init; } = string.Empty;
     public Guid PlayerInId { get; init; }
     public string PlayerInName { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// Kit details embedded in match response
+/// </summary>
+public record MatchKitDto
+{
+    public Guid Id { get; init; }
+    public string Name { get; init; } = string.Empty;
+    public string Type { get; init; } = string.Empty;
+    public string ShirtColor { get; init; } = string.Empty;
+    public string ShortsColor { get; init; } = string.Empty;
+    public string SocksColor { get; init; } = string.Empty;
 }

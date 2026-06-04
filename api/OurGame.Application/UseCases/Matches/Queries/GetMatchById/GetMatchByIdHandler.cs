@@ -28,7 +28,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
     {
         // 1. Fetch the match with team/age-group/club context
         var matchSql = @"
-            SELECT 
+            SELECT
                 m.Id,
                 m.TeamId,
                 t.AgeGroupId,
@@ -51,6 +51,16 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 m.PrimaryKitId,
                 m.SecondaryKitId,
                 m.GoalkeeperKitId,
+                pk.Name AS PrimaryKitName,
+                pk.Type AS PrimaryKitType,
+                pk.ShirtColor AS PrimaryKitShirtColor,
+                pk.ShortsColor AS PrimaryKitShortsColor,
+                pk.SocksColor AS PrimaryKitSocksColor,
+                gk.Name AS GoalkeeperKitName,
+                gk.Type AS GoalkeeperKitType,
+                gk.ShirtColor AS GoalkeeperKitShirtColor,
+                gk.ShortsColor AS GoalkeeperKitShortsColor,
+                gk.SocksColor AS GoalkeeperKitSocksColor,
                 m.HomeScore,
                 m.AwayScore,
                 m.Status,
@@ -64,6 +74,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             INNER JOIN Teams t ON m.TeamId = t.Id
             INNER JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
             INNER JOIN Clubs cl ON t.ClubId = cl.Id
+            LEFT JOIN Kits pk ON m.PrimaryKitId = pk.Id
+            LEFT JOIN Kits gk ON m.GoalkeeperKitId = gk.Id
             WHERE m.Id = {0}";
 
         var match = await _db.Database
@@ -314,6 +326,24 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             PrimaryKitId = match.PrimaryKitId,
             SecondaryKitId = match.SecondaryKitId,
             GoalkeeperKitId = match.GoalkeeperKitId,
+            PrimaryKit = match.PrimaryKitId.HasValue && match.PrimaryKitName != null ? new MatchKitDto
+            {
+                Id = match.PrimaryKitId.Value,
+                Name = match.PrimaryKitName,
+                Type = MapKitTypeToString(match.PrimaryKitType),
+                ShirtColor = match.PrimaryKitShirtColor ?? string.Empty,
+                ShortsColor = match.PrimaryKitShortsColor ?? string.Empty,
+                SocksColor = match.PrimaryKitSocksColor ?? string.Empty,
+            } : null,
+            GoalkeeperKit = match.GoalkeeperKitId.HasValue && match.GoalkeeperKitName != null ? new MatchKitDto
+            {
+                Id = match.GoalkeeperKitId.Value,
+                Name = match.GoalkeeperKitName,
+                Type = MapKitTypeToString(match.GoalkeeperKitType),
+                ShirtColor = match.GoalkeeperKitShirtColor ?? string.Empty,
+                ShortsColor = match.GoalkeeperKitShortsColor ?? string.Empty,
+                SocksColor = match.GoalkeeperKitSocksColor ?? string.Empty,
+            } : null,
             HomeScore = match.HomeScore,
             AwayScore = match.AwayScore,
             Status = MapStatusToString(match.Status),
@@ -443,6 +473,19 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
         };
     }
 
+    private static string MapKitTypeToString(int? type)
+    {
+        return type switch
+        {
+            0 => "home",
+            1 => "away",
+            2 => "third",
+            3 => "goalkeeper",
+            4 => "training",
+            _ => "home"
+        };
+    }
+
     private static string MapCardTypeToString(int type)
     {
         return type switch
@@ -491,6 +534,16 @@ public class MatchRaw
     public Guid? PrimaryKitId { get; set; }
     public Guid? SecondaryKitId { get; set; }
     public Guid? GoalkeeperKitId { get; set; }
+    public string? PrimaryKitName { get; set; }
+    public int? PrimaryKitType { get; set; }
+    public string? PrimaryKitShirtColor { get; set; }
+    public string? PrimaryKitShortsColor { get; set; }
+    public string? PrimaryKitSocksColor { get; set; }
+    public string? GoalkeeperKitName { get; set; }
+    public int? GoalkeeperKitType { get; set; }
+    public string? GoalkeeperKitShirtColor { get; set; }
+    public string? GoalkeeperKitShortsColor { get; set; }
+    public string? GoalkeeperKitSocksColor { get; set; }
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
     public int Status { get; set; }

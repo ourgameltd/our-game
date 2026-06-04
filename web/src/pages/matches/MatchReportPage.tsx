@@ -130,7 +130,10 @@ export default function MatchReportPage() {
     );
   }
 
-  const isUpcoming = new Date(match.matchDate) > new Date();
+  // Dapper serializes DateTime with Kind=Unspecified (no Z suffix), so append Z to force UTC parsing.
+  const asUtc = (iso: string) => (/Z$|[+-]\d{2}:\d{2}$/.test(iso) ? iso : iso + 'Z');
+
+  const isUpcoming = new Date(asUtc(match.matchDate)) > new Date();
   const homeTeam = match.isHome ? match.teamName : match.opposition;
   const awayTeam = match.isHome ? match.opposition : match.teamName;
   // Group cards by player
@@ -168,7 +171,7 @@ export default function MatchReportPage() {
   const substitutes = match.lineup?.players.filter(p => !p.isStarting) || [];
 
   const handleAddToCalendar = () => {
-    const meet = new Date(match.meetTime!);
+    const meet = new Date(asUtc(match.meetTime!));
     const end = new Date(meet.getTime() + 2 * 60 * 60 * 1000);
     const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
     const ics = [
@@ -223,11 +226,11 @@ export default function MatchReportPage() {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
             <div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <span>📅 {new Date(match.matchDate).toLocaleDateString()}</span>
+                <span>📅 {new Date(asUtc(match.matchDate)).toLocaleDateString()}</span>
                 {match.kickOffTime && (
                   <>
                     <span>•</span>
-                    <span>⚽ {new Date(match.kickOffTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>⚽ {new Date(asUtc(match.kickOffTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   </>
                 )}
                 <span>•</span>
@@ -260,7 +263,7 @@ export default function MatchReportPage() {
                 {match.meetTime && (
                   <>
                     <span>•</span>
-                    <span>🕐 Meet: {new Date(match.meetTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span>🕐 Meet: {new Date(asUtc(match.meetTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     <button
                       type="button"
                       onClick={handleAddToCalendar}
@@ -282,6 +285,31 @@ export default function MatchReportPage() {
               </div>
             )}
           </div>
+
+          {(match.primaryKit || match.goalkeeperKit) && (
+            <div className="mt-3 flex flex-wrap gap-4">
+              {match.primaryKit && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kit:</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.shirtColor }} title="Shirt" />
+                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.shortsColor }} title="Shorts" />
+                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.socksColor }} title="Socks" />
+                  </div>
+                </div>
+              )}
+              {match.goalkeeperKit && (
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">GK Kit:</span>
+                  <div className="flex items-center gap-1">
+                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.shirtColor }} title="Shirt" />
+                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.shortsColor }} title="Shorts" />
+                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.socksColor }} title="Socks" />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
 
           {match.notes && (
             <div className="mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-600 dark:border-blue-400">

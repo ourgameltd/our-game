@@ -24,6 +24,7 @@ interface TacticDisplayProps {
   // Player assignment props (optional - for match lineup display)
   selectedPlayers?: SelectedPlayer[];
   getPlayerName?: (playerId: string) => string;
+  getPlayerPhotoUrl?: (playerId: string) => string | undefined;
   showPlayerNames?: boolean;
   interactive?: boolean;
   highlightedPlayerIndex?: number | null;
@@ -79,6 +80,7 @@ export default function TacticDisplay({
   // Player assignment props
   selectedPlayers = [],
   getPlayerName,
+  getPlayerPhotoUrl,
   showPlayerNames = true,
   interactive = false,
   highlightedPlayerIndex,
@@ -113,10 +115,10 @@ export default function TacticDisplay({
     : [];
 
   return (
-    <div className={`bg-white dark:bg-gray-800 ${compact ? '' : 'rounded-lg border border-gray-200 dark:border-gray-700'} overflow-hidden h-full ${className}`}>
+    <div className={`bg-white dark:bg-gray-800 ${compact ? 'h-full' : 'rounded-lg border border-gray-200 dark:border-gray-700'} overflow-hidden ${className}`}>
       {/* Football Pitch */}
       <div
-        className="relative w-full h-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-700 dark:to-green-800"
+        className={`relative w-full bg-gradient-to-b from-green-500 to-green-600 dark:from-green-700 dark:to-green-800 ${compact ? 'h-full' : ''}`}
         style={compact ? {} : { paddingBottom: '140%' }}
         onClick={(e) => {
           if (e.target === e.currentTarget || (e.target as HTMLElement).tagName === 'svg') {
@@ -176,6 +178,7 @@ export default function TacticDisplay({
           const hasPlayer = !!player;
           const playerName = hasPlayer && getPlayerName ? getPlayerName(player.playerId) : '';
           const initials = playerName ? playerName.split(' ').map(n => n[0]).join('') : '';
+          const playerPhotoUrl = hasPlayer && getPlayerPhotoUrl ? getPlayerPhotoUrl(player.playerId) : undefined;
           const isHighlighted = hasPlayer && positionIndex === highlightedPlayerIndex;
           
           // Dim positions not related to selected position's principles OR selected principle's positions
@@ -214,10 +217,10 @@ export default function TacticDisplay({
               <div className="relative">
                 <div
                   className={`${
-                    compact 
-                      ? 'w-4 h-4' 
+                    compact
+                      ? 'w-4 h-4'
                       : 'w-10 h-10 sm:w-12 sm:h-12'
-                  } rounded-full flex items-center justify-center border-2 shadow-lg transition-colors ${
+                  } rounded-full flex items-center justify-center border-2 shadow-lg transition-colors overflow-hidden ${
                     isHighlighted
                       ? 'bg-yellow-500 dark:bg-yellow-600 border-yellow-300 dark:border-yellow-400 ring-4 ring-yellow-400 dark:ring-yellow-500 animate-pulse'
                       : isSelected
@@ -236,15 +239,19 @@ export default function TacticDisplay({
                   }`}
                 >
                   {!compact && (
-                    <span className={`text-xs sm:text-sm font-bold ${
-                      hasPlayer || (!selectedPlayers.length && !hasOverrides) || isPrincipleHighlighted
-                        ? 'text-white'
-                        : selectedPlayers.length > 0 && !hasPlayer
-                        ? 'text-gray-700 dark:text-gray-300'
-                        : 'text-white'
-                    }`}>
-                      {hasPlayer ? initials : pos.position}
-                    </span>
+                    hasPlayer && playerPhotoUrl ? (
+                      <img src={playerPhotoUrl} alt={initials} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className={`text-xs sm:text-sm font-bold ${
+                        hasPlayer || (!selectedPlayers.length && !hasOverrides) || isPrincipleHighlighted
+                          ? 'text-white'
+                          : selectedPlayers.length > 0 && !hasPlayer
+                          ? 'text-gray-700 dark:text-gray-300'
+                          : 'text-white'
+                      }`}>
+                        {hasPlayer ? initials : pos.position}
+                      </span>
+                    )
                   )}
                 </div>
 
