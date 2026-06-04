@@ -3,14 +3,13 @@ import { useEffect, useState } from 'react';
 import { useRequiredParams } from '@utils/routeParams';
 import { Plus, Users } from 'lucide-react';
 import { apiClient } from '@/api';
-import type { 
-  ClubDetailDto, 
-  ClubStatisticsDto, 
-  AgeGroupListDto, 
-  AgeGroupStatisticsDto 
+import type {
+  ClubDetailDto,
+  ClubStatisticsDto,
+  AgeGroupListDto,
+  AgeGroupStatisticsDto
 } from '@/api';
 import type { SquadSize } from '@/types';
-import StatsGrid from '@components/stats/StatsGrid';
 import MatchesCard from '@components/matches/MatchesCard';
 import AgeGroupListCard from '@components/ageGroup/AgeGroupListCard';
 import PageTitle from '@components/common/PageTitle';
@@ -30,7 +29,6 @@ export default function ClubOverviewPage() {
 
   const [stats, setStats] = useState<ClubStatisticsDto | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState<string | null>(null);
 
   const [ageGroups, setAgeGroups] = useState<AgeGroupListDto[]>([]);
   const [ageGroupsLoading, setAgeGroupsLoading] = useState(true);
@@ -64,14 +62,10 @@ export default function ClubOverviewPage() {
       .then((response) => {
         if (response.success && response.data) {
           setStats(response.data);
-          setStatsError(null);
-        } else {
-          setStatsError(response.error?.message || 'Failed to load statistics');
         }
       })
       .catch((err) => {
         console.error('Failed to fetch statistics:', err);
-        setStatsError('Failed to load statistics from API');
       })
       .finally(() => setStatsLoading(false));
 
@@ -138,12 +132,6 @@ export default function ClubOverviewPage() {
               <div className="h-4 w-28 bg-gray-200 dark:bg-gray-700 rounded" />
             </div>
             <div className="h-9 w-28 bg-gray-200 dark:bg-gray-700 rounded" />
-          </div>
-
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-            ))}
           </div>
 
           <div className="mb-4">
@@ -231,27 +219,6 @@ export default function ClubOverviewPage() {
             variant: 'primary'
           }}
         />
-
-        {/* Stats Overview */}
-        {statsError ? (
-          <div className="mb-4 p-4 bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300 rounded-lg">
-            {statsError}
-          </div>
-        ) : stats && (
-          <StatsGrid 
-            stats={{
-              playerCount: stats.playerCount,
-              matchesPlayed: stats.matchesPlayed,
-              wins: stats.wins,
-              draws: stats.draws,
-              losses: stats.losses,
-              winRate: stats.winRate,
-              goalDifference: stats.goalDifference
-            }}
-            onPlayerCountClick={() => navigate(Routes.clubPlayers(clubId))}
-            additionalInfo={`${ageGroups.length} age groups`}
-          />
-        )}
 
         {/* Age Groups Section */}
         <div className="mb-4">

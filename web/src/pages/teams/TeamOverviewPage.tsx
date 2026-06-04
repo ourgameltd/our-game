@@ -1,10 +1,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useTeamOverview } from '@/api/hooks';
 import { TeamMatchSummaryDto } from '@/api';
-import StatsGrid from '@components/stats/StatsGrid';
 import MatchesCard from '@components/matches/MatchesCard';
-import TopPerformersCard from '@components/players/TopPerformersCard';
-import NeedsSupportCard from '@components/players/NeedsSupportCard';
 import PageTitle from '@components/common/PageTitle';
 import { Routes } from '@utils/routes';
 import { Match } from '@/types';
@@ -39,9 +36,6 @@ export default function TeamOverviewPage() {
 
   const upcomingMatches = stats ? mapMatchSummary(stats.upcomingMatches, 'scheduled') : [];
   const previousResults = stats ? mapMatchSummary(stats.previousResults, 'completed') : [];
-
-  const topPerformersData = stats?.topPerformers ?? [];
-  const needsAttentionData = stats?.underperforming ?? [];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -93,17 +87,6 @@ export default function TeamOverviewPage() {
             </p>
           </div>
         )}
-
-        {/* Stats Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 animate-pulse">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-            ))}
-          </div>
-        ) : stats ? (
-          <StatsGrid stats={stats} />
-        ) : null}
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           {isLoading ? (
@@ -184,24 +167,6 @@ export default function TeamOverviewPage() {
           </div>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-4">
-          {isLoading ? (
-            Array.from({ length: 2 }).map((_, index) => (
-              <div key={index} className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-            ))
-          ) : (
-            <>
-              <TopPerformersCard 
-                performers={topPerformersData}
-                getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
-              />
-              <NeedsSupportCard 
-                performers={needsAttentionData}
-                getPlayerLink={(playerId) => Routes.player(clubId!, ageGroupId!, playerId)}
-              />
-            </>
-          )}
-        </div>
       </main>
     </div>
   );

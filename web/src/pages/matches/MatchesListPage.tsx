@@ -31,16 +31,6 @@ function mapTeamMatchToMatch(dto: TeamMatchDto, teamId: string): Match {
 function MatchesListSkeleton() {
   return (
     <>
-      {/* Stats Summary Skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="card text-center animate-pulse">
-            <div className="h-8 w-12 mx-auto bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-            <div className="h-4 w-16 mx-auto bg-gray-200 dark:bg-gray-700 rounded" />
-          </div>
-        ))}
-      </div>
-
       {/* Matches List Skeleton */}
       <div className="space-y-4">
         <div className="h-6 w-40 bg-gray-200 dark:bg-gray-700 rounded animate-pulse" />

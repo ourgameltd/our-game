@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, matchPath } from 'react-router-dom';
-import { 
+import {
   Users,
   Home,
   HelpCircle,
@@ -21,7 +21,8 @@ import {
   Settings,
   Calendar,
   Dumbbell,
-  Award
+  Award,
+  BarChart3
 } from 'lucide-react';
 import { useClubById, useTeamOverview, useAgeGroup, usePlayer, useCoach } from '@/api/hooks';
 import { apiClient } from '@/api/client';
@@ -90,8 +91,8 @@ export default function MobileNavigation() {
   // Check if we're viewing a scheduling-related page (matches or training)
   const isSchedulingPage = location.pathname.includes('/matches') || location.pathname.includes('/training');
 
-  // Check if we're viewing a management-related page (ethos, kits, report-cards, competency-frameworks)
-  const isManagementPage = location.pathname.includes('/ethos') || location.pathname.includes('/kits') || location.pathname.includes('/invites') || location.pathname.includes('/competency-frameworks');
+  // Check if we're viewing a management-related page (ethos, kits, report-cards, competency-frameworks, statistics)
+  const isManagementPage = location.pathname.includes('/ethos') || location.pathname.includes('/kits') || location.pathname.includes('/invites') || location.pathname.includes('/competency-frameworks') || location.pathname.endsWith('/statistics');
 
   // Check if we're viewing a tactics-related page (formations, drills, templates)
   const isTacticsPage = location.pathname.includes('/tactics') || location.pathname.includes('/drills') || location.pathname.includes('/drill-templates');
@@ -233,6 +234,7 @@ export default function MobileNavigation() {
       if (path.includes('/squad')) return { title: 'Squad Management', image: null };
       if (path.includes('/matches')) return { title: 'Matches', image: null };
       if (path.includes('/training')) return { title: 'Training', image: null };
+      if (path.endsWith('/statistics')) return { title: 'Statistics', image: null };
       if (path.includes('/kit')) return { title: 'Kit Orders', image: null };
       if (path.includes('/drill-templates')) return { title: 'Sessions', image: null };
       if (path.includes('/drills')) return { title: 'Drills', image: null };
@@ -511,50 +513,6 @@ export default function MobileNavigation() {
                               </ul>
                             )}
                           </li>
-                          {/* Tactics Section */}
-                          <li className="mobile-nav-item">
-                            <button
-                              onClick={() => setIsTacticsExpanded(!isTacticsExpanded)}
-                              className={`mobile-nav-link pl-8 w-full justify-between ${isTacticsPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
-                            >
-                              <span className="flex items-center gap-4">
-                                <FileText className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Tactics</span>
-                              </span>
-                              {isTacticsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
-                            {isTacticsExpanded && (
-                              <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.ageGroupTactics(clubId as string, ageGroupId as string)}
-                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupTactics(clubId as string, ageGroupId as string)) && !location.pathname.includes('/drill') ? 'active' : ''}`}
-                                  >
-                                    <FileText className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Formations</span>
-                                  </Link>
-                                </li>
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.ageGroupDrills(clubId as string, ageGroupId as string)}
-                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupDrills(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
-                                  >
-                                    <FileText className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Drills</span>
-                                  </Link>
-                                </li>
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.ageGroupDrillTemplates(clubId as string, ageGroupId as string)}
-                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupDrillTemplates(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
-                                  >
-                                    <FileText className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Sessions</span>
-                                  </Link>
-                                </li>
-                              </ul>
-                            )}
-                          </li>
                           {/* Management Section */}
                           <li className="mobile-nav-item">
                             <button
@@ -594,6 +552,50 @@ export default function MobileNavigation() {
                                   >
                                     <Award className="mobile-nav-icon" />
                                     <span className="mobile-nav-text">Competencies</span>
+                                  </Link>
+                                </li>
+                              </ul>
+                            )}
+                          </li>
+                          {/* Tactics Section */}
+                          <li className="mobile-nav-item">
+                            <button
+                              onClick={() => setIsTacticsExpanded(!isTacticsExpanded)}
+                              className={`mobile-nav-link pl-8 w-full justify-between ${isTacticsPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                            >
+                              <span className="flex items-center gap-4">
+                                <FileText className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Tactics</span>
+                              </span>
+                              {isTacticsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </button>
+                            {isTacticsExpanded && (
+                              <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.ageGroupTactics(clubId as string, ageGroupId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupTactics(clubId as string, ageGroupId as string)) && !location.pathname.includes('/drill') ? 'active' : ''}`}
+                                  >
+                                    <FileText className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Formations</span>
+                                  </Link>
+                                </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.ageGroupDrills(clubId as string, ageGroupId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupDrills(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
+                                  >
+                                    <FileText className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Drills</span>
+                                  </Link>
+                                </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.ageGroupDrillTemplates(clubId as string, ageGroupId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.ageGroupDrillTemplates(clubId as string, ageGroupId as string)) ? 'active' : ''}`}
+                                  >
+                                    <FileText className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Sessions</span>
                                   </Link>
                                 </li>
                               </ul>
@@ -697,50 +699,6 @@ export default function MobileNavigation() {
                               </ul>
                             )}
                           </li>
-                          {/* Tactics Section */}
-                          <li className="mobile-nav-item">
-                            <button
-                              onClick={() => setIsTacticsExpanded(!isTacticsExpanded)}
-                              className={`mobile-nav-link pl-8 w-full justify-between ${isTacticsPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
-                            >
-                              <span className="flex items-center gap-4">
-                                <FileText className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Tactics</span>
-                              </span>
-                              {isTacticsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
-                            {isTacticsExpanded && (
-                              <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.clubTactics(clubId as string)}
-                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.clubTactics(clubId as string)) && !location.pathname.includes('/drill') ? 'active' : ''}`}
-                                  >
-                                    <FileText className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Formations</span>
-                                  </Link>
-                                </li>
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.drills(clubId as string)}
-                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.drills(clubId as string)) ? 'active' : ''}`}
-                                  >
-                                    <FileText className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Drills</span>
-                                  </Link>
-                                </li>
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.drillTemplates(clubId as string)}
-                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.drillTemplates(clubId as string)) ? 'active' : ''}`}
-                                  >
-                                    <FileText className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Sessions</span>
-                                  </Link>
-                                </li>
-                              </ul>
-                            )}
-                          </li>
                           {/* Management Section */}
                           <li className="mobile-nav-item">
                             <button
@@ -789,6 +747,50 @@ export default function MobileNavigation() {
                                   >
                                     <Award className="mobile-nav-icon" />
                                     <span className="mobile-nav-text">Competencies</span>
+                                  </Link>
+                                </li>
+                              </ul>
+                            )}
+                          </li>
+                          {/* Tactics Section */}
+                          <li className="mobile-nav-item">
+                            <button
+                              onClick={() => setIsTacticsExpanded(!isTacticsExpanded)}
+                              className={`mobile-nav-link pl-8 w-full justify-between ${isTacticsPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                            >
+                              <span className="flex items-center gap-4">
+                                <FileText className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Tactics</span>
+                              </span>
+                              {isTacticsExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </button>
+                            {isTacticsExpanded && (
+                              <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.clubTactics(clubId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.clubTactics(clubId as string)) && !location.pathname.includes('/drill') ? 'active' : ''}`}
+                                  >
+                                    <FileText className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Formations</span>
+                                  </Link>
+                                </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.drills(clubId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.drills(clubId as string)) ? 'active' : ''}`}
+                                  >
+                                    <FileText className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Drills</span>
+                                  </Link>
+                                </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.drillTemplates(clubId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes(Routes.drillTemplates(clubId as string)) ? 'active' : ''}`}
+                                  >
+                                    <FileText className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Sessions</span>
                                   </Link>
                                 </li>
                               </ul>
@@ -892,6 +894,50 @@ export default function MobileNavigation() {
                               </ul>
                             )}
                           </li>
+                          {/* Management Section */}
+                          <li className="mobile-nav-item">
+                            <button
+                              onClick={() => setIsManagementExpanded(!isManagementExpanded)}
+                              className={`mobile-nav-link pl-8 w-full justify-between ${isManagementPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
+                            >
+                              <span className="flex items-center gap-4">
+                                <Settings className="mobile-nav-icon" />
+                                <span className="mobile-nav-text">Management</span>
+                              </span>
+                              {isManagementExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                            </button>
+                            {isManagementExpanded && (
+                              <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.teamKits(clubId as string, ageGroupId as string, teamId as string)}
+                                    className={`mobile-nav-link pl-8 ${isActive(Routes.teamKits(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
+                                  >
+                                    <Shirt className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Kits</span>
+                                  </Link>
+                                </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.teamCompetencyFrameworks(clubId as string, ageGroupId as string, teamId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.includes('/competency-frameworks') ? 'active' : ''}`}
+                                  >
+                                    <Award className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Competencies</span>
+                                  </Link>
+                                </li>
+                                <li className="mobile-nav-item">
+                                  <Link
+                                    to={Routes.teamStatistics(clubId as string, ageGroupId as string, teamId as string)}
+                                    className={`mobile-nav-link pl-8 ${location.pathname.endsWith('/statistics') ? 'active' : ''}`}
+                                  >
+                                    <BarChart3 className="mobile-nav-icon" />
+                                    <span className="mobile-nav-text">Statistics</span>
+                                  </Link>
+                                </li>
+                              </ul>
+                            )}
+                          </li>
                           {/* Scheduling Section */}
                           <li className="mobile-nav-item">
                             <button
@@ -966,41 +1012,6 @@ export default function MobileNavigation() {
                                   >
                                     <FileText className="mobile-nav-icon" />
                                     <span className="mobile-nav-text">Sessions</span>
-                                  </Link>
-                                </li>
-                              </ul>
-                            )}
-                          </li>
-                          {/* Management Section */}
-                          <li className="mobile-nav-item">
-                            <button
-                              onClick={() => setIsManagementExpanded(!isManagementExpanded)}
-                              className={`mobile-nav-link pl-8 w-full justify-between ${isManagementPage ? 'text-primary-600 dark:text-primary-400' : ''}`}
-                            >
-                              <span className="flex items-center gap-4">
-                                <Settings className="mobile-nav-icon" />
-                                <span className="mobile-nav-text">Management</span>
-                              </span>
-                              {isManagementExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                            </button>
-                            {isManagementExpanded && (
-                              <ul className="ml-4 border-l-2 border-gray-200 dark:border-gray-700">
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.teamKits(clubId as string, ageGroupId as string, teamId as string)}
-                                    className={`mobile-nav-link pl-8 ${isActive(Routes.teamKits(clubId as string, ageGroupId as string, teamId as string)) ? 'active' : ''}`}
-                                  >
-                                    <Shirt className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Kits</span>
-                                  </Link>
-                                </li>
-                                <li className="mobile-nav-item">
-                                  <Link
-                                    to={Routes.teamCompetencyFrameworks(clubId as string, ageGroupId as string, teamId as string)}
-                                    className={`mobile-nav-link pl-8 ${location.pathname.includes('/competency-frameworks') ? 'active' : ''}`}
-                                  >
-                                    <Award className="mobile-nav-icon" />
-                                    <span className="mobile-nav-text">Competencies</span>
                                   </Link>
                                 </li>
                               </ul>

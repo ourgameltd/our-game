@@ -227,34 +227,6 @@ export default function MatchesListContent({
 
   return (
     <>
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            {matches.length}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Total Matches</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {pastMatches.filter(m => getMatchResult(m) === 'W').length}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Wins</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
-            {pastMatches.filter(m => getMatchResult(m) === 'D').length}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Draws</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-red-600 dark:text-red-400">
-            {pastMatches.filter(m => getMatchResult(m) === 'L').length}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Losses</div>
-        </div>
-      </div>
-
       {/* Upcoming Matches */}
       {upcomingMatches.length > 0 && (
         <div className="mb-4">

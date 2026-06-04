@@ -697,6 +697,19 @@ export class Routes {
     return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/training/${validateParam(sessionId, 'sessionId')}/edit`;
   }
 
+  // Statistics
+  static teamStatistics(clubId: string, ageGroupId: string, teamId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/statistics`;
+  }
+
+  static playerStatistics(clubId: string, ageGroupId: string, playerId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/players/${validateParam(playerId, 'playerId')}/statistics`;
+  }
+
+  static teamPlayerStatistics(clubId: string, ageGroupId: string, teamId: string, playerId: string): string {
+    return `/dashboard/${validateParam(clubId, 'clubId')}/age-groups/${validateParam(ageGroupId, 'ageGroupId')}/teams/${validateParam(teamId, 'teamId')}/players/${validateParam(playerId, 'playerId')}/statistics`;
+  }
+
   // Report Cards (Management)
   static clubReportCards(clubId: string): string {
     return `/dashboard/${validateParam(clubId, 'clubId')}/report-cards`;

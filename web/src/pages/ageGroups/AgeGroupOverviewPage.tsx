@@ -10,10 +10,7 @@ import type {
   ClubDetailDto
 } from '@/api';
 import type { AgeGroup, Club, Team, SquadSize, Match } from '@/types';
-import StatsGrid from '../../components/stats/StatsGrid';
 import MatchesCard from '../../components/matches/MatchesCard';
-import TopPerformersCard from '../../components/players/TopPerformersCard';
-import NeedsSupportCard from '../../components/players/NeedsSupportCard';
 import TeamListCard from '../../components/team/TeamListCard';
 import PageTitle from '../../components/common/PageTitle';
 import EmptyState from '../../components/common/EmptyState';
@@ -40,7 +37,6 @@ const AgeGroupOverviewPage: React.FC = () => {
 
   const [stats, setStats] = useState<AgeGroupStatisticsDto | null>(null);
   const [statsLoading, setStatsLoading] = useState(true);
-  const [statsError, setStatsError] = useState<string | null>(null);
 
   usePageTitle(['Club', ageGroup?.name ?? 'Age Group', 'Overview']);
 
@@ -100,14 +96,10 @@ const AgeGroupOverviewPage: React.FC = () => {
       .then((response) => {
         if (response.success && response.data) {
           setStats(response.data);
-          setStatsError(null);
-        } else {
-          setStatsError(response.error?.message || 'Failed to load statistics');
         }
       })
       .catch((err) => {
         console.error('Failed to fetch statistics:', err);
-        setStatsError('Failed to load statistics from API');
       })
       .finally(() => setStatsLoading(false));
   }, [clubId, ageGroupId]);
@@ -274,22 +266,6 @@ const AgeGroupOverviewPage: React.FC = () => {
           </div>
         )}
 
-        {/* Statistics Cards */}
-        {statsError ? (
-          <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-red-800 dark:text-red-200 font-medium">Failed to load statistics</p>
-            <p className="text-red-600 dark:text-red-300 text-sm mt-1">{statsError}</p>
-          </div>
-        ) : statsLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4 animate-pulse">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-            ))}
-          </div>
-        ) : stats ? (
-          <StatsGrid stats={stats} />
-        ) : null}
-
         {/* Teams Section */}
         <div className="mb-4">
           <div className="flex justify-between items-center mb-4">
@@ -389,42 +365,6 @@ const AgeGroupOverviewPage: React.FC = () => {
         )}
       </div>
 
-      <div className="grid md:grid-cols-2 gap-4">
-        {statsLoading ? (
-          Array.from({ length: 2 }).map((_, index) => (
-            <div key={index} className="h-64 bg-gray-200 dark:bg-gray-700 rounded-lg animate-pulse" />
-          ))
-        ) : (
-          <>
-            <TopPerformersCard 
-              performers={(stats?.topPerformers ?? []).map(p => ({
-                playerId: p.playerId,
-                firstName: p.firstName || '',
-                lastName: p.lastName || '',
-                averageRating: p.averageRating,
-                matchesPlayed: p.matchesPlayed
-              }))}
-              getPlayerLink={(playerId) => {
-                if (!clubId || !ageGroupId) return '#';
-                return Routes.player(clubId, ageGroupId, playerId);
-              }}
-            />
-            <NeedsSupportCard 
-              performers={(stats?.underperforming ?? []).map(p => ({
-                playerId: p.playerId,
-                firstName: p.firstName || '',
-                lastName: p.lastName || '',
-                averageRating: p.averageRating,
-                matchesPlayed: p.matchesPlayed
-              }))}
-              getPlayerLink={(playerId) => {
-                if (!clubId || !ageGroupId) return '#';
-                return Routes.player(clubId, ageGroupId, playerId);
-              }}
-            />
-          </>
-        )}
-      </div>
       </main>
     </div>
   );

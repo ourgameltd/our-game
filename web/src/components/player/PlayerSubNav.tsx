@@ -1,5 +1,5 @@
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { User, BarChart3, ClipboardList } from 'lucide-react';
+import { User, BarChart3, ClipboardList, TrendingUp } from 'lucide-react';
 import { Routes } from '@utils/routes';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
@@ -31,11 +31,18 @@ export default function PlayerSubNav() {
       ? Routes.playerReviews(clubId, ageGroupId, playerId)
       : null;
 
+  const statisticsLink = teamId && ageGroupId
+    ? Routes.teamPlayerStatistics(clubId, ageGroupId, teamId, playerId)
+    : ageGroupId
+      ? Routes.playerStatistics(clubId, ageGroupId, playerId)
+      : null;
+
   if (!profileLink) return null;
 
   const isAbilitiesPage = location.pathname.includes('/abilities');
   const isReviewsPage = location.pathname.includes('/reviews');
-  const isProfilePage = !isAbilitiesPage && !isReviewsPage && !location.pathname.includes('/settings') && !location.pathname.includes('/album');
+  const isStatisticsPage = location.pathname.includes('/statistics');
+  const isProfilePage = !isAbilitiesPage && !isReviewsPage && !isStatisticsPage && !location.pathname.includes('/settings') && !location.pathname.includes('/album');
 
   const tabs = [
     { label: 'Overview', href: profileLink, active: isProfilePage, Icon: User },
@@ -44,6 +51,9 @@ export default function PlayerSubNav() {
       : []),
     ...(reviewsLink && canViewPlayerAbilities(profile)
       ? [{ label: 'Reviews', href: reviewsLink, active: isReviewsPage, Icon: ClipboardList }]
+      : []),
+    ...(statisticsLink && canViewPlayerAbilities(profile)
+      ? [{ label: 'Statistics', href: statisticsLink, active: isStatisticsPage, Icon: TrendingUp }]
       : []),
   ];
 

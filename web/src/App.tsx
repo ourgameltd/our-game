@@ -59,6 +59,8 @@ import TrainingSessionPage from '@pages/teams/TrainingSessionPage';
 // import AddEditDevelopmentPlanPage from '@pages/players/AddEditDevelopmentPlanPage';
 import PlayerAlbumPage from '@pages/players/PlayerAlbumPage';
 import PlayerSettingsPage from '@pages/players/PlayerSettingsPage';
+import PlayerStatisticsPage from '@pages/players/PlayerStatisticsPage';
+import TeamStatisticsPage from '@pages/teams/TeamStatisticsPage';
 // import ClubReportCardsPage from '@pages/clubs/ClubReportCardsPage';
 // import AgeGroupReportCardsPage from '@pages/ageGroups/AgeGroupReportCardsPage';
 // import TeamReportCardsPage from '@pages/teams/TeamReportCardsPage';
@@ -207,6 +209,7 @@ function AppContent() {
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} /> */}
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/new" element={<AddEditDevelopmentPlanPage />} /> */}
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/development-plans/:planId/edit" element={<AddEditDevelopmentPlanPage />} /> */}
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/statistics" element={<PlayerStatisticsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/album" element={<PlayerAlbumPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/players/:playerId/settings" element={<PlayerSettingsPage />} />
 
@@ -215,6 +218,7 @@ function AppContent() {
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/new" element={<AddEditTeamPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId" element={<TeamOverviewPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/edit" element={<AddEditTeamPage />} />
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/statistics" element={<TeamStatisticsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/squad" element={<TeamPlayersPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/coaches" element={<TeamCoachesPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/kits" element={<TeamKitsPage />} />
@@ -239,6 +243,7 @@ function AppContent() {
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans" element={<PlayerDevelopmentPlansPage />} /> */}
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/new" element={<AddEditDevelopmentPlanPage />} /> */}
         {/* <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/development-plans/:planId/edit" element={<AddEditDevelopmentPlanPage />} /> */}
+        <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/statistics" element={<PlayerStatisticsPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/album" element={<PlayerAlbumPage />} />
         <Route path="/dashboard/:clubId/age-groups/:ageGroupId/teams/:teamId/players/:playerId/settings" element={<PlayerSettingsPage />} />
 

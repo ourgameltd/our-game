@@ -304,3 +304,83 @@ All badge classes are defined in `globals.css` and include dark-mode variants.
   Section Name
 </h3>
 ```
+
+---
+
+## Page Title Component
+
+Every page **must** use the `<PageTitle>` component from `@components/common/PageTitle` for its heading — never roll a custom `<h2>` or heading block at the page level.
+
+### Props
+
+| Prop | Type | Purpose |
+|------|------|---------|
+| `title` | `string` | Primary heading (required) |
+| `subtitle` | `string` | Secondary context line (e.g. team/age group name) |
+| `backLink` | `string` | If set, renders an `ArrowLeft` back button before the title |
+| `image` | `{ src?, alt, initials?, colorClass? }` | Avatar shown left of the title (player photo, club logo) |
+| `action` | `{ label, onClick?, href?, icon?, variant?, title? }` | Primary CTA button on the right |
+| `badge` | `string \| number` | Count shown in parentheses after the title |
+
+### Back buttons
+
+**All sub-pages and detail pages must pass `backLink`** so the user can navigate back. Choose the target based on route context:
+
+```tsx
+// Team context
+const backLink = teamId && ageGroupId
+  ? Routes.teamSquad(clubId!, ageGroupId, teamId)
+  : ageGroupId
+    ? Routes.ageGroupPlayers(clubId!, ageGroupId)
+    : Routes.clubPlayers(clubId!);
+
+<PageTitle title="Player Name" subtitle="Team • Age Group" backLink={backLink} />
+```
+
+Team-level sub-pages (Squad, Coaches, Kits, Statistics, etc.) go back to the team overview:
+
+```tsx
+<PageTitle title="Statistics" subtitle={teamName} backLink={Routes.team(clubId!, ageGroupId!, teamId!)} />
+```
+
+### Loading skeleton
+
+Show an inline skeleton while data loads — do **not** defer the whole page or return null:
+
+```tsx
+{isLoading ? (
+  <div className="mb-4 animate-pulse">
+    <div className="h-8 w-64 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+    <div className="h-5 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
+  </div>
+) : player ? (
+  <PageTitle
+    title={`${player.firstName} ${player.lastName}`}
+    subtitle={subtitle}
+    backLink={backLink}
+    image={{
+      src: player.photoUrl,
+      alt: `${player.firstName} ${player.lastName}`,
+      initials: `${player.firstName[0]}${player.lastName[0]}`,
+      colorClass: 'from-primary-500 to-primary-600',
+    }}
+    action={{ label: 'Settings', href: settingsLink, icon: 'settings', title: 'Player Settings' }}
+  />
+) : null}
+```
+
+### Navigation context
+
+Player pages must also call `useNavigation().setEntityName` so the sidebar header stays accurate:
+
+```tsx
+const { setEntityName } = useNavigation();
+useEffect(() => {
+  if (player) {
+    setEntityName('player', player.id, `${player.firstName} ${player.lastName}`);
+    if (player.clubId && player.clubName) setEntityName('club', player.clubId, player.clubName);
+    if (player.teamId && player.teamName) setEntityName('team', player.teamId, player.teamName);
+    if (player.ageGroupId && player.ageGroupName) setEntityName('ageGroup', player.ageGroupId, player.ageGroupName);
+  }
+}, [player?.id, /* ...deps... */, setEntityName]);
+```

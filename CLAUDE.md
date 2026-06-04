@@ -100,6 +100,7 @@ All frontend UI must follow the patterns in [`web/STYLE_GUIDE.md`](web/STYLE_GUI
 - **Small action buttons** — consistent colour/icon conventions: `btn-sm btn-secondary` + `Pencil` for edit, `btn-sm btn-danger` + `Trash2` for delete, etc.
 - **Listing pipe indicator** — `w-1 rounded-full self-stretch` pill: `bg-primary-500 dark:bg-primary-400` for active/club-owned, `bg-gray-300 dark:bg-gray-600` for shared/system
 - **Dark/light mode** — every colour class must have a `dark:` counterpart (no exceptions)
+- **Page title** — every page must use `<PageTitle>` from `@components/common/PageTitle`; sub-pages and detail pages must pass `backLink` so users can navigate back; show a skeleton while loading rather than returning null
 
 **Quick-reference palette:**
 - Page backgrounds: `bg-gray-50 dark:bg-gray-900`

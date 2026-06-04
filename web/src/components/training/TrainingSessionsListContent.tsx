@@ -30,14 +30,6 @@ export default function TrainingSessionsListContent({
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()); // Soonest first
   const pastSessions = sortedSessions.filter(s => new Date(s.date) < now);
 
-  // Stats
-  const completedCount = pastSessions.length;
-  const totalAttendance = pastSessions.reduce((acc, s) => {
-    return acc + (s.attendance ?? []).filter(a => a.status === 'confirmed').length;
-  }, 0);
-  const totalExpected = (squadCount ?? 0) * pastSessions.length;
-  const avgAttendance = totalExpected > 0 ? Math.round((totalAttendance / totalExpected) * 100) : 0;
-
   const navigate = useNavigate();
 
   const SessionRow = ({ session }: { session: TrainingSession }) => {
@@ -198,34 +190,6 @@ export default function TrainingSessionsListContent({
 
   return (
     <>
-      {/* Stats Summary */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-gray-900 dark:text-white">
-            {sessions.length}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Total Sessions</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-            {upcomingSessions.length}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Upcoming</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-green-600 dark:text-green-400">
-            {completedCount}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Completed</div>
-        </div>
-        <div className="card text-center">
-          <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
-            {avgAttendance}%
-          </div>
-          <div className="text-sm text-gray-600 dark:text-gray-400">Avg Attendance</div>
-        </div>
-      </div>
-
       {/* Upcoming Sessions */}
       {upcomingSessions.length > 0 && (
         <div className="mb-4">
