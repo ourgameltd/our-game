@@ -36,10 +36,8 @@ export default function HomePage() {
         <div className="w-full max-w-4xl">
           <div className="text-center mb-4">
             {/* Logo */}
-            <div className="flex justify-center mb-4">
-              <div className="bg-white/10 backdrop-blur-md rounded-full p-3 shadow-2xl">
-                <Logo size={100}/>
-              </div>
+            <div className="flex justify-center mb-6">
+              <Logo size={180}/>
             </div>
 
             {/* Name/Title */}

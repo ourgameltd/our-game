@@ -29,6 +29,7 @@ import { apiClient } from '@/api/client';
 import { getCurrentUser } from '@/api/users';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
+import Logo from '@components/common/Logo';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
 import { Routes, areAllParamsValid, isValidParam } from '@/utils/routes';
@@ -367,12 +368,12 @@ export default function MobileNavigation() {
         </button>
 
         <div className="mobile-nav-drawer-header">
-          <Link 
-            to="/dashboard" 
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
+          <Link
+            to="/dashboard"
+            className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
             aria-label="Go to Dashboard"
           >
-            <Home className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+            <Logo size={28} />
           </Link>
           <Link to="/profile" className="mobile-nav-user-profile hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors ml-auto">
             <div className="mobile-nav-user-avatar-wrapper">
