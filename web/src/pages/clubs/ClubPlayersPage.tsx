@@ -13,7 +13,7 @@ import type { Player, PlayerPosition, PlayerAttributes } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import PlayerCard from '@components/player/PlayerCard';
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 50;
 
 const ALL_POSITIONS: PlayerPosition[] = [
   'GK', 'LB', 'CB', 'RB', 'LWB', 'RWB',
