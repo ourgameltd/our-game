@@ -172,7 +172,7 @@ export default function ClubOverviewPage() {
                 <Link
                   key={ageGroup.id}
                   to={Routes.ageGroup(clubId, ageGroup.id)}
-                  className="block"
+                  className="block md:border-b last:border-b-0 border-gray-200 dark:border-gray-700"
                 >
                   <AgeGroupListCard
                     ageGroup={{
