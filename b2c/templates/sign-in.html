@@ -13,6 +13,8 @@
       --color-primary-hover:  #0369a1;
       --color-primary-light:  #7dd3fc;
       --color-primary-focus:  #0ea5e9;
+      --color-success:        #16a34a;
+      --color-success-hover:  #15803d;
       --color-bg:             #f9fafb;
       --color-card:           #ffffff;
       --color-border:         #d1d5db;
@@ -119,9 +121,10 @@
 
     /* Hide B2C's injected page heading — we render our own above the card */
     #api .heading { display: none; }
+    #api .intro { display: none; }
 
-    /* Hide section sub-headings */
-    #api .intro h2 { display: none; }
+    /* Strip bullets from B2C attribute lists */
+    #api ul, #api li { list-style: none; padding: 0; }
 
     /* ── Social providers ── */
     #api .claims-provider-list-buttons {
@@ -279,7 +282,12 @@
       box-shadow: 0 0 0 2px var(--color-primary-focus);
     }
 
-    #api .buttons { margin-top: 0; }
+    #api .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-top: 0;
+    }
 
     /* Error messages */
     #api .error p,
@@ -338,6 +346,182 @@
       color: var(--color-primary-hover);
       text-decoration: underline;
     }
+
+    /* ── Registration / verification form (SelfAsserted) ── */
+
+    /* Attribute list fields */
+    #api .attributeList ul {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    /* Each attribute entry — gap handles label → error → input spacing */
+    #api .attrEntry {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    #api .attrEntry > label { margin-bottom: 0; }
+
+    /* Hide B2C help links */
+    #api .helpLink { display: none; }
+
+    /* Validation — errored input */
+    #api input.highlightError {
+      border-color: var(--color-error);
+    }
+
+    #api input.highlightError:focus {
+      border-color: transparent;
+      box-shadow: 0 0 0 2px var(--color-error);
+    }
+
+    /* Validation — per-field inline error text */
+    #api .error.itemLevel {
+      font-size: 0.8125rem;
+      color: var(--color-error);
+      min-height: 0;
+    }
+
+    /* Continue (Create Account) button — green */
+    #api #continue {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.625rem 1rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      font-family: var(--font);
+      color: #fff;
+      background-color: var(--color-success);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    #api #continue:hover { background-color: var(--color-success-hover); }
+
+    #api #continue:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-primary-focus);
+    }
+
+    /* Cancel / back button */
+    #api #cancel {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.625rem 1rem;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--color-text-secondary);
+      background-color: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    #api #cancel:hover {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    /* Space between email input and send-code button */
+    #api .verificationControlContent .buttons {
+      margin-top: 0.75rem;
+    }
+
+    /* Separation between fields and the main continue/cancel buttons */
+    #api #attributeVerification > .buttons {
+      margin-top: 1.25rem;
+    }
+
+    /* Verification code buttons — primary */
+    #api #email_ver_but_send,
+    #api #email_ver_but_verify,
+    #api .sendCode,
+    #api .verifyCode {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.625rem 1rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
+      font-family: var(--font);
+      color: #fff;
+      background-color: var(--color-primary);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-color 0.15s;
+    }
+
+    #api #email_ver_but_send:hover,
+    #api #email_ver_but_verify:hover,
+    #api .sendCode:hover,
+    #api .verifyCode:hover { background-color: var(--color-primary-hover); }
+
+    #api #email_ver_but_send:focus,
+    #api #email_ver_but_verify:focus,
+    #api .sendCode:focus,
+    #api .verifyCode:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-primary-focus);
+    }
+
+    /* Verification code buttons — secondary */
+    #api #email_ver_but_resend,
+    #api #email_ver_but_edit,
+    #api .sendNewCode,
+    #api .changeClaims {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      padding: 0.625rem 1rem;
+      font-size: 0.9375rem;
+      font-weight: 500;
+      font-family: var(--font);
+      color: var(--color-text-secondary);
+      background-color: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s;
+    }
+
+    #api #email_ver_but_resend:hover,
+    #api #email_ver_but_edit:hover,
+    #api .sendNewCode:hover,
+    #api .changeClaims:hover {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    /* Sign-in link shown on registration page */
+    #api .account-footer,
+    #api p#signInLink {
+      margin-top: 1rem;
+      font-size: 0.875rem;
+      color: var(--color-text-secondary);
+      text-align: center;
+    }
+
+    #api #signIn {
+      color: var(--color-primary);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    #api #signIn:hover { color: var(--color-primary-hover); }
   </style>
 </head>
 <body>
