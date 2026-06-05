@@ -120,23 +120,26 @@
     #api { font-family: var(--font); }
 
     #api .heading { display: none; }
-    #api .intro h2 { display: none; }
+    #api .intro { display: none; }
+
+    /* Strip all list bullets from B2C injected lists */
+    #api ul, #api li { list-style: none; padding: 0; }
 
     /* Attribute list — B2C renders fields as <ul><li class="AttributeName"> */
     #api .attributeList ul {
-      list-style: none;
-      padding: 0;
       display: flex;
       flex-direction: column;
-      gap: 0.625rem;
+      gap: 1.25rem;
+    }
+    #api #attributeList ul li {
+      margin-bottom:1.25rem;
     }
 
-    #api .attributeList ul li { list-style: none; }
-
-    /* Each attribute entry */
+    /* Each attribute entry — gap handles label → error → input spacing */
     #api .attrEntry {
       display: flex;
       flex-direction: column;
+      gap: 0.25rem;
     }
 
     /* Labels */
@@ -146,8 +149,15 @@
       font-size: 0.875rem;
       font-weight: 500;
       color: var(--color-label);
-      margin-bottom: 0.375rem;
+      margin-top: 1.25rem;
     }
+
+    #api .attrEntry > label:first-of-type {
+      margin-top: 0;
+    }
+
+    /* Working / loading indicator */
+    #api .working { display: none; }
 
     /* Inputs */
     #api input[type="text"],
@@ -157,8 +167,8 @@
     #api .textInput {
       display: block;
       width: 100%;
-      padding: 0.5rem 0.75rem;
-      font-size: 0.875rem;
+      padding: 0.625rem 0.875rem;
+      font-size: 0.9375rem;
       font-family: var(--font);
       color: var(--color-text);
       background-color: var(--color-card);
@@ -178,15 +188,32 @@
       box-shadow: 0 0 0 2px var(--color-primary-focus);
     }
 
+    /* Validation — errored input */
+    #api input.highlightError {
+      border-color: var(--color-error);
+    }
+
+    #api input.highlightError:focus {
+      border-color: transparent;
+      box-shadow: 0 0 0 2px var(--color-error);
+    }
+
+    /* Validation — per-field inline error text */
+    #api .error.itemLevel {
+      font-size: 0.8125rem;
+      color: var(--color-error);
+      min-height: 0;
+    }
+
     /* Submit (Create Account) — green to match the React RegisterPage */
     #api #continue {
       display: inline-flex;
       align-items: center;
       justify-content: center;
       width: 100%;
-      padding: 0.5rem 1rem;
-      font-size: 1rem;
-      font-weight: 500;
+      padding: 0.625rem 1rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
       font-family: var(--font);
       color: #fff;
       background-color: var(--color-success);
@@ -194,10 +221,14 @@
       border-radius: var(--radius);
       cursor: pointer;
       transition: background-color 0.15s;
-      margin-top: 0.75rem;
     }
 
     #api #continue:hover { background-color: var(--color-success-hover); }
+
+    #api #continue:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-primary-focus);
+    }
 
     /* Cancel / back link */
     #api #cancel {
@@ -205,8 +236,8 @@
       align-items: center;
       justify-content: center;
       width: 100%;
-      padding: 0.5rem 1rem;
-      font-size: 0.875rem;
+      padding: 0.625rem 1rem;
+      font-size: 0.9375rem;
       font-weight: 500;
       font-family: var(--font);
       color: var(--color-text-secondary);
@@ -215,7 +246,6 @@
       border-radius: var(--radius);
       cursor: pointer;
       transition: background-color 0.15s, color 0.15s;
-      margin-top: 0.375rem;
     }
 
     #api #cancel:hover {
@@ -226,18 +256,32 @@
     #api .buttons {
       display: flex;
       flex-direction: column;
+      gap: 0.5rem;
       margin-top: 0;
     }
 
-    /* Email verification buttons */
+    /* Space between email input and send-code button */
+    #api .verificationControlContent .buttons {
+      margin-top: 0.75rem;
+    }
+
+    /* Separation between field/verify area and the main continue/cancel buttons */
+    #api #attributeVerification > .buttons {
+      margin-top: 1.25rem;
+    }
+
+    /* Verification code buttons — primary */
     #api #email_ver_but_send,
-    #api #email_ver_but_verify {
+    #api #email_ver_but_verify,
+    #api .sendCode,
+    #api .verifyCode {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.375rem 0.75rem;
-      font-size: 0.875rem;
-      font-weight: 500;
+      width: 100%;
+      padding: 0.625rem 1rem;
+      font-size: 0.9375rem;
+      font-weight: 600;
       font-family: var(--font);
       color: #fff;
       background-color: var(--color-primary);
@@ -245,20 +289,32 @@
       border-radius: var(--radius);
       cursor: pointer;
       transition: background-color 0.15s;
-      margin-top: 0.375rem;
-      width: 100%;
     }
 
     #api #email_ver_but_send:hover,
-    #api #email_ver_but_verify:hover { background-color: var(--color-primary-hover); }
+    #api #email_ver_but_verify:hover,
+    #api .sendCode:hover,
+    #api .verifyCode:hover { background-color: var(--color-primary-hover); }
 
+    #api #email_ver_but_send:focus,
+    #api #email_ver_but_verify:focus,
+    #api .sendCode:focus,
+    #api .verifyCode:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px var(--color-primary-focus);
+    }
+
+    /* Verification code buttons — secondary */
     #api #email_ver_but_resend,
-    #api #email_ver_but_edit {
+    #api #email_ver_but_edit,
+    #api .sendNewCode,
+    #api .changeClaims {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 0.375rem 0.75rem;
-      font-size: 0.875rem;
+      width: 100%;
+      padding: 0.625rem 1rem;
+      font-size: 0.9375rem;
       font-weight: 500;
       font-family: var(--font);
       color: var(--color-text-secondary);
@@ -266,25 +322,31 @@
       border: 1px solid var(--color-border);
       border-radius: var(--radius);
       cursor: pointer;
-      transition: background-color 0.15s;
-      margin-top: 0.25rem;
-      width: 100%;
+      transition: background-color 0.15s, color 0.15s;
     }
 
     #api #email_ver_but_resend:hover,
-    #api #email_ver_but_edit:hover { color: var(--color-text); }
+    #api #email_ver_but_edit:hover,
+    #api .sendNewCode:hover,
+    #api .changeClaims:hover {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+    }
+
+    /* Hide B2C help links */
+    #api .helpLink { display: none; }
 
     /* Error messages */
-    #api .error,
-    #api .pageLevel { font-size: 0.8125rem; color: var(--color-error); }
+    #api .error p,
+    #api .pageLevel p { font-size: 0.8125rem; color: var(--color-error); }
 
-    #api .error.pageLevel,
+    #api .error.pageLevel:not([aria-hidden="true"]),
     #api .pageLevel:not([aria-hidden="true"]) {
       background-color: var(--color-error-bg);
       border: 1px solid var(--color-error-border);
       border-radius: var(--radius);
       padding: 0.5rem 0.75rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
     }
 
     #api [aria-hidden="true"] { display: none !important; }
@@ -320,7 +382,40 @@
       </div>
 
       <div class="card">
-        <div id="api"></div>
+        <div id="api" data-name="SelfAsserted">
+      <div class="heading">
+        <h1 role="heading">User Details</h1>
+      </div>
+    <div class="buttons">
+    </div>
+    <div class="intro">
+      <p>Please provide the following details.</p>
+    </div>
+    <form id="attributeVerification">
+        <div id="requiredFieldMissing" class="error pageLevel" style="display: none;" aria-hidden="true">A required field is missing. Please fill out all required fields and try again.</div>
+        <div id="fieldIncorrect" class="error pageLevel" style="display: none;" aria-hidden="true">One or more fields are filled out incorrectly. Please check your entries and try again.</div>
+        <div id="captchaUnresolved" class="error pageLevel" style="display: none;" aria-hidden="true">Captcha challenge is not resolved. Please solve it to proceed.</div>
+        <div id="claimVerificationServerError" class="error pageLevel" style="display: none;" aria-hidden="true"></div>
+        <div id="attributeList" class="attr">
+            <ul>
+                <li class="VerificationControl emailVerificationControl_li"><div class="attrEntry"><label id="emailVerificationControl_label" for="emailVerificationControl" class=""></label><div class="error itemLevel" role="alert"></div><div class="verificationControlContent" id="emailVerificationControl"><div class="verificationInfoText"><div id="emailVerificationControl_info_message" aria-hidden="true" role="alert" aria-label="Verification is necessary. Please click Send button." style="display: none;">Verification is necessary. Please click Send button.</div></div><div class="verificationSuccessText"><div id="emailVerificationControl_success_message" aria-hidden="true" role="alert" aria-label="" style="display: none;"></div></div><div class="verificationErrorText error"><div id="emailVerificationControl_error_message" aria-hidden="true" role="alert" aria-label="" style="display: none;"></div></div><ul><li class="EmailBox email_li email" aria-hidden="false" style="display: inline;"><div class="attrEntry"><label id="email_label" for="email" class="required">Email Address</label><div class="error itemLevel" role="alert"></div><input id="email" class="textInput" type="email" placeholder="Email Address" pattern="^[a-zA-Z0-9!#$%&amp;'+^_`{}~-]+(?:\.[a-zA-Z0-9!#$%&amp;'+^_`{}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$" title="Email address that can be used to contact you." aria-required="true" autofocus="autofocus"><a class="helpLink tiny" href="javascript:void(0)" data-help="Email address that can be used to contact you.">What is this?</a></div></li><li class="TextBox emailVerificationCode_li VerificationCode" aria-hidden="true" style="display: none;"><div class="attrEntry"><label id="emailVerificationCode_label" for="emailVerificationCode" class="required">Verification Code</label><div class="error itemLevel" role="alert"></div><input id="emailVerificationCode" class="textInput" type="text" placeholder="Verification Code" title="Enter your verification code" aria-required="true" autocomplete="off" disabled=""><a class="helpLink tiny" href="javascript:void(0)" data-help="Enter your verification code">What is this?</a></div></li></ul><div class="working" style="display: none;" aria-hidden="true"></div><div class="buttons"><button class="sendCode" id="emailVerificationControl_but_send_code" type="button" aria-label="Send verification code" aria-hidden="false" style="display: inline;">Send verification code</button><button class="verifyCode" id="emailVerificationControl_but_verify_code" type="button" aria-label="Verify code" aria-hidden="true" style="display: none;">Verify code</button><button class="sendNewCode" id="emailVerificationControl_but_send_new_code" type="button" aria-label="Send new code" aria-hidden="true" style="display: none;">Send new code</button><button class="changeClaims" id="emailVerificationControl_but_change_claims" type="button" aria-label="Change e-mail" aria-hidden="true" style="display: none;">Change e-mail</button></div></div><a class="helpLink tiny" href="javascript:void(0)">What is this?</a></div></li>
+                <li class="Password newPassword_li"><div class="attrEntry"><label id="newPassword_label" for="newPassword" class="required">New Password</label><div class="error itemLevel" role="alert"></div><input id="newPassword" class="textInput" type="password" placeholder="New Password" title="Enter new password" autocomplete="new-password" aria-required="true" aria-disabled="true" disabled="disabled" tabindex="-1"><a class="helpLink tiny" href="javascript:void(0)" data-help="Enter new password">What is this?</a></div></li>
+                <li class="Password reenterPassword_li"><div class="attrEntry"><label id="reenterPassword_label" for="reenterPassword" class="required">Confirm New Password</label><div class="error itemLevel" role="alert"></div><input id="reenterPassword" class="textInput" type="password" placeholder="Confirm New Password" title="Confirm new password" autocomplete="new-password" aria-required="true" aria-disabled="true" disabled="disabled" tabindex="-1"><a class="helpLink tiny" href="javascript:void(0)" data-help="Confirm new password">What is this?</a></div></li>
+                <li class="TextBox displayName_li"><div class="attrEntry"><label id="displayName_label" for="displayName" class="">Display Name</label><div class="error itemLevel" role="alert"></div><input id="displayName" class="textInput" type="text" placeholder="Display Name" title="Your display name." aria-disabled="true" disabled="disabled" tabindex="-1"><a class="helpLink tiny" href="javascript:void(0)" data-help="Your display name.">What is this?</a></div></li>
+                <li class="TextBox surname_li"><div class="attrEntry"><label id="surname_label" for="surname" class="">Surname</label><div class="error itemLevel" role="alert"></div><input id="surname" class="textInput" type="text" placeholder="Surname" title="Your surname (also known as family name or last name)." aria-disabled="true" disabled="disabled" tabindex="-1"><a class="helpLink tiny" href="javascript:void(0)" data-help="Your surname (also known as family name or last name).">What is this?</a></div></li>
+                <li class="TextBox givenName_li"><div class="attrEntry"><label id="givenName_label" for="givenName" class="">Given Name</label><div class="error itemLevel" role="alert"></div><input id="givenName" class="textInput" type="text" placeholder="Given Name" title="Your given name (also known as first name)." aria-disabled="true" disabled="disabled" tabindex="-1"><a class="helpLink tiny" href="javascript:void(0)" data-help="Your given name (also known as first name).">What is this?</a></div></li>
+            </ul>
+        </div>
+        <div class="buttons">
+            <button id="continue" type="submit" form="attributeVerification" aria-disabled="true" aria-label="Create" tabindex="-1">Create</button><button id="cancel" aria-label="Cancel" formnovalidate="">Cancel</button>
+        </div>
+
+        <div class="verifying-modal" aria-live="assertive" aria-labelledby="verifying_blurb">
+            <div id="verifying_blurb"></div>
+        </div>
+    </form>
+    
+  </div>
       </div>
 
     </div>
