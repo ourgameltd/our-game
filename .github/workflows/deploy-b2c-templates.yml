@@ -32,7 +32,7 @@ jobs:
           --account-name "${{ env.STORAGE_ACCOUNT_NAME }}" \
           --source ./b2c/templates \
           --destination "${{ env.B2C_CONTAINER }}" \
-          --auth-mode login \
+          --auth-mode key \
           --overwrite \
           --content-type "text/html; charset=utf-8"
 
