@@ -13,6 +13,7 @@
 export { apiClient, getApiBaseUrl } from './client';
 export type {
   ApiResponse,
+  PagedResponse,
   UpdateAgeGroupRequest,
   ArchiveAgeGroupRequest,
   UserProfile,

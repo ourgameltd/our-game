@@ -1,50 +1,102 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useRequiredParams } from '@utils/routeParams';
-import { Plus, ChevronDown, ChevronUp, Filter, Users, Search } from 'lucide-react';
+import { Plus, ChevronDown, ChevronUp, ChevronLeft, ChevronRight, Filter, Users, Search } from 'lucide-react';
 import { useState, useMemo, useEffect } from 'react';
 import { apiClient } from '@/api';
-import type { ClubPlayerDto, ClubTeamDto, ClubDetailDto } from '@/api';
+import type { ClubPlayerDto, ClubTeamDto, ClubDetailDto, PagedResponse } from '@/api';
 import type { CompetencyBand } from '@/api/competencies';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
 import type { Player, PlayerPosition, PlayerAttributes } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import PlayerCard from '@components/player/PlayerCard';
 
-// Skeleton component for player card loading state
+const PAGE_SIZE = 20;
+
+const ALL_POSITIONS: PlayerPosition[] = [
+  'GK', 'LB', 'CB', 'RB', 'LWB', 'RWB',
+  'CDM', 'CM', 'CAM', 'LM', 'RM',
+  'LW', 'RW', 'CF', 'ST',
+];
+
+function getPaginationPages(current: number, total: number): (number | '...')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const pages: (number | '...')[] = [1];
+  if (current > 3) pages.push('...');
+  for (let p = Math.max(2, current - 1); p <= Math.min(total - 1, current + 1); p++) {
+    pages.push(p);
+  }
+  if (current < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
+}
+
+function PaginationBar({ currentPage, totalPages, onPageChange }: {
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}) {
+  const pages = getPaginationPages(currentPage, totalPages);
+  return (
+    <div className="flex items-center justify-center gap-1 mt-4">
+      <button
+        onClick={() => onPageChange(currentPage - 1)}
+        disabled={currentPage === 1}
+        className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Previous page"
+      >
+        <ChevronLeft className="w-4 h-4" />
+      </button>
+
+      {pages.map((page, i) =>
+        page === '...' ? (
+          <span key={`ellipsis-${i}`} className="px-1 text-gray-400 dark:text-gray-500 text-sm select-none">…</span>
+        ) : (
+          <button
+            key={page}
+            onClick={() => onPageChange(page as number)}
+            className={`w-8 h-8 rounded text-sm font-medium transition-colors ${
+              page === currentPage
+                ? 'bg-primary-600 dark:bg-primary-500 text-white'
+                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+            }`}
+          >
+            {page}
+          </button>
+        )
+      )}
+
+      <button
+        onClick={() => onPageChange(currentPage + 1)}
+        disabled={currentPage === totalPages}
+        className="p-1.5 rounded text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        aria-label="Next page"
+      >
+        <ChevronRight className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
 function PlayerCardSkeleton() {
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-6 md:rounded-none md:shadow-none md:p-0 md:px-4 md:py-3 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b flex flex-col md:flex-row md:items-center md:gap-4 animate-pulse">
-      <div className="flex items-center gap-3 mb-3 md:mb-0 md:shrink-0 md:order-1">
-        <div className="w-12 h-12 md:w-10 md:h-10 rounded-full bg-gray-200 dark:bg-gray-700" />
-        <div className="flex-1 min-w-0 md:hidden">
-          <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-      </div>
-      <div className="hidden md:flex md:items-baseline md:gap-2 md:min-w-48 md:shrink-0 md:order-2">
-        <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded" />
-      </div>
-      <div className="hidden md:block md:w-16 md:shrink-0 md:order-3">
-        <div className="h-4 w-12 bg-gray-200 dark:bg-gray-700 rounded" />
-      </div>
-      <div className="mb-3 md:mb-0 md:w-32 md:shrink-0 md:order-4">
-        <div className="flex flex-wrap gap-1">
-          <div className="h-5 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
-          <div className="h-5 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
-      </div>
-      <div className="md:flex-1 md:order-5">
-        <div className="hidden md:flex md:gap-4 md:justify-end">
-          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
-          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-3 border border-gray-200 dark:border-gray-700 animate-pulse">
+      <div className="flex items-center gap-2">
+        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 min-h-[2.5rem]" />
+        <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="flex gap-1">
+            <div className="h-3 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-3 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-// Helper to map API DTO to Player type for PlayerCard compatibility
 function mapApiPlayerToPlayer(apiPlayer: ClubPlayerDto): Player {
   const defaultAttributes: PlayerAttributes = {
     ballControl: 50, crossing: 50, weakFoot: 50, dribbling: 50, finishing: 50,
@@ -76,19 +128,15 @@ function mapApiPlayerToPlayer(apiPlayer: ClubPlayerDto): Player {
   };
 }
 
-// Dynamically import PlayerCard to avoid issues if not needed during loading
-import PlayerCard from '@components/player/PlayerCard';
-
 export default function ClubPlayersPage() {
   usePageTitle(['Club Players']);
 
-  // Validate route parameters
   const params = useRequiredParams(['clubId'], { returnNullOnError: true });
   const clubId = params.clubId;
   const navigate = useNavigate();
 
-  // API state
-  const [apiPlayers, setApiPlayers] = useState<ClubPlayerDto[]>([]);
+  // Server-fetched paged result
+  const [pagedResult, setPagedResult] = useState<PagedResponse<ClubPlayerDto> | null>(null);
   const [playersLoading, setPlayersLoading] = useState(true);
   const [playersError, setPlayersError] = useState<string | null>(null);
 
@@ -101,48 +149,66 @@ export default function ClubPlayersPage() {
 
   // Filter state
   const [searchName, setSearchName] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [filterAgeGroup, setFilterAgeGroup] = useState('');
   const [filterPosition, setFilterPosition] = useState('');
   const [filterTeam, setFilterTeam] = useState('');
   const [filterBanding, setFilterBanding] = useState<CompetencyBand | ''>('');
   const [showArchived, setShowArchived] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
 
-  // Fetch data from API
+  // Debounce name search by 300 ms
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchName), 300);
+    return () => clearTimeout(t);
+  }, [searchName]);
+
+  // Reset to page 1 whenever filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, filterAgeGroup, filterPosition, filterTeam, filterBanding, showArchived]);
+
+  // Fetch players from server with current page + filters
   useEffect(() => {
     if (!clubId) return;
 
-    // Fetch players (always include archived, filter client-side)
     setPlayersLoading(true);
-    apiClient.clubs.getPlayers(clubId, true)
+    setPlayersError(null);
+
+    apiClient.clubs.getPlayers(clubId, {
+      page: currentPage,
+      pageSize: PAGE_SIZE,
+      includeArchived: showArchived,
+      search: debouncedSearch || undefined,
+      ageGroupId: filterAgeGroup || undefined,
+      teamId: filterTeam || undefined,
+      position: filterPosition || undefined,
+      band: filterBanding || undefined,
+    })
       .then((response) => {
         if (response.success && response.data) {
-          setApiPlayers(response.data);
-          setPlayersError(null);
+          setPagedResult(response.data);
         } else {
           setPlayersError(response.error?.message || 'Failed to load players');
         }
       })
-      .catch((err) => {
-        console.error('Failed to fetch players:', err);
-        setPlayersError('Failed to load players from API');
-      })
+      .catch(() => setPlayersError('Failed to load players from API'))
       .finally(() => setPlayersLoading(false));
+  }, [clubId, currentPage, debouncedSearch, filterAgeGroup, filterPosition, filterTeam, filterBanding, showArchived]);
 
-    // Fetch teams
+  // Fetch teams (for filter dropdown) and club (for page title)
+  useEffect(() => {
+    if (!clubId) return;
+
     setTeamsLoading(true);
     apiClient.clubs.getTeams(clubId, true)
       .then((response) => {
-        if (response.success && response.data) {
-          setTeams(response.data);
-        }
+        if (response.success && response.data) setTeams(response.data);
       })
-      .catch((err) => {
-        console.error('Failed to fetch teams:', err);
-      })
+      .catch((err) => console.error('Failed to fetch teams:', err))
       .finally(() => setTeamsLoading(false));
 
-    // Fetch club
     setClubLoading(true);
     apiClient.clubs.getClubById(clubId)
       .then((response) => {
@@ -160,92 +226,35 @@ export default function ClubPlayersPage() {
       .finally(() => setClubLoading(false));
   }, [clubId]);
 
-  // Build a quick lookup of playerId -> competency band from the main API payload.
-  const playerBands = useMemo<Record<string, CompetencyBand | null>>(() => {
-    return Object.fromEntries(
-      apiPlayers.map((player) => [player.id, player.overallBand ?? null])
-    );
-  }, [apiPlayers]);
-
-  // Map API players to Player type for compatibility with existing components
-  const allPlayers = useMemo(() => {
-    return apiPlayers.map(mapApiPlayerToPlayer);
-  }, [apiPlayers]);
-
-  // Get unique positions from all players
-  const allPositions = useMemo(() => {
-    const positions = new Set<string>();
-    allPlayers.forEach(player => {
-      player.preferredPositions.forEach(pos => positions.add(pos));
+  // Age groups derived from teams (no extra API call)
+  const ageGroupsFromTeams = useMemo(() => {
+    const map = new Map<string, string>();
+    teams.forEach(t => {
+      if (t.ageGroupId && !map.has(t.ageGroupId)) {
+        map.set(t.ageGroupId, t.ageGroupName ?? t.ageGroupId);
+      }
     });
-    return Array.from(positions).sort();
-  }, [allPlayers]);
-
-  // Get unique age groups from all players (using API data directly)
-  const allAgeGroups = useMemo(() => {
-    const ageGroupMap = new Map<string, string>();
-    apiPlayers.forEach(player => {
-      player.ageGroups.forEach(ag => {
-        if (!ageGroupMap.has(ag.id)) {
-          ageGroupMap.set(ag.id, ag.name);
-        }
-      });
-    });
-    return Array.from(ageGroupMap.entries())
+    return Array.from(map.entries())
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name));
-  }, [apiPlayers]);
+  }, [teams]);
 
-  // Filter players based on search and filters
-  const filteredPlayers = useMemo(() => {
-    return allPlayers.filter(player => {
-      // Name filter
-      if (searchName) {
-        const fullName = `${player.firstName} ${player.lastName}`.toLowerCase();
-        if (!fullName.includes(searchName.toLowerCase())) {
-          return false;
-        }
-      }
+  const playerBands = useMemo<Record<string, CompetencyBand | null>>(() => {
+    const items: ClubPlayerDto[] = pagedResult?.items ?? [];
+    return Object.fromEntries(items.map((p) => [p.id, p.overallBand ?? null]));
+  }, [pagedResult]);
 
-      // Age group filter
-      if (filterAgeGroup) {
-        if (!player.ageGroupIds.includes(filterAgeGroup)) {
-          return false;
-        }
-      }
+  const players = useMemo<Player[]>(
+    () => (pagedResult?.items ?? ([] as ClubPlayerDto[])).map(mapApiPlayerToPlayer),
+    [pagedResult]
+  );
 
-      // Position filter
-      if (filterPosition) {
-        if (!player.preferredPositions.includes(filterPosition as any)) {
-          return false;
-        }
-      }
+  const totalPages = pagedResult?.totalPages ?? 0;
+  const totalCount = pagedResult?.totalCount ?? 0;
+  const pageStart = totalCount > 0 ? (currentPage - 1) * PAGE_SIZE + 1 : 0;
+  const pageEnd = Math.min(currentPage * PAGE_SIZE, totalCount);
+  const hasActiveFilters = !!(filterAgeGroup || filterPosition || filterTeam || filterBanding || debouncedSearch);
 
-      // Team filter
-      if (filterTeam) {
-        if (!player.teamIds.includes(filterTeam)) {
-          return false;
-        }
-      }
-
-      // Banding filter
-      if (filterBanding) {
-        const playerBand = playerBands[player.id];
-        if (playerBand !== filterBanding) {
-          return false;
-        }
-      }
-
-      // Archived filter
-      if (!showArchived && player.isArchived) {
-        return false;
-      }
-
-      return true;
-    });
-  }, [allPlayers, searchName, filterAgeGroup, filterPosition, filterTeam, filterBanding, showArchived, playerBands]);
-
-  // Invalid parameters state
   if (!clubId) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -253,23 +262,25 @@ export default function ClubPlayersPage() {
           <div className="text-center py-12 bg-white dark:bg-gray-800 rounded-lg">
             <div className="text-red-500 text-5xl mb-4">⚠️</div>
             <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">Invalid Page Parameters</h3>
-            <p className="text-gray-600 dark:text-gray-400">
-              Club ID is required to view this page.
-            </p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-2">
-              The URL may be malformed or contain invalid values.
-            </p>
+            <p className="text-gray-600 dark:text-gray-400">Club ID is required to view this page.</p>
           </div>
         </main>
       </div>
     );
   }
 
+  const pageSubtitle = (() => {
+    if (!pagedResult) return 'Loading players…';
+    if (totalCount === 0) return hasActiveFilters ? 'No players match the current filters' : 'No players registered to this club';
+    if (totalPages > 1) return `Showing ${pageStart}–${pageEnd} of ${totalCount} players`;
+    if (hasActiveFilters) return `Showing ${totalCount} filtered player${totalCount !== 1 ? 's' : ''}`;
+    return `View and manage players registered to the club`;
+  })();
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <main className="mx-auto px-4 py-4">
-        {/* Page Title with loading state */}
-        {(clubLoading || playersLoading) ? (
+        {(clubLoading) ? (
           <div className="animate-pulse mb-4">
             <div className="flex items-center gap-3 mb-2">
               <div className="h-7 w-48 bg-gray-200 dark:bg-gray-700 rounded" />
@@ -285,12 +296,8 @@ export default function ClubPlayersPage() {
         ) : (
           <PageTitle
             title="All Club Players"
-            badge={allPlayers.filter(p => !p.isArchived).length}
-            subtitle={
-              filteredPlayers.length !== allPlayers.length 
-                ? `Showing ${filteredPlayers.length} of ${allPlayers.length} players${allPlayers.filter(p => p.isArchived).length > 0 ? ` (${allPlayers.filter(p => p.isArchived).length} archived)` : ''}`
-                : `View and manage players registered to the club${allPlayers.filter(p => p.isArchived).length > 0 ? ` (${allPlayers.filter(p => p.isArchived).length} archived)` : ''}`
-            }
+            badge={totalCount}
+            subtitle={pageSubtitle}
             action={{
               label: 'Add New Player',
               icon: 'plus',
@@ -301,7 +308,6 @@ export default function ClubPlayersPage() {
           />
         )}
 
-        {/* Players error message */}
         {playersError && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
             <p className="text-red-800 dark:text-red-200 font-medium">Failed to load players</p>
@@ -315,7 +321,7 @@ export default function ClubPlayersPage() {
             <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
             <input
               type="text"
-              placeholder="Filter players by name..."
+              placeholder="Search players by name..."
               value={searchName}
               onChange={(e) => setSearchName(e.target.value)}
               className="flex-1 py-0.5 text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
@@ -326,13 +332,12 @@ export default function ClubPlayersPage() {
                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
                 title="Clear search"
               >
-                <Search className="w-4 h-4 hidden" />
                 <span className="text-lg leading-none">×</span>
               </button>
             )}
-            {(filterAgeGroup || filterPosition || filterTeam || filterBanding || showArchived) && (
+            {(hasActiveFilters || showArchived) && (
               <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                {[filterAgeGroup ? 1 : 0, filterPosition ? 1 : 0, filterTeam ? 1 : 0, filterBanding ? 1 : 0, showArchived ? 1 : 0].reduce((a, b) => a + b, 0)} active
+                {[filterAgeGroup ? 1 : 0, filterPosition ? 1 : 0, filterTeam ? 1 : 0, filterBanding ? 1 : 0, showArchived ? 1 : 0, debouncedSearch ? 1 : 0].reduce((a, b) => a + b, 0)} active
               </span>
             )}
             <button
@@ -340,34 +345,31 @@ export default function ClubPlayersPage() {
               className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
               title="More filters"
             >
-              {showFilters ? (
-                <ChevronUp className="w-5 h-5" />
-              ) : (
-                <ChevronDown className="w-5 h-5" />
-              )}
+              {showFilters ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
             </button>
           </div>
 
-          {showFilters && !playersLoading && (
+          {showFilters && (
             <>
               <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="grid md:grid-cols-4 gap-4">
                   <div>
                     <label className="label">Age Group</label>
-                    <select 
+                    <select
                       value={filterAgeGroup}
                       onChange={(e) => setFilterAgeGroup(e.target.value)}
                       className="input"
+                      disabled={teamsLoading}
                     >
                       <option value="">All Age Groups</option>
-                      {allAgeGroups.map(ageGroup => (
-                        <option key={ageGroup.id} value={ageGroup.id}>{ageGroup.name}</option>
+                      {ageGroupsFromTeams.map(ag => (
+                        <option key={ag.id} value={ag.id}>{ag.name}</option>
                       ))}
                     </select>
                   </div>
                   <div>
                     <label className="label">Team</label>
-                    <select 
+                    <select
                       value={filterTeam}
                       onChange={(e) => setFilterTeam(e.target.value)}
                       className="input"
@@ -383,14 +385,14 @@ export default function ClubPlayersPage() {
                   </div>
                   <div>
                     <label className="label">Position</label>
-                    <select 
+                    <select
                       value={filterPosition}
                       onChange={(e) => setFilterPosition(e.target.value)}
                       className="input"
                     >
                       <option value="">All Positions</option>
-                      {allPositions.map(position => (
-                        <option key={position} value={position}>{position}</option>
+                      {ALL_POSITIONS.map(pos => (
+                        <option key={pos} value={pos}>{pos}</option>
                       ))}
                     </select>
                   </div>
@@ -419,19 +421,24 @@ export default function ClubPlayersPage() {
                       className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500"
                     />
                     <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Show archived players ({allPlayers.filter(p => p.isArchived).length})
+                      Show archived players
                     </span>
                   </label>
                 </div>
               </div>
-          
-              {/* Active filters display and clear */}
-              {(filterAgeGroup || filterPosition || filterTeam || filterBanding) && (
-                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+
+              {hasActiveFilters && (
+                <div className="flex items-center gap-2 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 flex-wrap">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Active filters:</span>
+                  {debouncedSearch && (
+                    <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm">
+                      Name: "{debouncedSearch}"
+                      <button onClick={() => setSearchName('')} className="hover:text-primary-900 dark:hover:text-primary-100">×</button>
+                    </span>
+                  )}
                   {filterAgeGroup && (
                     <span className="inline-flex items-center gap-1 px-2 py-1 bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded text-sm">
-                      Age: {allAgeGroups.find(ag => ag.id === filterAgeGroup)?.name || filterAgeGroup}
+                      Age: {ageGroupsFromTeams.find(ag => ag.id === filterAgeGroup)?.name || filterAgeGroup}
                       <button onClick={() => setFilterAgeGroup('')} className="hover:text-primary-900 dark:hover:text-primary-100">×</button>
                     </span>
                   )}
@@ -453,7 +460,7 @@ export default function ClubPlayersPage() {
                       <button onClick={() => setFilterBanding('')} className="hover:text-primary-900 dark:hover:text-primary-100">×</button>
                     </span>
                   )}
-                  <button 
+                  <button
                     onClick={() => {
                       setSearchName('');
                       setFilterAgeGroup('');
@@ -471,44 +478,58 @@ export default function ClubPlayersPage() {
           )}
         </div>
 
-        {/* Players List - Loading State */}
+        {/* Players Grid — Loading */}
         {playersLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-            {[...Array(5)].map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => (
               <PlayerCardSkeleton key={i} />
             ))}
           </div>
         )}
 
-        {/* Players List */}
-        {!playersLoading && filteredPlayers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-            {filteredPlayers.map((player) => (
-              <Link key={player.id} to={Routes.clubPlayer(clubId, player.id)}>
-                <PlayerCard 
-                  player={player}
-                  detailDisplay="banding"
-                  competencyBand={playerBands[player.id] ?? null}
-                  badges={
-                    player.isArchived ? (
-                      <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
-                        🗄️ Archived
-                      </span>
-                    ) : undefined
-                  }
-                />
-              </Link>
-            ))}
-          </div>
+        {/* Players Grid */}
+        {!playersLoading && players.length > 0 && (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {players.map((player) => (
+                <Link key={player.id} to={Routes.clubPlayer(clubId, player.id)}>
+                  <PlayerCard
+                    player={player}
+                    detailDisplay="banding"
+                    competencyBand={playerBands[player.id] ?? null}
+                    forceCard
+                    badges={
+                      player.isArchived ? (
+                        <span className="bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 text-xs px-2 py-1 rounded-full font-medium">
+                          🗄️ Archived
+                        </span>
+                      ) : undefined
+                    }
+                  />
+                </Link>
+              ))}
+            </div>
+
+            {totalPages > 1 && (
+              <PaginationBar
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
+            )}
+          </>
         )}
 
-        {!playersLoading && filteredPlayers.length === 0 && allPlayers.length === 0 && (
+        {!playersLoading && totalCount === 0 && !hasActiveFilters && !showArchived && (
           <EmptyState
             icon={Users}
             title="No players yet"
             description="Get started by adding your first player to the club"
             action={
-              <button className="btn-success btn-md flex items-center gap-2" title="Add First Player">
+              <button
+                className="btn-success btn-md flex items-center gap-2"
+                onClick={() => navigate(Routes.clubPlayerSettings(clubId, 'new'))}
+              >
                 <Plus className="w-5 h-5" />
                 Add First Player
               </button>
@@ -516,7 +537,7 @@ export default function ClubPlayersPage() {
           />
         )}
 
-        {!playersLoading && filteredPlayers.length === 0 && allPlayers.length > 0 && (
+        {!playersLoading && totalCount === 0 && (hasActiveFilters || showArchived) && (
           <EmptyState
             icon={Search}
             title="No players found"
@@ -529,6 +550,7 @@ export default function ClubPlayersPage() {
                   setFilterPosition('');
                   setFilterTeam('');
                   setFilterBanding('');
+                  setShowArchived(false);
                 }}
                 className="btn-secondary btn-md"
               >
@@ -541,4 +563,3 @@ export default function ClubPlayersPage() {
     </div>
   );
 }
-

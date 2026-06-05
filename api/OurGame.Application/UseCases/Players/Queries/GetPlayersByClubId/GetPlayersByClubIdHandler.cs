@@ -1,6 +1,8 @@
 using MediatR;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
+using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Players.Queries.GetPlayersByClubId.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
@@ -8,14 +10,24 @@ using OurGame.Persistence.Models;
 namespace OurGame.Application.UseCases.Players.Queries.GetPlayersByClubId;
 
 /// <summary>
-/// Query to get all players for a specific club
+/// Query to get a paged, filtered list of players for a specific club
 /// </summary>
-public record GetPlayersByClubIdQuery(Guid ClubId, bool IncludeArchived = false) : IQuery<List<ClubPlayerDto>>;
+public record GetPlayersByClubIdQuery(
+    Guid ClubId,
+    bool IncludeArchived = false,
+    string? Search = null,
+    Guid? AgeGroupId = null,
+    Guid? TeamId = null,
+    string? Position = null,
+    string? Band = null,
+    int Page = 1,
+    int PageSize = 20
+) : IQuery<PagedResponse<ClubPlayerDto>>;
 
 /// <summary>
 /// Handler for GetPlayersByClubIdQuery
 /// </summary>
-public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery, List<ClubPlayerDto>>
+public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery, PagedResponse<ClubPlayerDto>>
 {
     private readonly OurGameContext _db;
 
@@ -24,80 +36,78 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
         _db = db;
     }
 
-    public async Task<List<ClubPlayerDto>> Handle(GetPlayersByClubIdQuery query, CancellationToken cancellationToken)
+    public async Task<PagedResponse<ClubPlayerDto>> Handle(GetPlayersByClubIdQuery query, CancellationToken cancellationToken)
     {
-        // Get all players for the club
-        var sql = query.IncludeArchived
-            ? @"
-                SELECT 
-                    p.Id,
-                    p.ClubId,
-                    p.FirstName,
-                    p.LastName,
-                    p.Nickname,
-                    p.DateOfBirth,
-                    p.Photo,
-                    p.AssociationId,
-                    p.PreferredPositions,
-                    p.OverallRating,
-                    p.OverallBand,
-                    p.IsArchived
-                FROM Players p
-                WHERE p.ClubId = {0}
-                ORDER BY p.FirstName, p.LastName"
-            : @"
-                SELECT 
-                    p.Id,
-                    p.ClubId,
-                    p.FirstName,
-                    p.LastName,
-                    p.Nickname,
-                    p.DateOfBirth,
-                    p.Photo,
-                    p.AssociationId,
-                    p.PreferredPositions,
-                    p.OverallRating,
-                    p.OverallBand,
-                    p.IsArchived
-                FROM Players p
-                WHERE p.ClubId = {0} AND p.IsArchived = 0
-                ORDER BY p.FirstName, p.LastName";
+        var (whereClause, _) = BuildFilter(query);
+
+        // COUNT with same filters
+        var countSql = $"SELECT COUNT(*) AS Value FROM Players p WHERE {whereClause}";
+        var (_, countParams) = BuildFilter(query);
+        var totalCount = (await _db.Database
+            .SqlQueryRaw<int>(countSql, countParams)
+            .ToListAsync(cancellationToken))[0];
+
+        if (totalCount == 0)
+            return PagedResponse<ClubPlayerDto>.Create(new List<ClubPlayerDto>(), query.Page, query.PageSize, 0);
+
+        // Paged player query
+        var skip = (query.Page - 1) * query.PageSize;
+        var (_, mainFilterParams) = BuildFilter(query);
+        var mainParams = new List<object>(mainFilterParams)
+        {
+            new SqlParameter("@skip", skip),
+            new SqlParameter("@pageSize", query.PageSize)
+        };
+
+        var mainSql = $@"
+            SELECT
+                p.Id,
+                p.ClubId,
+                p.FirstName,
+                p.LastName,
+                p.Nickname,
+                p.DateOfBirth,
+                p.Photo,
+                p.AssociationId,
+                p.PreferredPositions,
+                p.OverallRating,
+                p.OverallBand,
+                p.IsArchived
+            FROM Players p
+            WHERE {whereClause}
+            ORDER BY p.FirstName, p.LastName
+            OFFSET @skip ROWS FETCH NEXT @pageSize ROWS ONLY";
 
         var playerData = await _db.Database
-            .SqlQueryRaw<PlayerRawDto>(sql, query.ClubId)
+            .SqlQueryRaw<PlayerRawDto>(mainSql, mainParams.ToArray())
             .ToListAsync(cancellationToken);
 
         if (playerData.Count == 0)
-        {
-            return new List<ClubPlayerDto>();
-        }
+            return PagedResponse<ClubPlayerDto>.Create(new List<ClubPlayerDto>(), query.Page, query.PageSize, totalCount);
 
-        // Get player IDs for fetching related data
+        // Fetch related data for the current page's player IDs only
         var playerIds = playerData.Select(p => p.Id).ToList();
+        var batchParams = playerIds.Select((id, i) => new SqlParameter($"@p{i}", id)).ToArray();
+        var paramNames = string.Join(", ", batchParams.Select(p => p.ParameterName));
 
-        // Build parameterized query for age groups
-        var parameters = playerIds.Select((id, index) =>
-            new Microsoft.Data.SqlClient.SqlParameter($"@p{index}", id)).ToArray();
-        var parameterNames = string.Join(", ", parameters.Select(p => p.ParameterName));
-
-        // Get age groups for players
         var ageGroupSql = $@"
-            SELECT 
+            SELECT
                 pag.PlayerId,
                 ag.Id,
                 ag.Name
             FROM PlayerAgeGroups pag
             INNER JOIN AgeGroups ag ON pag.AgeGroupId = ag.Id
-            WHERE pag.PlayerId IN ({parameterNames})
+            WHERE pag.PlayerId IN ({paramNames})
             ORDER BY ag.Name";
 
         var ageGroupData = await _db.Database
-            .SqlQueryRaw<PlayerAgeGroupRawDto>(ageGroupSql, parameters)
+            .SqlQueryRaw<PlayerAgeGroupRawDto>(ageGroupSql, batchParams)
             .ToListAsync(cancellationToken);
 
-        // Get teams for players
+        var batchParams2 = playerIds.Select((id, i) => new SqlParameter($"@p{i}", id)).ToArray();
+
         var teamSql = $@"
-            SELECT 
+            SELECT
                 pt.PlayerId,
                 t.Id,
                 t.AgeGroupId,
@@ -106,14 +116,13 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
             FROM PlayerTeams pt
             INNER JOIN Teams t ON pt.TeamId = t.Id
             LEFT JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
-            WHERE pt.PlayerId IN ({parameterNames})
+            WHERE pt.PlayerId IN ({paramNames})
             ORDER BY ag.Name, t.Name";
 
         var teamData = await _db.Database
-            .SqlQueryRaw<PlayerTeamRawDto>(teamSql, parameters)
+            .SqlQueryRaw<PlayerTeamRawDto>(teamSql, batchParams2)
             .ToListAsync(cancellationToken);
 
-        // Group related data by player
         var ageGroupsByPlayer = ageGroupData
             .GroupBy(ag => ag.PlayerId)
             .ToDictionary(
@@ -138,8 +147,7 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
                 }).ToList()
             );
 
-        // Map to DTOs
-        return playerData
+        var items = playerData
             .Select(p => new ClubPlayerDto
             {
                 Id = p.Id,
@@ -154,14 +162,53 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
                 OverallRating = p.OverallRating,
                 OverallBand = p.OverallBand,
                 IsArchived = p.IsArchived,
-                AgeGroups = ageGroupsByPlayer.TryGetValue(p.Id, out var ageGroups)
-                    ? ageGroups
-                    : new List<ClubPlayerAgeGroupDto>(),
-                Teams = teamsByPlayer.TryGetValue(p.Id, out var teams)
-                    ? teams
-                    : new List<ClubPlayerTeamDto>()
+                AgeGroups = ageGroupsByPlayer.TryGetValue(p.Id, out var ageGroups) ? ageGroups : new(),
+                Teams = teamsByPlayer.TryGetValue(p.Id, out var teams) ? teams : new()
             })
             .ToList();
+
+        return PagedResponse<ClubPlayerDto>.Create(items, query.Page, query.PageSize, totalCount);
+    }
+
+    private static (string WhereClause, object[] Parameters) BuildFilter(GetPlayersByClubIdQuery query)
+    {
+        var conditions = new List<string> { "p.ClubId = @clubId" };
+        var parameters = new List<SqlParameter> { new("@clubId", query.ClubId) };
+
+        if (!query.IncludeArchived)
+            conditions.Add("p.IsArchived = 0");
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
+        {
+            conditions.Add("(p.FirstName + ' ' + p.LastName LIKE '%' + @search + '%')");
+            parameters.Add(new("@search", query.Search.Trim()));
+        }
+
+        if (query.AgeGroupId.HasValue)
+        {
+            conditions.Add("EXISTS (SELECT 1 FROM PlayerAgeGroups pag WHERE pag.PlayerId = p.Id AND pag.AgeGroupId = @ageGroupId)");
+            parameters.Add(new("@ageGroupId", query.AgeGroupId.Value));
+        }
+
+        if (query.TeamId.HasValue)
+        {
+            conditions.Add("EXISTS (SELECT 1 FROM PlayerTeams pt WHERE pt.PlayerId = p.Id AND pt.TeamId = @teamId)");
+            parameters.Add(new("@teamId", query.TeamId.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Position))
+        {
+            conditions.Add("EXISTS (SELECT 1 FROM OPENJSON(p.PreferredPositions) pos WHERE pos.value = @position)");
+            parameters.Add(new("@position", query.Position.Trim()));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Band) && Enum.TryParse<CompetencyBand>(query.Band, out var band))
+        {
+            conditions.Add("p.OverallBand = @band");
+            parameters.Add(new("@band", (int)band));
+        }
+
+        return (string.Join(" AND ", conditions), parameters.Cast<object>().ToArray());
     }
 
     private static List<string> ParsePositions(string? positions)
@@ -169,15 +216,12 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
         if (string.IsNullOrWhiteSpace(positions))
             return new List<string>();
 
-        // Database stores positions as JSON array: ["CAM","CM"]
         try
         {
-            var result = System.Text.Json.JsonSerializer.Deserialize<List<string>>(positions);
-            return result ?? new List<string>();
+            return System.Text.Json.JsonSerializer.Deserialize<List<string>>(positions) ?? new List<string>();
         }
         catch (System.Text.Json.JsonException)
         {
-            // Fallback: treat as comma-separated string for legacy data
             return positions
                 .Split(new[] { ',', '|', ';' }, StringSplitOptions.RemoveEmptyEntries)
                 .Select(p => p.Trim())
@@ -187,9 +231,6 @@ public class GetPlayersByClubIdHandler : IRequestHandler<GetPlayersByClubIdQuery
     }
 }
 
-/// <summary>
-/// DTO for raw SQL player query result
-/// </summary>
 class PlayerRawDto
 {
     public Guid Id { get; set; }
@@ -206,9 +247,6 @@ class PlayerRawDto
     public bool IsArchived { get; set; }
 }
 
-/// <summary>
-/// DTO for raw SQL age group query result
-/// </summary>
 class PlayerAgeGroupRawDto
 {
     public Guid PlayerId { get; set; }
@@ -216,9 +254,6 @@ class PlayerAgeGroupRawDto
     public string? Name { get; set; }
 }
 
-/// <summary>
-/// DTO for raw SQL team query result
-/// </summary>
 class PlayerTeamRawDto
 {
     public Guid PlayerId { get; set; }

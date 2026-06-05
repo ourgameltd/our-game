@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   apiClient,
   ApiResponse,
+  PagedResponse,
   UserProfile,
   MyClubListItemDto,
   TeamListItemDto,
@@ -499,11 +500,11 @@ export function useAgeGroupDevelopmentPlans(ageGroupId: string | undefined): Use
  */
 export function useClubPlayers(
   clubId: string | undefined,
-  includeArchived: boolean = false
-): UseApiState<ClubPlayerDto[]> {
-  return useApiCall<ClubPlayerDto[]>(
-    () => apiClient.clubs.getPlayers(clubId!, includeArchived),
-    [clubId, includeArchived],
+  options: Parameters<typeof apiClient.clubs.getPlayers>[1] = {}
+): UseApiState<PagedResponse<ClubPlayerDto>> {
+  return useApiCall<PagedResponse<ClubPlayerDto>>(
+    () => apiClient.clubs.getPlayers(clubId!, options),
+    [clubId, options.page, options.pageSize, options.includeArchived],
     isValidId(clubId)
   );
 }
