@@ -238,11 +238,16 @@ jobs:
       working-directory: ./api
       run: dotnet publish OurGame.Api/OurGame.Api.csproj --configuration Release --output ../api-output
 
+    - name: Create deployment zip
+      run: cd ./api-output && zip -r ../api-package.zip .
+
     - name: Deploy to Azure Function App
-      uses: Azure/functions-action@ac2abfb0e49d12ed5d273a3cb39f01bdd1654c43 # v1.5.5
-      with:
-        app-name: ${{ needs.deploy-infrastructure.outputs.functionAppName }}
-        package: ./api-output
+      run: |
+        az functionapp deploy \
+          --resource-group ${{ needs.deploy-infrastructure.outputs.resourceGroupName }} \
+          --name ${{ needs.deploy-infrastructure.outputs.functionAppName }} \
+          --src-path ./api-package.zip \
+          --type zip
 
   deploy-static-web-app:
     runs-on: ubuntu-latest

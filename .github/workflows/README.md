@@ -71,7 +71,7 @@ Runs only for functional, non-Dependabot, same-repo PRs (same conditions as prev
 ### 5. `deploy-function-app` — conditional API deployment
 
 - Downloads the validated `api-package` artifact
-- Deploys it to the Function App using `Azure/functions-action@v1`
+- Deploys it to the Function App using `az functionapp deploy` (zip deploy via Azure CLI)
 
 ### 6. `deploy-preview` — conditional preview deployment
 
