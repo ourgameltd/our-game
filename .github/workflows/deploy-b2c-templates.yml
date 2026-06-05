@@ -1,0 +1,54 @@
+name: "Deploy: B2C Custom UI Templates"
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: 'rgourgame'
+  # Storage account name derived from Bicep naming: toLower('ourgamestorageprod') + '001', truncated to 24 chars.
+  STORAGE_ACCOUNT_NAME: 'ourgamestorageprod001'
+  B2C_CONTAINER: 'b2c-templates'
+
+jobs:
+  deploy-b2c-templates:
+    runs-on: ubuntu-latest
+    environment: live
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+    - name: Azure Login
+      uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Upload B2C templates to blob storage
+      run: |
+        az storage blob upload-batch \
+          --account-name "${{ env.STORAGE_ACCOUNT_NAME }}" \
+          --source ./b2c/templates \
+          --destination "${{ env.B2C_CONTAINER }}" \
+          --auth-mode login \
+          --overwrite \
+          --content-type "text/html; charset=utf-8"
+
+    - name: Deployment Summary
+      run: |
+        BASE_URL="https://${{ env.STORAGE_ACCOUNT_NAME }}.blob.core.windows.net/${{ env.B2C_CONTAINER }}"
+
+        echo "## B2C Templates Deployed!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Templates are live at the following URLs. Paste them into your Azure B2C user flow custom page settings:" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Page | URL |" >> $GITHUB_STEP_SUMMARY
+        echo "|------|-----|" >> $GITHUB_STEP_SUMMARY
+        echo "| Sign in | \`${BASE_URL}/sign-in.html\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| Sign up | \`${BASE_URL}/sign-up.html\` |" >> $GITHUB_STEP_SUMMARY
+        echo "| Password reset | \`${BASE_URL}/password-reset.html\` |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY

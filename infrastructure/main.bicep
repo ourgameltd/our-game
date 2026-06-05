@@ -49,6 +49,9 @@ param sqlAdminUsername string
 @secure()
 param sqlAdminPassword string
 
+@description('Azure B2C tenant domain (e.g. yourtenant.b2clogin.com). Used to configure CORS so B2C can load custom UI templates from blob storage. Leave empty to allow only login.microsoftonline.com.')
+param b2cTenantDomain string = ''
+
 // Storage account names must be 3-24 chars, lowercase letters and numbers only.
 // Normalize by lowercasing and removing hyphens, then truncate to 24 characters.
 var storageAccountNameRaw = replace(toLower('${baseName}storage${environmentName}'), '-', '')
@@ -94,6 +97,22 @@ resource tableService 'Microsoft.Storage/storageAccounts/tableServices@2023-05-0
 resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01' = {
   parent: storageAccount
   name: 'default'
+  properties: {
+    cors: {
+      corsRules: [
+        {
+          // B2C loads custom UI templates in an iframe from the browser — CORS is required.
+          allowedOrigins: empty(b2cTenantDomain)
+            ? ['https://login.microsoftonline.com']
+            : ['https://login.microsoftonline.com', 'https://${b2cTenantDomain}']
+          allowedMethods: ['GET', 'OPTIONS']
+          allowedHeaders: ['*']
+          exposedHeaders: ['*']
+          maxAgeInSeconds: 200
+        }
+      ]
+    }
+  }
 }
 
 // Blob Containers for image uploads
@@ -117,7 +136,7 @@ resource coachPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/co
   parent: blobService
   name: 'coach-photos'
   properties: {
-    publicAccess: 'None'
+    publicAccess: 'Blob'
   }
 }
 
@@ -125,7 +144,7 @@ resource playerAlbumContainer 'Microsoft.Storage/storageAccounts/blobServices/co
   parent: blobService
   name: 'player-album'
   properties: {
-    publicAccess: 'None'
+    publicAccess: 'Blob'
   }
 }
 
@@ -133,7 +152,16 @@ resource userPhotosContainer 'Microsoft.Storage/storageAccounts/blobServices/con
   parent: blobService
   name: 'user-photos'
   properties: {
-    publicAccess: 'None'
+    publicAccess: 'Blob'
+  }
+}
+
+// Public container for Azure B2C custom UI page templates
+resource b2cTemplatesContainer 'Microsoft.Storage/storageAccounts/blobServices/containers@2023-05-01' = {
+  parent: blobService
+  name: 'b2c-templates'
+  properties: {
+    publicAccess: 'Blob'
   }
 }
 
@@ -335,3 +363,4 @@ output functionAppUrl string = 'https://${functionApp.properties.defaultHostName
 output sqlServerName string = sqlServer.name
 output sqlServerFqdn string = sqlServer.properties.fullyQualifiedDomainName
 output sqlAdminUsername string = sqlAdminUsername
+output b2cTemplatesUrl string = '${storageAccount.properties.primaryEndpoints.blob}b2c-templates'

@@ -13,7 +13,8 @@
     "build-storybook": "storybook build",
     "screenshots": "node scripts/capture-screenshots.js",
     "screenshots:clean": "node -e \"require('fs').rmSync('screenshots', {recursive: true, force: true})\"",
-    "generate:api": "echo 'NSwag client generation - requires openapi.json from running API. Start API with func start, then run: npx @hey-api/openapi-ts -i http://localhost:7071/api/openapi/v3.json -o src/api/generated -c axios'"
+    "generate:api": "echo 'NSwag client generation - requires openapi.json from running API. Start API with func start, then run: npx @hey-api/openapi-ts -i http://localhost:7071/api/openapi/v3.json -o src/api/generated -c axios'",
+    "serve:b2c": "npx serve ../b2c/templates --listen 3100 --no-clipboard"
   },
   "dependencies": {
     "@emotion/react": "11.14.0",

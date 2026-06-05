@@ -1,0 +1,132 @@
+name: "Deploy: Infrastructure Only"
+
+on:
+  workflow_dispatch:
+    inputs:
+      b2c_tenant_domain:
+        description: 'Azure B2C tenant domain (e.g. yourtenant.b2clogin.com). Leave empty to use the value already stored in the repository variable B2C_TENANT_DOMAIN, or omit CORS configuration for the B2C tenant.'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  AZURE_RESOURCE_GROUP: 'rgourgame'
+  AZURE_REGION: 'westeurope'
+
+jobs:
+  deploy-infrastructure:
+    runs-on: ubuntu-latest
+    environment: live
+    outputs:
+      resourceGroupName: ${{ steps.deploy.outputs.resourceGroupName }}
+      storageAccountName: ${{ steps.deploy.outputs.storageAccountName }}
+      staticWebAppName: ${{ steps.deploy.outputs.staticWebAppName }}
+      staticWebAppUrl: ${{ steps.deploy.outputs.staticWebAppUrl }}
+      functionAppName: ${{ steps.deploy.outputs.functionAppName }}
+      sqlServerName: ${{ steps.deploy.outputs.sqlServerName }}
+      sqlServerFqdn: ${{ steps.deploy.outputs.sqlServerFqdn }}
+      sqlAdminUsername: ${{ steps.deploy.outputs.sqlAdminUsername }}
+      b2cTemplatesUrl: ${{ steps.deploy.outputs.b2cTemplatesUrl }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+    - name: Azure Login
+      uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+    - name: Resolve SQL admin username
+      id: sql_admin
+      shell: bash
+      run: |
+        SQL_ADMIN_USERNAME="${{ vars.SQL_ADMIN_USERNAME }}"
+
+        if [ -z "$SQL_ADMIN_USERNAME" ]; then
+          SQL_ADMIN_USERNAME="ourgame_sql_admin"
+        fi
+
+        if [[ ! "$SQL_ADMIN_USERNAME" =~ ^[A-Za-z][A-Za-z0-9_]{2,127}$ ]]; then
+          echo "Invalid SQL admin username: '$SQL_ADMIN_USERNAME'"
+          echo "Expected pattern: starts with a letter, then letters/numbers/underscore, length 3-128"
+          exit 1
+        fi
+
+        echo "sqlAdminUsername=$SQL_ADMIN_USERNAME" >> $GITHUB_OUTPUT
+
+    - name: Validate SQL admin password secret
+      shell: bash
+      run: |
+        if [ -z "${{ secrets.SQL_ADMIN_PASSWORD }}" ]; then
+          echo "GitHub secret SQL_ADMIN_PASSWORD is required and must not be empty"
+          exit 1
+        fi
+
+    - name: Resolve VAPID and B2C deployment parameters
+      id: deploy_params
+      shell: bash
+      run: |
+        VAPID_SUBJECT="${{ vars.VAPID_SUBJECT }}"
+        VAPID_PUBLIC_KEY="${{ vars.VAPID_PUBLIC_KEY }}"
+
+        # Prefer the workflow input; fall back to the repository variable.
+        B2C_TENANT_DOMAIN="${{ github.event.inputs.b2c_tenant_domain }}"
+        if [ -z "$B2C_TENANT_DOMAIN" ]; then
+          B2C_TENANT_DOMAIN="${{ vars.B2C_TENANT_DOMAIN }}"
+        fi
+
+        echo "vapidSubject=$VAPID_SUBJECT" >> $GITHUB_OUTPUT
+        echo "vapidPublicKey=$VAPID_PUBLIC_KEY" >> $GITHUB_OUTPUT
+        echo "b2cTenantDomain=$B2C_TENANT_DOMAIN" >> $GITHUB_OUTPUT
+
+    - name: Deploy Bicep template at subscription level
+      id: deploy
+      run: |
+        LOCATION="${{ env.AZURE_REGION }}"
+        RESOURCE_GROUP="${{ env.AZURE_RESOURCE_GROUP }}"
+
+        DEPLOYMENT_OUTPUT=$(az deployment sub create \
+          --location "$LOCATION" \
+          --template-file infrastructure/main-subscription.bicep \
+          --parameters resourceGroupName="$RESOURCE_GROUP" \
+          --parameters location="$LOCATION" \
+          --parameters environmentName=prod \
+          --parameters baseName=ourgame \
+          --parameters storageAccountSku=Standard_LRS \
+          --parameters sqlAdminUsername="${{ steps.sql_admin.outputs.sqlAdminUsername }}" \
+          --parameters sqlAdminPassword="${{ secrets.SQL_ADMIN_PASSWORD }}" \
+          --parameters vapidSubject="${{ steps.deploy_params.outputs.vapidSubject }}" \
+          --parameters vapidPublicKey="${{ steps.deploy_params.outputs.vapidPublicKey }}" \
+          --parameters vapidPrivateKey="${{ secrets.VAPID_PRIVATE_KEY }}" \
+          --parameters b2cTenantDomain="${{ steps.deploy_params.outputs.b2cTenantDomain }}" \
+          --query 'properties.outputs' \
+          --output json)
+
+        echo "resourceGroupName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.resourceGroupName.value')" >> $GITHUB_OUTPUT
+        echo "storageAccountName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.storageAccountName.value')" >> $GITHUB_OUTPUT
+        echo "staticWebAppName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.staticWebAppName.value')" >> $GITHUB_OUTPUT
+        echo "staticWebAppUrl=$(echo $DEPLOYMENT_OUTPUT | jq -r '.staticWebAppUrl.value')" >> $GITHUB_OUTPUT
+        echo "functionAppName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.functionAppName.value')" >> $GITHUB_OUTPUT
+        echo "sqlServerName=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerName.value')" >> $GITHUB_OUTPUT
+        echo "sqlServerFqdn=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlServerFqdn.value')" >> $GITHUB_OUTPUT
+        echo "sqlAdminUsername=$(echo $DEPLOYMENT_OUTPUT | jq -r '.sqlAdminUsername.value')" >> $GITHUB_OUTPUT
+        echo "b2cTemplatesUrl=$(echo $DEPLOYMENT_OUTPUT | jq -r '.b2cTemplatesUrl.value')" >> $GITHUB_OUTPUT
+
+    - name: Deployment Summary
+      run: |
+        echo "## Infrastructure Deployed!" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Resource Group**: ${{ steps.deploy.outputs.resourceGroupName }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Storage Account**: ${{ steps.deploy.outputs.storageAccountName }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Static Web App**: ${{ steps.deploy.outputs.staticWebAppUrl }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **Function App**: ${{ steps.deploy.outputs.functionAppName }}" >> $GITHUB_STEP_SUMMARY
+        echo "- **B2C Templates Base URL**: ${{ steps.deploy.outputs.b2cTemplatesUrl }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### B2C Custom Page URLs" >> $GITHUB_STEP_SUMMARY
+        echo "Paste these into your Azure B2C user flow custom page settings:" >> $GITHUB_STEP_SUMMARY
+        echo "- **Sign in**: \`${{ steps.deploy.outputs.b2cTemplatesUrl }}/sign-in.html\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Sign up**: \`${{ steps.deploy.outputs.b2cTemplatesUrl }}/sign-up.html\`" >> $GITHUB_STEP_SUMMARY
+        echo "- **Password reset**: \`${{ steps.deploy.outputs.b2cTemplatesUrl }}/password-reset.html\`" >> $GITHUB_STEP_SUMMARY

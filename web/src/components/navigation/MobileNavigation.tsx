@@ -1012,6 +1012,16 @@ export default function MobileNavigation() {
           {/* Secondary Navigation */}
           <ul className="mobile-nav-menu mobile-nav-menu-secondary">
             <li className="mobile-nav-item">
+              <Link
+                to="/dashboard"
+                className={`mobile-nav-link ${isActive('/dashboard') ? 'active' : ''}`}
+              >
+                <Home className="mobile-nav-icon" />
+                <span className="mobile-nav-text">Dashboard</span>
+              </Link>
+            </li>
+
+            <li className="mobile-nav-item">
               <button
                 onClick={toggleTheme}
                 className="mobile-nav-link"
