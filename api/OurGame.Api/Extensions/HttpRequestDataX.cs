@@ -46,11 +46,13 @@ public static class HttpRequestDataX
         try
         {
             if (string.IsNullOrWhiteSpace(json))
-            { 
+            {
                 // The header is base64 encoded JSON
                 var data = Convert.FromBase64String(header);
                 json = System.Text.Encoding.UTF8.GetString(data);
             }
+
+            Console.WriteLine($"[GetClientPrincipal] json={json}");
 
             var principal = JsonSerializer.Deserialize<ClientPrincipalData>(json, new JsonSerializerOptions
             {

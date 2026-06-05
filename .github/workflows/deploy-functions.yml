@@ -1,0 +1,63 @@
+name: "Deploy: Function App"
+
+on:
+  workflow_dispatch:
+    inputs:
+      function_app_name:
+        description: "Azure Function App name"
+        required: false
+        default: "ourgame-func-prod"
+      resource_group:
+        description: "Azure Resource Group"
+        required: false
+        default: "rgourgame"
+
+env:
+  DOTNET_VERSION: '8.0.x'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: live
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@c2fa09f4bde5ebb9d1777cf28262a3eb3db3ced7 # v5.2.0
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Restore dependencies
+        working-directory: ./api
+        run: dotnet restore
+
+      - name: Publish API
+        working-directory: ./api
+        run: dotnet publish OurGame.Api/OurGame.Api.csproj --configuration Release --output ../api-output
+
+      - name: Create deployment zip
+        run: cd ./api-output && zip -r ../api-package.zip .
+
+      - name: Azure Login
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v3.0.0
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Deploy to Azure Function App
+        run: |
+          az functionapp deploy \
+            --resource-group ${{ github.event.inputs.resource_group }} \
+            --name ${{ github.event.inputs.function_app_name }} \
+            --src-path ./api-package.zip \
+            --type zip
+
+      - name: Deployment Summary
+        run: |
+          echo "## Function App Deployed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **App**: ${{ github.event.inputs.function_app_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Resource Group**: ${{ github.event.inputs.resource_group }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Triggered by**: ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit**: ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
