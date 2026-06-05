@@ -6,7 +6,8 @@
  */
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { getUserInfo, ClientPrincipal, getUserEmail, getUserDisplayName, hasRole } from '@/api/auth';
+import { getUserInfo, ClientPrincipal, getUserEmail, getUserDisplayName, getUserGivenName, getUserSurname, hasRole } from '@/api/auth';
+import { apiClient } from '@/api/client';
 
 interface AuthContextType {
   user: ClientPrincipal | null;
@@ -29,6 +30,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const userInfo = await getUserInfo();
       setUser(userInfo);
+
+      if (userInfo) {
+        const claimHeaders: Record<string, string> = {};
+        const email = getUserEmail(userInfo);
+        const givenName = getUserGivenName(userInfo);
+        const surname = getUserSurname(userInfo);
+        if (email) claimHeaders['x-user-email'] = email;
+        if (givenName) claimHeaders['x-user-given-name'] = givenName;
+        if (surname) claimHeaders['x-user-surname'] = surname;
+        await apiClient.users.getCurrentUser(Object.keys(claimHeaders).length > 0 ? claimHeaders : undefined);
+      }
     } catch (error) {
       console.error('Error fetching user info:', error);
       setUser(null);

@@ -2768,8 +2768,10 @@ export const apiClient = {
     /**
      * Get current authenticated user's profile
      */
-    getCurrentUser: async (): Promise<ApiResponse<UserProfile>> => {
-      const response = await axiosInstance.get<ApiResponse<UserProfile>>('/v1/users/me');
+    getCurrentUser: async (claimHeaders?: Record<string, string>): Promise<ApiResponse<UserProfile>> => {
+      const response = await axiosInstance.get<ApiResponse<UserProfile>>('/v1/users/me', {
+        headers: claimHeaders,
+      });
       return response.data;
     },
 

@@ -80,6 +80,24 @@ export function getUserEmail(principal: ClientPrincipal | null): string | undefi
 }
 
 /**
+ * Get user given/first name from claims
+ */
+export function getUserGivenName(principal: ClientPrincipal | null): string | undefined {
+  if (!principal?.claims) return undefined;
+  return getClaimValue(principal.claims, 'given_name') ||
+         getClaimValue(principal.claims, 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/givenname');
+}
+
+/**
+ * Get user surname/last name from claims
+ */
+export function getUserSurname(principal: ClientPrincipal | null): string | undefined {
+  if (!principal?.claims) return undefined;
+  return getClaimValue(principal.claims, 'family_name') ||
+         getClaimValue(principal.claims, 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/surname');
+}
+
+/**
  * Get user display name from claims
  * @param principal - The user's client principal
  * @returns The user's display name or undefined

@@ -51,9 +51,7 @@ public static class HttpRequestDataX
                 var data = Convert.FromBase64String(header);
                 json = System.Text.Encoding.UTF8.GetString(data);
             }
-
-            Console.WriteLine($"[GetClientPrincipal] json={json}");
-
+            
             var principal = JsonSerializer.Deserialize<ClientPrincipalData>(json, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true
@@ -132,7 +130,8 @@ public static class HttpRequestDataX
         return principal?.FindFirst("emails")?.Value ??
                principal?.FindFirst(ClaimTypes.Email)?.Value ??
                principal?.FindFirst("email")?.Value ??
-               principal?.FindFirst("preferred_username")?.Value;
+               principal?.FindFirst("preferred_username")?.Value ??
+               req.GetFirstHeaderValue("x-user-email");
     }
 
     /// <summary>
@@ -144,7 +143,8 @@ public static class HttpRequestDataX
     {
         var principal = req.GetClientPrincipal();
         return principal?.FindFirst(ClaimTypes.GivenName)?.Value ??
-               principal?.FindFirst("given_name")?.Value;
+               principal?.FindFirst("given_name")?.Value ??
+               req.GetFirstHeaderValue("x-user-given-name");
     }
 
     /// <summary>
@@ -156,7 +156,15 @@ public static class HttpRequestDataX
     {
         var principal = req.GetClientPrincipal();
         return principal?.FindFirst(ClaimTypes.Surname)?.Value ??
-               principal?.FindFirst("family_name")?.Value;
+               principal?.FindFirst("family_name")?.Value ??
+               req.GetFirstHeaderValue("x-user-surname");
+    }
+
+    private static string? GetFirstHeaderValue(this HttpRequestData req, string headerName)
+    {
+        return req.Headers.TryGetValues(headerName, out var values)
+            ? values.FirstOrDefault()
+            : null;
     }
 
     /// <summary>
