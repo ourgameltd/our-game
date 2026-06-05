@@ -3215,9 +3215,25 @@ export const apiClient = {
     /**
      * Get all coaches for a club
      */
-    getCoaches: async (clubId: string, includeArchived: boolean = false): Promise<ApiResponse<ClubCoachDto[]>> => {
-      const params = includeArchived ? '?includeArchived=true' : '';
-      const response = await axiosInstance.get<ApiResponse<ClubCoachDto[]>>(`/v1/clubs/${clubId}/coaches${params}`);
+    getCoaches: async (clubId: string, options: {
+      page?: number;
+      pageSize?: number;
+      includeArchived?: boolean;
+      search?: string;
+      ageGroupId?: string;
+      teamId?: string;
+      role?: string;
+    } = {}): Promise<ApiResponse<PagedResponse<ClubCoachDto>>> => {
+      const query = new URLSearchParams();
+      if (options.page !== undefined) query.set('page', String(options.page));
+      if (options.pageSize !== undefined) query.set('pageSize', String(options.pageSize));
+      if (options.includeArchived) query.set('includeArchived', 'true');
+      if (options.search) query.set('search', options.search);
+      if (options.ageGroupId) query.set('ageGroupId', options.ageGroupId);
+      if (options.teamId) query.set('teamId', options.teamId);
+      if (options.role) query.set('role', options.role);
+      const qs = query.toString() ? `?${query.toString()}` : '';
+      const response = await axiosInstance.get<ApiResponse<PagedResponse<ClubCoachDto>>>(`/v1/clubs/${clubId}/coaches${qs}`);
       return response.data;
     },
 

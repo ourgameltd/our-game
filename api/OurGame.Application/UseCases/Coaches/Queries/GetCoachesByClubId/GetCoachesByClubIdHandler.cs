@@ -1,20 +1,31 @@
 using MediatR;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
+using OurGame.Application.Abstractions.Responses;
 using OurGame.Application.UseCases.Coaches.Queries.GetCoachesByClubId.DTOs;
 using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.Coaches.Queries.GetCoachesByClubId;
 
 /// <summary>
-/// Query to get all coaches for a specific club
+/// Query to get a paged, filtered list of coaches for a specific club
 /// </summary>
-public record GetCoachesByClubIdQuery(Guid ClubId, bool IncludeArchived = false) : IQuery<List<ClubCoachDto>>;
+public record GetCoachesByClubIdQuery(
+    Guid ClubId,
+    bool IncludeArchived = false,
+    string? Search = null,
+    Guid? AgeGroupId = null,
+    Guid? TeamId = null,
+    string? Role = null,
+    int Page = 1,
+    int PageSize = 20
+) : IQuery<PagedResponse<ClubCoachDto>>;
 
 /// <summary>
 /// Handler for GetCoachesByClubIdQuery
 /// </summary>
-public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery, List<ClubCoachDto>>
+public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery, PagedResponse<ClubCoachDto>>
 {
     private readonly OurGameContext _db;
 
@@ -23,73 +34,63 @@ public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery
         _db = db;
     }
 
-    public async Task<List<ClubCoachDto>> Handle(GetCoachesByClubIdQuery query, CancellationToken cancellationToken)
+    public async Task<PagedResponse<ClubCoachDto>> Handle(GetCoachesByClubIdQuery query, CancellationToken cancellationToken)
     {
-        // Get all coaches for the club
-        var sql = query.IncludeArchived
-            ? @"
-                SELECT 
-                    c.Id,
-                    c.ClubId,
-                    c.FirstName,
-                    c.LastName,
-                    c.DateOfBirth,
-                    c.Photo,
-                    u.Email,
-                    c.Phone,
-                    c.AssociationId,
-                    c.HasAccount,
-                    c.Biography,
-                    c.Specializations,
-                    c.ClubRoles,
-                    c.Badges,
-                    c.IsArchived
-                FROM Coaches c
-                LEFT JOIN Users u ON u.Id = c.UserId
-                WHERE c.ClubId = {0}
-                ORDER BY c.FirstName, c.LastName"
-            : @"
-                SELECT 
-                    c.Id,
-                    c.ClubId,
-                    c.FirstName,
-                    c.LastName,
-                    c.DateOfBirth,
-                    c.Photo,
-                    u.Email,
-                    c.Phone,
-                    c.AssociationId,
-                    c.HasAccount,
-                    c.Biography,
-                    c.Specializations,
-                    c.ClubRoles,
-                    c.Badges,
-                    c.IsArchived
-                FROM Coaches c
-                LEFT JOIN Users u ON u.Id = c.UserId
-                WHERE c.ClubId = {0} AND c.IsArchived = 0
-                ORDER BY c.FirstName, c.LastName";
+        var (whereClause, _) = BuildFilter(query);
+
+        var countSql = $"SELECT COUNT(*) AS Value FROM Coaches c WHERE {whereClause}";
+        var (_, countParams) = BuildFilter(query);
+        var totalCount = (await _db.Database
+            .SqlQueryRaw<int>(countSql, countParams)
+            .ToListAsync(cancellationToken))[0];
+
+        if (totalCount == 0)
+            return PagedResponse<ClubCoachDto>.Create(new List<ClubCoachDto>(), query.Page, query.PageSize, 0);
+
+        var skip = (query.Page - 1) * query.PageSize;
+        var (_, mainFilterParams) = BuildFilter(query);
+        var mainParams = new List<object>(mainFilterParams)
+        {
+            new SqlParameter("@skip", skip),
+            new SqlParameter("@pageSize", query.PageSize)
+        };
+
+        var mainSql = $@"
+            SELECT
+                c.Id,
+                c.ClubId,
+                c.FirstName,
+                c.LastName,
+                c.DateOfBirth,
+                c.Photo,
+                u.Email,
+                c.Phone,
+                c.AssociationId,
+                c.HasAccount,
+                c.Biography,
+                c.Specializations,
+                c.ClubRoles,
+                c.Badges,
+                c.IsArchived
+            FROM Coaches c
+            LEFT JOIN Users u ON u.Id = c.UserId
+            WHERE {whereClause}
+            ORDER BY c.FirstName, c.LastName
+            OFFSET @skip ROWS FETCH NEXT @pageSize ROWS ONLY";
 
         var coachData = await _db.Database
-            .SqlQueryRaw<CoachRawDto>(sql, query.ClubId)
+            .SqlQueryRaw<CoachRawDto>(mainSql, mainParams.ToArray())
             .ToListAsync(cancellationToken);
 
         if (coachData.Count == 0)
-        {
-            return new List<ClubCoachDto>();
-        }
+            return PagedResponse<ClubCoachDto>.Create(new List<ClubCoachDto>(), query.Page, query.PageSize, totalCount);
 
-        // Get coach IDs for fetching related data
         var coachIds = coachData.Select(c => c.Id).ToList();
+        var batchParams = coachIds.Select((id, i) => new SqlParameter($"@p{i}", id)).ToArray();
+        var paramNames = string.Join(", ", batchParams.Select(p => p.ParameterName));
 
-        // Build parameterized query for teams
-        var parameters = coachIds.Select((id, index) =>
-            new Microsoft.Data.SqlClient.SqlParameter($"@p{index}", id)).ToArray();
-        var parameterNames = string.Join(", ", parameters.Select(p => p.ParameterName));
-
-        // Get teams for coaches
         var teamSql = $@"
-            SELECT 
+            SELECT
                 tc.CoachId,
                 t.Id,
                 t.AgeGroupId,
@@ -98,14 +99,13 @@ public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery
             FROM TeamCoaches tc
             INNER JOIN Teams t ON tc.TeamId = t.Id
             LEFT JOIN AgeGroups ag ON t.AgeGroupId = ag.Id
-            WHERE tc.CoachId IN ({parameterNames})
+            WHERE tc.CoachId IN ({paramNames})
             ORDER BY ag.Name, t.Name";
 
         var teamData = await _db.Database
-            .SqlQueryRaw<CoachTeamRawDto>(teamSql, parameters)
+            .SqlQueryRaw<CoachTeamRawDto>(teamSql, batchParams)
             .ToListAsync(cancellationToken);
 
-        // Group related data by coach
         var teamsByCoach = teamData
             .GroupBy(t => t.CoachId)
             .ToDictionary(
@@ -119,8 +119,7 @@ public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery
                 }).ToList()
             );
 
-        // Map to DTOs
-        return coachData
+        var items = coachData
             .Select(c => new ClubCoachDto
             {
                 Id = c.Id,
@@ -134,48 +133,77 @@ public class GetCoachesByClubIdHandler : IRequestHandler<GetCoachesByClubIdQuery
                 AssociationId = c.AssociationId,
                 HasAccount = c.HasAccount,
                 Biography = c.Biography,
-                Specializations = ParseSpecializations(c.Specializations),
-                ClubRoles = ParseSpecializations(c.ClubRoles),
-                Badges = ParseSpecializations(c.Badges),
+                Specializations = ParseJsonOrCsv(c.Specializations),
+                ClubRoles = ParseJsonOrCsv(c.ClubRoles),
+                Badges = ParseJsonOrCsv(c.Badges),
                 IsArchived = c.IsArchived,
                 Teams = teamsByCoach.GetValueOrDefault(c.Id, new List<ClubCoachTeamDto>())
             })
             .ToList();
+
+        return PagedResponse<ClubCoachDto>.Create(items, query.Page, query.PageSize, totalCount);
     }
 
-    private static List<string> ParseSpecializations(string? specializations)
+    private static (string WhereClause, object[] Parameters) BuildFilter(GetCoachesByClubIdQuery query)
     {
-        if (string.IsNullOrWhiteSpace(specializations))
+        var conditions = new List<string> { "c.ClubId = @clubId" };
+        var parameters = new List<SqlParameter> { new("@clubId", query.ClubId) };
+
+        if (!query.IncludeArchived)
+            conditions.Add("c.IsArchived = 0");
+
+        if (!string.IsNullOrWhiteSpace(query.Search))
         {
-            return new List<string>();
+            conditions.Add("(c.FirstName + ' ' + c.LastName LIKE '%' + @search + '%')");
+            parameters.Add(new("@search", query.Search.Trim()));
         }
 
-        // Try to parse as JSON array first (e.g., ["Youth Development","Tactical Training"])
-        var trimmed = specializations.Trim();
+        if (query.AgeGroupId.HasValue)
+        {
+            conditions.Add("EXISTS (SELECT 1 FROM TeamCoaches tc INNER JOIN Teams t ON tc.TeamId = t.Id WHERE tc.CoachId = c.Id AND t.AgeGroupId = @ageGroupId)");
+            parameters.Add(new("@ageGroupId", query.AgeGroupId.Value));
+        }
+
+        if (query.TeamId.HasValue)
+        {
+            conditions.Add("EXISTS (SELECT 1 FROM TeamCoaches tc WHERE tc.CoachId = c.Id AND tc.TeamId = @teamId)");
+            parameters.Add(new("@teamId", query.TeamId.Value));
+        }
+
+        if (!string.IsNullOrWhiteSpace(query.Role))
+        {
+            conditions.Add("c.ClubRoles LIKE '%' + @role + '%'");
+            parameters.Add(new("@role", query.Role.Trim()));
+        }
+
+        return (string.Join(" AND ", conditions), parameters.Cast<object>().ToArray());
+    }
+
+    private static List<string> ParseJsonOrCsv(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return new List<string>();
+
+        var trimmed = value.Trim();
         if (trimmed.StartsWith("[") && trimmed.EndsWith("]"))
         {
             try
             {
-                var parsed = System.Text.Json.JsonSerializer.Deserialize<List<string>>(trimmed);
-                return parsed ?? new List<string>();
+                return System.Text.Json.JsonSerializer.Deserialize<List<string>>(trimmed) ?? new List<string>();
             }
             catch
             {
-                // Fall through to comma-separated parsing
+                // fall through
             }
         }
 
-        // Fallback: Specializations are stored as comma-separated values
-        return specializations
+        return trimmed
             .Split(',', StringSplitOptions.RemoveEmptyEntries)
             .Select(s => s.Trim())
             .ToList();
     }
 }
 
-/// <summary>
-/// DTO for raw SQL coach query result
-/// </summary>
 class CoachRawDto
 {
     public Guid Id { get; set; }
@@ -195,9 +223,6 @@ class CoachRawDto
     public bool IsArchived { get; set; }
 }
 
-/// <summary>
-/// DTO for raw SQL coach team query result
-/// </summary>
 class CoachTeamRawDto
 {
     public Guid CoachId { get; set; }

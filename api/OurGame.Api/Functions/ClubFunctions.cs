@@ -306,19 +306,25 @@ public class ClubFunctions
     }
 
     /// <summary>
-    /// Get all coaches for a specific club
+    /// Get coaches for a specific club with pagination and filtering
     /// </summary>
     /// <param name="req">The HTTP request</param>
     /// <param name="clubId">The club ID</param>
-    /// <returns>List of coaches in the club</returns>
+    /// <returns>Paged list of coaches in the club</returns>
     [Function("GetClubCoaches")]
-    [OpenApiOperation(operationId: "GetClubCoaches", tags: new[] { "Clubs", "Coaches" }, Summary = "Get club coaches", Description = "Retrieves all coaches for a specific club")]
+    [OpenApiOperation(operationId: "GetClubCoaches", tags: new[] { "Clubs", "Coaches" }, Summary = "Get club coaches", Description = "Retrieves a paged, filtered list of coaches for a specific club")]
     [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club ID")]
     [OpenApiParameter(name: "includeArchived", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "Include archived coaches (default: false)")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubCoachDto>>), Description = "Coaches retrieved successfully")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubCoachDto>>), Description = "User not authenticated")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubCoachDto>>), Description = "Invalid club ID format")]
-    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<List<ClubCoachDto>>), Description = "Internal server error")]
+    [OpenApiParameter(name: "page", In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "Page number (1-based, default 1)")]
+    [OpenApiParameter(name: "pageSize", In = ParameterLocation.Query, Required = false, Type = typeof(int), Description = "Items per page (default 20, max 50)")]
+    [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by coach name")]
+    [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Query, Required = false, Type = typeof(Guid), Description = "Filter by age group")]
+    [OpenApiParameter(name: "teamId", In = ParameterLocation.Query, Required = false, Type = typeof(Guid), Description = "Filter by team")]
+    [OpenApiParameter(name: "role", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by club role")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<ClubCoachDto>>), Description = "Coaches retrieved successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<ClubCoachDto>>), Description = "User not authenticated")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<ClubCoachDto>>), Description = "Invalid club ID format")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<PagedResponse<ClubCoachDto>>), Description = "Internal server error")]
     public async Task<HttpResponseData> GetClubCoaches(
         [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "v1/clubs/{clubId}/coaches")] HttpRequestData req,
         string clubId)
@@ -334,16 +340,24 @@ public class ClubFunctions
         if (!Guid.TryParse(clubId, out var clubGuid))
         {
             var badRequestResponse = req.CreateResponse(HttpStatusCode.BadRequest);
-            await badRequestResponse.WriteAsJsonAsync(ApiResponse<List<ClubCoachDto>>.ErrorResponse(
+            await badRequestResponse.WriteAsJsonAsync(ApiResponse<PagedResponse<ClubCoachDto>>.ErrorResponse(
                 "Invalid club ID format", 400));
             return badRequestResponse;
         }
 
         var includeArchived = req.GetQueryParam("includeArchived")?.ToLower() == "true";
-        var coaches = await _mediator.Send(new GetCoachesByClubIdQuery(clubGuid, includeArchived));
+        var page = int.TryParse(req.GetQueryParam("page"), out var pageParsed) ? Math.Max(1, pageParsed) : 1;
+        var pageSize = int.TryParse(req.GetQueryParam("pageSize"), out var sizeParsed) ? Math.Clamp(sizeParsed, 1, 50) : 20;
+        var search = req.GetQueryParam("search");
+        var ageGroupId = Guid.TryParse(req.GetQueryParam("ageGroupId"), out var agGuid) ? agGuid : (Guid?)null;
+        var teamId = Guid.TryParse(req.GetQueryParam("teamId"), out var teamGuid) ? teamGuid : (Guid?)null;
+        var role = req.GetQueryParam("role");
+
+        var result = await _mediator.Send(new GetCoachesByClubIdQuery(
+            clubGuid, includeArchived, search, ageGroupId, teamId, role, page, pageSize));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(ApiResponse<List<ClubCoachDto>>.SuccessResponse(coaches));
+        await response.WriteAsJsonAsync(ApiResponse<PagedResponse<ClubCoachDto>>.SuccessResponse(result));
         return response;
     }
 

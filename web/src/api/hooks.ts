@@ -524,14 +524,17 @@ export function useClubTeams(
 }
 
 /**
- * Hook to fetch all coaches for a club
+ * Hook to fetch all coaches for a club (uses paginated endpoint with large page size)
  */
 export function useClubCoaches(
   clubId: string | undefined,
   includeArchived: boolean = false
 ): UseApiState<ClubCoachDto[]> {
   return useApiCall<ClubCoachDto[]>(
-    () => apiClient.clubs.getCoaches(clubId!, includeArchived),
+    async () => {
+      const res = await apiClient.clubs.getCoaches(clubId!, { includeArchived, pageSize: 200 });
+      return { ...res, data: res.data?.items };
+    },
     [clubId, includeArchived],
     isValidId(clubId)
   );

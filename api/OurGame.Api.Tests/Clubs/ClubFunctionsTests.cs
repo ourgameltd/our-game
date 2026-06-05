@@ -301,7 +301,7 @@ public class ClubFunctionsTests
         var response = await sut.GetClubCoaches(req, "bad");
 
         Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
-        var payload = await HttpResponseAssertions.ReadApiResponseAsync<List<ClubCoachDto>>(response);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<PagedResponse<ClubCoachDto>>(response);
         Assert.False(payload.Success);
         Assert.Equal(400, payload.StatusCode);
         Assert.Equal("Invalid club ID format", payload.Error?.Message);
@@ -311,10 +311,11 @@ public class ClubFunctionsTests
     public async Task GetClubCoaches_ReturnsOk_WhenClubIdIsValid()
     {
         var clubId = Guid.NewGuid();
-        var expected = new List<ClubCoachDto> { new() { Id = Guid.NewGuid(), FirstName = "Jamie" } };
+        var expected = PagedResponse<ClubCoachDto>.Create(
+            new List<ClubCoachDto> { new() { Id = Guid.NewGuid(), FirstName = "Jamie" } }, 1, 20, 1);
 
         var mediator = new TestMediator();
-        mediator.Register<GetCoachesByClubIdQuery, List<ClubCoachDto>>((_, _) => Task.FromResult(expected));
+        mediator.Register<GetCoachesByClubIdQuery, PagedResponse<ClubCoachDto>>((_, _) => Task.FromResult(expected));
 
         var sut = BuildSut(mediator);
         var req = CreateAuthedRequest("GET", $"https://localhost/v1/clubs/{clubId}/coaches");
@@ -322,11 +323,43 @@ public class ClubFunctionsTests
         var response = await sut.GetClubCoaches(req, clubId.ToString());
 
         Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
-        var payload = await HttpResponseAssertions.ReadApiResponseAsync<List<ClubCoachDto>>(response);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<PagedResponse<ClubCoachDto>>(response);
         Assert.True(payload.Success);
         Assert.Equal(200, payload.StatusCode);
         Assert.NotNull(payload.Data);
-        Assert.Single(payload.Data!);
+        Assert.Single(payload.Data!.Items);
+    }
+
+    [Fact]
+    public async Task GetClubCoaches_PassesPaginationAndFilters_WhenQueryParamsSet()
+    {
+        var clubId = Guid.NewGuid();
+        var ageGroupId = Guid.NewGuid();
+        var teamId = Guid.NewGuid();
+        GetCoachesByClubIdQuery? capturedQuery = null;
+
+        var mediator = new TestMediator();
+        mediator.Register<GetCoachesByClubIdQuery, PagedResponse<ClubCoachDto>>((q, _) =>
+        {
+            capturedQuery = q;
+            return Task.FromResult(PagedResponse<ClubCoachDto>.Create(new List<ClubCoachDto>(), 2, 10, 0));
+        });
+
+        var sut = BuildSut(mediator);
+        var url = $"https://localhost/v1/clubs/{clubId}/coaches?page=2&pageSize=10&search=Jamie&ageGroupId={ageGroupId}&teamId={teamId}&role=Head+Coach&includeArchived=true";
+        var req = CreateAuthedRequest("GET", url);
+
+        var response = await sut.GetClubCoaches(req, clubId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        Assert.NotNull(capturedQuery);
+        Assert.Equal(2, capturedQuery!.Page);
+        Assert.Equal(10, capturedQuery.PageSize);
+        Assert.Equal("Jamie", capturedQuery.Search);
+        Assert.Equal(ageGroupId, capturedQuery.AgeGroupId);
+        Assert.Equal(teamId, capturedQuery.TeamId);
+        Assert.Equal("Head Coach", capturedQuery.Role);
+        Assert.True(capturedQuery.IncludeArchived);
     }
 
     // ── GetClubTrainingSessions ──────────────────────────────────────

@@ -187,7 +187,8 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
         string authId = "coach-auth",
         string firstName = "John",
         string lastName = "Coach",
-        bool isArchived = false)
+        bool isArchived = false,
+        string? clubRoles = null)
     {
         var userId = await SeedUserAsync(authId);
         var coachId = Guid.NewGuid();
@@ -201,6 +202,7 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
             FirstName = firstName,
             LastName = lastName,
             IsArchived = isArchived,
+            ClubRoles = clubRoles,
             CreatedAt = now,
             UpdatedAt = now
         });
