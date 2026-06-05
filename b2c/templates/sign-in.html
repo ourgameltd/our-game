@@ -353,7 +353,70 @@
       </div>
 
       <div class="card">
-        <div id="api"></div>
+        <div id="api" data-name="Unified">
+      <div class="heading">
+        <h1 role="heading">Sign in</h1>
+      </div>
+        <div class="claims-provider-list-buttons social" aria-label="Sign in with your social account" role="form">
+          <div class="intro">
+            <h2>Sign in with your social account</h2>
+          </div>
+          <div class="options">
+              <div>
+                  <button class="accountButton firstButton claims-provider-selection" id="GoogleExchange" role="link" autofocus="">Google</button>
+              </div>
+                      </div>
+        </div>
+
+        <div class="divider">
+          <h2>OR</h2>
+        </div>
+      <form id="localAccountForm" class="localAccount" aria-label="Sign in with your email address">
+        <div class="intro">
+          <h2>
+            Sign in with your email address
+          </h2>
+        </div>
+        <div class="error pageLevel" aria-hidden="true" role="alert" style="display: none;">
+          <p></p>
+        </div>
+        <div class="entry">
+          <div class="entry-item">
+            <label for="email">
+              Email Address
+            </label>
+            <div class="error itemLevel" aria-hidden="false" role="alert" style="display: block;">
+              <p>Please enter your Email Address</p>
+            </div>
+            <input type="email" id="email" name="Email Address" title="Please enter a valid email address" pattern="^[a-zA-Z0-9!#$%&amp;'+^_`{}~-]+(?:\.[a-zA-Z0-9!#$%&amp;'+^_`{}~-]+)*@(?:[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?\.)+[a-zA-Z0-9](?:[a-zA-Z0-9-]*[a-zA-Z0-9])?$" autofocus="" placeholder="Email Address" aria-label="Email Address" class="highlightError">
+          </div>
+            <div class="entry-item">
+              <div class="password-label">
+                <label for="password">Password</label>
+                    <a id="forgotPassword" href="/ourgameauth.onmicrosoft.com/B2C_1_SUSI/api/CombinedSigninAndSignup/unified?claimsexchange=ForgotPassword&amp;csrf_token=Q2VPYlBPc1dSVWNpNGtOOWRpdlpVV211SXJ3Y2hUa21GbDRGWi9FMlBnTjJxb3VpK01kYy8xWFQ2VG9MdWdpVE04Zys1U01qOVhWdWhTVkhYcTk4M3c9PTsyMDI2LTA2LTA1VDE1OjI0OjM4Ljg1MTgxMTJaOzFCYUNpVWZ6VjJUVm9aZTZGZ3llQVE9PTt7Ik9yY2hlc3RyYXRpb25TdGVwIjoxfQ==&amp;tx=StateProperties=eyJUSUQiOiJiOTFjNzhhNy04NGU5LTQ0ZjMtYjc1Yy1mMTMyM2E0ZWM4NzkifQ&amp;p=B2C_1_SUSI">Forgot your password?</a>
+                              </div>
+              <div class="error itemLevel" aria-hidden="false" style="display: block;">
+                <p role="alert">Please enter your password</p>
+              </div>
+              <input type="password" id="password" name="Password" placeholder="Password" aria-label="Password" autocomplete="current-password" aria-required="true" class="highlightError">
+                          </div>
+          <div class="working"></div>
+
+
+          <div class="buttons">
+            <button id="next" type="submit" class="buttons" form="localAccountForm">Sign in</button>
+          </div>
+        </div>
+              <div class="divider">
+                <h2>OR</h2>
+              </div>
+              <div class="create">
+                <p>
+                  Don't have an account?<a id="createAccount" href="/ourgameauth.onmicrosoft.com/B2C_1_SUSI/api/CombinedSigninAndSignup/unified?local=signup&amp;csrf_token=Q2VPYlBPc1dSVWNpNGtOOWRpdlpVV211SXJ3Y2hUa21GbDRGWi9FMlBnTjJxb3VpK01kYy8xWFQ2VG9MdWdpVE04Zys1U01qOVhWdWhTVkhYcTk4M3c9PTsyMDI2LTA2LTA1VDE1OjI0OjM4Ljg1MTgxMTJaOzFCYUNpVWZ6VjJUVm9aZTZGZ3llQVE9PTt7Ik9yY2hlc3RyYXRpb25TdGVwIjoxfQ==&amp;tx=StateProperties=eyJUSUQiOiJiOTFjNzhhNy04NGU5LTQ0ZjMtYjc1Yy1mMTMyM2E0ZWM4NzkifQ&amp;p=B2C_1_SUSI">Sign up now</a>
+                </p>
+              </div>
+      </form>
+  </div>
       </div>
 
     </div>
