@@ -1,5 +1,23 @@
 import { Link } from 'react-router-dom';
 import { Plus, AlertCircle, Search, ChevronDown, ChevronUp, Filter, Users, X } from 'lucide-react';
+
+function PlayerCardSkeleton() {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-3 border border-gray-200 dark:border-gray-700 animate-pulse">
+      <div className="flex items-center gap-2">
+        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 min-h-[2.5rem]" />
+        <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="flex gap-1">
+            <div className="h-3 w-10 bg-gray-200 dark:bg-gray-700 rounded" />
+            <div className="h-3 w-8 bg-gray-200 dark:bg-gray-700 rounded" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 import { useState, useMemo } from 'react';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
@@ -237,18 +255,8 @@ export default function TeamPlayersPage() {
           </div>
           
           {/* List skeleton */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-            {[1, 2, 3, 4, 5].map(i => (
-              <div key={i} className="bg-white dark:bg-gray-800 rounded-lg p-6 md:rounded-none md:p-4 border border-gray-200 dark:border-gray-700 md:border-0 md:border-b">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse"></div>
-                  <div className="flex-1">
-                    <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-2 animate-pulse"></div>
-                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-20 animate-pulse"></div>
-                  </div>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => <PlayerCardSkeleton key={i} />)}
           </div>
         </main>
       </div>
@@ -371,21 +379,15 @@ export default function TeamPlayersPage() {
           </div>
         )}
         {filteredTeamPlayers.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filteredTeamPlayers.map((player) => (
               <Link key={player.id} to={Routes.teamPlayer(clubId!, ageGroupId!, teamId!, player.id)}>
                 <PlayerCard
                   player={player}
+                  forceCard
                   squadNumber={squadNumberMap[player.id]}
                   detailDisplay="banding"
                   competencyBand={playerBands[player.id]}
-                  badges={
-                    player.teamIds.length > 1 ? (
-                      <span className="bg-primary-600 text-white text-xs px-2 py-1 rounded-full">
-                        {player.teamIds.length} teams
-                      </span>
-                    ) : undefined
-                  }
                   actions={
                     !team.isArchived ? (
                       <button

@@ -1,6 +1,21 @@
 import { Link } from 'react-router-dom';
 import { useState, useMemo } from 'react';
 import { Plus, Loader2, AlertCircle, Search, UserCog, Filter, X } from 'lucide-react';
+
+function CoachCardSkeleton() {
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-3 border border-gray-200 dark:border-gray-700 animate-pulse">
+      <div className="flex items-center gap-2">
+        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 min-h-[2.5rem]" />
+        <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+        </div>
+      </div>
+    </div>
+  );
+}
 import { useTeamOverview, useTeamCoaches, useClubCoaches, useAssignTeamCoach, useRemoveTeamCoach } from '@/api/hooks';
 import { apiClient } from '@/api';
 import CoachCard from '@components/coach/CoachCard';
@@ -125,17 +140,8 @@ export default function TeamCoachesPage() {
           </div>
           
           {/* Coaches List Skeleton */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="flex items-center gap-2 px-4 py-3 border-b border-gray-200 dark:border-gray-700 last:border-0 animate-pulse">
-                <div className="w-1 h-10 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
-                <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
-                <div className="flex-1">
-                  <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-32 mb-1"></div>
-                  <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-20"></div>
-                </div>
-              </div>
-            ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {[...Array(8)].map((_, i) => <CoachCardSkeleton key={i} />)}
           </div>
         </main>
       </div>
@@ -295,10 +301,11 @@ export default function TeamCoachesPage() {
         )}
         {filteredTeamCoaches.length > 0 && (
           <div className="mb-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 gap-4 md:gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredTeamCoaches.filter((coach): coach is typeof coach & { id: string } => coach.id !== undefined).map((coach) => (
                 <Link key={coach.id} to={Routes.teamCoach(clubId!, ageGroupId!, teamId!, coach.id)}>
-                  <CoachCard 
+                  <CoachCard
+                    forceCard
                     coach={{
                       id: coach.id || '',
                       clubId: team.clubId,

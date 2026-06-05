@@ -108,11 +108,6 @@ export default function CoachCard({ coach, onClick, badges, actions, forceCard =
 
           {/* Actions / status */}
           <div className={`flex items-center gap-2 shrink-0 ${!forceCard ? 'md:order-7' : ''}`}>
-            {coach.associationId && (
-              <p className="text-xs text-gray-500 dark:text-gray-500 hidden lg:block">
-                FA ID: {coach.associationId}
-              </p>
-            )}
             {coach.hasAccount && (
               <span className="flex items-center text-green-600 dark:text-green-400 text-xs font-medium">
                 <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
