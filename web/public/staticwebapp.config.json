@@ -176,6 +176,11 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/api/v1/social/*",
+      "methods": ["GET"],
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/api/v1/invites/*",
       "methods": ["GET"],
       "allowedRoles": ["anonymous"]
