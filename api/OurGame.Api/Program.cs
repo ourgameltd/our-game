@@ -46,7 +46,7 @@ var host = new HostBuilder()
         // Register IB2CUserService: LocalB2CUserService for development, B2CGraphService for production
         if (context.HostingEnvironment.IsDevelopment())
         {
-            services.AddSingleton<IB2CUserService, LocalB2CUserService>();
+            services.AddScoped<IB2CUserService, LocalB2CUserService>();
         }
         else
         {

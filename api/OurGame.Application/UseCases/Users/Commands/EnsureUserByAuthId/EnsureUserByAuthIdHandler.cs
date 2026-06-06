@@ -46,10 +46,10 @@ public class EnsureUserByAuthIdHandler : IRequestHandler<EnsureUserByAuthIdComma
             var b2CProfile = await _b2CUserService.GetUserAsync(authId, cancellationToken);
             if (b2CProfile != null)
             {
-                email ??= b2CProfile.Email;
-                givenName ??= b2CProfile.GivenName;
-                surname ??= b2CProfile.Surname;
-                displayName ??= b2CProfile.DisplayName;
+                email = b2CProfile.Email;
+                givenName = b2CProfile.GivenName;
+                surname = b2CProfile.Surname;
+                displayName = b2CProfile.DisplayName;
             }
         }
 

@@ -42,6 +42,8 @@ public sealed class B2CGraphService : IB2CUserService
                 return null;
             }
 
+            // Prefer the primary SMTP address (mail); fall back to otherMails which B2C
+            // may populate for local accounts depending on the user flow configuration.
             var email = user.Mail
                 ?? user.OtherMails?.FirstOrDefault();
 
