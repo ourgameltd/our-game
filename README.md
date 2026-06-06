@@ -188,9 +188,13 @@ Triggered by pushing a semver tag (e.g. `v1.2.0`) or manually. Runs five jobs in
 |---|---|---|
 | `AZURE_CREDENTIALS` | Secret | Azure Service Principal credentials (JSON) |
 | `SQL_ADMIN_PASSWORD` | Secret | Azure SQL admin password |
-| `B2C_CLIENT_SECRET` | Secret | Azure AD B2C client secret |
+| `B2C_CLIENT_SECRET` | Secret | Azure AD B2C client secret (SWA OpenID Connect provider) |
+| `B2C_GRAPH_CLIENT_SECRET` | Secret | Client secret of the app registration used for Microsoft Graph user profile lookups |
+| `VAPID_PRIVATE_KEY` | Secret | VAPID private key for Web Push |
 | `SQL_ADMIN_USERNAME` | Variable | SQL admin username (defaults to `ourgame_sql_admin`) |
-| `B2C_CLIENT_ID` | Variable | Azure AD B2C client ID |
+| `B2C_CLIENT_ID` | Variable | Azure AD B2C client ID (SWA OpenID Connect provider) |
+| `B2C_GRAPH_TENANT_ID` | Variable | Azure AD B2C tenant ID (GUID) for Microsoft Graph user profile lookups |
+| `B2C_GRAPH_CLIENT_ID` | Variable | Client ID of the app registration with `User.Read.All` for Microsoft Graph |
 
 ## Testing
 

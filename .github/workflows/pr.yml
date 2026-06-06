@@ -313,6 +313,9 @@ jobs:
             --parameters vapidSubject="${{ steps.deploy_params.outputs.vapidSubject }}" \
             --parameters vapidPublicKey="${{ steps.deploy_params.outputs.vapidPublicKey }}" \
             --parameters vapidPrivateKey="${{ secrets.VAPID_PRIVATE_KEY }}" \
+            --parameters b2cGraphTenantId="${{ vars.B2C_GRAPH_TENANT_ID }}" \
+            --parameters b2cGraphClientId="${{ vars.B2C_GRAPH_CLIENT_ID }}" \
+            --parameters b2cGraphClientSecret="${{ secrets.B2C_GRAPH_CLIENT_SECRET }}" \
             --query 'properties.outputs' \
             --output json)
 
