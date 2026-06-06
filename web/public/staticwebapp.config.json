@@ -88,6 +88,11 @@
       "allowedRoles": ["anonymous"]
     },
     {
+      "route": "/social/match/*/report",
+      "rewrite": "/api/social-og-page",
+      "allowedRoles": ["anonymous"]
+    },
+    {
       "route": "/social*",
       "allowedRoles": ["anonymous"]
     },

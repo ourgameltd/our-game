@@ -19,6 +19,7 @@ using OurGame.Application.UseCases.Matches.Commands.UpdateMyMatchAttendance;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 using System.Net;
+using System.Text.RegularExpressions;
 
 namespace OurGame.Api.Functions;
 
@@ -287,6 +288,70 @@ public class MatchFunctions
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<PublishedMatchReportDto>.SuccessResponse(dto));
+        return response;
+    }
+
+    /// <summary>
+    /// Serve an HTML page with OG meta tags for social sharing of a published match report.
+    /// Azure SWA rewrites /social/match/*/report to this endpoint.
+    /// </summary>
+    [Function("GetSocialMatchReportPageHtml")]
+    [AllowAnonymousEndpoint]
+    public async Task<HttpResponseData> GetSocialMatchReportPageHtml(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "get", Route = "social-og-page")] HttpRequestData req)
+    {
+        req.Headers.TryGetValues("x-ms-original-url", out var originalUrlValues);
+        var originalUrl = originalUrlValues?.FirstOrDefault() ?? string.Empty;
+
+        var urlMatch = Regex.Match(originalUrl, @"/social/match/([^/?#]+)/report");
+        if (!urlMatch.Success || !Guid.TryParse(urlMatch.Groups[1].Value, out var matchGuid))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            bad.Headers.Add("Content-Type", "text/html; charset=utf-8");
+            await bad.WriteStringAsync("<html><head><title>Invalid URL</title></head><body><p>Invalid match URL.</p></body></html>");
+            return bad;
+        }
+
+        var match = await _mediator.Send(new GetMatchByIdQuery(matchGuid));
+        if (match == null || !match.IsPublished || match.Report == null)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            notFound.Headers.Add("Content-Type", "text/html; charset=utf-8");
+            await notFound.WriteStringAsync("<html><head><title>Not Found</title></head><body><p>Published match report not found.</p></body></html>");
+            return notFound;
+        }
+
+        req.Headers.TryGetValues("x-forwarded-proto", out var protoValues);
+        req.Headers.TryGetValues("x-forwarded-host", out var hostValues);
+        var proto = protoValues?.FirstOrDefault() ?? "https";
+        var host = hostValues?.FirstOrDefault() ?? req.Url.Host;
+        var pageUrl = $"{proto}://{host}/social/match/{matchGuid}/report";
+
+        var scoreText = match.HomeScore.HasValue && match.AwayScore.HasValue
+            ? $"{match.HomeScore} – {match.AwayScore}" : null;
+        var ogTitle = scoreText != null
+            ? $"{match.TeamName} {scoreText} {match.Opposition} | Match Report"
+            : $"{match.TeamName} vs {match.Opposition} | Match Report";
+        var ogDescription = scoreText != null
+            ? $"{match.TeamName} {scoreText} {match.Opposition} in {match.Competition}."
+            : $"{match.TeamName} vs {match.Opposition} in {match.Competition}.";
+        if (!string.IsNullOrWhiteSpace(match.Report.Summary))
+        {
+            var plain = match.Report.Summary.Length > 120
+                ? match.Report.Summary[..120].TrimEnd() + "…"
+                : match.Report.Summary;
+            ogDescription += $" {plain}";
+        }
+        var ogImage = !string.IsNullOrEmpty(match.ClubLogo)
+            ? match.ClubLogo
+            : $"{proto}://{host}/icons/icon-512x512.png";
+
+        var html = SocialMatchReportHtml.Build(match, ogTitle, ogDescription, ogImage, pageUrl);
+
+        var response = req.CreateResponse(HttpStatusCode.OK);
+        response.Headers.Add("Content-Type", "text/html; charset=utf-8");
+        response.Headers.Add("Cache-Control", "public, max-age=300");
+        await response.WriteStringAsync(html);
         return response;
     }
 
