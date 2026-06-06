@@ -51,6 +51,9 @@ param staticWebCustomDomainDnsTtl int = 3600
 @description('Azure B2C tenant domain (e.g. yourtenant.b2clogin.com). Used to configure CORS on blob storage for custom UI templates.')
 param b2cTenantDomain string = ''
 
+@description('Azure B2C Graph API tenant ID (GUID). Used by the Function App to read user profiles via MS Graph.')
+param b2cGraphTenantId string = ''
+
 // Create the resource group
 resource resourceGroup 'Microsoft.Resources/resourceGroups@2024-03-01' = {
   name: resourceGroupName
@@ -82,6 +85,7 @@ module infrastructure 'main.bicep' = {
     staticWebCustomDomainDnsRecordSetName: staticWebCustomDomainDnsRecordSetName
     staticWebCustomDomainDnsTtl: staticWebCustomDomainDnsTtl
     b2cTenantDomain: b2cTenantDomain
+    b2cGraphTenantId: b2cGraphTenantId
   }
 }
 
