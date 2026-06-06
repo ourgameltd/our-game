@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Settings, GitBranch, Dumbbell, Images } from 'lucide-react';
 import type { DrillListDto } from '@/api/client';
@@ -43,16 +44,39 @@ export function DrillCardSkeleton() {
 
 export default function DrillCard({ drill, href, editHref, isInherited }: DrillCardProps) {
   const slideCount = drill.drillDiagramConfig?.frames?.length ?? 0;
+  const [activeFrame, setActiveFrame] = useState(0);
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
+  }, []);
+
+  const handleMouseEnter = () => {
+    if (slideCount <= 1) return;
+    intervalRef.current = setInterval(() => {
+      setActiveFrame(prev => (prev + 1) % slideCount);
+    }, 2000);
+  };
+
+  const handleMouseLeave = () => {
+    if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
+    setActiveFrame(0);
+  };
+
   const topBorderClass = isInherited
     ? 'border-t-[3px] border-t-gray-300 dark:border-t-gray-600'
     : 'border-t-[3px] border-t-primary-500 dark:border-t-primary-400';
 
   return (
-    <div className={`relative rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 ${topBorderClass} ${isInherited ? 'opacity-80' : ''}`}>
+    <div
+      className={`relative rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 ${topBorderClass} ${isInherited ? 'opacity-80' : ''}`}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <Link to={href} className="block">
         <div className="relative overflow-hidden">
           {drill.drillDiagramConfig ? (
-            <DrillDiagramRenderer drillDiagramConfig={drill.drillDiagramConfig} forceSquare />
+            <DrillDiagramRenderer drillDiagramConfig={drill.drillDiagramConfig} forceSquare frameIndex={activeFrame} />
           ) : (
             <div className="aspect-square bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
               <Dumbbell className="w-10 h-10 text-gray-300 dark:text-gray-600" />

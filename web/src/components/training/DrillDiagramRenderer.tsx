@@ -4,6 +4,7 @@ type DrillDiagramRendererProps = {
   drillDiagramConfig?: DrillDiagramConfigDto;
   className?: string;
   forceSquare?: boolean;
+  frameIndex?: number;
 };
 
 type DiagramObject = Record<string, unknown>;
@@ -311,8 +312,9 @@ export default function DrillDiagramRenderer({
   drillDiagramConfig,
   className = '',
   forceSquare = false,
+  frameIndex = 0,
 }: DrillDiagramRendererProps) {
-  const frame = drillDiagramConfig?.frames?.[0];
+  const frame = drillDiagramConfig?.frames?.[frameIndex];
   const objects = (frame?.objects ?? []) as DiagramObject[];
   const pitch = (frame?.pitch as Record<string, unknown> | undefined) ?? {};
   const pitchMode = pitch.mode === 'full' ? 'full' : 'half';
