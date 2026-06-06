@@ -1693,8 +1693,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       </div>
 
       {/* Horizontal frame strip */}
-      <div className="mt-3">
-        <div className="flex gap-2 overflow-x-auto pb-1">
+      <div className="flex gap-2 overflow-x-auto mt-3 pb-1">
           {frames.map((frame, index) => {
             const isActive = frame.id === activeFrame?.id;
             return (
@@ -1736,7 +1735,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           >
             + Frame
           </button>
-        </div>
       </div>
     </div>
   );

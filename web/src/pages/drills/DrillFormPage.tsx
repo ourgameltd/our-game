@@ -590,7 +590,7 @@ export default function DrillFormPage() {
 
             {/* Drill Diagram Editor + Equipment Needed */}
             <div className="grid gap-2 items-start lg:grid-cols-[1fr_260px]">
-              <div className="card">
+              <div className="card min-w-0 overflow-hidden">
                 <h3 className="text-lg font-semibold mb-2">Drill Diagram</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
                   Draw your setup directly on the pitch. Add players, cones, balls, markers, mannequins, and more across multiple frames, with canvas resizing behaviour preserved for those drill items.
