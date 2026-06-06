@@ -1,5 +1,6 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
+using OurGame.Application.Abstractions;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
 using OurGame.Persistence.Models;
@@ -8,16 +9,20 @@ namespace OurGame.Application.UseCases.Users.Commands.EnsureUserByAuthId;
 
 /// <summary>
 /// Creates a new user row for first-time authenticated users, or returns the existing profile.
+/// When identity claims are absent (e.g. in production on Azure Static Web Apps), the handler
+/// enriches the profile by querying the Azure AD B2C directory via <see cref="IB2CUserService"/>.
 /// </summary>
 public class EnsureUserByAuthIdHandler : IRequestHandler<EnsureUserByAuthIdCommand, UserProfileDto>
 {
     private readonly OurGameContext _db;
     private readonly IMediator _mediator;
+    private readonly IB2CUserService _b2CUserService;
 
-    public EnsureUserByAuthIdHandler(OurGameContext db, IMediator mediator)
+    public EnsureUserByAuthIdHandler(OurGameContext db, IMediator mediator, IB2CUserService b2CUserService)
     {
         _db = db;
         _mediator = mediator;
+        _b2CUserService = b2CUserService;
     }
 
     public async Task<UserProfileDto> Handle(EnsureUserByAuthIdCommand command, CancellationToken cancellationToken)
@@ -30,15 +35,33 @@ public class EnsureUserByAuthIdHandler : IRequestHandler<EnsureUserByAuthIdComma
             return existing;
         }
 
+        // When SWA does not forward extended claims (production), enrich from B2C Graph API.
+        var email = command.Email;
+        var givenName = command.GivenName;
+        var surname = command.Surname;
+        var displayName = command.DisplayName;
+
+        if (string.IsNullOrWhiteSpace(email) && string.IsNullOrWhiteSpace(givenName) && string.IsNullOrWhiteSpace(surname))
+        {
+            var b2CProfile = await _b2CUserService.GetUserAsync(authId, cancellationToken);
+            if (b2CProfile != null)
+            {
+                email ??= b2CProfile.Email;
+                givenName ??= b2CProfile.GivenName;
+                surname ??= b2CProfile.Surname;
+                displayName ??= b2CProfile.DisplayName;
+            }
+        }
+
         var now = DateTime.UtcNow;
-        var (firstName, lastName) = ResolveNames(command.GivenName, command.Surname, command.DisplayName);
-        var email = ResolveEmail(command.Email, command.DisplayName, authId);
+        var (firstName, lastName) = ResolveNames(givenName, surname, displayName);
+        var resolvedEmail = ResolveEmail(email, displayName, authId);
 
         _db.Users.Add(new User
         {
             Id = Guid.NewGuid(),
             AuthId = authId,
-            Email = email,
+            Email = resolvedEmail,
             FirstName = firstName,
             LastName = lastName,
             Photo = string.Empty,
