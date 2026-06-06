@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ChevronDown,
-  ChevronUp,
   Circle,
   Copy,
   Goal,
+  MessageSquare,
   Minus,
   MousePointer2,
   Pencil,
@@ -1192,79 +1191,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     ],
   });
 
-  const renderFrameRail = () => (
-    <div className="w-full space-y-2">
-      {frames.map((frame, index) => {
-        const isActive = frame.id === activeFrame?.id;
-        return (
-          <div
-            key={frame.id}
-            onClick={() => {
-              setActiveFrameId(frame.id);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') {
-                event.preventDefault();
-                setActiveFrameId(frame.id);
-              }
-            }}
-            role="button"
-            tabIndex={0}
-            className="w-full text-left cursor-pointer"
-            aria-label={`Select slide ${index + 1}`}
-          >
-            <div
-              className={`relative overflow-hidden rounded ${
-                isActive
-                  ? 'ring-2 ring-primary-600 dark:ring-primary-500'
-                  : 'ring-1 ring-gray-300 dark:ring-gray-600'
-              }`}
-            >
-              <div className="absolute left-1 top-1 z-10 rounded bg-white/90 px-1.5 py-0.5 text-[10px] font-semibold text-gray-700 dark:bg-gray-900/90 dark:text-gray-200">
-                Slide {index + 1}
-              </div>
-              <div className="absolute right-1 top-1 z-10 flex gap-1">
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    duplicateFrame(frame.id);
-                  }}
-                  disabled={disabled}
-                  className="flex h-6 w-6 items-center justify-center rounded bg-white/90 text-gray-700 shadow hover:bg-white disabled:opacity-60 dark:bg-gray-800/90 dark:text-gray-200 dark:hover:bg-gray-800"
-                  title="Duplicate slide"
-                >
-                  <Copy className="h-3.5 w-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={(event) => {
-                    event.stopPropagation();
-                    deleteFrame(frame.id);
-                  }}
-                  disabled={disabled || frames.length <= 1}
-                  className="flex h-6 w-6 items-center justify-center rounded bg-white/90 text-red-600 shadow hover:bg-white disabled:opacity-60 dark:bg-gray-800/90 dark:text-red-300 dark:hover:bg-gray-800"
-                  title="Delete slide"
-                >
-                  <Trash2 className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <DrillDiagramRenderer drillDiagramConfig={getFramePreviewConfig(frame)} className="border-0" forceSquare />
-            </div>
-          </div>
-        );
-      })}
-
-      <button
-        type="button"
-        onClick={addFrame}
-        disabled={disabled}
-        className="w-full rounded-lg border border-dashed border-gray-300 bg-white px-3 py-2 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
-      >
-        + Frame
-      </button>
-    </div>
-  );
 
   return (
     <div className="space-y-3">
@@ -1427,9 +1353,8 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-[minmax(0,12fr)_minmax(0,5fr)_minmax(0,3fr)]">
-        <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
-          <div ref={previewRef} className="relative">
+      <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
+        <div ref={previewRef} className="relative">
         <DrillDiagramRenderer drillDiagramConfig={activeFrameConfig} className="border border-gray-300 dark:border-gray-600" />
         <div className="absolute left-2 top-2 z-20 h-9 w-9 overflow-visible">
           <SpeedDial
@@ -1679,6 +1604,45 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
             </div>
           );
         })()}
+
+        {/* Frame actions — bottom-right of the main pitch, act on the active frame */}
+        <div className="absolute bottom-2 right-2 z-20 flex gap-1 pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => {
+              setIsInstructionsExpanded((prev) => !prev);
+              setIsEditingFrameInstructions(false);
+            }}
+            className={`flex h-8 w-8 items-center justify-center rounded-md shadow transition-colors ${
+              isInstructionsExpanded
+                ? 'bg-primary-600 text-white dark:bg-primary-500'
+                : activeFrameInstructions.trim()
+                  ? 'bg-amber-100 text-amber-600 hover:bg-amber-200 dark:bg-amber-900/60 dark:text-amber-400 dark:hover:bg-amber-900/80'
+                  : 'bg-white/95 text-gray-500 hover:bg-white dark:bg-gray-700/95 dark:text-gray-400 dark:hover:bg-gray-700'
+            }`}
+            title={isInstructionsExpanded ? 'Hide frame notes' : 'Show frame notes'}
+          >
+            <MessageSquare className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => duplicateFrame()}
+            disabled={disabled}
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 shadow hover:bg-white disabled:opacity-60 dark:bg-gray-700/95 dark:hover:bg-gray-700"
+            title="Duplicate active frame"
+          >
+            <Copy className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+          </button>
+          <button
+            type="button"
+            onClick={() => deleteFrame()}
+            disabled={disabled || frames.length <= 1}
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 shadow hover:bg-red-50 disabled:opacity-60 dark:bg-gray-700/95 dark:hover:bg-red-900/40"
+            title="Delete active frame"
+          >
+            <Trash2 className="h-4 w-4 text-red-500" />
+          </button>
+        </div>
           </div>
 
           <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
@@ -1688,60 +1652,90 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           </p>
         </div>
 
-        <div className="rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800/60">
+      {/* Frame description — slides out between the pitch and the frame strip */}
+      <div
+        className={`overflow-hidden transition-all duration-300 ease-in-out ${
+          isInstructionsExpanded ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
+        }`}
+      >
+        <div className="rounded-lg border border-gray-300 bg-white dark:border-gray-600 dark:bg-gray-800/60 p-3 mt-3">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="text-xs font-semibold text-gray-900 dark:text-white">
+              Frame {frames.findIndex((f) => f.id === activeFrame?.id) + 1} Notes
+            </h4>
+            <button
+              type="button"
+              onClick={() => setIsEditingFrameInstructions((prev) => !prev)}
+              disabled={disabled}
+              className="flex h-6 w-6 items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-60 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+              title={isEditingFrameInstructions ? 'Done editing' : 'Edit notes'}
+            >
+              <Pencil className="h-3 w-3" />
+            </button>
+          </div>
+          <div className="text-xs text-gray-600 dark:text-gray-300">
+            {isEditingFrameInstructions ? (
+              <textarea
+                value={activeFrameInstructions}
+                onChange={(event) => updateActiveFrameInstructions(event.target.value)}
+                placeholder="Add notes for this frame..."
+                rows={4}
+                disabled={disabled}
+                className="w-full rounded-md border border-gray-300 bg-white p-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+              />
+            ) : activeFrameInstructions.trim() ? (
+              <p className="whitespace-pre-wrap">{activeFrameInstructions}</p>
+            ) : (
+              <p className="italic text-gray-500 dark:text-gray-400">No notes added. Click the pencil to add some.</p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Horizontal frame strip */}
+      <div className="mt-3">
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {frames.map((frame, index) => {
+            const isActive = frame.id === activeFrame?.id;
+            return (
+              <div
+                key={frame.id}
+                onClick={() => setActiveFrameId(frame.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setActiveFrameId(frame.id);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                className="flex-shrink-0 cursor-pointer"
+                aria-label={`Select frame ${index + 1}`}
+              >
+                <div
+                  className={`relative overflow-hidden rounded w-16 h-16 ${
+                    isActive
+                      ? 'ring-2 ring-primary-600 dark:ring-primary-500'
+                      : 'ring-1 ring-gray-300 dark:ring-gray-600'
+                  }`}
+                >
+                  <div className="absolute left-0.5 top-0.5 z-10 leading-4 rounded bg-white/90 px-1 py-0 text-[9px] font-semibold text-gray-700 dark:bg-gray-900/90 dark:text-gray-200">
+                    {index + 1}
+                  </div>
+                  <DrillDiagramRenderer drillDiagramConfig={getFramePreviewConfig(frame)} className="border-0" forceSquare />
+                </div>
+              </div>
+            );
+          })}
+
           <button
             type="button"
-            onClick={() => setIsInstructionsExpanded((prev) => !prev)}
-            className="flex w-full items-center justify-between p-4"
+            onClick={addFrame}
+            disabled={disabled}
+            className="flex-shrink-0 w-16 h-16 rounded-lg border border-dashed border-gray-300 bg-white text-xs font-medium text-gray-700 transition-colors hover:bg-gray-50 disabled:opacity-60 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-200 dark:hover:bg-gray-700"
           >
-            <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Diagram Instructions</h4>
-            <div className="flex items-center gap-1">
-              {activeFrameInstructions.trim() && !isInstructionsExpanded && (
-                <span className="text-xs text-gray-500 dark:text-gray-400 mr-1">Has notes</span>
-              )}
-              {isInstructionsExpanded ? (
-                <ChevronUp className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              ) : (
-                <ChevronDown className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              )}
-            </div>
+            + Frame
           </button>
-          {isInstructionsExpanded && (
-            <div className="px-4 pb-4">
-              <div className="flex items-center justify-end mb-2">
-                <button
-                  type="button"
-                  onClick={() => setIsEditingFrameInstructions((prev) => !prev)}
-                  disabled={disabled}
-                  className="flex h-7 w-7 items-center justify-center rounded border border-gray-300 text-gray-600 hover:bg-gray-100 disabled:opacity-60 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
-                  title={isEditingFrameInstructions ? 'Done editing instructions' : 'Edit frame instructions'}
-                >
-                  <Pencil className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <div className="space-y-3 text-xs text-gray-600 dark:text-gray-300">
-                {isEditingFrameInstructions ? (
-                  <textarea
-                    value={activeFrameInstructions}
-                    onChange={(event) => updateActiveFrameInstructions(event.target.value)}
-                    placeholder="Add instructions for this frame..."
-                    rows={9}
-                    disabled={disabled}
-                    className="w-full rounded-md border border-gray-300 bg-white p-2 text-xs text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                  />
-                ) : activeFrameInstructions.trim() ? (
-                  <p className="whitespace-pre-wrap">{activeFrameInstructions}</p>
-                ) : (
-                  <p className="italic text-gray-500 dark:text-gray-400">No description added.</p>
-                )}
-                <p>Current frame: <span className="font-semibold">{frames.findIndex((frame) => frame.id === activeFrame?.id) + 1}</span> of <span className="font-semibold">{frames.length}</span>.</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
-          {renderFrameRail()}
         </div>
       </div>
     </div>

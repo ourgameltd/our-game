@@ -281,11 +281,11 @@ export default function DrillsListPage() {
 
         {/* Drills Grid */}
         {drillsLoading ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {[...Array(6)].map((_, i) => <DrillCardSkeleton key={i} />)}
           </div>
         ) : filteredDrills.length > 0 ? (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
             {filteredDrills.map((drill: DrillListDto) => (
               <DrillCard
                 key={drill.id}

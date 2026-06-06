@@ -272,7 +272,8 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
 
         try
         {
-            return System.Text.Json.JsonSerializer.Deserialize<DrillDiagramConfigDto>(json);
+            return System.Text.Json.JsonSerializer.Deserialize<DrillDiagramConfigDto>(json,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
         catch
         {

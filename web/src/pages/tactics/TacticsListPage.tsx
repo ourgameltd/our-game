@@ -84,7 +84,7 @@ export default function TacticsListPage() {
 
           {/* Loading State */}
           {isLoading && (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <TacticCardSkeleton key={i} />
               ))}
@@ -101,7 +101,7 @@ export default function TacticsListPage() {
                   description="Create your first tactic to get started."
                 />
               ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                   {tactics.map((tactic: TacticListDto) => (
                     <TacticCard
                       key={tactic.id}
@@ -122,7 +122,7 @@ export default function TacticsListPage() {
                 <Users className="w-5 h-5" />
                 Inherited Tactics ({inheritedTactics.length})
               </h2>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                 {inheritedTactics.map((tactic: TacticListDto) => {
                   const scopeLabel = tactic.scope.type === 'club' ? 'Club' : 'Age Group';
                   return (
