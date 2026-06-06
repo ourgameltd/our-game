@@ -7,9 +7,11 @@ import {
   Minus,
   MousePointer2,
   Pencil,
+  Play,
   Plus,
   RectangleHorizontal,
   MoveRight,
+  Square,
   Trash2,
   UserRound,
   X,
@@ -394,9 +396,12 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [lineStart, setLineStart] = useState<Point | null>(null);
   const [addedObjectHistory, setAddedObjectHistory] = useState<string[]>([]);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const overlayRef = useRef<SVGSVGElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
+  const activeFrameIdRef = useRef(activeFrameId);
+  const framesRef = useRef(frames);
   const dragRef = useRef<{ id: string; pointer: Point } | null>(null);
   const lineEndpointRef = useRef<{ id: string; endpoint: 'start' | 'end' } | null>(null);
   const clipboardRef = useRef<DiagramObject | null>(null);
@@ -430,6 +435,24 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     });
     setAddedObjectHistory([]);
   }, [value]);
+
+  useEffect(() => { activeFrameIdRef.current = activeFrameId; }, [activeFrameId]);
+  useEffect(() => { framesRef.current = frames; }, [frames]);
+
+  useEffect(() => {
+    if (!isPlaying || frames.length <= 1) return;
+    const id = setInterval(() => {
+      const current = framesRef.current;
+      const currentIndex = current.findIndex((f) => f.id === activeFrameIdRef.current);
+      const next = current[(currentIndex + 1) % current.length];
+      if (next) setActiveFrameId(next.id);
+    }, 2000);
+    return () => clearInterval(id);
+  }, [isPlaying, frames.length]);
+
+  useEffect(() => {
+    if (frames.length <= 1) setIsPlaying(false);
+  }, [frames.length]);
 
   const activeFrame = useMemo(
     () => frames.find((frame) => frame.id === activeFrameId) ?? frames[0],
@@ -1356,6 +1379,20 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
         <div ref={previewRef} className="relative">
         <DrillDiagramRenderer drillDiagramConfig={activeFrameConfig} className="border border-gray-300 dark:border-gray-600" />
+        {frames.length > 1 && (
+          <button
+            type="button"
+            onClick={() => setIsPlaying((prev) => !prev)}
+            className={`absolute top-2 right-2 z-20 flex h-8 w-8 items-center justify-center rounded-md shadow transition-colors ${
+              isPlaying
+                ? 'bg-red-600 text-white hover:bg-red-700 dark:bg-red-500 dark:hover:bg-red-600'
+                : 'bg-white/95 text-gray-700 hover:bg-white dark:bg-gray-700/95 dark:text-gray-200 dark:hover:bg-gray-700'
+            }`}
+            title={isPlaying ? 'Stop playback' : 'Play frames'}
+          >
+            {isPlaying ? <Square className="h-4 w-4" fill="currentColor" /> : <Play className="h-4 w-4" fill="currentColor" />}
+          </button>
+        )}
         <div className="absolute left-2 top-2 z-20 h-9 w-9 overflow-visible">
           <SpeedDial
             ariaLabel="Add drill item"
