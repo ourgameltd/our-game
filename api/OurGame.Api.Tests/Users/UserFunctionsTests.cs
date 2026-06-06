@@ -7,6 +7,7 @@ using OurGame.Application.UseCases.Players.Queries.GetMyChildren.DTOs;
 using OurGame.Application.UseCases.Users.Commands.EnsureUserByAuthId;
 using OurGame.Application.UseCases.Users.Commands.UpdateMyProfile;
 using OurGame.Application.UseCases.Users.Commands.UpdateMyProfile.DTOs;
+using OurGame.Application.UseCases.Users.Commands.SyncProfileFromB2C;
 using OurGame.Application.UseCases.Users.Queries.GetMyClubs;
 using OurGame.Application.UseCases.Users.Queries.GetMyClubs.DTOs;
 using OurGame.Application.UseCases.Users.Queries.GetUserByAzureId.DTOs;
@@ -313,6 +314,92 @@ public class UserFunctionsTests
         Assert.NotNull(payload.Data);
         Assert.Equal(expected.AuthId, payload.Data!.AuthId);
         Assert.Equal(expected.Email, payload.Data.Email);
+    }
+
+    [Fact]
+    public async Task SyncProfileFromB2C_ReturnsUnauthorized_WhenClientPrincipalHeaderMissing()
+    {
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("POST", "https://localhost/v1/users/me/sync-from-b2c");
+
+        var response = await sut.SyncProfileFromB2C(req);
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<object>(response);
+        Assert.False(payload.Success);
+        Assert.Equal(401, payload.StatusCode);
+        Assert.Equal("Unauthorized", payload.Error?.Message);
+    }
+
+    [Fact]
+    public async Task SyncProfileFromB2C_ReturnsNotFound_WhenUserMissing()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var mediator = new TestMediator();
+        mediator.Register<SyncProfileFromB2CCommand, UserProfileDto>((_, _) =>
+            throw new NotFoundException("User", authId));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", "https://localhost/v1/users/me/sync-from-b2c", authId);
+
+        var response = await sut.SyncProfileFromB2C(req);
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<object>(response);
+        Assert.False(payload.Success);
+        Assert.Equal(404, payload.StatusCode);
+        Assert.Equal("NOT_FOUND", payload.Error?.Code);
+    }
+
+    [Fact]
+    public async Task SyncProfileFromB2C_ReturnsInternalServerError_WhenMediatorThrows()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var mediator = new TestMediator();
+        mediator.Register<SyncProfileFromB2CCommand, UserProfileDto>((_, _) =>
+            throw new InvalidOperationException("graph error"));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", "https://localhost/v1/users/me/sync-from-b2c", authId);
+
+        var response = await sut.SyncProfileFromB2C(req);
+
+        Assert.Equal(System.Net.HttpStatusCode.InternalServerError, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<object>(response);
+        Assert.False(payload.Success);
+        Assert.Equal(500, payload.StatusCode);
+        Assert.Equal("An error occurred while syncing the profile from B2C", payload.Error?.Message);
+    }
+
+    [Fact]
+    public async Task SyncProfileFromB2C_ReturnsOk_WhenSuccessful()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var synced = new UserProfileDto
+        {
+            Id = Guid.NewGuid(),
+            AuthId = authId,
+            FirstName = "Jane",
+            LastName = "Smith",
+            Email = "jane.smith@example.com"
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<SyncProfileFromB2CCommand, UserProfileDto>((command, _) =>
+            Task.FromResult(command.AuthId == authId ? synced : new UserProfileDto()));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", "https://localhost/v1/users/me/sync-from-b2c", authId);
+
+        var response = await sut.SyncProfileFromB2C(req);
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<UserProfileDto>(response);
+        Assert.True(payload.Success);
+        Assert.Equal(200, payload.StatusCode);
+        Assert.NotNull(payload.Data);
+        Assert.Equal("jane.smith@example.com", payload.Data!.Email);
+        Assert.Equal("Jane", payload.Data.FirstName);
     }
 
     private static UserFunctions BuildSut(TestMediator mediator)

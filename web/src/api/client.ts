@@ -2797,6 +2797,18 @@ export const apiClient = {
     },
 
     /**
+     * Sync current user's email and name from the B2C directory
+     */
+    syncFromB2C: async (): Promise<ApiResponse<UserProfile>> => {
+      try {
+        const response = await axiosInstance.post('/v1/users/me/sync-from-b2c');
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
      * Get children players for the current authenticated parent user
      */
     getMyChildren: async (): Promise<ApiResponse<ChildPlayerDto[]>> => {

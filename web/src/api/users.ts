@@ -38,3 +38,15 @@ export async function updateCurrentUser(request: UpdateCurrentUserRequest): Prom
   }
   return response.data!;
 }
+
+/**
+ * Sync the current user's email and name from the B2C directory
+ * @returns Updated user profile
+ */
+export async function syncUserFromB2C(): Promise<UserProfile> {
+  const response = await apiClient.users.syncFromB2C();
+  if (!response.success) {
+    throw new Error(response.error?.message || 'Failed to sync profile from B2C');
+  }
+  return response.data!;
+}

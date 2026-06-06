@@ -14,6 +14,7 @@ using OurGame.Application.UseCases.Users.Queries.GetMyClubs;
 using OurGame.Application.UseCases.Users.Queries.GetMyClubs.DTOs;
 using OurGame.Application.UseCases.Users.Commands.UpdateMyProfile;
 using OurGame.Application.UseCases.Users.Commands.UpdateMyProfile.DTOs;
+using OurGame.Application.UseCases.Users.Commands.SyncProfileFromB2C;
 using OurGame.Application.Abstractions.Exceptions;
 using System.Net;
 
@@ -196,6 +197,59 @@ public class UserFunctions
             var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
             await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
                 "An error occurred while updating the user profile",
+                (int)HttpStatusCode.InternalServerError));
+            return errorResponse;
+        }
+    }
+
+    /// <summary>
+    /// Sync the current user's email and name from the Azure AD B2C directory
+    /// </summary>
+    /// <param name="req">The HTTP request</param>
+    /// <param name="ct">Cancellation token</param>
+    /// <returns>Updated profile information</returns>
+    [Function("SyncProfileFromB2C")]
+    [OpenApiOperation(operationId: "SyncProfileFromB2C", tags: new[] { "Users" }, Summary = "Sync profile from B2C", Description = "Fetches the latest email and name from the Azure AD B2C directory and updates the stored profile")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<UserProfileDto>), Description = "Profile synced successfully")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Unauthorized")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.NotFound, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "User not found")]
+    [OpenApiResponseWithBody(statusCode: HttpStatusCode.InternalServerError, contentType: "application/json", bodyType: typeof(ApiResponse<object>), Description = "Internal server error")]
+    public async Task<HttpResponseData> SyncProfileFromB2C(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/users/me/sync-from-b2c")] HttpRequestData req,
+        CancellationToken ct = default)
+    {
+        var authId = req.GetUserId();
+
+        if (string.IsNullOrEmpty(authId))
+        {
+            _logger.LogWarning("Unauthorized request to SyncProfileFromB2C endpoint");
+            var unauthorizedResponse = req.CreateResponse(HttpStatusCode.Unauthorized);
+            await unauthorizedResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Unauthorized", (int)HttpStatusCode.Unauthorized));
+            return unauthorizedResponse;
+        }
+
+        try
+        {
+            var result = await _mediator.Send(new SyncProfileFromB2CCommand(authId), ct);
+
+            _logger.LogInformation("B2C profile sync completed for user: {AuthId}", authId);
+            var successResponse = req.CreateResponse(HttpStatusCode.OK);
+            await successResponse.WriteAsJsonAsync(ApiResponse<UserProfileDto>.SuccessResponse(result));
+            return successResponse;
+        }
+        catch (NotFoundException ex)
+        {
+            _logger.LogWarning(ex, "User not found during SyncProfileFromB2C");
+            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFoundResponse.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message));
+            return notFoundResponse;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing B2C profile");
+            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await errorResponse.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(
+                "An error occurred while syncing the profile from B2C",
                 (int)HttpStatusCode.InternalServerError));
             return errorResponse;
         }
