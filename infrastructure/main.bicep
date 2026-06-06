@@ -52,6 +52,16 @@ param sqlAdminPassword string
 @description('Azure B2C tenant domain (e.g. yourtenant.b2clogin.com). Used to configure CORS so B2C can load custom UI templates from blob storage. Leave empty to allow only login.microsoftonline.com.')
 param b2cTenantDomain string = ''
 
+@description('Azure AD B2C tenant ID (GUID) for the Microsoft Graph integration used to look up user profiles.')
+param b2cGraphTenantId string = ''
+
+@description('Client (application) ID of the app registration with User.Read.All for the Microsoft Graph integration.')
+param b2cGraphClientId string = ''
+
+@description('Client secret of the app registration used for the Microsoft Graph integration.')
+@secure()
+param b2cGraphClientSecret string = ''
+
 // Storage account names must be 3-24 chars, lowercase letters and numbers only.
 // Normalize by lowercasing and removing hyphens, then truncate to 24 characters.
 var storageAccountNameRaw = replace(toLower('${baseName}storage${environmentName}'), '-', '')
@@ -257,6 +267,18 @@ resource functionApp 'Microsoft.Web/sites@2023-12-01' = {
         {
           name: 'BlobStorage__ConnectionString'
           value: '${storageConnectionString}${storageAccount.listKeys().keys[0].value}'
+        }
+        {
+          name: 'B2cGraph__TenantId'
+          value: b2cGraphTenantId
+        }
+        {
+          name: 'B2cGraph__ClientId'
+          value: b2cGraphClientId
+        }
+        {
+          name: 'B2cGraph__ClientSecret'
+          value: b2cGraphClientSecret
         }
       ]
     }
