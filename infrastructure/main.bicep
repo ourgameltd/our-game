@@ -67,6 +67,16 @@ param b2cGraphClientSecret string = ''
 var storageAccountNameRaw = replace(toLower('${baseName}storage${environmentName}'), '-', '')
 var storageAccountNameSeed = empty(storageAccountNameRaw) ? 'ourgame' : storageAccountNameRaw
 var storageAccountName = substring('${storageAccountNameSeed}001', 0, min(length('${storageAccountNameSeed}001'), 24))
+
+// These two B2C origins are always required — B2C loads custom UI templates from blob storage
+// via both the legacy login.microsoftonline.com domain and the tenant-specific b2clogin.com domain.
+// Hardcoded here so a deployment that omits b2cTenantDomain never silently removes them.
+var b2cCorsBaseOrigins = [
+  'https://login.microsoftonline.com'
+  'https://ourgameauth.b2clogin.com'
+]
+var b2cCorsOrigins = empty(b2cTenantDomain) ? b2cCorsBaseOrigins : union(b2cCorsBaseOrigins, ['https://${b2cTenantDomain}'])
+
 var staticWebAppName = '${baseName}-swa-${environmentName}'
 var functionAppName = '${baseName}-func-${environmentName}'
 var appServicePlanName = '${baseName}-asp-${environmentName}'
@@ -111,10 +121,7 @@ resource blobService 'Microsoft.Storage/storageAccounts/blobServices@2023-05-01'
     cors: {
       corsRules: [
         {
-          // B2C loads custom UI templates in an iframe from the browser — CORS is required.
-          allowedOrigins: empty(b2cTenantDomain)
-            ? ['https://login.microsoftonline.com']
-            : ['https://login.microsoftonline.com', 'https://${b2cTenantDomain}']
+          allowedOrigins: b2cCorsOrigins
           allowedMethods: ['GET', 'OPTIONS']
           allowedHeaders: ['*']
           exposedHeaders: ['*']
