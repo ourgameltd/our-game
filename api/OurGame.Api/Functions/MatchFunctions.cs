@@ -281,6 +281,15 @@ public class MatchFunctions
             Cards = match.Report.Cards
                 .Select(c => new PublishedCardDto(c.PlayerName, c.Type, c.Minute, c.Period))
                 .ToList(),
+            StartingPlayers = (match.Lineup?.Players ?? [])
+                .Where(p => p.IsStarting)
+                .OrderBy(p => p.PositionIndex)
+                .Select(p => new PublishedLineupPlayerDto(p.FirstName, p.LastName, p.Position, p.SquadNumber))
+                .ToList(),
+            Substitutes = (match.Lineup?.Players ?? [])
+                .Where(p => !p.IsStarting)
+                .Select(p => new PublishedLineupPlayerDto(p.FirstName, p.LastName, p.Position, p.SquadNumber))
+                .ToList(),
             OgTitle = ogTitle,
             OgDescription = ogDescription,
             OgImage = match.ClubLogo
@@ -841,6 +850,8 @@ public class PublishedMatchReportDto
     public string? PlayerOfMatchPhoto { get; set; }
     public List<PublishedGoalDto> Goals { get; set; } = new();
     public List<PublishedCardDto> Cards { get; set; } = new();
+    public List<PublishedLineupPlayerDto> StartingPlayers { get; set; } = new();
+    public List<PublishedLineupPlayerDto> Substitutes { get; set; } = new();
     public string OgTitle { get; set; } = string.Empty;
     public string OgDescription { get; set; } = string.Empty;
     public string? OgImage { get; set; }
@@ -848,3 +859,4 @@ public class PublishedMatchReportDto
 
 public record PublishedGoalDto(string ScorerName, int? Minute, bool IsPenalty, string? Period);
 public record PublishedCardDto(string PlayerName, string Type, int? Minute, string? Period);
+public record PublishedLineupPlayerDto(string FirstName, string LastName, string? Position, int? SquadNumber);

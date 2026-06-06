@@ -2294,6 +2294,13 @@ export interface PublishedCardDto {
   period?: string;
 }
 
+export interface PublishedLineupPlayerDto {
+  firstName: string;
+  lastName: string;
+  position?: string;
+  squadNumber?: number;
+}
+
 export interface PublishedMatchReportDto {
   matchId: string;
   clubId: string;
@@ -2314,6 +2321,8 @@ export interface PublishedMatchReportDto {
   playerOfMatchPhoto?: string;
   goals?: PublishedGoalDto[];
   cards?: PublishedCardDto[];
+  startingPlayers?: PublishedLineupPlayerDto[];
+  substitutes?: PublishedLineupPlayerDto[];
   ogTitle: string;
   ogDescription: string;
   ogImage?: string;

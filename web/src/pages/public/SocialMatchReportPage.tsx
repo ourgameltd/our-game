@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { usePublishedMatchReport } from '@/api';
 import { useSocialMetaTags } from '@/hooks/useSocialMetaTags';
 import { getContrastTextColor } from '@utils/colorHelpers';
-import type { PublishedGoalDto, PublishedCardDto, PublishedMatchReportDto } from '@/api/client';
+import type { PublishedGoalDto, PublishedCardDto, PublishedMatchReportDto, PublishedLineupPlayerDto } from '@/api/client';
 
 const DEFAULT_PRIMARY = '#0284c7';   // primary-600
 const DEFAULT_SECONDARY = '#075985'; // primary-800
@@ -116,6 +116,36 @@ function buildEvents(data: PublishedMatchReportDto): Map<string, MatchEvent[]> {
     grouped.get(e.period)!.push(e);
   }
   return grouped;
+}
+
+function LineupList({ heading, players }: { heading: string; players: PublishedLineupPlayerDto[] }) {
+  if (players.length === 0) return null;
+  return (
+    <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+        {heading}
+      </h2>
+      <ol className="mt-3 divide-y divide-gray-100 dark:divide-gray-700">
+        {players.map((p, i) => (
+          <li key={i} className="flex items-center gap-3 py-1.5">
+            {p.squadNumber != null && (
+              <span className="w-6 shrink-0 text-right text-xs tabular-nums text-gray-400 dark:text-gray-500">
+                {p.squadNumber}
+              </span>
+            )}
+            <span className="flex-1 text-sm text-gray-900 dark:text-white">
+              {p.firstName} {p.lastName}
+            </span>
+            {p.position && (
+              <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                {p.position}
+              </span>
+            )}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
 function EventRow({ event }: { event: MatchEvent }) {
@@ -300,6 +330,12 @@ export default function SocialMatchReportPage() {
             </div>
           </div>
         )}
+
+        {/* Starting XI */}
+        <LineupList heading="Starting XI" players={data.startingPlayers ?? []} />
+
+        {/* Substitutes */}
+        <LineupList heading="Substitutes" players={data.substitutes ?? []} />
 
         {/* Events */}
         {(() => {
