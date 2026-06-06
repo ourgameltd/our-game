@@ -31,9 +31,11 @@ public sealed class B2CGraphService : IB2CUserService
         {
             var user = await _graphClient.Users[objectId].GetAsync(config =>
             {
+                // identities is required for B2C local accounts — the email is stored
+                // there as signInType="emailAddress", not in mail/otherMails.
                 config.QueryParameters.Select = new[]
                 {
-                    "mail", "otherMails", "givenName", "surname", "displayName"
+                    "mail", "otherMails", "identities", "givenName", "surname", "displayName"
                 };
             }, cancellationToken);
 
@@ -42,10 +44,19 @@ public sealed class B2CGraphService : IB2CUserService
                 return null;
             }
 
-            // Prefer the primary SMTP address (mail); fall back to otherMails which B2C
-            // may populate for local accounts depending on the user flow configuration.
+            // For B2C local accounts the email lives in identities[signInType=emailAddress].
+            // mail / otherMails are only populated for work/school or federated accounts.
+            var emailFromIdentities = user.Identities?
+                .FirstOrDefault(i => string.Equals(i.SignInType, "emailAddress", StringComparison.OrdinalIgnoreCase))
+                ?.IssuerAssignedId;
+
             var email = user.Mail
+                ?? emailFromIdentities
                 ?? user.OtherMails?.FirstOrDefault();
+
+            _logger.LogInformation(
+                "B2C Graph returned for {ObjectId}: mail={Mail}, identityEmail={IdentityEmail}, otherMails={OtherMails}",
+                objectId, user.Mail, emailFromIdentities, string.Join(",", user.OtherMails ?? []));
 
             return new B2CUserProfile(
                 Email: email,
