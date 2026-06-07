@@ -94,7 +94,7 @@ export default function CompetencyFrameworkEditorPage() {
   const handleWeightChange = (attributeId: string, format: GameFormat, value: number) => {
     setWeights((prev) => ({
       ...prev,
-      [attributeId]: { ...prev[attributeId], [format]: Math.max(0, Math.min(100, value)) },
+      [attributeId]: { ...prev[attributeId], [format]: Math.max(0, Math.min(10, value)) },
     }));
   };
 
@@ -258,7 +258,7 @@ export default function CompetencyFrameworkEditorPage() {
                       <input
                         type="range"
                         min={0}
-                        max={50}
+                        max={10}
                         step={1}
                         value={value}
                         onChange={(e) => handleWeightChange(attr.attributeId, activeFormat, Number(e.target.value))}
