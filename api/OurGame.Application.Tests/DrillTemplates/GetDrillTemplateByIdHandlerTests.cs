@@ -32,7 +32,6 @@ public class GetDrillTemplateByIdHandlerTests
             Description = "A basic warm-up",
             Category = "Conditioned Game",
             TotalDuration = 30,
-            AggregatedAttributes = "[\"agility\",\"speed\"]",
             CreatedBy = coachId,
             IsPublic = true,
             CreatedAt = DateTime.UtcNow
@@ -100,7 +99,7 @@ public class GetDrillTemplateByIdHandlerTests
     }
 
     [Fact]
-    public async Task Handle_ParsesAggregatedAttributes()
+    public async Task Handle_ReturnsEmptyCompetenciesWhenNoDrillCompetencies()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var clubId = await db.SeedClubAsync();
@@ -112,7 +111,6 @@ public class GetDrillTemplateByIdHandlerTests
             Name = "Attr Template",
             Description = "",
             Category = "Skills Practice",
-            AggregatedAttributes = "[\"passing\",\"dribbling\"]",
             CreatedAt = DateTime.UtcNow
         });
         db.Context.Set<DrillTemplateClub>().Add(new DrillTemplateClub
@@ -128,6 +126,6 @@ public class GetDrillTemplateByIdHandlerTests
         var result = await handler.Handle(new GetDrillTemplateByIdQuery(templateId), CancellationToken.None);
 
         Assert.NotNull(result);
-        Assert.Equal(new List<string> { "passing", "dribbling" }, result.Attributes);
+        Assert.Empty(result.Competencies);
     }
 }

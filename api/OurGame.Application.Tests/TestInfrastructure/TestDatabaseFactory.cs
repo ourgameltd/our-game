@@ -431,7 +431,6 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
             Description = "A basic passing drill",
             DurationMinutes = 15,
             Category = category,
-            Attributes = "[]",
             Equipment = "[]",
             Instructions = "[]",
             Variations = "[]",

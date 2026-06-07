@@ -17,7 +17,7 @@ public class UpdateDrillHandlerTests
         Description = "Updated description",
         DurationMinutes = 20,
         Category = "Game Related Practice",
-        Attributes = new List<string> { "passing" },
+        CompetencyIds = new List<Guid>(),
         Equipment = new List<string> { "cones" },
         Instructions = new List<string> { "Step 1" },
         Variations = new List<string> { "Easy" },

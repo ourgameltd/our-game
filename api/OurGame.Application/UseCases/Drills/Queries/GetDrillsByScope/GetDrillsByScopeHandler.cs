@@ -4,6 +4,7 @@ using OurGame.Application.Abstractions;
 using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.Drills.Queries.GetDrillsByScope.DTOs;
 using OurGame.Persistence.Models;
+using System;
 
 namespace OurGame.Application.UseCases.Drills.Queries.GetDrillsByScope;
 
@@ -15,7 +16,8 @@ public record GetDrillsByScopeQuery(
     Guid? AgeGroupId = null,
     Guid? TeamId = null,
     string? Category = null,
-    string? SearchTerm = null
+    string? SearchTerm = null,
+    List<Guid>? CompetencyIds = null
 ) : IQuery<DrillsByScopeResponseDto>;
 
 /// <summary>
@@ -42,13 +44,12 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
         // For age group scope: get drills linked to this club OR this age group
         // For team scope: get drills linked to this club OR the age group OR this team
         var sql = @"
-            SELECT 
+            SELECT
                 d.Id,
                 d.Name,
                 d.Description,
                 d.DurationMinutes,
                 d.Category,
-                d.Attributes,
                 d.Equipment,
                 d.Diagram,
                 d.DrillDiagramConfig,
@@ -57,7 +58,7 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
                 d.CreatedBy,
                 d.IsPublic,
                 d.CreatedAt,
-                CASE 
+                CASE
                     WHEN dt.DrillId IS NOT NULL THEN 'team'
                     WHEN dag.DrillId IS NOT NULL THEN 'agegroup'
                     WHEN dc.DrillId IS NOT NULL THEN 'club'
@@ -118,8 +119,20 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
         // Add optional search filter
         if (!string.IsNullOrEmpty(query.SearchTerm))
         {
-            sql += $" AND (d.Name LIKE {{{parameters.Count}}} OR d.Description LIKE {{{parameters.Count}}} OR d.Attributes LIKE {{{parameters.Count}}})";
+            sql += $" AND (d.Name LIKE {{{parameters.Count}}} OR d.Description LIKE {{{parameters.Count}}})";
             parameters.Add($"%{query.SearchTerm}%");
+        }
+
+        // Add optional competency filter
+        if (query.CompetencyIds is { Count: > 0 })
+        {
+            var competencyPlaceholders = new List<string>();
+            foreach (var competencyId in query.CompetencyIds)
+            {
+                competencyPlaceholders.Add($"{{{parameters.Count}}}");
+                parameters.Add(competencyId);
+            }
+            sql += $" AND EXISTS (SELECT 1 FROM DrillCompetencies dc2 WHERE dc2.DrillId = d.Id AND dc2.CompetencyId IN ({string.Join(", ", competencyPlaceholders)}))";
         }
 
         sql += " ORDER BY d.Name ASC";
@@ -128,7 +141,7 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
             .SqlQueryRaw<DrillRawDto>(sql, parameters.ToArray())
             .ToListAsync(cancellationToken);
 
-        // Fetch links for all drills
+        // Fetch links and competencies for all drills
         var drillIds = drills.Select(d => d.Id).ToList();
         var links = await _db.DrillLinks
             .Where(l => drillIds.Contains(l.DrillId))
@@ -149,12 +162,36 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
                 Type = l.Type
             }).ToList());
 
+        // Fetch competencies for all drills in one batch query
+        Dictionary<Guid, List<CompetencyDto>> competenciesByDrillId = new();
+        if (drillIds.Count > 0)
+        {
+            var idPlaceholders = string.Join(", ", drillIds.Select((_, i) => $"{{{i}}}"));
+            var competenciesSql = $@"
+                SELECT dc.DrillId, c.Id, c.Name, c.DisplayOrder
+                FROM DrillCompetencies dc
+                JOIN Competencies c ON c.Id = dc.CompetencyId
+                WHERE dc.DrillId IN ({idPlaceholders})
+                ORDER BY c.DisplayOrder";
+
+            var drillCompetencies = await _db.Database
+                .SqlQueryRaw<DrillCompetencyRaw>(competenciesSql, drillIds.Cast<object>().ToArray())
+                .ToListAsync(cancellationToken);
+
+            competenciesByDrillId = drillCompetencies
+                .GroupBy(dc => dc.DrillId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(dc => new CompetencyDto { Id = dc.Id, Name = dc.Name ?? string.Empty, DisplayOrder = dc.DisplayOrder }).ToList()
+                );
+        }
+
         var scopeDrills = new List<DrillListDto>();
         var inheritedDrills = new List<DrillListDto>();
 
         foreach (var drill in drills)
         {
-            var dto = MapToDto(drill, linksByDrillId.GetValueOrDefault(drill.Id, new List<DrillLinkDto>()));
+            var dto = MapToDto(drill, linksByDrillId.GetValueOrDefault(drill.Id, new List<DrillLinkDto>()), competenciesByDrillId.GetValueOrDefault(drill.Id, new List<CompetencyDto>()));
 
             // Determine the most specific scope this drill is linked to
             var drillScopeType = drill.ScopeType?.ToLowerInvariant() ?? "unknown";
@@ -199,7 +236,7 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
         };
     }
 
-    private static DrillListDto MapToDto(DrillRawDto raw, List<DrillLinkDto> links)
+    private static DrillListDto MapToDto(DrillRawDto raw, List<DrillLinkDto> links, List<CompetencyDto> competencies)
     {
         return new DrillListDto
         {
@@ -208,7 +245,7 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
             Description = raw.Description ?? string.Empty,
             Duration = raw.DurationMinutes ?? 0,
             Category = MapCategoryToString(raw.Category),
-            Attributes = ParseJsonArray(raw.Attributes),
+            Competencies = competencies,
             Equipment = ParseJsonArray(raw.Equipment),
             Diagram = raw.Diagram,
             DrillDiagramConfig = ParseDiagramConfig(raw.DrillDiagramConfig),
@@ -292,7 +329,6 @@ public class DrillRawDto
     public string? Description { get; set; }
     public int? DurationMinutes { get; set; }
     public int Category { get; set; }
-    public string? Attributes { get; set; }
     public string? Equipment { get; set; }
     public string? Diagram { get; set; }
     public string? DrillDiagramConfig { get; set; }
@@ -305,4 +341,12 @@ public class DrillRawDto
     public Guid? ScopeClubId { get; set; }
     public Guid? ScopeAgeGroupId { get; set; }
     public Guid? ScopeTeamId { get; set; }
+}
+
+public class DrillCompetencyRaw
+{
+    public Guid DrillId { get; set; }
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public int DisplayOrder { get; set; }
 }

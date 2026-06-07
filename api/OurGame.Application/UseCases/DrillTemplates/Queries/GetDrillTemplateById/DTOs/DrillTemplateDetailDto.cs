@@ -1,4 +1,5 @@
 namespace OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplateById.DTOs;
+using OurGame.Application.UseCases.Drills.DTOs;
 
 /// <summary>
 /// Full detail DTO for a single drill template
@@ -41,9 +42,9 @@ public class DrillTemplateDetailDto
     public string SessionCategory { get; set; } = "Whole Part Whole";
 
     /// <summary>
-    /// Aggregated attributes from included drills
+    /// Competencies covered by the drills in this template
     /// </summary>
-    public List<string> Attributes { get; set; } = new();
+    public List<CompetencyDto> Competencies { get; set; } = new();
 
     /// <summary>
     /// Whether the template is public/shared

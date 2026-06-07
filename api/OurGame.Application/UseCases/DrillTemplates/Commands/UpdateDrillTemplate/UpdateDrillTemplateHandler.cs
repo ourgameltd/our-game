@@ -1,4 +1,3 @@
-using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
@@ -101,11 +100,10 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
 
         // Fetch drills to compute aggregates
         var drillDataSql = @"
-            SELECT 
+            SELECT
                 d.Id,
                 d.DurationMinutes,
-                d.Category,
-                d.Attributes
+                d.Category
             FROM Drills d
             WHERE d.Id IN ({0})";
 
@@ -127,31 +125,18 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
 
         // Compute aggregates
         var totalDuration = drillData.Sum(d => d.DurationMinutes ?? 0);
-        var allAttributes = new HashSet<string>();
         var categoryCount = new Dictionary<string, int>();
 
         foreach (var drill in drillData)
         {
-            // Parse and merge attributes
-            var attrs = ParseJsonArray(drill.Attributes);
-            foreach (var attr in attrs)
-            {
-                allAttributes.Add(attr);
-            }
-
-            // Count categories
-            var category = MapDrillCategoryToTemplateCategory(drill.Category);
-            categoryCount[category] = categoryCount.GetValueOrDefault(category, 0) + 1;
+            var cat = MapDrillCategoryToTemplateCategory(drill.Category);
+            categoryCount[cat] = categoryCount.GetValueOrDefault(cat, 0) + 1;
         }
 
         // Determine predominant category
         var predominantCategory = categoryCount.Count > 0
             ? categoryCount.OrderByDescending(kv => kv.Value).First().Key
             : "mixed";
-
-        var aggregatedAttributesJson = allAttributes.Count > 0
-            ? JsonSerializer.Serialize(allAttributes.OrderBy(a => a).ToList())
-            : null;
 
         var name = dto.Name;
         var description = dto.Description ?? string.Empty;
@@ -168,7 +153,6 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
                 UPDATE DrillTemplates
                 SET Name = {name},
                     Description = {description},
-                    AggregatedAttributes = {aggregatedAttributesJson},
                     TotalDuration = {totalDuration},
                     Category = {predominantCategory},
                     SessionCategory = {sessionCategory},
@@ -214,26 +198,6 @@ public class UpdateDrillTemplateHandler : IRequestHandler<UpdateDrillTemplateCom
         return result;
     }
 
-    /// <summary>
-    /// Parse JSON string array (e.g. '["item1","item2"]') into a list of strings
-    /// </summary>
-    private static List<string> ParseJsonArray(string? jsonArray)
-    {
-        if (string.IsNullOrWhiteSpace(jsonArray))
-        {
-            return new List<string>();
-        }
-
-        try
-        {
-            return JsonSerializer.Deserialize<List<string>>(jsonArray) ?? new List<string>();
-        }
-        catch
-        {
-            return new List<string>();
-        }
-    }
-
     private static string MapDrillCategoryToTemplateCategory(int category)
     {
         return category switch
@@ -272,5 +236,4 @@ public class DrillDataRaw
     public Guid Id { get; set; }
     public int? DurationMinutes { get; set; }
     public int Category { get; set; }
-    public string? Attributes { get; set; }
 }

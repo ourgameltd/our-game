@@ -36,8 +36,8 @@ public class DrillTemplateFunctions
     [OpenApiOperation(operationId: "GetDrillTemplatesByClub", tags: new[] { "DrillTemplates" }, Summary = "Get drill templates by club", Description = "Retrieves all drill templates accessible at the club level")]
     [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club ID")]
     [OpenApiParameter(name: "category", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by session category (Whole Part Whole, Skills Practice, Circuits, Scenario)")]
-    [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter templates by name, description, or attributes")]
-    [OpenApiParameter(name: "attributes", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Comma-separated list of attribute codes to filter by (templates must have ANY of the attributes)")]
+    [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter templates by name or description")]
+    [OpenApiParameter(name: "competencyIds", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Comma-separated list of competency IDs to filter by (templates must have ANY matching competency)")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "Drill templates retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "User not authenticated")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "Invalid club ID format")]
@@ -64,16 +64,18 @@ public class DrillTemplateFunctions
 
         var category = req.Query["category"];
         var search = req.Query["search"];
-        var attributesParam = req.Query["attributes"];
-        var attributes = !string.IsNullOrEmpty(attributesParam)
-            ? attributesParam.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()).ToList()
+        var competencyIdsParam = req.Query["competencyIds"];
+        var competencyIds = !string.IsNullOrEmpty(competencyIdsParam)
+            ? competencyIdsParam.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => Guid.TryParse(s.Trim(), out var g) ? g : (Guid?)null)
+                .Where(g => g.HasValue).Select(g => g!.Value).ToList()
             : null;
 
         var templates = await _mediator.Send(new GetDrillTemplatesByScopeQuery(
             clubGuid,
             Category: category,
             SearchTerm: search,
-            Attributes: attributes));
+            CompetencyIds: competencyIds));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<DrillTemplatesByScopeResponseDto>.SuccessResponse(templates));
@@ -92,8 +94,8 @@ public class DrillTemplateFunctions
     [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club ID")]
     [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The age group ID")]
     [OpenApiParameter(name: "category", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by session category (Whole Part Whole, Skills Practice, Circuits, Scenario)")]
-    [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter templates by name, description, or attributes")]
-    [OpenApiParameter(name: "attributes", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Comma-separated list of attribute codes to filter by (templates must have ANY of the attributes)")]
+    [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter templates by name or description")]
+    [OpenApiParameter(name: "competencyIds", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Comma-separated list of competency IDs to filter by (templates must have ANY matching competency)")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "Drill templates retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "User not authenticated")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "Invalid ID format")]
@@ -129,9 +131,11 @@ public class DrillTemplateFunctions
 
         var category = req.Query["category"];
         var search = req.Query["search"];
-        var attributesParam = req.Query["attributes"];
-        var attributes = !string.IsNullOrEmpty(attributesParam)
-            ? attributesParam.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()).ToList()
+        var competencyIdsParam = req.Query["competencyIds"];
+        var competencyIds = !string.IsNullOrEmpty(competencyIdsParam)
+            ? competencyIdsParam.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => Guid.TryParse(s.Trim(), out var g) ? g : (Guid?)null)
+                .Where(g => g.HasValue).Select(g => g!.Value).ToList()
             : null;
 
         var templates = await _mediator.Send(new GetDrillTemplatesByScopeQuery(
@@ -139,7 +143,7 @@ public class DrillTemplateFunctions
             AgeGroupId: ageGroupGuid,
             Category: category,
             SearchTerm: search,
-            Attributes: attributes));
+            CompetencyIds: competencyIds));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<DrillTemplatesByScopeResponseDto>.SuccessResponse(templates));
@@ -160,8 +164,8 @@ public class DrillTemplateFunctions
     [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The age group ID")]
     [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
     [OpenApiParameter(name: "category", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by session category (Whole Part Whole, Skills Practice, Circuits, Scenario)")]
-    [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter templates by name, description, or attributes")]
-    [OpenApiParameter(name: "attributes", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Comma-separated list of attribute codes to filter by (templates must have ANY of the attributes)")]
+    [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter templates by name or description")]
+    [OpenApiParameter(name: "competencyIds", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Comma-separated list of competency IDs to filter by (templates must have ANY matching competency)")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "Drill templates retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "User not authenticated")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<DrillTemplatesByScopeResponseDto>), Description = "Invalid ID format")]
@@ -206,9 +210,11 @@ public class DrillTemplateFunctions
 
         var category = req.Query["category"];
         var search = req.Query["search"];
-        var attributesParam = req.Query["attributes"];
-        var attributes = !string.IsNullOrEmpty(attributesParam)
-            ? attributesParam.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(a => a.Trim()).ToList()
+        var competencyIdsParam = req.Query["competencyIds"];
+        var competencyIds = !string.IsNullOrEmpty(competencyIdsParam)
+            ? competencyIdsParam.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => Guid.TryParse(s.Trim(), out var g) ? g : (Guid?)null)
+                .Where(g => g.HasValue).Select(g => g!.Value).ToList()
             : null;
 
         var templates = await _mediator.Send(new GetDrillTemplatesByScopeQuery(
@@ -217,7 +223,7 @@ public class DrillTemplateFunctions
             TeamId: teamGuid,
             Category: category,
             SearchTerm: search,
-            Attributes: attributes));
+            CompetencyIds: competencyIds));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<DrillTemplatesByScopeResponseDto>.SuccessResponse(templates));

@@ -147,6 +147,19 @@ export function getAttributeCategory(key: string): 'Skills' | 'Physical' | 'Ment
   return null;
 }
 
+// The 9 competencies — deterministic GUIDs match CompetencyTaxonomySeedData in the backend
+export const drillCompetencies = [
+  { id: '1f2be2e4-2376-ea12-38e2-8ae0412139a5', name: 'Control & Receiving',      displayOrder: 1 },
+  { id: '72478e3a-8c30-77b5-6315-5a4d48851d82', name: 'Passing & Distribution',   displayOrder: 2 },
+  { id: '7be831c3-447e-bf8f-b248-55817ee0a3fc', name: 'Dribbling & Manipulation', displayOrder: 3 },
+  { id: 'a1e9ac58-47f9-e5f9-d53f-1aeddd5de66e', name: 'Striking & Finishing',     displayOrder: 4 },
+  { id: 'b1597f4a-26b0-aee4-a41f-bb1cc6003318', name: 'Defending & Tackling',     displayOrder: 5 },
+  { id: '6a77d2e0-d4a0-3d1e-4d16-16b34b226d04', name: 'Game Intelligence',        displayOrder: 6 },
+  { id: '1ad228b6-9aa4-1e56-d7e9-3035bbdc796b', name: 'Speed & Acceleration',     displayOrder: 7 },
+  { id: 'f85e6d90-5f48-7fe1-2902-f5ba606ce7e6', name: 'Physical Literacy',        displayOrder: 8 },
+  { id: 'bf1ae761-e656-8b6e-68d1-a2586ba6a6b1', name: 'Mental & Psycho-Social',   displayOrder: 9 },
+] as const;
+
 // Link types (for drills, training sessions, etc.)
 export const linkTypes = [
   { value: 'youtube', label: 'YouTube', icon: 'Youtube' },

@@ -92,13 +92,10 @@ public class CreateDrillTemplateHandlerTests
         var drill1 = await db.SeedDrillAsync(coachId: coachId, name: "Drill 1");
         var drill2 = await db.SeedDrillAsync(coachId: coachId, name: "Drill 2");
 
-        // Update drill attributes
         var d1 = await db.Context.Drills.FindAsync(drill1);
-        d1!.Attributes = "[\"passing\",\"movement\"]";
-        d1.DurationMinutes = 10;
+        d1!.DurationMinutes = 10;
         var d2 = await db.Context.Drills.FindAsync(drill2);
-        d2!.Attributes = "[\"shooting\"]";
-        d2.DurationMinutes = 15;
+        d2!.DurationMinutes = 15;
         await db.Context.SaveChangesAsync();
 
         var user = await db.Context.Users.FindAsync(userId);

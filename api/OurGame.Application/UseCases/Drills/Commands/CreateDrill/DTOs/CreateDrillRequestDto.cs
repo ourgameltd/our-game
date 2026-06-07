@@ -35,9 +35,9 @@ public record CreateDrillRequestDto
     public string Category { get; init; } = string.Empty;
 
     /// <summary>
-    /// List of attributes/skills trained in this drill
+    /// IDs of the competencies this drill develops
     /// </summary>
-    public List<string> Attributes { get; init; } = new();
+    public List<Guid> CompetencyIds { get; init; } = new();
 
     /// <summary>
     /// List of equipment required for the drill

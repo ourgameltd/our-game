@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Plus, ExternalLink, Globe, GitBranch, Play, Trash2, X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
-import { drillCategories, normalizeDrillCategory, playerAttributes } from '@/constants/referenceData';
+import { drillCategories, normalizeDrillCategory, drillCompetencies } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import { detectLinkProvider } from '@utils/linkProviders';
 import PageTitle from '@components/common/PageTitle';
@@ -51,21 +51,14 @@ function BasicInfoSkeleton() {
   );
 }
 
-function AttributesSkeleton() {
+function CompetenciesSkeleton() {
   return (
     <div className="card animate-pulse">
       <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
       <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-      <div className="space-y-4">
-        {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i}>
-            <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-            <div className="flex flex-wrap gap-2">
-              {Array.from({ length: 5 }).map((_, j) => (
-                <div key={j} className="h-8 w-24 bg-gray-200 dark:bg-gray-700 rounded-full" />
-              ))}
-            </div>
-          </div>
+      <div className="flex flex-wrap gap-2">
+        {Array.from({ length: 9 }).map((_, i) => (
+          <div key={i} className="h-8 w-36 bg-gray-200 dark:bg-gray-700 rounded-full" />
         ))}
       </div>
     </div>
@@ -175,7 +168,7 @@ export default function DrillFormPage() {
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState(10);
   const [category, setCategory] = useState<'Drill' | 'Skills Practice' | 'Game Related Practice' | 'Conditioned Game'>('Drill');
-  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
+  const [selectedCompetencyIds, setSelectedCompetencyIds] = useState<string[]>([]);
   const [instructions, setInstructions] = useState<string[]>([]);
   const [links, setLinks] = useState<DrillFormLink[]>([]);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -208,7 +201,7 @@ export default function DrillFormPage() {
       setDuration(drillData.durationMinutes || 10);
       const normalizedCategory = normalizeDrillCategory(drillData.category);
       setCategory(normalizedCategory === 'Mixed' ? 'Drill' : normalizedCategory);
-      setSelectedAttributes(drillData.attributes);
+      setSelectedCompetencyIds(drillData.competencies.map(c => c.id));
       setInstructions(drillData.instructions);
       setLinks(drillData.links.map(l => ({
         url: l.url,
@@ -235,18 +228,11 @@ export default function DrillFormPage() {
     }
   }, [createError, updateError, addToast]);
 
-  // Group attributes by category
-  const attributesByCategory: Record<string, Array<{key: string; label: string}>> = {
-    Skills: [...playerAttributes.skills],
-    Physical: [...playerAttributes.physical],
-    Mental: [...playerAttributes.mental]
-  };
-
-  const toggleAttribute = (attrKey: string) => {
-    setSelectedAttributes(prev => 
-      prev.includes(attrKey) 
-        ? prev.filter(a => a !== attrKey)
-        : [...prev, attrKey]
+  const toggleCompetency = (competencyId: string) => {
+    setSelectedCompetencyIds(prev =>
+      prev.includes(competencyId)
+        ? prev.filter(id => id !== competencyId)
+        : [...prev, competencyId]
     );
   };
 
@@ -335,8 +321,8 @@ export default function DrillFormPage() {
       alert('Please enter a drill name');
       return;
     }
-    if (selectedAttributes.length === 0) {
-      alert('Please select at least one attribute');
+    if (selectedCompetencyIds.length === 0) {
+      alert('Please select at least one competency');
       return;
     }
     if (!category.trim()) {
@@ -363,7 +349,7 @@ export default function DrillFormPage() {
         description: description.trim() || undefined,
         durationMinutes: duration,
         category,
-        attributes: selectedAttributes,
+        competencyIds: selectedCompetencyIds,
         equipment: [],
         instructions: cleanedInstructions,
         variations: [],
@@ -383,7 +369,7 @@ export default function DrillFormPage() {
         description: description.trim() || undefined,
         durationMinutes: duration,
         category,
-        attributes: selectedAttributes,
+        competencyIds: selectedCompetencyIds,
         equipment: [],
         instructions: cleanedInstructions,
         variations: [],
@@ -446,7 +432,7 @@ export default function DrillFormPage() {
 
           <div className="space-y-2">
             <BasicInfoSkeleton />
-            <AttributesSkeleton />
+            <CompetenciesSkeleton />
             <SectionSkeleton />
             <SectionSkeleton />
             <SectionSkeleton />
@@ -668,40 +654,32 @@ export default function DrillFormPage() {
             </div>
 
 
-            {/* Attributes */}
+            {/* Competencies */}
             <div className="card">
-              <h3 className="text-lg font-semibold mb-2">Attributes Developed *</h3>
+              <h3 className="text-lg font-semibold mb-2">Competencies Developed *</h3>
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Select the player attributes this drill improves.
+                Select the competency areas this drill develops.
               </p>
-
-              {Object.entries(attributesByCategory).map(([category, attrs]) => (
-                <div key={category} className="mb-4">
-                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {category} {category === 'Skills' ? '⚽' : category === 'Physical' ? '💪' : '🧠'}
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {attrs.map(attr => {
-                      const isSelected = selectedAttributes.includes(attr.key);
-                      return (
-                        <button
-                          key={attr.key}
-                          type="button"
-                          onClick={() => !isInherited && toggleAttribute(attr.key)}
-                          disabled={isInherited}
-                          className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                            isSelected
-                              ? 'bg-primary-600 text-white dark:bg-primary-500'
-                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                          } ${isInherited ? 'cursor-not-allowed opacity-60' : ''}`}
-                        >
-                          {attr.label}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
+              <div className="flex flex-wrap gap-2">
+                {drillCompetencies.map(competency => {
+                  const isSelected = selectedCompetencyIds.includes(competency.id);
+                  return (
+                    <button
+                      key={competency.id}
+                      type="button"
+                      onClick={() => !isInherited && toggleCompetency(competency.id)}
+                      disabled={isInherited}
+                      className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                        isSelected
+                          ? 'bg-primary-600 text-white dark:bg-primary-500'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                      } ${isInherited ? 'cursor-not-allowed opacity-60' : ''}`}
+                    >
+                      {competency.name}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             {/* Form Actions */}

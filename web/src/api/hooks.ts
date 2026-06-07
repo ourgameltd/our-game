@@ -777,11 +777,11 @@ export function useDrillTemplatesByScope(
   clubId: string | undefined,
   ageGroupId?: string,
   teamId?: string,
-  options?: { category?: string; search?: string; attributes?: string[] }
+  options?: { category?: string; search?: string; competencyIds?: string[] }
 ): UseApiState<DrillTemplatesByScopeResponseDto> {
   // Enabled when at least clubId is valid
   const enabled = isValidId(clubId);
-  
+
   return useApiCall<DrillTemplatesByScopeResponseDto>(
     () => {
       if (teamId && ageGroupId) {
@@ -792,7 +792,7 @@ export function useDrillTemplatesByScope(
       }
       return apiClient.drillTemplates.getByClub(clubId!, options);
     },
-    [clubId, ageGroupId, teamId, options?.category, options?.search, options?.attributes?.join(',')],
+    [clubId, ageGroupId, teamId, options?.category, options?.search, options?.competencyIds?.join(',')],
     enabled
   );
 }

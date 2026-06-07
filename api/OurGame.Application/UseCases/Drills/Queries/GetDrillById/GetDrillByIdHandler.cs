@@ -5,6 +5,7 @@ using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.Drills.Queries.GetDrillById.DTOs;
 using OurGame.Persistence.Enums;
 using OurGame.Persistence.Models;
+using System;
 
 namespace OurGame.Application.UseCases.Drills.Queries.GetDrillById;
 
@@ -24,13 +25,12 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
     {
         // 1. Fetch the drill
         var drillSql = @"
-            SELECT 
+            SELECT
                 d.Id,
                 d.Name,
                 d.Description,
                 d.DurationMinutes,
                 d.Category,
-                d.Attributes,
                 d.Equipment,
                 d.DrillDiagramConfig,
                 d.Instructions,
@@ -51,7 +51,19 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
             return null;
         }
 
-        // 2. Fetch drill links
+        // 2. Fetch drill competencies
+        var competenciesSql = @"
+            SELECT c.Id, c.Name, c.DisplayOrder
+            FROM DrillCompetencies dc
+            JOIN Competencies c ON c.Id = dc.CompetencyId
+            WHERE dc.DrillId = {0}
+            ORDER BY c.DisplayOrder";
+
+        var competencies = await _db.Database
+            .SqlQueryRaw<CompetencyRaw>(competenciesSql, query.DrillId)
+            .ToListAsync(cancellationToken);
+
+        // 3. Fetch drill links
         var linksSql = @"
             SELECT 
                 dl.Id,
@@ -65,7 +77,7 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
             .SqlQueryRaw<DrillLinkRaw>(linksSql, query.DrillId)
             .ToListAsync(cancellationToken);
 
-        // 3. Fetch scope link data
+        // 4. Fetch scope link data
         var clubIdsSql = @"SELECT dc.ClubId FROM DrillClubs dc WHERE dc.DrillId = {0}";
         var ageGroupIdsSql = @"SELECT dag.AgeGroupId FROM DrillAgeGroups dag WHERE dag.DrillId = {0}";
         var teamIdsSql = @"SELECT dt.TeamId FROM DrillTeams dt WHERE dt.DrillId = {0}";
@@ -90,7 +102,7 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
             Description = drill.Description,
             DurationMinutes = drill.DurationMinutes,
             Category = MapCategoryToString(drill.Category),
-            Attributes = ParseJsonArray(drill.Attributes),
+            Competencies = competencies.Select(c => new CompetencyDto { Id = c.Id, Name = c.Name ?? string.Empty, DisplayOrder = c.DisplayOrder }).ToList(),
             Equipment = ParseJsonArray(drill.Equipment),
             DrillDiagramConfig = ParseDiagramConfig(drill.DrillDiagramConfig),
             Instructions = ParseJsonArray(drill.Instructions),
@@ -182,7 +194,6 @@ public class DrillRaw
     public string? Description { get; set; }
     public int? DurationMinutes { get; set; }
     public int Category { get; set; }
-    public string? Attributes { get; set; }
     public string? Equipment { get; set; }
     public string? DrillDiagramConfig { get; set; }
     public string? Instructions { get; set; }
@@ -191,6 +202,13 @@ public class DrillRaw
     public Guid? CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
+}
+
+public class CompetencyRaw
+{
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public int DisplayOrder { get; set; }
 }
 
 public class DrillLinkRaw

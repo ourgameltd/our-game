@@ -90,7 +90,6 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
         var now = DateTime.UtcNow;
 
         // Serialize arrays as JSON
-        var attributesJson = JsonSerializer.Serialize(dto.Attributes ?? new List<string>());
         var equipmentJson = JsonSerializer.Serialize(dto.Equipment ?? new List<string>());
         var instructionsJson = JsonSerializer.Serialize(dto.Instructions ?? new List<string>());
         var variationsJson = JsonSerializer.Serialize(dto.Variations ?? new List<string>());
@@ -106,12 +105,22 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
 
             // Insert into Drills table
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO Drills (Id, Name, Description, DurationMinutes, Category, Attributes, Equipment,
+                INSERT INTO Drills (Id, Name, Description, DurationMinutes, Category, Equipment,
                     Diagram, DrillDiagramConfig, Instructions, Variations, CreatedBy, IsPublic, CreatedAt, UpdatedAt)
                 VALUES ({drillId}, {dto.Name}, {dto.Description}, {dto.DurationMinutes}, {(int)category},
-                    {attributesJson}, {equipmentJson}, {(string?)null}, {drillDiagramConfigJson}, {instructionsJson}, {variationsJson},
+                    {equipmentJson}, {(string?)null}, {drillDiagramConfigJson}, {instructionsJson}, {variationsJson},
                     {coachId}, {dto.IsPublic}, {now}, {now})
             ", cancellationToken);
+
+            // Insert competency links
+            foreach (var competencyId in dto.CompetencyIds ?? new List<Guid>())
+            {
+                var drillCompetencyId = Guid.NewGuid();
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO DrillCompetencies (Id, DrillId, CompetencyId)
+                    VALUES ({drillCompetencyId}, {drillId}, {competencyId})
+                ", cancellationToken);
+            }
 
             // Insert scope link row
             var scopeLinkId = Guid.NewGuid();

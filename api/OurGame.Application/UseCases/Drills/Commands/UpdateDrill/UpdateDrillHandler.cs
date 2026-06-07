@@ -61,10 +61,6 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
         var category = MapCategoryToEnum(dto.Category);
 
         // Serialize arrays to JSON
-        var attributesJson = dto.Attributes.Count > 0
-            ? JsonSerializer.Serialize(dto.Attributes)
-            : null;
-
         var equipmentJson = dto.Equipment.Count > 0
             ? JsonSerializer.Serialize(dto.Equipment)
             : null;
@@ -99,7 +95,6 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
                     Description = {description},
                     DurationMinutes = {durationMinutes},
                     Category = {category},
-                    Attributes = {attributesJson},
                     Equipment = {equipmentJson},
                     DrillDiagramConfig = {drillDiagramConfigJson},
                     Instructions = {instructionsJson},
@@ -108,6 +103,20 @@ public class UpdateDrillHandler : IRequestHandler<UpdateDrillCommand, DrillDetai
                     UpdatedAt = {now}
                 WHERE Id = {drillId}
             ", cancellationToken);
+
+            // Replace DrillCompetencies: DELETE existing + INSERT new set
+            await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                DELETE FROM DrillCompetencies WHERE DrillId = {drillId}
+            ", cancellationToken);
+
+            foreach (var competencyId in dto.CompetencyIds ?? new List<Guid>())
+            {
+                var drillCompetencyId = Guid.NewGuid();
+                await _db.Database.ExecuteSqlInterpolatedAsync($@"
+                    INSERT INTO DrillCompetencies (Id, DrillId, CompetencyId)
+                    VALUES ({drillCompetencyId}, {drillId}, {competencyId})
+                ", cancellationToken);
+            }
 
             // Replace DrillLinks: DELETE existing + INSERT new set
             await _db.Database.ExecuteSqlInterpolatedAsync($@"

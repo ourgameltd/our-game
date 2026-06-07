@@ -1,8 +1,10 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
+using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplatesByScope.DTOs;
 using OurGame.Persistence.Models;
+using System;
 
 namespace OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplatesByScope;
 
@@ -15,7 +17,7 @@ public record GetDrillTemplatesByScopeQuery(
     Guid? TeamId = null,
     string? Category = null,
     string? SearchTerm = null,
-    List<string>? Attributes = null
+    List<Guid>? CompetencyIds = null
 ) : IQuery<DrillTemplatesByScopeResponseDto>;
 
 /// <summary>
@@ -39,11 +41,10 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
 
         // Build SQL query to get drill templates accessible at this scope via link tables
         var sql = @"
-            SELECT 
+            SELECT
                 dt.Id,
                 dt.Name,
                 dt.Description,
-                dt.AggregatedAttributes,
                 dt.TotalDuration,
                 dt.Category,
                 dt.SessionCategory,
@@ -51,7 +52,7 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
                 dt.IsPublic,
                 dt.IsArchived,
                 dt.CreatedAt,
-                CASE 
+                CASE
                     WHEN dtt.DrillTemplateId IS NOT NULL THEN 'team'
                     WHEN dtag.DrillTemplateId IS NOT NULL THEN 'agegroup'
                     WHEN dtc.DrillTemplateId IS NOT NULL THEN 'club'
@@ -84,8 +85,23 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
         // Add optional search filter
         if (!string.IsNullOrEmpty(query.SearchTerm))
         {
-            sql += $" AND (dt.Name LIKE {{{parameters.Count}}} OR dt.Description LIKE {{{parameters.Count}}} OR dt.AggregatedAttributes LIKE {{{parameters.Count}}})";
+            sql += $" AND (dt.Name LIKE {{{parameters.Count}}} OR dt.Description LIKE {{{parameters.Count}}})";
             parameters.Add($"%{query.SearchTerm}%");
+        }
+
+        // Add optional competency filter — template must have at least one drill with a matching competency
+        if (query.CompetencyIds is { Count: > 0 })
+        {
+            var competencyPlaceholders = new List<string>();
+            foreach (var competencyId in query.CompetencyIds)
+            {
+                competencyPlaceholders.Add($"{{{parameters.Count}}}");
+                parameters.Add(competencyId);
+            }
+            sql += $@" AND EXISTS (
+                SELECT 1 FROM TemplateDrills td2
+                JOIN DrillCompetencies dc2 ON dc2.DrillId = td2.DrillId
+                WHERE td2.TemplateId = dt.Id AND dc2.CompetencyId IN ({string.Join(", ", competencyPlaceholders)}))";
         }
 
         sql += " ORDER BY dt.Name ASC";
@@ -106,26 +122,40 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
             .GroupBy(td => td.TemplateId)
             .ToDictionary(g => g.Key, g => g.Select(td => td.DrillId).ToList());
 
-        // Filter by attributes if specified (template must have ANY selected attribute)
-        if (query.Attributes is { Count: > 0 })
+        // Batch fetch competencies for all template drills
+        Dictionary<Guid, List<CompetencyDto>> competenciesByTemplateId = new();
+        if (templateIds.Count > 0)
         {
-            templates = templates.Where(t =>
-            {
-                var attrs = ParseJsonArray(t.AggregatedAttributes);
-                return query.Attributes.Any(attr => attrs.Contains(attr));
-            }).ToList();
+            var idPlaceholders = string.Join(", ", templateIds.Select((_, i) => $"{{{i}}}"));
+            var competenciesSql = $@"
+                SELECT DISTINCT td.TemplateId, c.Id, c.Name, c.DisplayOrder
+                FROM TemplateDrills td
+                JOIN DrillCompetencies dc ON dc.DrillId = td.DrillId
+                JOIN Competencies c ON c.Id = dc.CompetencyId
+                WHERE td.TemplateId IN ({idPlaceholders})
+                ORDER BY c.DisplayOrder";
+
+            var templateCompetencies = await _db.Database
+                .SqlQueryRaw<TemplateCompetencyRaw>(competenciesSql, templateIds.Cast<object>().ToArray())
+                .ToListAsync(cancellationToken);
+
+            competenciesByTemplateId = templateCompetencies
+                .GroupBy(tc => tc.TemplateId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => g.Select(tc => new CompetencyDto { Id = tc.Id, Name = tc.Name ?? string.Empty, DisplayOrder = tc.DisplayOrder })
+                          .DistinctBy(c => c.Id)
+                          .ToList()
+                );
         }
 
         var scopeTemplates = new List<DrillTemplateListDto>();
         var inheritedTemplates = new List<DrillTemplateListDto>();
-        var allAttributes = new HashSet<string>();
 
         foreach (var template in templates)
         {
-            var dto = MapToDto(template, drillIdsByTemplateId.GetValueOrDefault(template.Id, new List<Guid>()));
-
-            // Collect all attributes for filter
-            dto.Attributes.ForEach(a => allAttributes.Add(a));
+            var templateCompetencies = competenciesByTemplateId.GetValueOrDefault(template.Id, new List<CompetencyDto>());
+            var dto = MapToDto(template, drillIdsByTemplateId.GetValueOrDefault(template.Id, new List<Guid>()), templateCompetencies);
 
             // Determine the most specific scope this template is linked to
             var templateScopeType = template.ScopeType?.ToLowerInvariant() ?? "unknown";
@@ -167,11 +197,11 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
             Templates = scopeTemplates,
             InheritedTemplates = inheritedTemplates,
             TotalCount = scopeTemplates.Count + inheritedTemplates.Count,
-            AvailableAttributes = allAttributes.OrderBy(a => a).ToList()
+            AvailableCompetencies = new List<CompetencyDto>()
         };
     }
 
-    private static DrillTemplateListDto MapToDto(DrillTemplateRawDto raw, List<Guid> drillIds)
+    private static DrillTemplateListDto MapToDto(DrillTemplateRawDto raw, List<Guid> drillIds, List<CompetencyDto> competencies)
     {
         return new DrillTemplateListDto
         {
@@ -182,36 +212,13 @@ public class GetDrillTemplatesByScopeHandler : IRequestHandler<GetDrillTemplates
             TotalDuration = raw.TotalDuration ?? 0,
             Category = raw.Category,
             SessionCategory = raw.SessionCategory ?? "Whole Part Whole",
-            Attributes = ParseJsonArray(raw.AggregatedAttributes),
+            Competencies = competencies,
             ScopeType = raw.ScopeType ?? "unknown",
             IsPublic = raw.IsPublic,
             IsArchived = raw.IsArchived,
             CreatedBy = raw.CreatedBy,
             CreatedAt = raw.CreatedAt
         };
-    }
-
-    private static List<string> ParseJsonArray(string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-            return new List<string>();
-
-        if (json.StartsWith("["))
-        {
-            try
-            {
-                return System.Text.Json.JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
-            }
-            catch
-            {
-                return new List<string>();
-            }
-        }
-
-        // Handle comma-separated values
-        return json.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .ToList();
     }
 }
 
@@ -223,7 +230,6 @@ public class DrillTemplateRawDto
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
-    public string? AggregatedAttributes { get; set; }
     public int? TotalDuration { get; set; }
     public string? Category { get; set; }
     public string? SessionCategory { get; set; }
@@ -235,4 +241,12 @@ public class DrillTemplateRawDto
     public Guid? ScopeClubId { get; set; }
     public Guid? ScopeAgeGroupId { get; set; }
     public Guid? ScopeTeamId { get; set; }
+}
+
+public class TemplateCompetencyRaw
+{
+    public Guid TemplateId { get; set; }
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public int DisplayOrder { get; set; }
 }

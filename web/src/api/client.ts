@@ -1478,13 +1478,19 @@ export interface DrillDiagramConfigDto {
   meta?: Record<string, unknown>;
 }
 
+export interface CompetencyDto {
+  id: string;
+  name: string;
+  displayOrder: number;
+}
+
 export interface DrillListDto {
   id: string;
   name: string;
   description: string;
   duration: number;
   category: string;
-  attributes: string[];
+  competencies: CompetencyDto[];
   equipment: string[];
   diagram?: string;
   drillDiagramConfig?: DrillDiagramConfigDto;
@@ -1515,7 +1521,7 @@ export interface DrillDetailDto {
   description?: string;
   durationMinutes?: number;
   category: string;
-  attributes: string[];
+  competencies: CompetencyDto[];
   equipment: string[];
   drillDiagramConfig?: DrillDiagramConfigDto;
   instructions: string[];
@@ -1540,7 +1546,7 @@ export interface CreateDrillRequest {
   description?: string;
   durationMinutes?: number;
   category: string;
-  attributes: string[];
+  competencyIds: string[];
   equipment: string[];
   instructions: string[];
   variations: string[];
@@ -1567,7 +1573,7 @@ export interface UpdateDrillRequest {
   description?: string;
   durationMinutes?: number;
   category: string;
-  attributes: string[];
+  competencyIds: string[];
   equipment: string[];
   instructions: string[];
   variations: string[];
@@ -1591,7 +1597,7 @@ export interface DrillTemplateListDto {
   totalDuration: number;
   category?: string;
   sessionCategory?: string;
-  attributes: string[];
+  competencies: CompetencyDto[];
   scopeType: string;
   isPublic: boolean;
   isArchived: boolean;
@@ -1603,7 +1609,7 @@ export interface DrillTemplatesByScopeResponseDto {
   templates: DrillTemplateListDto[];
   inheritedTemplates: DrillTemplateListDto[];
   totalCount: number;
-  availableAttributes: string[];
+  availableCompetencies: CompetencyDto[];
 }
 
 export interface DrillTemplateDetailDto {
@@ -1619,7 +1625,7 @@ export interface DrillTemplateDetailDto {
   totalDuration?: number;
   category?: string;
   sessionCategory?: string;
-  aggregatedAttributes: string[];
+  competencies: CompetencyDto[];
   scopeType: string;
   scopeClubId?: string;
   scopeAgeGroupId?: string;
@@ -3666,12 +3672,12 @@ export const apiClient = {
      */
     getByClub: async (
       clubId: string,
-      options?: { category?: string; search?: string; attributes?: string[] }
+      options?: { category?: string; search?: string; competencyIds?: string[] }
     ): Promise<ApiResponse<DrillTemplatesByScopeResponseDto>> => {
       const params = new URLSearchParams();
       if (options?.category) params.append('category', options.category);
       if (options?.search) params.append('search', options.search);
-      if (options?.attributes && options.attributes.length > 0) params.append('attributes', options.attributes.join(','));
+      if (options?.competencyIds && options.competencyIds.length > 0) params.append('competencyIds', options.competencyIds.join(','));
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillTemplatesByScopeResponseDto>>(`/v1/clubs/${clubId}/drill-templates${queryString}`);
       return response.data;
@@ -3683,12 +3689,12 @@ export const apiClient = {
     getByAgeGroup: async (
       clubId: string,
       ageGroupId: string,
-      options?: { category?: string; search?: string; attributes?: string[] }
+      options?: { category?: string; search?: string; competencyIds?: string[] }
     ): Promise<ApiResponse<DrillTemplatesByScopeResponseDto>> => {
       const params = new URLSearchParams();
       if (options?.category) params.append('category', options.category);
       if (options?.search) params.append('search', options.search);
-      if (options?.attributes && options.attributes.length > 0) params.append('attributes', options.attributes.join(','));
+      if (options?.competencyIds && options.competencyIds.length > 0) params.append('competencyIds', options.competencyIds.join(','));
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillTemplatesByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/drill-templates${queryString}`);
       return response.data;
@@ -3701,12 +3707,12 @@ export const apiClient = {
       clubId: string,
       ageGroupId: string,
       teamId: string,
-      options?: { category?: string; search?: string; attributes?: string[] }
+      options?: { category?: string; search?: string; competencyIds?: string[] }
     ): Promise<ApiResponse<DrillTemplatesByScopeResponseDto>> => {
       const params = new URLSearchParams();
       if (options?.category) params.append('category', options.category);
       if (options?.search) params.append('search', options.search);
-      if (options?.attributes && options.attributes.length > 0) params.append('attributes', options.attributes.join(','));
+      if (options?.competencyIds && options.competencyIds.length > 0) params.append('competencyIds', options.competencyIds.join(','));
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillTemplatesByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drill-templates${queryString}`);
       return response.data;

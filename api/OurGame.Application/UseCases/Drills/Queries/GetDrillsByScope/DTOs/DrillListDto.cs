@@ -1,5 +1,6 @@
 namespace OurGame.Application.UseCases.Drills.Queries.GetDrillsByScope.DTOs;
 using OurGame.Application.UseCases.Drills.DTOs;
+using System;
 
 /// <summary>
 /// Response DTO for drills by scope
@@ -53,9 +54,9 @@ public class DrillListDto
     public string Category { get; set; } = string.Empty;
 
     /// <summary>
-    /// List of player attributes this drill improves
+    /// Competencies this drill develops
     /// </summary>
-    public List<string> Attributes { get; set; } = new();
+    public List<CompetencyDto> Competencies { get; set; } = new();
 
     /// <summary>
     /// List of equipment needed for the drill

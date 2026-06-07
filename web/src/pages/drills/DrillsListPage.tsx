@@ -5,22 +5,11 @@ import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
 import DrillCard, { DrillCardSkeleton } from '@/components/training/DrillCard';
 import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
-import { drillCategories, getAttributeLabel, normalizeDrillCategory } from '@/constants/referenceData';
+import { drillCategories, drillCompetencies, normalizeDrillCategory } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
 import { usePageTitle } from '@/hooks/usePageTitle';
-
-// Skeleton component for filter attributes loading state
-function FilterAttributesSkeleton() {
-  return (
-    <div className="flex flex-wrap gap-2">
-      {[...Array(10)].map((_, i) => (
-        <div key={i} className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full animate-pulse" />
-      ))}
-    </div>
-  );
-}
 
 export default function DrillsListPage() {
   usePageTitle(['Drills List']);
@@ -30,7 +19,7 @@ export default function DrillsListPage() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
+  const [selectedCompetencies, setSelectedCompetencies] = useState<string[]>([]);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
 
   // Fetch club details from API
@@ -54,16 +43,6 @@ export default function DrillsListPage() {
     return new Set(drillsData.inheritedDrills.map((drill) => drill.id));
   }, [drillsData]);
 
-  // Get all unique attributes from drills
-  const availableAttributes = useMemo(() => {
-    const attributeSet = new Set<string>();
-    allDrills.forEach((drill: DrillListDto) => {
-      drill.attributes.forEach((attr: string) => attributeSet.add(attr));
-    });
-    return Array.from(attributeSet).sort((a, b) => 
-      getAttributeLabel(a).localeCompare(getAttributeLabel(b))
-    );
-  }, [allDrills]);
 
   // Error handling
   if (clubError || drillsError) {
@@ -94,23 +73,15 @@ export default function DrillsListPage() {
     );
   }
 
-  const attributeOptions = useMemo(
-    () =>
-      availableAttributes.map((attr) => ({
-        value: attr,
-        label: getAttributeLabel(attr),
-      })),
-    [availableAttributes]
-  );
+  const competencyOptions = drillCompetencies.map((c) => ({ value: c.id, label: c.name }));
 
-  // Filter drills based on search term and selected attributes
+  // Filter drills based on search term and selected competencies
   const filteredDrills = allDrills.filter((drill: DrillListDto) => {
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       const drillDescription = (drill.description ?? '').toLowerCase();
-      if (!drill.name.toLowerCase().includes(searchLower) && 
-          !drillDescription.includes(searchLower) &&
-          !drill.attributes.some((attr: string) => getAttributeLabel(attr).toLowerCase().includes(searchLower))) {
+      if (!drill.name.toLowerCase().includes(searchLower) &&
+          !drillDescription.includes(searchLower)) {
         return false;
       }
     }
@@ -119,9 +90,8 @@ export default function DrillsListPage() {
         return false;
       }
     }
-    // Filter by selected attributes - drill must include ANY selected attribute
-    if (selectedAttributes.length > 0) {
-      if (!selectedAttributes.some(attr => drill.attributes.includes(attr))) {
+    if (selectedCompetencies.length > 0) {
+      if (!selectedCompetencies.some(id => drill.competencies.some(c => c.id === id))) {
         return false;
       }
     }
@@ -174,9 +144,9 @@ export default function DrillsListPage() {
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {(searchTerm || selectedCategory !== 'all' || selectedAttributes.length > 0) && (
+              {(searchTerm || selectedCategory !== 'all' || selectedCompetencies.length > 0) && (
                 <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {[searchTerm ? 1 : 0, selectedCategory !== 'all' ? 1 : 0, selectedAttributes.length > 0 ? 1 : 0].reduce((a, b) => a + b, 0)} active
+                  {[searchTerm ? 1 : 0, selectedCategory !== 'all' ? 1 : 0, selectedCompetencies.length > 0 ? 1 : 0].reduce((a, b) => a + b, 0)} active
                 </span>
               )}
             </div>
@@ -224,36 +194,33 @@ export default function DrillsListPage() {
                 </div>
                 <div>
                   <label className="label">
-                    Filter by Attributes
+                    Filter by Competency
                   </label>
-                  {drillsLoading ? (
-                    <FilterAttributesSkeleton />
-                  ) : (
-                    <MultiSelectTypeahead
-                      options={attributeOptions}
-                      value={selectedAttributes}
-                      onChange={setSelectedAttributes}
-                      placeholder="Type to find and add attributes..."
-                      showSelectedChips={false}
-                    />
-                  )}
+                  <MultiSelectTypeahead
+                    options={competencyOptions}
+                    value={selectedCompetencies}
+                    onChange={setSelectedCompetencies}
+                    placeholder="Type to find and add competencies..."
+                    showSelectedChips={false}
+                  />
                 </div>
               </div>
 
-              {selectedAttributes.length > 0 && (
+              {selectedCompetencies.length > 0 && (
                 <div className="mt-2">
                   <div className="flex flex-wrap gap-2">
-                    {selectedAttributes.map((attribute) => {
-                      const label = getAttributeLabel(attribute);
+                    {selectedCompetencies.map((id) => {
+                      const competency = drillCompetencies.find(c => c.id === id);
+                      const label = competency?.name ?? id;
                       return (
                         <span
-                          key={attribute}
+                          key={id}
                           className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300"
                         >
                           {label}
                           <button
                             type="button"
-                            onClick={() => setSelectedAttributes((prev) => prev.filter((item) => item !== attribute))}
+                            onClick={() => setSelectedCompetencies((prev) => prev.filter((item) => item !== id))}
                             className="hover:text-primary-900 dark:hover:text-primary-100"
                             aria-label={`Remove ${label}`}
                           >
@@ -267,7 +234,7 @@ export default function DrillsListPage() {
                     onClick={() => {
                       setSearchTerm('');
                       setSelectedCategory('all');
-                      setSelectedAttributes([]);
+                      setSelectedCompetencies([]);
                     }}
                     className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
                   >
@@ -301,7 +268,7 @@ export default function DrillsListPage() {
             icon={Dumbbell}
             title="No drills found"
             description={
-              searchTerm || selectedAttributes.length > 0 || selectedCategory !== 'all'
+              searchTerm || selectedCompetencies.length > 0 || selectedCategory !== 'all'
                 ? 'Try adjusting your filters'
                 : 'Create your first drill to get started'
             }

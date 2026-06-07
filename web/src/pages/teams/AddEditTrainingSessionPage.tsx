@@ -493,7 +493,7 @@ export default function AddEditTrainingSessionPage() {
           appliedAt: new Date(),
           drillIds: template.drillIds
         }]);
-        setFocusAreas(template.attributes);
+        setFocusAreas(template.competencies.map(c => c.name));
         setDuration(template.totalDuration.toString());
       } else {
         // Add template drills to existing drills (only drills not already in session)
@@ -521,7 +521,7 @@ export default function AddEditTrainingSessionPage() {
         }]);
         
         // Add focus areas from template (avoiding duplicates)
-        const newFocusAreas = template.attributes.filter(attr => !focusAreas.includes(attr));
+        const newFocusAreas = template.competencies.map(c => c.name).filter(name => !focusAreas.includes(name));
         if (newFocusAreas.length > 0) {
           setFocusAreas([...focusAreas, ...newFocusAreas]);
         }
@@ -928,9 +928,9 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                               {drill.description}
                             </p>
                             <div className="flex flex-wrap gap-1">
-                              {drill.attributes.map((skill: string, i: number) => (
+                              {drill.competencies.map((c, i) => (
                                 <span key={i} className="px-2 py-0.5 text-xs bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded">
-                                  {skill}
+                                  {c.name}
                                 </span>
                               ))}
                             </div>
@@ -1644,9 +1644,9 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Skills Focused</h4>
                       <div className="flex flex-wrap gap-1">
-                        {previewDrill.attributes.map((skill: string, i: number) => (
+                        {previewDrill.competencies.map((c, i) => (
                           <span key={i} className="px-2 py-1 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700">
-                            {skill}
+                            {c.name}
                           </span>
                         ))}
                       </div>
@@ -1852,9 +1852,9 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                               
                               {/* Focus Areas */}
                               <div className="flex flex-wrap gap-1">
-                                {template.attributes.map((area: string, i: number) => (
+                                {template.competencies.map((c, i) => (
                                   <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded">
-                                    {area}
+                                    {c.name}
                                   </span>
                                 ))}
                               </div>
@@ -1936,9 +1936,9 @@ Notes: Remember to bring first aid kit. Weather forecast: light rain expected.`}
                     <div>
                       <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Skills Focused</h4>
                       <div className="flex flex-wrap gap-1">
-                        {templatePreviewDrill.attributes.map((skill: string, i: number) => (
+                        {templatePreviewDrill.competencies.map((c, i) => (
                           <span key={i} className="px-2 py-1 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700">
-                            {skill}
+                            {c.name}
                           </span>
                         ))}
                       </div>

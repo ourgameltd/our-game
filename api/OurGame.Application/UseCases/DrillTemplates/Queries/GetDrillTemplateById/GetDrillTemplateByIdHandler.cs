@@ -1,8 +1,10 @@
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions;
+using OurGame.Application.UseCases.Drills.DTOs;
 using OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplateById.DTOs;
 using OurGame.Persistence.Models;
+using System;
 
 namespace OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplateById;
 
@@ -27,11 +29,10 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
     {
         // Query drill template with scope information via link tables
         var sql = @"
-            SELECT 
+            SELECT
                 dt.Id,
                 dt.Name,
                 dt.Description,
-                dt.AggregatedAttributes,
                 dt.TotalDuration,
                 dt.Category,
                 dt.SessionCategory,
@@ -39,7 +40,7 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
                 dt.IsPublic,
                 dt.IsArchived,
                 dt.CreatedAt,
-                CASE 
+                CASE
                     WHEN dtt.DrillTemplateId IS NOT NULL THEN 'team'
                     WHEN dtag.DrillTemplateId IS NOT NULL THEN 'agegroup'
                     WHEN dtc.DrillTemplateId IS NOT NULL THEN 'club'
@@ -71,10 +72,21 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
             .Select(td => td.DrillId)
             .ToListAsync(cancellationToken);
 
-        return MapToDto(template, drillIds);
+        // Get competencies from the template's drills
+        var competencies = await _db.Database
+            .SqlQueryRaw<TemplateCompetencyDetailRaw>(@"
+                SELECT DISTINCT c.Id, c.Name, c.DisplayOrder
+                FROM TemplateDrills td
+                JOIN DrillCompetencies dc ON dc.DrillId = td.DrillId
+                JOIN Competencies c ON c.Id = dc.CompetencyId
+                WHERE td.TemplateId = {0}
+                ORDER BY c.DisplayOrder", query.Id)
+            .ToListAsync(cancellationToken);
+
+        return MapToDto(template, drillIds, competencies.Select(c => new CompetencyDto { Id = c.Id, Name = c.Name ?? string.Empty, DisplayOrder = c.DisplayOrder }).ToList());
     }
 
-    private static DrillTemplateDetailDto MapToDto(DrillTemplateRawDto raw, List<Guid> drillIds)
+    private static DrillTemplateDetailDto MapToDto(DrillTemplateRawDto raw, List<Guid> drillIds, List<CompetencyDto> competencies)
     {
         return new DrillTemplateDetailDto
         {
@@ -85,7 +97,7 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
             TotalDuration = raw.TotalDuration ?? 0,
             Category = raw.Category,
             SessionCategory = raw.SessionCategory ?? "Whole Part Whole",
-            Attributes = ParseJsonArray(raw.AggregatedAttributes),
+            Competencies = competencies,
             IsPublic = raw.IsPublic,
             IsArchived = raw.IsArchived,
             CreatedBy = raw.CreatedBy,
@@ -95,29 +107,6 @@ public class GetDrillTemplateByIdHandler : IRequestHandler<GetDrillTemplateByIdQ
             ScopeAgeGroupId = raw.ScopeAgeGroupId,
             ScopeTeamId = raw.ScopeTeamId
         };
-    }
-
-    private static List<string> ParseJsonArray(string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-            return new List<string>();
-
-        if (json.StartsWith("["))
-        {
-            try
-            {
-                return System.Text.Json.JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
-            }
-            catch
-            {
-                return new List<string>();
-            }
-        }
-
-        // Handle comma-separated values
-        return json.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .ToList();
     }
 }
 
@@ -129,7 +118,6 @@ public class DrillTemplateRawDto
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
-    public string? AggregatedAttributes { get; set; }
     public int? TotalDuration { get; set; }
     public string? Category { get; set; }
     public string? SessionCategory { get; set; }
@@ -141,4 +129,11 @@ public class DrillTemplateRawDto
     public Guid? ScopeClubId { get; set; }
     public Guid? ScopeAgeGroupId { get; set; }
     public Guid? ScopeTeamId { get; set; }
+}
+
+public class TemplateCompetencyDetailRaw
+{
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public int DisplayOrder { get; set; }
 }

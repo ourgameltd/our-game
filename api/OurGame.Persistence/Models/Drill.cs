@@ -18,8 +18,6 @@ public partial class Drill
 
     public DrillCategory Category { get; set; }
 
-    public string Attributes { get; set; }
-
     public string Equipment { get; set; }
 
     public string Diagram { get; set; }
@@ -39,6 +37,8 @@ public partial class Drill
     public DateTime UpdatedAt { get; set; }
 
     public virtual Coach CreatedByNavigation { get; set; }
+
+    public virtual ICollection<DrillCompetency> DrillCompetencies { get; set; } = new List<DrillCompetency>();
 
     public virtual ICollection<DrillLink> DrillLinks { get; set; } = new List<DrillLink>();
 

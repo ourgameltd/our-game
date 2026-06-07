@@ -1,4 +1,3 @@
-using System.Text.Json;
 using MediatR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
@@ -94,23 +93,12 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
 
         // Compute aggregated fields
         var totalDuration = drillData.Sum(d => d.DurationMinutes ?? 0);
-        var allAttributes = new HashSet<string>();
         var categories = new HashSet<string>();
-
         foreach (var drill in drillData)
         {
-            // Parse attributes JSON array
-            var attrs = ParseJsonArray(drill.Attributes);
-            foreach (var attr in attrs)
-            {
-                allAttributes.Add(attr);
-            }
-
-            // Collect categories
             categories.Add(MapDrillCategoryToTemplateCategory(drill.Category));
         }
 
-        var aggregatedAttributes = JsonSerializer.Serialize(allAttributes.OrderBy(a => a).ToList());
         var category = categories.Count == 1 ? categories.First() : "mixed";
         var sessionCategory = string.IsNullOrWhiteSpace(dto.SessionCategory) ? "Whole Part Whole" : dto.SessionCategory;
 
@@ -126,8 +114,8 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
 
             // Insert into DrillTemplates table
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO DrillTemplates (Id, Name, Description, AggregatedAttributes, TotalDuration, Category, SessionCategory, CreatedBy, IsPublic, CreatedAt)
-                VALUES ({templateId}, {dto.Name}, {dto.Description}, {aggregatedAttributes}, {totalDuration}, {category}, {sessionCategory}, {coachId}, {dto.IsPublic}, {now})
+                INSERT INTO DrillTemplates (Id, Name, Description, TotalDuration, Category, SessionCategory, CreatedBy, IsPublic, CreatedAt)
+                VALUES ({templateId}, {dto.Name}, {dto.Description}, {totalDuration}, {category}, {sessionCategory}, {coachId}, {dto.IsPublic}, {now})
             ", cancellationToken);
 
             // Insert scope link row
@@ -213,7 +201,7 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
     private async Task<List<DrillDataDto>> GetDrillDataAsync(List<Guid> drillIds, CancellationToken cancellationToken)
     {
         var sql = @"
-            SELECT Id, DurationMinutes, Category, Attributes
+            SELECT Id, DurationMinutes, Category
             FROM Drills
             WHERE Id IN ({0})";
 
@@ -226,29 +214,6 @@ public class CreateDrillTemplateHandler : IRequestHandler<CreateDrillTemplateCom
             .ToListAsync(cancellationToken);
 
         return result;
-    }
-
-    private static List<string> ParseJsonArray(string? json)
-    {
-        if (string.IsNullOrWhiteSpace(json))
-            return new List<string>();
-
-        if (json.StartsWith("["))
-        {
-            try
-            {
-                return JsonSerializer.Deserialize<List<string>>(json) ?? new List<string>();
-            }
-            catch
-            {
-                return new List<string>();
-            }
-        }
-
-        // Handle comma-separated values
-        return json.Split(',', StringSplitOptions.RemoveEmptyEntries)
-            .Select(s => s.Trim())
-            .ToList();
     }
 
     private static string MapDrillCategoryToTemplateCategory(int category)
@@ -280,5 +245,4 @@ public class DrillDataDto
     public Guid Id { get; set; }
     public int? DurationMinutes { get; set; }
     public int Category { get; set; }
-    public string? Attributes { get; set; }
 }

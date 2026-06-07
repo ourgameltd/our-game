@@ -1,5 +1,6 @@
 namespace OurGame.Application.UseCases.Drills.Queries.GetDrillById.DTOs;
 using OurGame.Application.UseCases.Drills.DTOs;
+using System;
 
 /// <summary>
 /// Full detail DTO for a single drill
@@ -32,9 +33,9 @@ public class DrillDetailDto
     public string Category { get; set; } = string.Empty;
 
     /// <summary>
-    /// Attributes/skills trained in this drill
+    /// Competencies this drill develops
     /// </summary>
-    public List<string> Attributes { get; set; } = new();
+    public List<CompetencyDto> Competencies { get; set; } = new();
 
     /// <summary>
     /// Equipment required for the drill

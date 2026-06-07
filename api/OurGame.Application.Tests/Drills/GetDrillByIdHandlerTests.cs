@@ -89,11 +89,9 @@ public class GetDrillByIdHandlerTests
         await using var db = await TestDatabaseFactory.CreateAsync();
         var drillId = await db.SeedDrillAsync();
 
-        // Update the drill to have JSON arrays
         var drill = await db.Context.Drills.FindAsync(drillId);
         Assert.NotNull(drill);
-        drill!.Attributes = "[\"passing\",\"movement\"]";
-        drill.Equipment = "[\"cones\",\"balls\"]";
+        drill!.Equipment = "[\"cones\",\"balls\"]";
         drill.Instructions = "[\"Step 1\",\"Step 2\"]";
         drill.Variations = "[\"Easy\",\"Hard\"]";
         await db.Context.SaveChangesAsync();
@@ -102,7 +100,6 @@ public class GetDrillByIdHandlerTests
         var result = await handler.Handle(new GetDrillByIdQuery(drillId), CancellationToken.None);
 
         Assert.NotNull(result);
-        Assert.Equal(new List<string> { "passing", "movement" }, result.Attributes);
         Assert.Equal(new List<string> { "cones", "balls" }, result.Equipment);
         Assert.Equal(new List<string> { "Step 1", "Step 2" }, result.Instructions);
         Assert.Equal(new List<string> { "Easy", "Hard" }, result.Variations);

@@ -33,6 +33,8 @@ public partial class OurGameContext : DbContext
 
     public virtual DbSet<Drill> Drills { get; set; }
 
+    public virtual DbSet<DrillCompetency> DrillCompetencies { get; set; }
+
     public virtual DbSet<DrillLink> DrillLinks { get; set; }
 
     public virtual DbSet<DrillTemplate> DrillTemplates { get; set; }

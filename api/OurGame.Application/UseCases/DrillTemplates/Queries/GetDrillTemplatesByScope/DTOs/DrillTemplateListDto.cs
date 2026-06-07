@@ -1,4 +1,5 @@
 namespace OurGame.Application.UseCases.DrillTemplates.Queries.GetDrillTemplatesByScope.DTOs;
+using OurGame.Application.UseCases.Drills.DTOs;
 
 /// <summary>
 /// Response DTO for drill templates by scope
@@ -21,9 +22,9 @@ public class DrillTemplatesByScopeResponseDto
     public int TotalCount { get; set; }
 
     /// <summary>
-    /// All unique attributes from the templates for filtering
+    /// All unique competencies from the templates for filtering (always the full 9 from taxonomy)
     /// </summary>
-    public List<string> AvailableAttributes { get; set; } = new();
+    public List<CompetencyDto> AvailableCompetencies { get; set; } = new();
 }
 
 /// <summary>
@@ -67,9 +68,9 @@ public class DrillTemplateListDto
     public string SessionCategory { get; set; } = "Whole Part Whole";
 
     /// <summary>
-    /// Aggregated attributes from included drills
+    /// Competencies covered by the drills in this template
     /// </summary>
-    public List<string> Attributes { get; set; } = new();
+    public List<CompetencyDto> Competencies { get; set; } = new();
 
     /// <summary>
     /// The scope type this drill template belongs to (club, agegroup, team)

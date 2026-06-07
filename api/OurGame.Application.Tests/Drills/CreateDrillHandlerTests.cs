@@ -101,7 +101,7 @@ public class CreateDrillHandlerTests
             Description = "Passing drill in a box",
             DurationMinutes = 15,
             Category = "Skills Practice",
-            Attributes = new List<string> { "passing", "movement" },
+            CompetencyIds = new List<Guid>(),
             Equipment = new List<string> { "cones", "balls" },
             Instructions = new List<string> { "Form a circle", "Keep ball" },
             Variations = new List<string> { "2-touch", "1-touch" },

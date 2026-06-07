@@ -13,8 +13,6 @@ public partial class DrillTemplate
 
     public string Description { get; set; }
 
-    public string AggregatedAttributes { get; set; }
-
     public int? TotalDuration { get; set; }
 
     public string Category { get; set; }

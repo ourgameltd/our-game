@@ -12,7 +12,7 @@ import {
   useArchiveDrillTemplate
 } from '@/api/hooks';
 import type { DrillListDto, CreateDrillTemplateRequest, UpdateDrillTemplateRequest } from '@/api';
-import { getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
+import { getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
 import { sessionCategories, normalizeSessionCategory } from '@/constants/sessionCategories';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
@@ -137,12 +137,12 @@ export default function DrillTemplateFormPage() {
     // Total duration
     const totalDuration = drills.reduce((sum, drill) => sum + (drill.duration || 0), 0);
     
-    // Unique attributes
-    const attributeSet = new Set<string>();
+    // Unique competency IDs across all selected drills
+    const competencySet = new Map<string, string>();
     drills.forEach(drill => {
-      drill.attributes.forEach(attr => attributeSet.add(attr));
+      drill.competencies.forEach(c => competencySet.set(c.id, c.name));
     });
-    const attributes = Array.from(attributeSet);
+    const attributes = Array.from(competencySet.entries()).map(([id, name]) => ({ id, name }));
     
     // Category calculation
     const categories = drills.map(d => normalizeDrillCategory(d.category));
@@ -173,8 +173,8 @@ export default function DrillTemplateFormPage() {
       if (drillSearchTerm) {
         const searchLower = drillSearchTerm.toLowerCase();
         const description = (drill.description || '').toLowerCase();
-        const attrMatch = drill.attributes.some((attr) => getAttributeLabel(attr).toLowerCase().includes(searchLower));
-        if (!drill.name.toLowerCase().includes(searchLower) && !description.includes(searchLower) && !attrMatch) {
+        const competencyMatch = drill.competencies.some((c) => c.name.toLowerCase().includes(searchLower));
+        if (!drill.name.toLowerCase().includes(searchLower) && !description.includes(searchLower) && !competencyMatch) {
           return false;
         }
       }
@@ -583,7 +583,7 @@ export default function DrillTemplateFormPage() {
                           </p>
                           <div className="flex items-center gap-3 mt-1 text-xs text-gray-500 dark:text-gray-400">
                             <span>⏱️ {drill.duration || 0}m</span>
-                            <span>🎯 {drill.attributes.length} attributes</span>
+                            <span>🎯 {drill.competencies.length} competencies</span>
                           </div>
                         </div>
                         
@@ -650,15 +650,15 @@ export default function DrillTemplateFormPage() {
                 {attributes.length > 0 && (
                   <div className="mt-4">
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                      Attributes Developed ({attributes.length})
+                      Competencies Developed ({attributes.length})
                     </p>
                     <div className="flex flex-wrap gap-2">
-                      {attributes.slice(0, 10).map(attr => (
+                      {attributes.slice(0, 10).map(c => (
                         <span
-                          key={attr}
+                          key={c.id}
                           className="px-2 py-1 text-xs bg-white dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full"
                         >
-                          {getAttributeLabel(attr)}
+                          {c.name}
                         </span>
                       ))}
                       {attributes.length > 10 && (
@@ -788,7 +788,7 @@ export default function DrillTemplateFormPage() {
                                   {getDrillCategoryLabel(drill.category)}
                                 </span>
                                 <span className="text-xs text-gray-500 dark:text-gray-400">⏱️ {drill.duration || 0}m</span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">🎯 {drill.attributes.length} attributes</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">🎯 {drill.competencies.length} competencies</span>
                               </div>
                               <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">{drill.description}</p>
                             </div>
@@ -888,14 +888,14 @@ export default function DrillTemplateFormPage() {
                     </div>
 
                     <div>
-                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Attributes</h4>
+                      <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">Competencies</h4>
                       <div className="flex flex-wrap gap-1">
-                        {previewDrill.attributes.map((attr) => (
+                        {previewDrill.competencies.map((c) => (
                           <span
-                            key={attr}
+                            key={c.id}
                             className="px-2 py-1 text-xs bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded border border-gray-200 dark:border-gray-700"
                           >
-                            {getAttributeLabel(attr)}
+                            {c.name}
                           </span>
                         ))}
                       </div>

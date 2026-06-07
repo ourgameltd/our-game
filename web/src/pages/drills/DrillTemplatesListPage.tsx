@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom';
 import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Clock3, ListOrdered, Globe2, ClipboardList, X } from 'lucide-react';
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
-import { getAttributeLabel, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
+import { drillCompetencies, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
 import { normalizeSessionCategory, getSessionCategoryColors, sessionCategories } from '@/constants/sessionCategories';
 import MultiSelectTypeahead from '@components/common/MultiSelectTypeahead';
 import { Routes } from '@utils/routes';
@@ -51,17 +51,6 @@ function TemplatesListSkeleton({ count = 4 }: { count?: number }) {
   );
 }
 
-// Skeleton for filter attributes
-function AttributeFiltersSkeleton() {
-  return (
-    <div className="flex flex-wrap gap-2 animate-pulse">
-      {Array.from({ length: 8 }).map((_, index) => (
-        <div key={index} className="h-6 w-20 bg-gray-200 dark:bg-gray-700 rounded-full" />
-      ))}
-    </div>
-  );
-}
-
 export default function DrillTemplatesListPage() {
   usePageTitle(['Drill Templates List']);
 
@@ -70,7 +59,7 @@ export default function DrillTemplatesListPage() {
   
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
-  const [selectedAttributes, setSelectedAttributes] = useState<string[]>([]);
+  const [selectedCompetencies, setSelectedCompetencies] = useState<string[]>([]);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -93,22 +82,11 @@ export default function DrillTemplatesListPage() {
     {
       category: categoryFilter !== 'all' ? categoryFilter : undefined,
       search: debouncedSearch || undefined,
-      attributes: selectedAttributes.length > 0 ? selectedAttributes : undefined
+      competencyIds: selectedCompetencies.length > 0 ? selectedCompetencies : undefined
     }
   );
 
-  // Get all unique attributes from API response for filtering
-  const availableAttributes = useMemo(() => {
-    return templatesData?.availableAttributes || [];
-  }, [templatesData?.availableAttributes]);
-
-  const attributeOptions = useMemo(
-    () =>
-      availableAttributes
-        .map((attr) => ({ value: attr, label: getAttributeLabel(attr) }))
-        .sort((a, b) => a.label.localeCompare(b.label)),
-    [availableAttributes]
-  );
+  const competencyOptions = drillCompetencies.map((c) => ({ value: c.id, label: c.name }));
 
   const getScopeLabel = () => {
     if (teamId) return 'Team';
@@ -162,7 +140,7 @@ export default function DrillTemplatesListPage() {
   ], [templatesData]);
 
   // Check if any filters are active
-  const hasActiveFilters = searchTerm || categoryFilter !== 'all' || selectedAttributes.length > 0;
+  const hasActiveFilters = searchTerm || categoryFilter !== 'all' || selectedCompetencies.length > 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -191,9 +169,9 @@ export default function DrillTemplatesListPage() {
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {(searchTerm || categoryFilter !== 'all' || selectedAttributes.length > 0) && (
+              {(searchTerm || categoryFilter !== 'all' || selectedCompetencies.length > 0) && (
                 <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {[searchTerm ? 1 : 0, categoryFilter !== 'all' ? 1 : 0, selectedAttributes.length].reduce((a, b) => a + b, 0)} active
+                  {[searchTerm ? 1 : 0, categoryFilter !== 'all' ? 1 : 0, selectedCompetencies.length > 0 ? 1 : 0].reduce((a, b) => a + b, 0)} active
                 </span>
               )}
             </div>
@@ -237,37 +215,34 @@ export default function DrillTemplatesListPage() {
                 </div>
                 <div>
                   <label className="label">
-                    Filter by Attributes
+                    Filter by Competency
                   </label>
-                  {isLoading ? (
-                    <AttributeFiltersSkeleton />
-                  ) : (
-                    <MultiSelectTypeahead
-                      options={attributeOptions}
-                      value={selectedAttributes}
-                      onChange={setSelectedAttributes}
-                      placeholder="Type to find and add attributes..."
-                      showSelectedChips={false}
-                    />
-                  )}
+                  <MultiSelectTypeahead
+                    options={competencyOptions}
+                    value={selectedCompetencies}
+                    onChange={setSelectedCompetencies}
+                    placeholder="Type to find and add competencies..."
+                    showSelectedChips={false}
+                  />
                 </div>
               </div>
 
-              {(searchTerm || categoryFilter !== 'all' || selectedAttributes.length > 0) && (
+              {(searchTerm || categoryFilter !== 'all' || selectedCompetencies.length > 0) && (
                 <div className="mt-2">
-                  {selectedAttributes.length > 0 && (
+                  {selectedCompetencies.length > 0 && (
                     <div className="flex flex-wrap gap-2">
-                      {selectedAttributes.map((attribute) => {
-                        const label = getAttributeLabel(attribute);
+                      {selectedCompetencies.map((id) => {
+                        const competency = drillCompetencies.find(c => c.id === id);
+                        const label = competency?.name ?? id;
                         return (
                           <span
-                            key={attribute}
+                            key={id}
                             className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300"
                           >
                             {label}
                             <button
                               type="button"
-                              onClick={() => setSelectedAttributes((prev) => prev.filter((item) => item !== attribute))}
+                              onClick={() => setSelectedCompetencies((prev) => prev.filter((item) => item !== id))}
                               className="hover:text-primary-900 dark:hover:text-primary-100"
                               aria-label={`Remove ${label}`}
                             >
@@ -282,7 +257,7 @@ export default function DrillTemplatesListPage() {
                     onClick={() => {
                       setSearchTerm('');
                       setCategoryFilter('all');
-                      setSelectedAttributes([]);
+                      setSelectedCompetencies([]);
                     }}
                     className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
                   >
@@ -363,27 +338,27 @@ export default function DrillTemplatesListPage() {
                       </div>
 
                       <div className="hidden md:flex flex-wrap gap-1 md:shrink-0 md:w-48">
-                        {template.attributes.slice(0, 2).map((attr, i) => (
+                        {template.competencies.slice(0, 2).map((c, i) => (
                           <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded truncate">
-                            {getAttributeLabel(attr)}
+                            {c.name}
                           </span>
                         ))}
-                        {template.attributes.length > 2 && (
+                        {template.competencies.length > 2 && (
                           <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-                            +{template.attributes.length - 2}
+                            +{template.competencies.length - 2}
                           </span>
                         )}
                       </div>
 
                       <div className="flex md:hidden flex-wrap gap-1">
-                        {template.attributes.slice(0, 3).map((attr, i) => (
+                        {template.competencies.slice(0, 3).map((c, i) => (
                           <span key={i} className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300 rounded">
-                            {getAttributeLabel(attr)}
+                            {c.name}
                           </span>
                         ))}
-                        {template.attributes.length > 3 && (
+                        {template.competencies.length > 3 && (
                           <span className="px-2 py-0.5 text-xs bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded">
-                            +{template.attributes.length - 3}
+                            +{template.competencies.length - 3}
                           </span>
                         )}
                       </div>
