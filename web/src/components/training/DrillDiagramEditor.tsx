@@ -3,7 +3,9 @@ import {
   Circle,
   Copy,
   Goal,
+  Maximize2,
   MessageSquare,
+  Minimize2,
   Minus,
   MousePointer2,
   Pencil,
@@ -397,6 +399,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const [lineStart, setLineStart] = useState<Point | null>(null);
   const [addedObjectHistory, setAddedObjectHistory] = useState<string[]>([]);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const overlayRef = useRef<SVGSVGElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
@@ -453,6 +456,20 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   useEffect(() => {
     if (frames.length <= 1) setIsPlaying(false);
   }, [frames.length]);
+
+  useEffect(() => {
+    if (isFullscreen) {
+      document.body.style.overflow = 'hidden';
+      document.documentElement.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+    };
+  }, [isFullscreen]);
 
   const activeFrame = useMemo(
     () => frames.find((frame) => frame.id === activeFrameId) ?? frames[0],
@@ -1376,7 +1393,8 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
       )}
 
-      <div className="rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60">
+      <div className={isFullscreen ? 'fixed inset-0 z-40 flex flex-col bg-white dark:bg-gray-900 overflow-hidden' : 'contents'}>
+      <div className={isFullscreen ? '' : 'rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60'}>
         <div ref={previewRef} className="relative">
         <DrillDiagramRenderer drillDiagramConfig={activeFrameConfig} className="border border-gray-300 dark:border-gray-600" />
         {frames.length > 1 && (
@@ -1646,6 +1664,16 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         <div className="absolute bottom-2 right-2 z-20 flex gap-1 pointer-events-auto">
           <button
             type="button"
+            onClick={() => setIsFullscreen((prev) => !prev)}
+            className="flex h-8 w-8 items-center justify-center rounded-md bg-white/95 shadow hover:bg-white dark:bg-gray-700/95 dark:hover:bg-gray-700"
+            title={isFullscreen ? 'Exit fullscreen' : 'Fullscreen'}
+          >
+            {isFullscreen
+              ? <Minimize2 className="h-4 w-4 text-gray-700 dark:text-gray-200" />
+              : <Maximize2 className="h-4 w-4 text-gray-700 dark:text-gray-200" />}
+          </button>
+          <button
+            type="button"
             onClick={() => {
               setIsInstructionsExpanded((prev) => !prev);
               setIsEditingFrameInstructions(false);
@@ -1682,15 +1710,17 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
           </div>
 
-          <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-            {tool === 'select' && 'Select and drag objects to reposition them. You can place items around the pitch workspace.'}
-            {(tool === 'line' || tool === 'arrow') && (lineStart ? 'Click end point to complete the line/arrow.' : 'Click start point to begin a line/arrow.')}
-            {tool !== 'select' && tool !== 'line' && tool !== 'arrow' && `Click on the pitch to place a ${tool}.`}
-          </p>
+          {!isFullscreen && (
+            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              {tool === 'select' && 'Select and drag objects to reposition them. You can place items around the pitch workspace.'}
+              {(tool === 'line' || tool === 'arrow') && (lineStart ? 'Click end point to complete the line/arrow.' : 'Click start point to begin a line/arrow.')}
+              {tool !== 'select' && tool !== 'line' && tool !== 'arrow' && `Click on the pitch to place a ${tool}.`}
+            </p>
+          )}
         </div>
 
       {/* Frame description — slides out between the pitch and the frame strip */}
-      <div
+      {!isFullscreen && <div
         className={`overflow-hidden transition-all duration-300 ease-in-out ${
           isInstructionsExpanded ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
         }`}
@@ -1727,10 +1757,10 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
             )}
           </div>
         </div>
-      </div>
+      </div>}
 
       {/* Horizontal frame strip */}
-      <div className="flex gap-2 overflow-x-auto mt-3 pb-1">
+      <div className={isFullscreen ? 'mt-auto flex-shrink-0 flex gap-2 overflow-x-auto px-2 pb-3 pt-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700' : 'flex gap-2 overflow-x-auto mt-3 pb-1'}>
           {frames.map((frame, index) => {
             const isActive = frame.id === activeFrame?.id;
             return (
@@ -1772,6 +1802,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           >
             + Frame
           </button>
+      </div>
       </div>
     </div>
   );
