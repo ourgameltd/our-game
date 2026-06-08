@@ -1329,7 +1329,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       </div>
 
       {editModalOpen && selectedObject && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setEditModalOpen(false)}>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/40" onClick={() => setEditModalOpen(false)}>
           <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl dark:bg-gray-800" onClick={(e) => e.stopPropagation()}>
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-sm font-semibold text-gray-900 dark:text-white">
