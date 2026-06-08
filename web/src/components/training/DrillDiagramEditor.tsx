@@ -1395,6 +1395,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
 
       <div className={isFullscreen ? 'fixed inset-0 z-40 flex flex-col bg-white dark:bg-gray-900 overflow-hidden' : 'contents'}>
       <div className={isFullscreen ? '' : 'rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60'}>
+        <div className={isFullscreen ? '' : 'bg-gray-800/10 dark:bg-black/20 rounded-md p-1.5'}>
         <div ref={previewRef} className="relative">
         <DrillDiagramRenderer drillDiagramConfig={activeFrameConfig} className="border border-gray-300 dark:border-gray-600" />
         {frames.length > 1 && (
@@ -1543,6 +1544,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         <svg
           ref={overlayRef}
           className={`absolute inset-0 h-full w-full ${disabled ? 'pointer-events-none' : 'cursor-crosshair'}`}
+          style={{ touchAction: tool === 'select' && !selectedId ? 'pan-y' : 'none' }}
           viewBox={`0 0 ${WORKSPACE_WIDTH} ${workspaceHeight}`}
           preserveAspectRatio="xMidYMid meet"
           onPointerDown={onCanvasPointerDown}
@@ -1709,6 +1711,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           </button>
         </div>
           </div>
+        </div>
 
           {!isFullscreen && (
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
