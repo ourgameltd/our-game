@@ -36,6 +36,7 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
                 d.Instructions,
                 d.Variations,
                 d.IsPublic,
+                d.IsArchived,
                 d.CreatedBy,
                 d.CreatedAt,
                 d.UpdatedAt
@@ -108,6 +109,7 @@ public class GetDrillByIdHandler : IRequestHandler<GetDrillByIdQuery, DrillDetai
             Instructions = ParseJsonArray(drill.Instructions),
             Variations = ParseJsonArray(drill.Variations),
             IsPublic = drill.IsPublic,
+            IsArchived = drill.IsArchived,
             CreatedBy = drill.CreatedBy,
             CreatedAt = drill.CreatedAt,
             UpdatedAt = drill.UpdatedAt,
@@ -199,6 +201,7 @@ public class DrillRaw
     public string? Instructions { get; set; }
     public string? Variations { get; set; }
     public bool IsPublic { get; set; }
+    public bool IsArchived { get; set; }
     public Guid? CreatedBy { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }

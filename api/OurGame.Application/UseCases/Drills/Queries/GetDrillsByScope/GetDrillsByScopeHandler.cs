@@ -57,6 +57,7 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
                 d.Variations,
                 d.CreatedBy,
                 d.IsPublic,
+                d.IsArchived,
                 d.CreatedAt,
                 CASE
                     WHEN dt.DrillId IS NOT NULL THEN 'team'
@@ -71,7 +72,8 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
             LEFT JOIN DrillClubs dc ON d.Id = dc.DrillId AND dc.ClubId = {0}
             LEFT JOIN DrillAgeGroups dag ON d.Id = dag.DrillId AND dag.AgeGroupId = {1}
             LEFT JOIN DrillTeams dt ON d.Id = dt.DrillId AND dt.TeamId = {2}
-            WHERE dc.DrillId IS NOT NULL OR dag.DrillId IS NOT NULL OR dt.DrillId IS NOT NULL";
+            WHERE (dc.DrillId IS NOT NULL OR dag.DrillId IS NOT NULL OR dt.DrillId IS NOT NULL)
+                AND d.IsArchived = 0";
 
         var parameters = new List<object>
         {
@@ -254,6 +256,7 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
             Links = links,
             ScopeType = raw.ScopeType ?? "unknown",
             IsPublic = raw.IsPublic,
+            IsArchived = raw.IsArchived,
             CreatedBy = raw.CreatedBy,
             CreatedAt = raw.CreatedAt
         };
@@ -336,6 +339,7 @@ public class DrillRawDto
     public string? Variations { get; set; }
     public Guid? CreatedBy { get; set; }
     public bool IsPublic { get; set; }
+    public bool IsArchived { get; set; }
     public DateTime CreatedAt { get; set; }
     public string? ScopeType { get; set; }
     public Guid? ScopeClubId { get; set; }

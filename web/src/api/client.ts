@@ -1499,6 +1499,7 @@ export interface DrillListDto {
   links: DrillLinkDto[];
   scopeType: string;
   isPublic: boolean;
+  isArchived: boolean;
   createdBy?: string;
   createdAt: string;
 }
@@ -1528,6 +1529,7 @@ export interface DrillDetailDto {
   variations: string[];
   links: DrillDetailLinkDto[];
   isPublic: boolean;
+  isArchived: boolean;
   createdBy?: string;
   createdAt: string;
   updatedAt: string;
@@ -1651,6 +1653,10 @@ export interface UpdateDrillTemplateRequest {
   drillIds: string[];
   isPublic: boolean;
   sessionCategory?: string;
+}
+
+export interface ArchiveDrillRequest {
+  isArchived: boolean;
 }
 
 export interface ArchiveDrillTemplateRequest {
@@ -3659,6 +3665,24 @@ export const apiClient = {
           `/v1/drills/${drillId}`,
           request
         );
+        return response.data;
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Archive or unarchive an existing drill
+     */
+    archive: async (drillId: string, request: ArchiveDrillRequest): Promise<ApiResponse<void>> => {
+      try {
+        const response = await axiosInstance.put<ApiResponse<void>>(
+          `/v1/drills/${drillId}/archive`,
+          request
+        );
+        if (response.status === 204) {
+          return { success: true, statusCode: 204, data: undefined };
+        }
         return response.data;
       } catch (error) {
         return handleApiError(error);

@@ -68,6 +68,11 @@ public class DrillDetailDto
     public bool IsPublic { get; set; }
 
     /// <summary>
+    /// Whether the drill has been archived
+    /// </summary>
+    public bool IsArchived { get; set; }
+
+    /// <summary>
     /// Coach ID who created the drill
     /// </summary>
     public Guid? CreatedBy { get; set; }

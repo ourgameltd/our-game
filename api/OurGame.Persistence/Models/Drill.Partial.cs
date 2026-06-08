@@ -7,6 +7,8 @@ namespace OurGame.Persistence.Models;
 /// </summary>
 public partial class Drill
 {
+    public bool IsArchived { get; set; }
+
     /// <summary>
     /// Clubs this drill is shared with
     /// </summary>

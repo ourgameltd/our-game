@@ -939,6 +939,52 @@ export function useArchiveDrillTemplate(templateId: string | undefined): UseMuta
   return { mutate, isSubmitting, data, error };
 }
 
+/**
+ * Hook to archive or unarchive a drill.
+ * Returns a mutation function and state for handling archive lifecycle.
+ */
+export function useArchiveDrill(drillId: string | undefined): UseMutationState<void> & {
+  mutate: (isArchived: boolean) => Promise<boolean>;
+} {
+  const [data, setData] = useState<void | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const mutate = useCallback(async (isArchived: boolean): Promise<boolean> => {
+    if (!isValidId(drillId)) {
+      setError({ message: 'Valid drill ID is required' });
+      return false;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+    setData(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.drills.archive(drillId, { isArchived });
+      if (response.success || response.statusCode === 204) {
+        setData(undefined);
+        return true;
+      }
+
+      setError({
+        message: response.error?.message || 'Failed to update drill archive status',
+        statusCode: response.error?.statusCode,
+        validationErrors: response.error?.validationErrors,
+      });
+      return false;
+    } catch (err) {
+      setError({
+        message: err instanceof Error ? err.message : 'An unexpected error occurred',
+      });
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [drillId]);
+
+  return { mutate, isSubmitting, data, error };
+}
+
 // ============================================================
 // Player Hooks
 // ============================================================

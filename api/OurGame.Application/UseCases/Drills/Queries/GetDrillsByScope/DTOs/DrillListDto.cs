@@ -107,6 +107,11 @@ public class DrillListDto
     /// When the drill was created
     /// </summary>
     public DateTime CreatedAt { get; set; }
+
+    /// <summary>
+    /// Whether the drill has been archived
+    /// </summary>
+    public bool IsArchived { get; set; }
 }
 
 /// <summary>

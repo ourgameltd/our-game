@@ -19,6 +19,7 @@ import {
   useAgeGroupsByClubId,
   useClubTeams,
 } from '@/api';
+import { useArchiveDrill } from '@/api/hooks';
 import type {
   CreateDrillRequest,
   UpdateDrillRequest,
@@ -150,11 +151,12 @@ export default function DrillFormPage() {
   const { data: drillData, isLoading: isDrillLoading, error: fetchError } = useDrill(drillId);
   const { mutate: createDrill, isSubmitting: isCreating, data: createData, error: createError } = useCreateDrill();
   const { mutate: updateDrill, isSubmitting: isUpdating, data: updateData, error: updateError } = useUpdateDrill(drillId || '');
+  const archiveMutation = useArchiveDrill(drillId);
   const { data: club } = useClubById(clubId);
   const { data: ageGroups } = useAgeGroupsByClubId(clubId);
   const { data: teams } = useClubTeams(clubId);
   
-  const isSubmitting = isCreating || isUpdating;
+  const isSubmitting = isCreating || isUpdating || archiveMutation.isSubmitting;
   
   // Find context data
   const ageGroup = ageGroupId && ageGroups ? ageGroups.find(ag => ag.id === ageGroupId) : undefined;
@@ -387,6 +389,23 @@ export default function DrillFormPage() {
         }
       };
       createDrill(request);
+    }
+  };
+
+  const handleArchive = async () => {
+    if (!drillId || !isEditMode || isInherited) return;
+
+    const isCurrentlyArchived = drillData?.isArchived ?? false;
+    const action = isCurrentlyArchived ? 'unarchive' : 'archive';
+    const drillName = name.trim() || 'this drill';
+    if (!confirm(`Are you sure you want to ${action} "${drillName}"?`)) return;
+
+    const success = await archiveMutation.mutate(!isCurrentlyArchived);
+    if (success) {
+      addToast('success', isCurrentlyArchived ? 'Drill unarchived' : 'Drill archived');
+      navigate(backLink);
+    } else if (archiveMutation.error) {
+      addToast('error', archiveMutation.error.message || 'Failed to update drill archive status');
     }
   };
 
@@ -685,6 +704,8 @@ export default function DrillFormPage() {
             {/* Form Actions */}
             {!isInherited && (
               <FormActions
+                isArchived={drillData?.isArchived}
+                onArchive={isEditMode ? handleArchive : undefined}
                 onCancel={handleCancel}
                 saveLabel={isEditMode ? 'Update Drill' : 'Create Drill'}
                 saveDisabled={isSubmitting}
