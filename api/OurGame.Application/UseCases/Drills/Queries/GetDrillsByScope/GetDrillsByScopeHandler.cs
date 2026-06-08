@@ -17,7 +17,8 @@ public record GetDrillsByScopeQuery(
     Guid? TeamId = null,
     string? Category = null,
     string? SearchTerm = null,
-    List<Guid>? CompetencyIds = null
+    List<Guid>? CompetencyIds = null,
+    bool IncludeArchived = false
 ) : IQuery<DrillsByScopeResponseDto>;
 
 /// <summary>
@@ -43,7 +44,9 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
         // For club scope: get drills linked to this club
         // For age group scope: get drills linked to this club OR this age group
         // For team scope: get drills linked to this club OR the age group OR this team
-        var sql = @"
+        var archivedFilter = query.IncludeArchived ? "" : "AND d.IsArchived = 0";
+
+        var sql = $@"
             SELECT
                 d.Id,
                 d.Name,
@@ -69,11 +72,11 @@ public class GetDrillsByScopeHandler : IRequestHandler<GetDrillsByScopeQuery, Dr
                 dag.AgeGroupId as ScopeAgeGroupId,
                 dt.TeamId as ScopeTeamId
             FROM Drills d
-            LEFT JOIN DrillClubs dc ON d.Id = dc.DrillId AND dc.ClubId = {0}
-            LEFT JOIN DrillAgeGroups dag ON d.Id = dag.DrillId AND dag.AgeGroupId = {1}
-            LEFT JOIN DrillTeams dt ON d.Id = dt.DrillId AND dt.TeamId = {2}
+            LEFT JOIN DrillClubs dc ON d.Id = dc.DrillId AND dc.ClubId = {{0}}
+            LEFT JOIN DrillAgeGroups dag ON d.Id = dag.DrillId AND dag.AgeGroupId = {{1}}
+            LEFT JOIN DrillTeams dt ON d.Id = dt.DrillId AND dt.TeamId = {{2}}
             WHERE (dc.DrillId IS NOT NULL OR dag.DrillId IS NOT NULL OR dt.DrillId IS NOT NULL)
-                AND d.IsArchived = 0";
+                {archivedFilter}";
 
         var parameters = new List<object>
         {

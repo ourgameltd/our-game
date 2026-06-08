@@ -16,23 +16,22 @@ export default function DrillsListPage() {
 
   const { clubId, ageGroupId, teamId } = useParams();
   const navigate = useNavigate();
-  
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [selectedCompetencies, setSelectedCompetencies] = useState<string[]>([]);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
+  const [includeArchived, setIncludeArchived] = useState(false);
 
-  // Fetch club details from API
   const { data: club, isLoading: clubLoading, error: clubError } = useClubById(clubId);
 
-  // Fetch drills from API based on scope
   const { data: drillsData, isLoading: drillsLoading, error: drillsError } = useDrillsByScope(
     clubId,
     ageGroupId,
-    teamId
+    teamId,
+    { includeArchived }
   );
 
-  // Combine all drills (scope + inherited) for display
   const allDrills = useMemo(() => {
     if (!drillsData) return [];
     return [...drillsData.drills, ...drillsData.inheritedDrills];
@@ -43,8 +42,6 @@ export default function DrillsListPage() {
     return new Set(drillsData.inheritedDrills.map((drill) => drill.id));
   }, [drillsData]);
 
-
-  // Error handling
   if (clubError || drillsError) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -60,7 +57,6 @@ export default function DrillsListPage() {
     );
   }
 
-  // Club not found (only check after loading completes)
   if (!clubLoading && !club) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -75,30 +71,23 @@ export default function DrillsListPage() {
 
   const competencyOptions = drillCompetencies.map((c) => ({ value: c.id, label: c.name }));
 
-  // Filter drills based on search term and selected competencies
   const filteredDrills = allDrills.filter((drill: DrillListDto) => {
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       const drillDescription = (drill.description ?? '').toLowerCase();
-      if (!drill.name.toLowerCase().includes(searchLower) &&
-          !drillDescription.includes(searchLower)) {
+      if (!drill.name.toLowerCase().includes(searchLower) && !drillDescription.includes(searchLower)) {
         return false;
       }
     }
-    if (selectedCategory !== 'all') {
-      if (normalizeDrillCategory(drill.category) !== selectedCategory) {
-        return false;
-      }
+    if (selectedCategory !== 'all' && normalizeDrillCategory(drill.category) !== selectedCategory) {
+      return false;
     }
-    if (selectedCompetencies.length > 0) {
-      if (!selectedCompetencies.some(id => drill.competencies.some(c => c.id === id))) {
-        return false;
-      }
+    if (selectedCompetencies.length > 0 && !selectedCompetencies.some(id => drill.competencies.some(c => c.id === id))) {
+      return false;
     }
     return true;
   });
 
-  // Generate the correct route based on context
   const getDrillRoute = (drillId: string) => {
     if (teamId) return Routes.teamDrill(clubId!, ageGroupId!, teamId!, drillId);
     if (ageGroupId) return Routes.ageGroupDrill(clubId!, ageGroupId!, drillId);
@@ -116,6 +105,13 @@ export default function DrillsListPage() {
     if (ageGroupId) return Routes.ageGroupDrillNew(clubId!, ageGroupId!);
     return Routes.drillNew(clubId!);
   };
+
+  const activeFilterCount = [
+    searchTerm ? 1 : 0,
+    selectedCategory !== 'all' ? 1 : 0,
+    selectedCompetencies.length > 0 ? 1 : 0,
+    includeArchived ? 1 : 0,
+  ].reduce((a, b) => a + b, 0);
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -144,9 +140,9 @@ export default function DrillsListPage() {
             <div className="flex items-center gap-2">
               <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
               <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {(searchTerm || selectedCategory !== 'all' || selectedCompetencies.length > 0) && (
+              {activeFilterCount > 0 && (
                 <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {[searchTerm ? 1 : 0, selectedCategory !== 'all' ? 1 : 0, selectedCompetencies.length > 0 ? 1 : 0].reduce((a, b) => a + b, 0)} active
+                  {activeFilterCount} active
                 </span>
               )}
             </div>
@@ -158,8 +154,8 @@ export default function DrillsListPage() {
           </button>
 
           {filtersExpanded && (
-            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="label">
                     <Search className="w-4 h-4 inline mr-1" />
@@ -174,9 +170,7 @@ export default function DrillsListPage() {
                   />
                 </div>
                 <div>
-                  <label className="label">
-                    Category
-                  </label>
+                  <label className="label">Category</label>
                   <select
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value)}
@@ -193,9 +187,7 @@ export default function DrillsListPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">
-                    Filter by Competency
-                  </label>
+                  <label className="label">Filter by Competency</label>
                   <MultiSelectTypeahead
                     options={competencyOptions}
                     value={selectedCompetencies}
@@ -206,41 +198,55 @@ export default function DrillsListPage() {
                 </div>
               </div>
 
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeArchived}
+                  onChange={(e) => setIncludeArchived(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-primary-600 focus:ring-primary-500 dark:bg-gray-700"
+                />
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  Show archived drills
+                </span>
+              </label>
+
               {selectedCompetencies.length > 0 && (
-                <div className="mt-2">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCompetencies.map((id) => {
-                      const competency = drillCompetencies.find(c => c.id === id);
-                      const label = competency?.name ?? id;
-                      return (
-                        <span
-                          key={id}
-                          className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300"
+                <div className="flex flex-wrap gap-2">
+                  {selectedCompetencies.map((id) => {
+                    const competency = drillCompetencies.find(c => c.id === id);
+                    const label = competency?.name ?? id;
+                    return (
+                      <span
+                        key={id}
+                        className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-300"
+                      >
+                        {label}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedCompetencies((prev) => prev.filter((item) => item !== id))}
+                          className="hover:text-primary-900 dark:hover:text-primary-100"
+                          aria-label={`Remove ${label}`}
                         >
-                          {label}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedCompetencies((prev) => prev.filter((item) => item !== id))}
-                            className="hover:text-primary-900 dark:hover:text-primary-100"
-                            aria-label={`Remove ${label}`}
-                          >
-                            <X className="w-3 h-3" />
-                          </button>
-                        </span>
-                      );
-                    })}
-                  </div>
-                  <button
-                    onClick={() => {
-                      setSearchTerm('');
-                      setSelectedCategory('all');
-                      setSelectedCompetencies([]);
-                    }}
-                    className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
-                  >
-                    Clear all filters
-                  </button>
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    );
+                  })}
                 </div>
+              )}
+
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setSelectedCategory('all');
+                    setSelectedCompetencies([]);
+                    setIncludeArchived(false);
+                  }}
+                  className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  Clear all filters
+                </button>
               )}
             </div>
           )}

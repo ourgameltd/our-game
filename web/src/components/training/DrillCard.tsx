@@ -69,7 +69,7 @@ export default function DrillCard({ drill, href, editHref, isInherited }: DrillC
 
   return (
     <div
-      className={`relative rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 ${topBorderClass} ${isInherited ? 'opacity-80' : ''}`}
+      className={`relative rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 ${topBorderClass} ${isInherited || drill.isArchived ? 'opacity-80' : ''}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -89,6 +89,12 @@ export default function DrillCard({ drill, href, editHref, isInherited }: DrillC
               title="Inherited drill"
             >
               <GitBranch className="w-3 h-3" />
+            </span>
+          )}
+
+          {drill.isArchived && (
+            <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 text-[10px] font-medium bg-amber-500/90 text-white rounded">
+              Archived
             </span>
           )}
         </div>

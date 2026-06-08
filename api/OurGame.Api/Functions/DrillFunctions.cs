@@ -37,6 +37,7 @@ public class DrillFunctions
     [OpenApiParameter(name: "clubId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The club ID")]
     [OpenApiParameter(name: "category", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by drill category (Drill, Skills Practice, Game Related Practice, Conditioned Game)")]
     [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter drills by name, description, or attributes")]
+    [OpenApiParameter(name: "includeArchived", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "When true, includes archived drills in results")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "Drills retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "User not authenticated")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "Invalid club ID format")]
@@ -63,11 +64,13 @@ public class DrillFunctions
 
         var category = req.Query["category"];
         var search = req.Query["search"];
+        var includeArchived = bool.TryParse(req.Query["includeArchived"], out var sa) && sa;
 
         var drills = await _mediator.Send(new GetDrillsByScopeQuery(
             clubGuid,
             Category: category,
-            SearchTerm: search));
+            SearchTerm: search,
+            IncludeArchived: includeArchived));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<DrillsByScopeResponseDto>.SuccessResponse(drills));
@@ -87,6 +90,7 @@ public class DrillFunctions
     [OpenApiParameter(name: "ageGroupId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The age group ID")]
     [OpenApiParameter(name: "category", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by drill category (Drill, Skills Practice, Game Related Practice, Conditioned Game)")]
     [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter drills by name, description, or attributes")]
+    [OpenApiParameter(name: "includeArchived", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "When true, includes archived drills in results")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "Drills retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "User not authenticated")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "Invalid ID format")]
@@ -122,12 +126,14 @@ public class DrillFunctions
 
         var category = req.Query["category"];
         var search = req.Query["search"];
+        var includeArchived = bool.TryParse(req.Query["includeArchived"], out var sa) && sa;
 
         var drills = await _mediator.Send(new GetDrillsByScopeQuery(
             clubGuid,
             AgeGroupId: ageGroupGuid,
             Category: category,
-            SearchTerm: search));
+            SearchTerm: search,
+            IncludeArchived: includeArchived));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<DrillsByScopeResponseDto>.SuccessResponse(drills));
@@ -149,6 +155,7 @@ public class DrillFunctions
     [OpenApiParameter(name: "teamId", In = ParameterLocation.Path, Required = true, Type = typeof(Guid), Description = "The team ID")]
     [OpenApiParameter(name: "category", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Filter by drill category (Drill, Skills Practice, Game Related Practice, Conditioned Game)")]
     [OpenApiParameter(name: "search", In = ParameterLocation.Query, Required = false, Type = typeof(string), Description = "Search term to filter drills by name, description, or attributes")]
+    [OpenApiParameter(name: "includeArchived", In = ParameterLocation.Query, Required = false, Type = typeof(bool), Description = "When true, includes archived drills in results")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.OK, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "Drills retrieved successfully")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.Unauthorized, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "User not authenticated")]
     [OpenApiResponseWithBody(statusCode: HttpStatusCode.BadRequest, contentType: "application/json", bodyType: typeof(ApiResponse<DrillsByScopeResponseDto>), Description = "Invalid ID format")]
@@ -193,13 +200,15 @@ public class DrillFunctions
 
         var category = req.Query["category"];
         var search = req.Query["search"];
+        var includeArchived = bool.TryParse(req.Query["includeArchived"], out var sa) && sa;
 
         var drills = await _mediator.Send(new GetDrillsByScopeQuery(
             clubGuid,
             AgeGroupId: ageGroupGuid,
             TeamId: teamGuid,
             Category: category,
-            SearchTerm: search));
+            SearchTerm: search,
+            IncludeArchived: includeArchived));
 
         var response = req.CreateResponse(HttpStatusCode.OK);
         await response.WriteAsJsonAsync(ApiResponse<DrillsByScopeResponseDto>.SuccessResponse(drills));

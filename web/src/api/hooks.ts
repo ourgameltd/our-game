@@ -655,11 +655,11 @@ export function useDrillsByScope(
   clubId: string | undefined,
   ageGroupId?: string,
   teamId?: string,
-  options?: { category?: string; search?: string }
+  options?: { category?: string; search?: string; includeArchived?: boolean }
 ): UseApiState<DrillsByScopeResponseDto> {
   // Enabled when at least clubId is valid
   const enabled = isValidId(clubId);
-  
+
   return useApiCall<DrillsByScopeResponseDto>(
     () => {
       if (teamId && ageGroupId) {
@@ -670,7 +670,7 @@ export function useDrillsByScope(
       }
       return apiClient.drills.getByClub(clubId!, options);
     },
-    [clubId, ageGroupId, teamId, options?.category, options?.search],
+    [clubId, ageGroupId, teamId, options?.category, options?.search, options?.includeArchived],
     enabled
   );
 }

@@ -3590,11 +3590,12 @@ export const apiClient = {
      */
     getByClub: async (
       clubId: string,
-      options?: { category?: string; search?: string }
+      options?: { category?: string; search?: string; includeArchived?: boolean }
     ): Promise<ApiResponse<DrillsByScopeResponseDto>> => {
       const params = new URLSearchParams();
       if (options?.category) params.append('category', options.category);
       if (options?.search) params.append('search', options.search);
+      if (options?.includeArchived) params.append('includeArchived', 'true');
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillsByScopeResponseDto>>(`/v1/clubs/${clubId}/drills${queryString}`);
       return response.data;
@@ -3606,11 +3607,12 @@ export const apiClient = {
     getByAgeGroup: async (
       clubId: string,
       ageGroupId: string,
-      options?: { category?: string; search?: string }
+      options?: { category?: string; search?: string; includeArchived?: boolean }
     ): Promise<ApiResponse<DrillsByScopeResponseDto>> => {
       const params = new URLSearchParams();
       if (options?.category) params.append('category', options.category);
       if (options?.search) params.append('search', options.search);
+      if (options?.includeArchived) params.append('includeArchived', 'true');
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/drills${queryString}`);
       return response.data;
@@ -3623,11 +3625,12 @@ export const apiClient = {
       clubId: string,
       ageGroupId: string,
       teamId: string,
-      options?: { category?: string; search?: string }
+      options?: { category?: string; search?: string; includeArchived?: boolean }
     ): Promise<ApiResponse<DrillsByScopeResponseDto>> => {
       const params = new URLSearchParams();
       if (options?.category) params.append('category', options.category);
       if (options?.search) params.append('search', options.search);
+      if (options?.includeArchived) params.append('includeArchived', 'true');
       const queryString = params.toString() ? `?${params.toString()}` : '';
       const response = await axiosInstance.get<ApiResponse<DrillsByScopeResponseDto>>(`/v1/clubs/${clubId}/age-groups/${ageGroupId}/teams/${teamId}/drills${queryString}`);
       return response.data;
