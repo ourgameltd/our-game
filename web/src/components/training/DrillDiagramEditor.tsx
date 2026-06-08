@@ -408,6 +408,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
   const dragRef = useRef<{ id: string; pointer: Point } | null>(null);
   const lineEndpointRef = useRef<{ id: string; endpoint: 'start' | 'end' } | null>(null);
   const clipboardRef = useRef<DiagramObject | null>(null);
+  const touchStartHandlerRef = useRef<((e: TouchEvent) => void) | null>(null);
   const objectResizeRef = useRef<
     | {
         mode: 'resize';
@@ -738,6 +739,62 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     }
 
     return best?.id ?? null;
+  };
+
+  // Assigned every render so the native touchstart listener always sees current state.
+  // Calls preventDefault() only when a touch lands on a draggable object or handle,
+  // letting empty-space touches propagate to the browser's native page scroll.
+  touchStartHandlerRef.current = (e: TouchEvent) => {
+    if (disabled) return;
+    if (e.touches.length !== 1) return;
+
+    const touch = e.touches[0];
+    const rect = overlayRef.current?.getBoundingClientRect();
+    if (!rect || rect.width <= 0 || rect.height <= 0) return;
+
+    const point: Point = {
+      x: clamp(((touch.clientX - rect.left) / rect.width) * WORKSPACE_WIDTH, 0, WORKSPACE_WIDTH),
+      y: clamp(((touch.clientY - rect.top) / rect.height) * workspaceHeight, 0, workspaceHeight),
+    };
+
+    if (tool !== 'select') {
+      e.preventDefault();
+      return;
+    }
+
+    if (selectedObject && (selectedObject.type === 'line' || selectedObject.type === 'arrow')) {
+      const sx = selectedObject.x ?? 0;
+      const sy = selectedObject.y ?? 0;
+      const ex = selectedObject.x2 ?? sx;
+      const ey = selectedObject.y2 ?? sy;
+      if (Math.hypot(point.x - sx, point.y - sy) <= 2.0 ||
+          Math.hypot(point.x - ex, point.y - ey) <= 2.0) {
+        e.preventDefault();
+        return;
+      }
+    }
+
+    if (selectedObject && isTransformableObject(selectedObject.type)) {
+      const anchors = getObjectTransformAnchors(selectedObject);
+      if (anchors) {
+        if (Math.hypot(point.x - anchors.rotateHandleWorld.x, point.y - anchors.rotateHandleWorld.y) <= OBJECT_ROTATE_HIT_RADIUS) {
+          e.preventDefault();
+          return;
+        }
+        for (const corner of ['nw', 'ne', 'se', 'sw'] as ObjectResizeCorner[]) {
+          if (Math.hypot(point.x - anchors.cornersWorld[corner].x, point.y - anchors.cornersWorld[corner].y) <= OBJECT_HANDLE_HIT_RADIUS) {
+            e.preventDefault();
+            return;
+          }
+        }
+      }
+    }
+
+    if (findHitObjectId(point)) {
+      e.preventDefault();
+      return;
+    }
+    // Empty space + select tool: no preventDefault → browser handles as page scroll
   };
 
   const onCanvasPointerDown = (event: React.PointerEvent<SVGSVGElement>) => {
@@ -1151,6 +1208,14 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [disabled, selectedId, objects, activeFrameId]);
 
+  useEffect(() => {
+    const el = overlayRef.current;
+    if (!el) return;
+    const onTouchStart = (e: TouchEvent) => touchStartHandlerRef.current?.(e);
+    el.addEventListener('touchstart', onTouchStart, { passive: false });
+    return () => el.removeEventListener('touchstart', onTouchStart);
+  }, []);
+
   const canSetSelectedLineStyle = selectedObject?.type === 'line' || selectedObject?.type === 'arrow';
 
   const setSelectedLineStyle = (nextStyle: 'solid' | 'dashed') => {
@@ -1393,9 +1458,8 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
       )}
 
-      <div className={isFullscreen ? 'fixed inset-0 z-40 flex flex-col bg-white dark:bg-gray-900 overflow-hidden' : 'contents'}>
+      <div className={isFullscreen ? 'fixed inset-0 z-[60] flex flex-col bg-white dark:bg-gray-900 overflow-hidden' : 'contents'}>
       <div className={isFullscreen ? '' : 'rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60'}>
-        <div className={isFullscreen ? '' : 'bg-gray-800/10 dark:bg-black/20 rounded-md p-1.5'}>
         <div ref={previewRef} className="relative">
         <DrillDiagramRenderer drillDiagramConfig={activeFrameConfig} className="border border-gray-300 dark:border-gray-600" />
         {frames.length > 1 && (
@@ -1544,7 +1608,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         <svg
           ref={overlayRef}
           className={`absolute inset-0 h-full w-full ${disabled ? 'pointer-events-none' : 'cursor-crosshair'}`}
-          style={{ touchAction: tool === 'select' && !selectedId ? 'pan-y' : 'none' }}
           viewBox={`0 0 ${WORKSPACE_WIDTH} ${workspaceHeight}`}
           preserveAspectRatio="xMidYMid meet"
           onPointerDown={onCanvasPointerDown}
@@ -1711,7 +1774,6 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
           </button>
         </div>
           </div>
-        </div>
 
           {!isFullscreen && (
             <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">

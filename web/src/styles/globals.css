@@ -2,9 +2,16 @@
 @config "../../tailwind.config.js";
 
 @layer base {
+  html {
+    scroll-padding-top: 64px;
+  }
+
   body {
     @apply bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white font-sans transition-colors;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+    /* Prevent pinch-to-zoom on iOS Safari (which ignores user-scalable=no) without
+       non-passive touchstart listeners that would block native vertical scroll. */
+    touch-action: pan-x pan-y;
   }
 
   * {
