@@ -1458,8 +1458,8 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
         </div>
       )}
 
-      <div className={isFullscreen ? 'fixed inset-0 z-[60] flex flex-col bg-white dark:bg-gray-900 overflow-hidden' : 'contents'}>
-      <div className={isFullscreen ? '' : 'rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60'}>
+      <div className={isFullscreen ? 'fixed inset-0 z-[60] flex flex-col bg-white dark:bg-gray-900' : 'contents'}>
+      <div className={isFullscreen ? 'flex-1 min-h-0 overflow-y-auto' : 'rounded-lg border border-gray-300 bg-white p-4 dark:border-gray-600 dark:bg-gray-800/60'}>
         <div ref={previewRef} className="relative">
         <DrillDiagramRenderer drillDiagramConfig={activeFrameConfig} className="border border-gray-300 dark:border-gray-600" />
         {frames.length > 1 && (
@@ -1825,7 +1825,7 @@ export default function DrillDiagramEditor({ value, onChange, disabled = false }
       </div>}
 
       {/* Horizontal frame strip */}
-      <div className={isFullscreen ? 'mt-auto flex-shrink-0 flex gap-2 overflow-x-auto px-2 pb-3 pt-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700' : 'flex gap-2 overflow-x-auto mt-3 pb-1'}>
+      <div className={isFullscreen ? 'flex-shrink-0 flex gap-2 overflow-x-auto px-2 pb-3 pt-2 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700' : 'flex gap-2 overflow-x-auto mt-3 pb-1'}>
           {frames.map((frame, index) => {
             const isActive = frame.id === activeFrame?.id;
             return (
