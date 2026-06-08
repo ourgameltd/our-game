@@ -4,6 +4,7 @@ export type PushPermissionState = 'default' | 'granted' | 'denied' | 'unsupporte
 
 export interface PushSubscriptionState {
   isSupported: boolean;
+  isIosInstallRequired: boolean;
   permission: PushPermissionState;
   isSubscribed: boolean;
   isLoading: boolean;
@@ -73,6 +74,16 @@ export function usePushNotifications(): PushSubscriptionState {
     'serviceWorker' in navigator &&
     'PushManager' in window &&
     'Notification' in window;
+
+  const isIos =
+    typeof window !== 'undefined' &&
+    /iPad|iPhone|iPod/.test(navigator.userAgent) &&
+    !(window as { MSStream?: unknown }).MSStream;
+  const isStandalone =
+    typeof window !== 'undefined' &&
+    (window.matchMedia('(display-mode: standalone)').matches ||
+      (navigator as { standalone?: boolean }).standalone === true);
+  const isIosInstallRequired = isIos && !isStandalone && !isSupported;
 
   const [permission, setPermission] = useState<PushPermissionState>(
     isSupported ? (Notification.permission as PushPermissionState) : 'unsupported'
@@ -183,6 +194,7 @@ export function usePushNotifications(): PushSubscriptionState {
 
   return {
     isSupported,
+    isIosInstallRequired,
     permission,
     isSubscribed,
     isLoading,

@@ -245,6 +245,22 @@ export default function NotificationsPage() {
             </div>
           )}
 
+          {push.isIosInstallRequired && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-4 flex items-start gap-3">
+              <Smartphone className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                  Add to Home Screen to enable push notifications
+                </p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">
+                  On iPhone/iPad, tap the <strong>Share</strong> button in Safari then choose{' '}
+                  <strong>Add to Home Screen</strong>. Open the app from your home screen and come
+                  back here to enable notifications.
+                </p>
+              </div>
+            </div>
+          )}
+
           {push.isSupported && push.isSubscribed && (
             <div className="flex justify-end mb-4">
               <button
