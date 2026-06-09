@@ -37,9 +37,12 @@ export default function DrillsListPage() {
     return [...drillsData.drills, ...drillsData.inheritedDrills];
   }, [drillsData]);
 
-  const inheritedDrillIds = useMemo(() => {
-    if (!drillsData) return new Set<string>();
-    return new Set(drillsData.inheritedDrills.map((drill) => drill.id));
+  const inheritedDrillLabels = useMemo(() => {
+    if (!drillsData) return new Map<string, string>();
+    return new Map(drillsData.inheritedDrills.map((drill) => [
+      drill.id,
+      drill.scopeType === 'club' ? 'Club' : 'Age Group',
+    ]));
   }, [drillsData]);
 
   if (clubError || drillsError) {
@@ -264,7 +267,7 @@ export default function DrillsListPage() {
                 drill={drill}
                 href={getDrillRoute(drill.id)}
                 editHref={getDrillEditRoute(drill.id)}
-                isInherited={inheritedDrillIds.has(drill.id)}
+                inheritedFrom={inheritedDrillLabels.get(drill.id)}
               />
             ))}
           </div>

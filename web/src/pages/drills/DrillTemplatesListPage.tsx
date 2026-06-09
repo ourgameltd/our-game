@@ -301,7 +301,7 @@ export default function DrillTemplatesListPage() {
                             {template.name}
                           </h3>
                           {template.isInherited && (
-                            <span className="px-1.5 py-0.5 text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 rounded">
+                            <span className="px-1.5 py-0.5 text-[10px] font-medium bg-gray-600 dark:bg-gray-500 text-white rounded">
                               {scopeLabel}
                             </span>
                           )}

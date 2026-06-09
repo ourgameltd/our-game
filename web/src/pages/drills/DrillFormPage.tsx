@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, ExternalLink, Globe, GitBranch, Play, Trash2, X, AlertCircle } from 'lucide-react';
+import { Plus, ExternalLink, Globe, Play, Trash2, X, AlertCircle } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
 import { drillCategories, normalizeDrillCategory, drillCompetencies } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
@@ -491,12 +491,8 @@ export default function DrillFormPage() {
             <div className="card">
               <h3 className="text-lg font-semibold mb-4">Basic Information&nbsp;
                     {inheritedFromLabel && (
-                      <span
-                        className="inline-flex items-center text-blue-600 dark:text-blue-400"
-                        title={inheritedFromLabel}
-                        aria-label={inheritedFromLabel}
-                      >
-                        <GitBranch className="w-4 h-4" />
+                      <span className="ml-2 px-1.5 py-0.5 text-[10px] font-medium bg-gray-600 dark:bg-gray-500 text-white rounded align-middle">
+                        {inheritedFromLabel}
                       </span>
                     )}</h3>
               <div className="grid gap-4 md:grid-cols-2">

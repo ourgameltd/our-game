@@ -80,8 +80,12 @@ export default function TacticCard({ tactic, href, editHref, inheritedFrom }: Ta
   const visibleTags = tactic.tags.slice(0, 3);
   const extraTagCount = tactic.tags.length - visibleTags.length;
 
+  const topBorderClass = inheritedFrom
+    ? 'border-t-[3px] border-t-gray-300 dark:border-t-gray-600'
+    : 'border-t-[3px] border-t-primary-500 dark:border-t-primary-400';
+
   return (
-    <div className={`relative rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 ${inheritedFrom ? 'opacity-80' : ''}`}>
+    <div className={`relative rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 ${topBorderClass} ${inheritedFrom ? 'opacity-80' : ''}`}>
       <Link to={href} className="block">
         {/* Clip wrapper: square by default, full pitch when expanded */}
         <div className={`relative ${isExpanded ? '' : 'aspect-square overflow-hidden'}`}>

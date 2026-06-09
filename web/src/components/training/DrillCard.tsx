@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Settings, GitBranch, Dumbbell, Images } from 'lucide-react';
+import { Settings, Dumbbell, Images } from 'lucide-react';
 import type { DrillListDto } from '@/api/client';
 import DrillDiagramRenderer from './DrillDiagramRenderer';
 import { getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
@@ -10,7 +10,7 @@ interface DrillCardProps {
   drill: DrillListDto;
   href: string;
   editHref: string;
-  isInherited?: boolean;
+  inheritedFrom?: string;
 }
 
 function getCategoryPillClasses(category: string) {
@@ -103,7 +103,7 @@ function DrillCardPreview({ drill, activeFrame }: { drill: DrillListDto; activeF
   );
 }
 
-export default function DrillCard({ drill, href, editHref, isInherited }: DrillCardProps) {
+export default function DrillCard({ drill, href, editHref, inheritedFrom }: DrillCardProps) {
   const slideCount = drill.drillDiagramConfig?.frames?.length ?? 0;
   const [activeFrame, setActiveFrame] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -124,13 +124,13 @@ export default function DrillCard({ drill, href, editHref, isInherited }: DrillC
     setActiveFrame(0);
   };
 
-  const topBorderClass = isInherited
+  const topBorderClass = inheritedFrom
     ? 'border-t-[3px] border-t-gray-300 dark:border-t-gray-600'
     : 'border-t-[3px] border-t-primary-500 dark:border-t-primary-400';
 
   return (
     <div
-      className={`relative rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 ${topBorderClass} ${isInherited || drill.isArchived ? 'opacity-80' : ''}`}
+      className={`relative rounded-lg overflow-hidden shadow hover:shadow-lg transition-shadow border border-gray-200 dark:border-gray-700 ${topBorderClass} ${inheritedFrom || drill.isArchived ? 'opacity-80' : ''}`}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
@@ -138,12 +138,9 @@ export default function DrillCard({ drill, href, editHref, isInherited }: DrillC
         <div className="relative overflow-hidden">
           <DrillCardPreview drill={drill} activeFrame={activeFrame} />
 
-          {isInherited && (
-            <span
-              className="absolute top-1.5 right-1.5 flex items-center gap-0.5 px-1.5 py-0.5 text-[10px] font-medium bg-black/50 text-white rounded"
-              title="Inherited drill"
-            >
-              <GitBranch className="w-3 h-3" />
+          {inheritedFrom && (
+            <span className="absolute top-1.5 right-1.5 px-1.5 py-0.5 text-[10px] font-medium bg-black/50 text-white rounded">
+              {inheritedFrom}
             </span>
           )}
 

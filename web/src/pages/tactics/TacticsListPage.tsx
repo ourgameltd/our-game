@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { Users, AlertCircle, LayoutGrid } from 'lucide-react';
+import { AlertCircle, LayoutGrid } from 'lucide-react';
 import { useTacticsByScope } from '@/api/hooks';
 import type { TacticListDto } from '@/api';
 import { Routes } from '@/utils/routes';
@@ -56,6 +56,10 @@ export default function TacticsListPage() {
 
   const tactics = tacticsData?.scopeTactics || [];
   const inheritedTactics = tacticsData?.inheritedTactics || [];
+  const allTactics = [
+    ...tactics.map(t => ({ tactic: t, inheritedFrom: undefined as string | undefined })),
+    ...inheritedTactics.map(t => ({ tactic: t, inheritedFrom: t.scope.type === 'club' ? 'Club' : 'Age Group' })),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -91,52 +95,27 @@ export default function TacticsListPage() {
             </div>
           )}
 
-          {/* Current Scope Tactics */}
+          {/* Combined tactics grid */}
           {!isLoading && !error && (
-            <div>
-              {tactics.length === 0 ? (
-                <EmptyState
-                  icon={LayoutGrid}
-                  title="No tactics yet"
-                  description="Create your first tactic to get started."
-                />
-              ) : (
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                  {tactics.map((tactic: TacticListDto) => (
-                    <TacticCard
-                      key={tactic.id}
-                      tactic={tactic}
-                      href={getTacticDetailUrl(tactic.id)}
-                      editHref={getTacticEditUrl(tactic.id)}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Inherited Tactics */}
-          {!isLoading && !error && inheritedTactics.length > 0 && (
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Inherited Tactics ({inheritedTactics.length})
-              </h2>
+            allTactics.length === 0 ? (
+              <EmptyState
+                icon={LayoutGrid}
+                title="No tactics yet"
+                description="Create your first tactic to get started."
+              />
+            ) : (
               <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                {inheritedTactics.map((tactic: TacticListDto) => {
-                  const scopeLabel = tactic.scope.type === 'club' ? 'Club' : 'Age Group';
-                  return (
-                    <TacticCard
-                      key={tactic.id}
-                      tactic={tactic}
-                      href={getTacticDetailUrl(tactic.id)}
-                      editHref={getTacticEditUrl(tactic.id)}
-                      inheritedFrom={scopeLabel}
-                    />
-                  );
-                })}
+                {allTactics.map(({ tactic, inheritedFrom }) => (
+                  <TacticCard
+                    key={tactic.id}
+                    tactic={tactic}
+                    href={getTacticDetailUrl(tactic.id)}
+                    editHref={getTacticEditUrl(tactic.id)}
+                    inheritedFrom={inheritedFrom}
+                  />
+                ))}
               </div>
-            </div>
+            )
           )}
         </div>
       </main>
