@@ -1,7 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { AlertCircle, LayoutGrid } from 'lucide-react';
 import { useTacticsByScope } from '@/api/hooks';
-import type { TacticListDto } from '@/api';
 import { Routes } from '@/utils/routes';
 import PageTitle from '@/components/common/PageTitle';
 import EmptyState from '@/components/common/EmptyState';
