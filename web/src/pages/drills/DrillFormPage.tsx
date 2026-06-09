@@ -52,19 +52,6 @@ function BasicInfoSkeleton() {
   );
 }
 
-function CompetenciesSkeleton() {
-  return (
-    <div className="card animate-pulse">
-      <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-      <div className="h-4 w-full bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-      <div className="flex flex-wrap gap-2">
-        {Array.from({ length: 9 }).map((_, i) => (
-          <div key={i} className="h-8 w-36 bg-gray-200 dark:bg-gray-700 rounded-full" />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function SectionSkeleton() {
   return (
@@ -451,7 +438,6 @@ export default function DrillFormPage() {
 
           <div className="space-y-2">
             <BasicInfoSkeleton />
-            <CompetenciesSkeleton />
             <SectionSkeleton />
             <SectionSkeleton />
             <SectionSkeleton />
@@ -516,8 +502,9 @@ export default function DrillFormPage() {
                         <GitBranch className="w-4 h-4" />
                       </span>
                     )}</h3>
-              <div className="space-y-2">
-                <div className="grid gap-3 md:grid-cols-2">
+              <div className="grid gap-4 md:grid-cols-2">
+                {/* Left column: Name, Category, Duration + Checkbox */}
+                <div className="space-y-3">
                   <div>
                     <div className="mb-2 flex items-center gap-2">
                       <label className="label">
@@ -555,40 +542,67 @@ export default function DrillFormPage() {
                         ))}
                     </select>
                   </div>
+
+                  <div className="flex flex-col sm:flex-row sm:items-end gap-3">
+                    <div className="sm:w-40 shrink-0">
+                      <label className="label">
+                        Duration (minutes) *
+                      </label>
+                      <input
+                        type="number"
+                        value={duration}
+                        onChange={(e) => setDuration(Number(e.target.value))}
+                        min={1}
+                        max={120}
+                        className="input"
+                        disabled={isInherited}
+                        required
+                      />
+                    </div>
+
+                    {!isInherited && (
+                      <div className="flex items-end">
+                        <label className="flex items-center gap-3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={isPublic}
+                            onChange={(e) => setIsPublic(e.target.checked)}
+                            className="w-4 h-4"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">
+                            Share this drill with other teams in the club
+                          </span>
+                        </label>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                <div className={`grid gap-3 ${!isInherited ? 'md:grid-cols-2' : 'md:grid-cols-1'}`}>
-                  <div>
-                    <label className="label">
-                      Duration (minutes) *
-                    </label>
-                    <input
-                      type="number"
-                      value={duration}
-                      onChange={(e) => setDuration(Number(e.target.value))}
-                      min={1}
-                      max={120}
-                      className="input"
-                      disabled={isInherited}
-                      required
-                    />
+                {/* Right column: Competencies */}
+                <div>
+                  <label className="label">
+                    Competencies *
+                  </label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {drillCompetencies.map(competency => {
+                      const isSelected = selectedCompetencyIds.includes(competency.id);
+                      return (
+                        <button
+                          key={competency.id}
+                          type="button"
+                          onClick={() => !isInherited && toggleCompetency(competency.id)}
+                          disabled={isInherited}
+                          className={`px-3 py-1 text-sm rounded-full transition-colors ${
+                            isSelected
+                              ? 'bg-primary-600 text-white dark:bg-primary-500'
+                              : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          } ${isInherited ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'}`}
+                        >
+                          {competency.name}
+                        </button>
+                      );
+                    })}
                   </div>
-
-                  {!isInherited && (
-                    <div className="flex items-end">
-                      <label className="w-full flex items-center gap-3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700">
-                        <input
-                          type="checkbox"
-                          checked={isPublic}
-                          onChange={(e) => setIsPublic(e.target.checked)}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm text-gray-700 dark:text-gray-300">
-                          Share this drill with other teams in the club
-                        </span>
-                      </label>
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
@@ -672,34 +686,6 @@ export default function DrillFormPage() {
               </div>
             </div>
 
-
-            {/* Competencies */}
-            <div className="card">
-              <h3 className="text-lg font-semibold mb-2">Competencies Developed *</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                Select the competency areas this drill develops.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {drillCompetencies.map(competency => {
-                  const isSelected = selectedCompetencyIds.includes(competency.id);
-                  return (
-                    <button
-                      key={competency.id}
-                      type="button"
-                      onClick={() => !isInherited && toggleCompetency(competency.id)}
-                      disabled={isInherited}
-                      className={`px-3 py-1 text-sm rounded-full transition-colors ${
-                        isSelected
-                          ? 'bg-primary-600 text-white dark:bg-primary-500'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
-                      } ${isInherited ? 'cursor-not-allowed opacity-60' : ''}`}
-                    >
-                      {competency.name}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
 
             {/* Form Actions */}
             {!isInherited && (
