@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, AlertCircle, Clock3, ListOrdered, Globe2, ClipboardList, X } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, AlertCircle, Clock3, ListOrdered, Globe2, ClipboardList } from 'lucide-react';
 import { useDrillTemplatesByScope, useClubById } from '@/api/hooks';
 import type { DrillTemplateListDto } from '@/api';
 import { drillCompetencies, getDrillCategoryColors, getDrillCategoryLabel } from '@/constants/referenceData';
@@ -162,46 +162,43 @@ export default function DrillTemplatesListPage() {
 
         {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
-          <button
-            onClick={() => setFiltersExpanded(!filtersExpanded)}
-            className="w-full flex items-center justify-between text-left"
-          >
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {(searchTerm || categoryFilter !== 'all' || selectedCompetencies.length > 0) && (
-                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {[searchTerm ? 1 : 0, categoryFilter !== 'all' ? 1 : 0, selectedCompetencies.length > 0 ? 1 : 0].reduce((a, b) => a + b, 0)} active
-                </span>
-              )}
-            </div>
-            {filtersExpanded ? (
-              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search sessions by name or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 py-0.5 text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                title="Clear search"
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
             )}
-          </button>
+            {hasActiveFilters && (
+              <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                {[searchTerm ? 1 : 0, categoryFilter !== 'all' ? 1 : 0, selectedCompetencies.length > 0 ? 1 : 0].reduce((a, b) => a + b, 0)} active
+              </span>
+            )}
+            <button
+              onClick={() => setFiltersExpanded(!filtersExpanded)}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              title="More filters"
+            >
+              {filtersExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </button>
+          </div>
 
           {filtersExpanded && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
                 <div>
-                  <label className="label">
-                    <Search className="w-4 h-4 inline mr-1" />
-                    Search Templates
-                  </label>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search by name, description, or attributes..."
-                    className="input"
-                  />
-                </div>
-                <div>
-                  <label className="label">
-                    Category
-                  </label>
+                  <label className="label">Category</label>
                   <select
                     value={categoryFilter}
                     onChange={(e) => setCategoryFilter(e.target.value)}
@@ -214,9 +211,7 @@ export default function DrillTemplatesListPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="label">
-                    Filter by Competency
-                  </label>
+                  <label className="label">Filter by Competency</label>
                   <MultiSelectTypeahead
                     options={competencyOptions}
                     value={selectedCompetencies}
@@ -227,10 +222,10 @@ export default function DrillTemplatesListPage() {
                 </div>
               </div>
 
-              {(searchTerm || categoryFilter !== 'all' || selectedCompetencies.length > 0) && (
+              {hasActiveFilters && (
                 <div className="mt-2">
                   {selectedCompetencies.length > 0 && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mb-2">
                       {selectedCompetencies.map((id) => {
                         const competency = drillCompetencies.find(c => c.id === id);
                         const label = competency?.name ?? id;
@@ -246,7 +241,7 @@ export default function DrillTemplatesListPage() {
                               className="hover:text-primary-900 dark:hover:text-primary-100"
                               aria-label={`Remove ${label}`}
                             >
-                              <X className="w-3 h-3" />
+                              ×
                             </button>
                           </span>
                         );
@@ -259,7 +254,7 @@ export default function DrillTemplatesListPage() {
                       setCategoryFilter('all');
                       setSelectedCompetencies([]);
                     }}
-                    className="mt-2 text-sm text-primary-600 dark:text-primary-400 hover:underline"
+                    className="text-sm text-primary-600 dark:text-primary-400 hover:underline"
                   >
                     Clear all filters
                   </button>

@@ -165,6 +165,7 @@ export default function DrillFormPage() {
   const [newLinkUrl, setNewLinkUrl] = useState('');
   const [newLinkError, setNewLinkError] = useState<string | null>(null);
   const [drillDiagramConfig, setDrillDiagramConfig] = useState<DrillDiagramConfigDto | undefined>(undefined);
+  const [showDiagram, setShowDiagram] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
 
   // Check if drill is inherited (can only view, not edit)
@@ -198,6 +199,7 @@ export default function DrillFormPage() {
         type: isSupportedLinkType(l.linkType) ? l.linkType : detectSupportedLinkType(l.url)
       })));
       setDrillDiagramConfig(drillData.drillDiagramConfig);
+      setShowDiagram(!!drillData.drillDiagramConfig?.frames?.length);
       setIsPublic(drillData.isPublic);
       formInitialized.current = true;
     }
@@ -323,11 +325,6 @@ export default function DrillFormPage() {
     const diagramInstructions = getDiagramInstructions();
     const fallbackInstructions = instructions.filter(i => i.trim());
     const cleanedInstructions = diagramInstructions.length > 0 ? diagramInstructions : fallbackInstructions;
-
-    if (cleanedInstructions.length === 0) {
-      alert('Please add at least one diagram instruction');
-      return;
-    }
 
     const cleanedLinks = links.filter(l => l.url.trim());
 
@@ -608,20 +605,51 @@ export default function DrillFormPage() {
             </div>
 
             {/* Drill Diagram Editor + Equipment Needed */}
-            <div className="grid gap-2 items-start lg:grid-cols-[1fr_260px]">
+            <div className={showDiagram ? 'grid gap-2 items-start lg:grid-cols-[1fr_260px]' : ''}>
               <div className="card min-w-0 overflow-hidden">
-                <h3 className="text-lg font-semibold mb-2">Drill Diagram</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  Draw your setup directly on the pitch. Add players, cones, balls, markers, mannequins, and more across multiple frames, with canvas resizing behaviour preserved for those drill items.
-                </p>
-                <DrillDiagramEditor
-                  value={drillDiagramConfig}
-                  onChange={setDrillDiagramConfig}
-                  disabled={isInherited}
-                />
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-semibold">Drill Diagram</h3>
+                  {!isInherited && (
+                    showDiagram ? (
+                      <button
+                        type="button"
+                        onClick={() => { setShowDiagram(false); setDrillDiagramConfig(undefined); }}
+                        className="btn-sm btn-danger"
+                      >
+                        Remove Diagram
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowDiagram(true)}
+                        className="btn-sm btn-secondary"
+                      >
+                        Add Diagram
+                      </button>
+                    )
+                  )}
+                </div>
+                {showDiagram ? (
+                  <>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+                      Draw your setup directly on the pitch. Add players, cones, balls, markers, mannequins, and more across multiple frames, with canvas resizing behaviour preserved for those drill items.
+                    </p>
+                    <DrillDiagramEditor
+                      value={drillDiagramConfig}
+                      onChange={setDrillDiagramConfig}
+                      disabled={isInherited}
+                    />
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-400">
+                    No diagram added. Click "Add Diagram" to draw one, or add a reference video link below.
+                  </p>
+                )}
               </div>
 
-              <EquipmentSummary equipment={extractEquipmentFromDiagram(drillDiagramConfig)} showEmpty />
+              {showDiagram && (
+                <EquipmentSummary equipment={extractEquipmentFromDiagram(drillDiagramConfig)} showEmpty />
+              )}
             </div>
 
             {/* Links (Optional) */}

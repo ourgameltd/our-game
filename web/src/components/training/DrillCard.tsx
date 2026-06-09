@@ -4,6 +4,7 @@ import { Settings, GitBranch, Dumbbell, Images } from 'lucide-react';
 import type { DrillListDto } from '@/api/client';
 import DrillDiagramRenderer from './DrillDiagramRenderer';
 import { getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
+import { buildYouTubeThumbnailUrl } from '@utils/linkProviders';
 
 interface DrillCardProps {
   drill: DrillListDto;
@@ -42,6 +43,66 @@ export function DrillCardSkeleton() {
   );
 }
 
+function DrillCardPreview({ drill, activeFrame }: { drill: DrillListDto; activeFrame: number }) {
+  const [imgError, setImgError] = useState(false);
+
+  if (drill.drillDiagramConfig) {
+    return <DrillDiagramRenderer drillDiagramConfig={drill.drillDiagramConfig} forceSquare frameIndex={activeFrame} />;
+  }
+
+  const videoLink = drill.links?.find(l => ['youtube', 'instagram', 'tiktok'].includes(l.type));
+
+  if (videoLink?.type === 'youtube' && !imgError) {
+    const thumbnailUrl = buildYouTubeThumbnailUrl(videoLink.url);
+    if (thumbnailUrl) {
+      return (
+        <div className="relative aspect-square bg-gray-900">
+          <img
+            src={thumbnailUrl}
+            alt=""
+            className="w-full h-full object-cover"
+            onError={() => setImgError(true)}
+          />
+          <span className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-black/60">
+            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5" aria-hidden="true">
+              <rect x="2" y="5" width="20" height="14" rx="4" fill="#ff0000" />
+              <path d="M10 9l6 3-6 3V9z" fill="#ffffff" />
+            </svg>
+          </span>
+        </div>
+      );
+    }
+  }
+
+  if (videoLink?.type === 'instagram') {
+    return (
+      <div className="aspect-square bg-gradient-to-br from-purple-500 via-pink-500 to-orange-400 flex items-center justify-center">
+        <svg viewBox="0 0 24 24" className="w-10 h-10" aria-hidden="true">
+          <rect x="4" y="4" width="16" height="16" rx="5" fill="none" stroke="white" strokeWidth="2" />
+          <circle cx="12" cy="12" r="4" fill="none" stroke="white" strokeWidth="2" />
+          <circle cx="17" cy="7" r="1.2" fill="white" />
+        </svg>
+      </div>
+    );
+  }
+
+  if (videoLink?.type === 'tiktok') {
+    return (
+      <div className="aspect-square bg-black flex items-center justify-center">
+        <svg viewBox="0 0 24 24" className="w-10 h-10" aria-hidden="true">
+          <path d="M14 4c.4 1.8 1.5 3.3 3 4.3 1 .7 2.2 1.1 3.5 1.2v3.2c-1.7-.1-3.3-.6-4.8-1.4v5.7c0 3.2-2.7 5.8-5.9 5.8S4 20.2 4 17s2.7-5.8 5.8-5.8c.3 0 .6 0 .8.1v3.2c-.2 0-.5-.1-.7-.1-1.5 0-2.7 1.2-2.7 2.7S8.4 19.8 9.9 19.8s2.7-1.2 2.7-2.7V4h1.4z" fill="white" />
+        </svg>
+      </div>
+    );
+  }
+
+  return (
+    <div className="aspect-square bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+      <Dumbbell className="w-10 h-10 text-gray-300 dark:text-gray-600" />
+    </div>
+  );
+}
+
 export default function DrillCard({ drill, href, editHref, isInherited }: DrillCardProps) {
   const slideCount = drill.drillDiagramConfig?.frames?.length ?? 0;
   const [activeFrame, setActiveFrame] = useState(0);
@@ -75,13 +136,7 @@ export default function DrillCard({ drill, href, editHref, isInherited }: DrillC
     >
       <Link to={href} className="block">
         <div className="relative overflow-hidden">
-          {drill.drillDiagramConfig ? (
-            <DrillDiagramRenderer drillDiagramConfig={drill.drillDiagramConfig} forceSquare frameIndex={activeFrame} />
-          ) : (
-            <div className="aspect-square bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
-              <Dumbbell className="w-10 h-10 text-gray-300 dark:text-gray-600" />
-            </div>
-          )}
+          <DrillCardPreview drill={drill} activeFrame={activeFrame} />
 
           {isInherited && (
             <span

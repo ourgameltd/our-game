@@ -87,3 +87,11 @@ export function buildYouTubeEmbedUrl(input: string): string | null {
 
   return `https://www.youtube.com/embed/${videoId}`;
 }
+
+export function buildYouTubeThumbnailUrl(input: string): string | null {
+  const parsed = parseUrl(input);
+  if (!parsed) return null;
+  const videoId = extractYouTubeVideoId(parsed);
+  if (!videoId) return null;
+  return `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+}

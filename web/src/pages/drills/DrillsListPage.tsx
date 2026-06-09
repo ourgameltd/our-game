@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Search, ChevronDown, ChevronUp, Filter, X, Dumbbell } from 'lucide-react';
+import { ChevronDown, ChevronUp, Filter, Dumbbell } from 'lucide-react';
 import { useDrillsByScope, useClubById } from '@/api/hooks';
 import { DrillListDto } from '@/api/client';
 import DrillCard, { DrillCardSkeleton } from '@/components/training/DrillCard';
@@ -133,42 +133,41 @@ export default function DrillsListPage() {
 
         {/* Filters */}
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-4 mb-4">
-          <button
-            onClick={() => setFiltersExpanded(!filtersExpanded)}
-            className="w-full flex items-center justify-between text-left"
-          >
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-              <span className="font-medium text-gray-900 dark:text-white">Filters</span>
-              {activeFilterCount > 0 && (
-                <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
-                  {activeFilterCount} active
-                </span>
-              )}
-            </div>
-            {filtersExpanded ? (
-              <ChevronUp className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+          <div className="flex items-center gap-2">
+            <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400 shrink-0" />
+            <input
+              type="text"
+              placeholder="Search drills by name or description..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="flex-1 py-0.5 text-sm bg-transparent border-none outline-none text-gray-900 dark:text-white placeholder-gray-400 focus:outline-none"
+            />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm('')}
+                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                title="Clear search"
+              >
+                <span className="text-lg leading-none">×</span>
+              </button>
             )}
-          </button>
+            {activeFilterCount > 0 && (
+              <span className="px-2 py-0.5 text-xs bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300 rounded-full">
+                {activeFilterCount} active
+              </span>
+            )}
+            <button
+              onClick={() => setFiltersExpanded(!filtersExpanded)}
+              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+              title="More filters"
+            >
+              {filtersExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+            </button>
+          </div>
 
           {filtersExpanded && (
             <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="label">
-                    <Search className="w-4 h-4 inline mr-1" />
-                    Search Drills
-                  </label>
-                  <input
-                    type="text"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search by name, description, or attributes..."
-                    className="input"
-                  />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="label">Category</label>
                   <select
@@ -227,7 +226,7 @@ export default function DrillsListPage() {
                           className="hover:text-primary-900 dark:hover:text-primary-100"
                           aria-label={`Remove ${label}`}
                         >
-                          <X className="w-3 h-3" />
+                          ×
                         </button>
                       </span>
                     );
