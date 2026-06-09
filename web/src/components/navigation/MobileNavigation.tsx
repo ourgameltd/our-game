@@ -7,6 +7,7 @@ import {
   LogOut,
   X,
   Bell,
+  Newspaper,
   User,
   Moon,
   Sun,
@@ -332,7 +333,7 @@ export default function MobileNavigation() {
               <Sun className="w-5 h-5" />
             )}
           </button>
-          <Link to="/notifications" className="mobile-nav-notification-btn" aria-label="Notifications">
+          <Link to="/feed" className="mobile-nav-notification-btn" aria-label="Feed">
             <Bell className="w-5 h-5" />
             {unreadNotificationCount > 0 && (
               <span className="mobile-nav-notification-badge">
@@ -1003,7 +1004,7 @@ export default function MobileNavigation() {
           {/* Only show divider if the primary menu above has content */}
           {(location.pathname !== '/dashboard'
             && location.pathname !== '/profile'
-            && location.pathname !== '/notifications'
+            && location.pathname !== '/feed'
             && !location.pathname.startsWith('/help')
             && location.pathname !== '/clubs') && (
             <div className="mobile-nav-divider"></div>
@@ -1022,6 +1023,21 @@ export default function MobileNavigation() {
             </li>
 
             <li className="mobile-nav-item">
+              <Link
+                to="/feed"
+                className={`mobile-nav-link ${isActive('/feed') ? 'active' : ''}`}
+              >
+                <Newspaper className="mobile-nav-icon" />
+                <span className="mobile-nav-text">Feed</span>
+                {unreadNotificationCount > 0 && (
+                  <span className="ml-auto bg-red-600 text-white rounded-full px-2 py-0.5 text-xs font-bold min-w-5 text-center">
+                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
+                  </span>
+                )}
+              </Link>
+            </li>
+
+            <li className="mobile-nav-item">
               <button
                 onClick={toggleTheme}
                 className="mobile-nav-link"
@@ -1035,21 +1051,6 @@ export default function MobileNavigation() {
                   Theme: {theme === 'system' ? 'System' : theme === 'dark' ? 'Dark' : 'Light'}
                 </span>
               </button>
-            </li>
-
-            <li className="mobile-nav-item">
-              <Link 
-                to="/notifications" 
-                className="mobile-nav-link"
-              >
-                <Bell className="mobile-nav-icon" />
-                <span className="mobile-nav-text">Notifications</span>
-                {unreadNotificationCount > 0 && (
-                  <span className="ml-auto bg-red-600 text-white rounded-full px-2 py-0.5 text-xs font-bold min-w-5 text-center">
-                    {unreadNotificationCount > 99 ? '99+' : unreadNotificationCount}
-                  </span>
-                )}
-              </Link>
             </li>
 
             <li className="mobile-nav-item">

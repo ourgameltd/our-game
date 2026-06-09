@@ -754,9 +754,14 @@ export class Routes {
     return '/profile';
   }
 
-  // Notifications
+  // Feed (notifications + messages + club updates)
+  static feed(): string {
+    return '/feed';
+  }
+
+  // Notifications — alias kept for backward compatibility
   static notifications(): string {
-    return '/notifications';
+    return '/feed';
   }
 
   // Help & Support

@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { UserPreferencesProvider } from '@/contexts/UserPreferencesContext';
@@ -70,7 +70,7 @@ import TeamStatisticsPage from '@pages/teams/TeamStatisticsPage';
 import CoachProfilePage from '@pages/coaches/CoachProfilePage';
 import CoachSettingsPage from '@pages/coaches/CoachSettingsPage';
 import HelpSupportPage from '@pages/HelpSupportPage';
-import NotificationsPage from '@pages/NotificationsPage';
+import FeedPage from '@pages/FeedPage';
 import TacticsListPage from '@pages/tactics/TacticsListPage';
 import TacticDetailPage from '@pages/tactics/TacticDetailPage';
 import AddEditTacticPage from '@pages/tactics/AddEditTacticPage';
@@ -147,8 +147,9 @@ function AppContent() {
         {/* Profile */}
         <Route path="/profile" element={<ProfilePage />} />
         
-        {/* Notifications */}
-        <Route path="/notifications" element={<NotificationsPage />} />
+        {/* Feed */}
+        <Route path="/feed" element={<FeedPage />} />
+        <Route path="/notifications" element={<Navigate to="/feed" replace />} />
         
         {/* Help & Support */}
         <Route path="/help" element={<HelpSupportPage />} />
