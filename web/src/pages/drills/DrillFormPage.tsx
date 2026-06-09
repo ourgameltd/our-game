@@ -377,7 +377,7 @@ export default function DrillFormPage() {
   };
 
   const handleArchive = async () => {
-    if (!drillId || !isEditMode || isInherited) return;
+    if (!drillId || !isEditMode) return;
 
     const isCurrentlyArchived = drillData?.isArchived ?? false;
     const action = isCurrentlyArchived ? 'unarchive' : 'archive';
@@ -716,7 +716,15 @@ export default function DrillFormPage() {
 
 
             {/* Form Actions */}
-            {!isInherited && (
+            {isEditMode && isInherited ? (
+              <FormActions
+                isArchived={drillData?.isArchived}
+                onArchive={handleArchive}
+                onCancel={handleCancel}
+                saveLabel="Update Drill"
+                showSave={false}
+              />
+            ) : (
               <FormActions
                 isArchived={drillData?.isArchived}
                 onArchive={isEditMode ? handleArchive : undefined}

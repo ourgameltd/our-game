@@ -5,10 +5,6 @@ using OurGame.Persistence.Models;
 
 namespace OurGame.Application.UseCases.Drills.Commands.ArchiveDrill;
 
-/// <summary>
-/// Handler for archiving or unarchiving a drill.
-/// Only the creating coach can archive/unarchive the drill.
-/// </summary>
 public class ArchiveDrillHandler : IRequestHandler<ArchiveDrillCommand>
 {
     private readonly OurGameContext _db;
@@ -22,36 +18,17 @@ public class ArchiveDrillHandler : IRequestHandler<ArchiveDrillCommand>
     {
         var drillId = command.DrillId;
 
-        var drillCheck = await _db.Database
-            .SqlQueryRaw<ArchiveDrillCheckRaw>(@"
-                SELECT Id, CreatedBy
+        var exists = await _db.Database
+            .SqlQueryRaw<int>(@"
+                SELECT 1 AS Value
                 FROM Drills
                 WHERE Id = {0}
             ", drillId)
             .FirstOrDefaultAsync(cancellationToken);
 
-        if (drillCheck == null)
+        if (exists == 0)
         {
             throw new NotFoundException("Drill", drillId.ToString());
-        }
-
-        var currentCoachId = await _db.Database
-            .SqlQueryRaw<Guid>(@"
-                SELECT c.Id AS Value
-                FROM Coaches c
-                INNER JOIN Users u ON c.UserId = u.Id
-                WHERE u.AuthId = {0}
-            ", command.UserId)
-            .FirstOrDefaultAsync(cancellationToken);
-
-        if (currentCoachId == Guid.Empty)
-        {
-            throw new NotFoundException("Coach", "Current user is not a coach");
-        }
-
-        if (drillCheck.CreatedBy != currentCoachId)
-        {
-            throw new UnauthorizedAccessException("Only the creating coach can archive this drill");
         }
 
         var rowsAffected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
@@ -65,10 +42,4 @@ public class ArchiveDrillHandler : IRequestHandler<ArchiveDrillCommand>
             throw new NotFoundException("Drill", drillId.ToString());
         }
     }
-}
-
-internal class ArchiveDrillCheckRaw
-{
-    public Guid Id { get; set; }
-    public Guid? CreatedBy { get; set; }
 }
