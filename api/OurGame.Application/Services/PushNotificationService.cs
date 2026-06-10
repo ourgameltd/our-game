@@ -3,6 +3,7 @@ using System.Text;
 using System.Text.Json;
 using Lib.Net.Http.WebPush;
 using Lib.Net.Http.WebPush.Authentication;
+using LibPushSubscription = Lib.Net.Http.WebPush.PushSubscription;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -111,7 +112,7 @@ public class PushNotificationService(
         {
             try
             {
-                var pushSubscription = new Lib.Net.Http.WebPush.PushSubscription
+                var pushSubscription = new LibPushSubscription
                 {
                     Endpoint = sub.Endpoint
                 };
