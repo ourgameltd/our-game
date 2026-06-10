@@ -3,6 +3,7 @@ import { Kit } from '@/types';
 import { kitTypes } from '@/data/referenceData';
 import { Trash2 } from 'lucide-react';
 import FormActions from '@components/common/FormActions';
+import KitStrip from '@components/kit/KitStrip';
 
 interface KitBuilderProps {
   kit?: Kit;
@@ -94,6 +95,11 @@ export default function KitBuilder({ kit, onSave, onCancel, onDelete }: KitBuild
           </div>
 
           <div>
+            {/* Live kit preview */}
+            <div className="flex justify-center mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+              <KitStrip size="lg" shirtColor={shirtColor} shortsColor={shortsColor} socksColor={socksColor} />
+            </div>
+
             <div>
               <label className="label">
                 Shirt Color *

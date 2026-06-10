@@ -18,21 +18,13 @@ import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
 import { Routes } from '@/utils/routes';
 
-// Skeleton component for kit card loading state
 function KitCardSkeleton() {
   return (
-    <div className="card-hover p-3 md:p-4 animate-pulse">
-      <div className="flex items-stretch gap-3">
-        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
-        <div className="flex-1 min-w-0 flex items-center gap-4">
-          <div className="flex gap-1.5 shrink-0">
-            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
-            <div className="w-6 h-6 rounded bg-gray-200 dark:bg-gray-700" />
-          </div>
-          <div className="h-5 w-32 bg-gray-200 dark:bg-gray-700 rounded flex-1" />
-          <div className="h-4 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
-        </div>
+    <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden animate-pulse">
+      <div className="h-36 bg-gray-200 dark:bg-gray-700" />
+      <div className="p-3 space-y-2">
+        <div className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700 rounded" />
+        <div className="h-3 w-1/2 bg-gray-200 dark:bg-gray-700 rounded" />
       </div>
     </div>
   );
@@ -223,7 +215,7 @@ export default function ClubKitsPage() {
 
         {/* Loading State */}
         {!showBuilder && kitsLoading && (
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {[1, 2, 3].map((i) => (
               <KitCardSkeleton key={i} />
             ))}
@@ -237,21 +229,19 @@ export default function ClubKitsPage() {
           </div>
         )}
 
-        {/* Kits List */}
+        {/* Kits Grid */}
         {!isKitDetailPage && !showBuilder && !kitsLoading && !kitsError && kits.length > 0 && (
-          <div>
-            <div className="grid grid-cols-1 gap-0 md:bg-white md:dark:bg-gray-800 md:rounded-lg md:border md:border-gray-200 md:dark:border-gray-700 md:overflow-hidden">
-              {kits.map((kit) => (
-                <KitCard
-                  key={kit.id}
-                  kit={kit}
-                  isInherited={false}
-                  onClick={() => navigate(Routes.clubKit(clubId!, kit.id))}
-                  showActions={false}
-                  variant="list"
-                />
-              ))}
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {kits.map((kit) => (
+              <KitCard
+                key={kit.id}
+                kit={kit}
+                isInherited={false}
+                onClick={() => navigate(Routes.clubKit(clubId!, kit.id))}
+                showActions={false}
+                variant="card"
+              />
+            ))}
           </div>
         )}
 

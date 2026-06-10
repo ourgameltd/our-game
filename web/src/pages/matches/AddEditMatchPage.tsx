@@ -22,6 +22,7 @@ import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticList
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
 import Markdown from 'react-markdown';
+import KitStrip from '@components/kit/KitStrip';
 
 const supportedSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
 
@@ -1929,34 +1930,8 @@ export default function AddEditMatchPage() {
                       </p>
                     )}
                     {selectedKit && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
-                        <div className="flex items-center gap-1">
-                          <div className="flex flex-col items-center">
-                            <div
-                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                              style={{ backgroundColor: selectedKit.shirtColor }}
-                              title="Shirt"
-                            />
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <div
-                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                              style={{ backgroundColor: selectedKit.shortsColor }}
-                              title="Shorts"
-                            />
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <div
-                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                              style={{ backgroundColor: selectedKit.socksColor }}
-                              title="Socks"
-                            />
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
-                          </div>
-                        </div>
+                      <div className="mt-2">
+                        <KitStrip size="md" shirtColor={selectedKit.shirtColor} shortsColor={selectedKit.shortsColor} socksColor={selectedKit.socksColor} />
                       </div>
                     )}
                   </div>
@@ -1981,34 +1956,8 @@ export default function AddEditMatchPage() {
                       </p>
                     )}
                     {selectedGoalkeeperKit && (
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
-                        <div className="flex items-center gap-1">
-                          <div className="flex flex-col items-center">
-                            <div
-                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                              style={{ backgroundColor: selectedGoalkeeperKit.shirtColor }}
-                              title="Shirt"
-                            />
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <div
-                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                              style={{ backgroundColor: selectedGoalkeeperKit.shortsColor }}
-                              title="Shorts"
-                            />
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
-                          </div>
-                          <div className="flex flex-col items-center">
-                            <div
-                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                              style={{ backgroundColor: selectedGoalkeeperKit.socksColor }}
-                              title="Socks"
-                            />
-                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
-                          </div>
-                        </div>
+                      <div className="mt-2">
+                        <KitStrip size="md" shirtColor={selectedGoalkeeperKit.shirtColor} shortsColor={selectedGoalkeeperKit.shortsColor} socksColor={selectedGoalkeeperKit.socksColor} />
                       </div>
                     )}
                   </div>

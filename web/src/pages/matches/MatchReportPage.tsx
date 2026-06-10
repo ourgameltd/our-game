@@ -9,6 +9,7 @@ import { Routes } from '@/utils/routes';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import PageTitle from '@components/common/PageTitle';
 import AttendanceResponse from '@components/AttendanceResponse';
+import KitStrip from '@components/kit/KitStrip';
 
 export default function MatchReportPage() {
   const { matchId, clubId, ageGroupId, teamId } = useParams();
@@ -291,25 +292,17 @@ export default function MatchReportPage() {
                   </span>
                 )}
                 {(match.primaryKit || match.goalkeeperKit) && (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex items-end gap-4">
                     {match.primaryKit && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kit:</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.shirtColor }} title="Shirt" />
-                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.shortsColor }} title="Shorts" />
-                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.socksColor }} title="Socks" />
-                        </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <KitStrip size="sm" shirtColor={match.primaryKit.shirtColor} shortsColor={match.primaryKit.shortsColor} socksColor={match.primaryKit.socksColor} />
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kit</span>
                       </div>
                     )}
                     {match.goalkeeperKit && (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">GK Kit:</span>
-                        <div className="flex items-center gap-1">
-                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.shirtColor }} title="Shirt" />
-                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.shortsColor }} title="Shorts" />
-                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.socksColor }} title="Socks" />
-                        </div>
+                      <div className="flex flex-col items-center gap-1">
+                        <KitStrip size="sm" shirtColor={match.goalkeeperKit.shirtColor} shortsColor={match.goalkeeperKit.shortsColor} socksColor={match.goalkeeperKit.socksColor} />
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">GK Kit</span>
                       </div>
                     )}
                   </div>
