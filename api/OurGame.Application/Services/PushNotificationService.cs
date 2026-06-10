@@ -1,8 +1,9 @@
+using Lib.Net.Http.WebPush;
+using Lib.Net.Http.WebPush.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OurGame.Persistence.Models;
-using WebPushLib = WebPush;
 
 namespace OurGame.Application.Services;
 
@@ -45,7 +46,7 @@ public interface IPushNotificationService
 }
 
 /// <summary>
-/// Implementation of <see cref="IPushNotificationService"/> using VAPID Web Push.
+/// Implementation of <see cref="IPushNotificationService"/> using VAPID Web Push (RFC 8291 aes128gcm).
 /// </summary>
 public class PushNotificationService : IPushNotificationService
 {
@@ -87,9 +88,6 @@ public class PushNotificationService : IPushNotificationService
 
         _logger.LogInformation("Sending push notification to {Count} subscription(s) for user {UserId}", subscriptions.Count, userId);
 
-        var vapidDetails = new WebPushLib.VapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
-        var webPushClient = new WebPushLib.WebPushClient();
-
         var payloadJson = System.Text.Json.JsonSerializer.Serialize(new
         {
             title = payload.Title,
@@ -99,22 +97,42 @@ public class PushNotificationService : IPushNotificationService
             tag = payload.Tag,
         }, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
 
-        var staleSubscriptions = new List<PushSubscription>();
+        using var vapidAuthentication = new VapidAuthentication(vapidPublicKey, vapidPrivateKey)
+        {
+            Subject = vapidSubject
+        };
+
+        var pushClient = new PushServiceClient
+        {
+            DefaultAuthentication = vapidAuthentication
+        };
+
+        var staleSubscriptions = new List<OurGame.Persistence.Models.PushSubscription>();
 
         foreach (var sub in subscriptions)
         {
             try
             {
-                var pushSubscription = new WebPushLib.PushSubscription(sub.Endpoint, sub.P256dh, sub.Auth);
-                await webPushClient.SendNotificationAsync(pushSubscription, payloadJson, vapidDetails);
+                var pushSubscription = new Lib.Net.Http.WebPush.PushSubscription();
+                pushSubscription.Endpoint = sub.Endpoint;
+                pushSubscription.SetKey(PushEncryptionKeyName.P256DH, sub.P256dh);
+                pushSubscription.SetKey(PushEncryptionKeyName.Auth, sub.Auth);
+
+                var message = new PushMessage(payloadJson)
+                {
+                    Topic = payload.Tag,
+                    Urgency = PushMessageUrgency.High
+                };
+
+                await pushClient.RequestPushMessageDeliveryAsync(pushSubscription, message, cancellationToken);
                 _logger.LogInformation("Push notification sent successfully to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
             }
-            catch (WebPushLib.WebPushException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Gone || ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            catch (PushServiceClientException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Gone || ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
                 _logger.LogInformation("Removing stale push subscription {SubscriptionId} for user {UserId} (HTTP {StatusCode})", sub.Id, userId, (int)ex.StatusCode);
                 staleSubscriptions.Add(sub);
             }
-            catch (WebPushLib.WebPushException ex)
+            catch (PushServiceClientException ex)
             {
                 _logger.LogError(ex, "Push delivery failed for subscription {SubscriptionId} user {UserId} – HTTP {StatusCode}: {Message}",
                     sub.Id, userId, (int)ex.StatusCode, ex.Message);
