@@ -102,7 +102,8 @@ public class PushNotificationService : IPushNotificationService
             Subject = vapidSubject
         };
 
-        var pushClient = new PushServiceClient
+        using var httpClient = new System.Net.Http.HttpClient(new PushErrorLoggingHandler(_logger));
+        var pushClient = new PushServiceClient(httpClient)
         {
             DefaultAuthentication = vapidAuthentication
         };
@@ -125,7 +126,7 @@ public class PushNotificationService : IPushNotificationService
                     TimeToLive = 86400,
                 };
 
-                await pushClient.RequestPushMessageDeliveryAsync(pushSubscription, message, cancellationToken);
+                await pushClient.RequestPushMessageDeliveryAsync(pushSubscription, message, vapidAuthentication, VapidAuthenticationScheme.Vapid, cancellationToken);
                 _logger.LogInformation("Push notification sent successfully to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
             }
             catch (PushServiceClientException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Gone || ex.StatusCode == System.Net.HttpStatusCode.NotFound)
@@ -150,6 +151,38 @@ public class PushNotificationService : IPushNotificationService
         {
             _db.PushSubscriptions.RemoveRange(staleSubscriptions);
             await _db.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private sealed class PushErrorLoggingHandler : System.Net.Http.DelegatingHandler
+    {
+        private readonly ILogger _logger;
+
+        public PushErrorLoggingHandler(ILogger logger)
+            : base(new System.Net.Http.HttpClientHandler())
+        {
+            _logger = logger;
+        }
+
+        protected override async Task<System.Net.Http.HttpResponseMessage> SendAsync(
+            System.Net.Http.HttpRequestMessage request, CancellationToken cancellationToken)
+        {
+            var response = await base.SendAsync(request, cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Content.ReadAsStringAsync(cancellationToken);
+                _logger.LogError("Push service {Host} returned {StatusCode}: {Body}",
+                    request.RequestUri?.Host, (int)response.StatusCode, body);
+
+                var buffered = new System.Net.Http.ByteArrayContent(
+                    System.Text.Encoding.UTF8.GetBytes(body));
+                foreach (var (key, values) in response.Content.Headers)
+                    buffered.Headers.TryAddWithoutValidation(key, values);
+                response.Content = buffered;
+            }
+
+            return response;
         }
     }
 }
