@@ -1,4 +1,4 @@
-using Microsoft.EntityFrameworkCore.Migrations;
+﻿using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
@@ -12,16 +12,14 @@ namespace OurGame.Persistence.Migrations
         {
             migrationBuilder.AddColumn<string>(
                 name: "PitchType",
-                table: "Matches",
-                type: "nvarchar(50)",
-                maxLength: 50,
+                table: "TrainingSessions",
+                type: "nvarchar(max)",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "PitchType",
-                table: "TrainingSessions",
-                type: "nvarchar(50)",
-                maxLength: 50,
+                table: "Matches",
+                type: "nvarchar(max)",
                 nullable: true);
         }
 
@@ -30,11 +28,11 @@ namespace OurGame.Persistence.Migrations
         {
             migrationBuilder.DropColumn(
                 name: "PitchType",
-                table: "Matches");
+                table: "TrainingSessions");
 
             migrationBuilder.DropColumn(
                 name: "PitchType",
-                table: "TrainingSessions");
+                table: "Matches");
         }
     }
 }
