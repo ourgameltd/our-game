@@ -416,6 +416,31 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
         return matchId;
     }
 
+    public async Task<Guid> SeedMatchLineupAsync(Guid matchId, params Guid[] playerIds)
+    {
+        var lineupId = Guid.NewGuid();
+
+        Context.MatchLineups.Add(new MatchLineup
+        {
+            Id = lineupId,
+            MatchId = matchId,
+        });
+
+        foreach (var playerId in playerIds)
+        {
+            Context.LineupPlayers.Add(new LineupPlayer
+            {
+                Id = Guid.NewGuid(),
+                LineupId = lineupId,
+                PlayerId = playerId,
+                IsStarting = true,
+            });
+        }
+
+        await Context.SaveChangesAsync();
+        return lineupId;
+    }
+
     // ────────────────────────────────────────────
     //  Drill
     // ────────────────────────────────────────────

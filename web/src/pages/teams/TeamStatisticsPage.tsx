@@ -201,6 +201,7 @@ function MatchTab({ matches }: { matches: TeamMatchDto[] }) {
                 <th className="pb-2 font-medium text-center">H/A</th>
                 <th className="pb-2 font-medium text-center">Score</th>
                 <th className="pb-2 font-medium hidden sm:table-cell">Competition</th>
+                <th className="pb-2 font-medium hidden md:table-cell">Surface</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -227,6 +228,9 @@ function MatchTab({ matches }: { matches: TeamMatchDto[] }) {
                     </td>
                     <td className="py-2 text-xs text-gray-500 dark:text-gray-500 hidden sm:table-cell truncate max-w-[120px]">
                       {m.competition || '—'}
+                    </td>
+                    <td className="py-2 text-xs text-gray-500 dark:text-gray-400 hidden md:table-cell">
+                      {m.pitchType || '—'}
                     </td>
                   </tr>
                 );
@@ -321,6 +325,7 @@ function TrainingTab({ sessions, squadCount }: { sessions: TeamTrainingSessionDt
                 <th className="pb-2 font-medium hidden sm:table-cell">Focus Areas</th>
                 <th className="pb-2 font-medium text-center">Duration</th>
                 <th className="pb-2 font-medium text-center">Attendance</th>
+                <th className="pb-2 font-medium hidden md:table-cell">Surface</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
@@ -359,6 +364,9 @@ function TrainingTab({ sessions, squadCount }: { sessions: TeamTrainingSessionDt
                       ) : (
                         <span className="text-gray-400 dark:text-gray-500">—</span>
                       )}
+                    </td>
+                    <td className="py-2 text-xs text-gray-500 dark:text-gray-400 hidden md:table-cell">
+                      {s.pitchType || '—'}
                     </td>
                   </tr>
                 );

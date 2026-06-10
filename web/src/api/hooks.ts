@@ -77,6 +77,7 @@ import {
   UpdatePlayerAbilityEvaluationRequest,
   ArchivePlayerAbilityEvaluationRequest,
   PlayerRecentPerformanceDto,
+  PlayerSeasonStatisticsDto,
   PlayerUpcomingMatchDto,
   PlayerReportSummaryDto,
   ReportCardDto,
@@ -1178,6 +1179,20 @@ export function usePlayerRecentPerformances(
   return useApiCall<PlayerRecentPerformanceDto[]>(
     () => apiClient.players.getRecentPerformances(playerId!, limit),
     [playerId, limit],
+    isValidId(playerId)
+  );
+}
+
+/**
+ * Hook to fetch per-season statistics and attendance for a player.
+ * Only fetches if playerId is defined.
+ */
+export function usePlayerSeasonStatistics(
+  playerId: string | undefined
+): UseApiState<PlayerSeasonStatisticsDto[]> {
+  return useApiCall<PlayerSeasonStatisticsDto[]>(
+    () => apiClient.players.getSeasonStatistics(playerId!),
+    [playerId],
     isValidId(playerId)
   );
 }

@@ -103,7 +103,7 @@ public class GetPlayerRecentPerformancesFunction
         int limit = 10; // default
         if (!string.IsNullOrEmpty(limitStr) && int.TryParse(limitStr, out var parsedLimit))
         {
-            limit = Math.Max(1, Math.Min(parsedLimit, 50)); // Clamp between 1 and 50
+            limit = Math.Max(1, Math.Min(parsedLimit, 500)); // Clamp between 1 and 500
         }
 
         // Check if player exists

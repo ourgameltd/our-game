@@ -37,4 +37,7 @@ public class PlayerRecentPerformanceDto
 
     /// <summary>Competition name (optional)</summary>
     public string? Competition { get; init; }
+
+    /// <summary>Season identifier (e.g. "2024/25")</summary>
+    public string Season { get; init; } = string.Empty;
 }

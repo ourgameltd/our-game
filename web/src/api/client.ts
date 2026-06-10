@@ -2047,6 +2047,7 @@ export interface PlayerRecentPerformanceDto {
   teamId: string;
   ageGroupId: string;
   matchDate: string;  // ISO date string
+  season: string;     // e.g., "2024/25"
   opponent: string;
   homeAway: string;   // "Home" | "Away"
   result: string;     // e.g., "W 3-1"
@@ -2054,6 +2055,21 @@ export interface PlayerRecentPerformanceDto {
   goals: number;
   assists: number;
   competition?: string;
+}
+
+export interface PlayerSeasonStatisticsDto {
+  season: string;
+  appearances: number;
+  goals: number;
+  assists: number;
+  avgRating?: number;
+  matchesConfirmed: number;
+  matchesDeclined: number;
+  matchesPending: number;
+  matchesRsvpd: number;
+  trainingPresent: number;
+  trainingAbsent: number;
+  trainingTotal: number;
 }
 
 export interface PlayerUpcomingMatchDto {
@@ -3974,6 +3990,16 @@ export const apiClient = {
       const params = limit ? `?limit=${limit}` : '';
       const response = await axiosInstance.get<ApiResponse<PlayerRecentPerformanceDto[]>>(
         `/v1/players/${playerId}/recent-performances${params}`
+      );
+      return response.data;
+    },
+
+    /**
+     * Get per-season aggregated statistics and attendance for a player
+     */
+    getSeasonStatistics: async (playerId: string): Promise<ApiResponse<PlayerSeasonStatisticsDto[]>> => {
+      const response = await axiosInstance.get<ApiResponse<PlayerSeasonStatisticsDto[]>>(
+        `/v1/players/${playerId}/season-statistics`
       );
       return response.data;
     },
