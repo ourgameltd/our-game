@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OurGame.Persistence.Models;
+using DbPushSubscription = OurGame.Persistence.Models.PushSubscription;
 
 namespace OurGame.Application.Services;
 
@@ -106,7 +107,7 @@ public class PushNotificationService(
             DefaultAuthentication = vapidAuthentication
         };
 
-        var staleSubscriptions = new List<PushSubscription>();
+        var staleSubscriptions = new List<DbPushSubscription>();
 
         foreach (var sub in subscriptions)
         {
