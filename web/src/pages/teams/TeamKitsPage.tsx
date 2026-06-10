@@ -187,7 +187,7 @@ export default function TeamKitsPage() {
             )}
 
             {isLoading && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {[1, 2, 3, 4].map((i) => (
                   <KitCardSkeleton key={i} />
                 ))}
@@ -218,7 +218,7 @@ export default function TeamKitsPage() {
             )}
 
             {!isLoading && !hasError && (teamKits.length > 0 || clubKits.length > 0) && (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {teamKits.map((kit) => (
                   <KitCard
                     key={kit.id}

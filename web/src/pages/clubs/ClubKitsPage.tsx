@@ -215,7 +215,7 @@ export default function ClubKitsPage() {
 
         {/* Loading State */}
         {!showBuilder && kitsLoading && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {[1, 2, 3].map((i) => (
               <KitCardSkeleton key={i} />
             ))}
@@ -231,7 +231,7 @@ export default function ClubKitsPage() {
 
         {/* Kits Grid */}
         {!isKitDetailPage && !showBuilder && !kitsLoading && !kitsError && kits.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {kits.map((kit) => (
               <KitCard
                 key={kit.id}
