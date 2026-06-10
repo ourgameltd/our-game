@@ -1908,136 +1908,138 @@ export default function AddEditMatchPage() {
                   />
                 </div>
 
-                <div>
-                  <label className="label">
-                    Kit *
-                  </label>
-                  <select
-                    value={kit}
-                    onChange={(e) => setKit(e.target.value)}
-                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">Select a team or club kit</option>
-                    {availableOutfieldKits.map(k => (
-                        <option key={k.id} value={k.id}>{k.name}</option>
-                      ))}
-                  </select>
-                  {availableOutfieldKits.length === 0 && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      No team or club match kits are available for this fixture.
-                    </p>
-                  )}
-                  {selectedKit && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
-                      <div className="flex items-center gap-1">
-                        <div className="flex flex-col items-center">
-                          <div 
-                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                            style={{ backgroundColor: selectedKit.shirtColor }}
-                            title="Shirt"
-                          />
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div 
-                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                            style={{ backgroundColor: selectedKit.shortsColor }}
-                            title="Shorts"
-                          />
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div 
-                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                            style={{ backgroundColor: selectedKit.socksColor }}
-                            title="Socks"
-                          />
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div>
-                  <label className="label">
-                    Goalkeeper Kit
-                  </label>
-                  <select
-                    value={goalkeeperKit}
-                    onChange={(e) => setGoalkeeperKit(e.target.value)}
-                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <option value="">Select a team or club goalkeeper kit (optional)</option>
-                    {availableGoalkeeperKits.map(k => (
-                        <option key={k.id} value={k.id}>{k.name}</option>
-                      ))}
-                  </select>
-                  {availableGoalkeeperKits.length === 0 && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      No team or club goalkeeper kits are available for this fixture.
-                    </p>
-                  )}
-                  {selectedGoalkeeperKit && (
-                    <div className="mt-2 flex items-center gap-2">
-                      <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
-                      <div className="flex items-center gap-1">
-                        <div className="flex flex-col items-center">
-                          <div 
-                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                            style={{ backgroundColor: selectedGoalkeeperKit.shirtColor }}
-                            title="Shirt"
-                          />
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div 
-                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                            style={{ backgroundColor: selectedGoalkeeperKit.shortsColor }}
-                            title="Shorts"
-                          />
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
-                        </div>
-                        <div className="flex flex-col items-center">
-                          <div 
-                            className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                            style={{ backgroundColor: selectedGoalkeeperKit.socksColor }}
-                            title="Socks"
-                          />
-                          <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
+                <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div>
+                    <label className="label">
+                      Kit *
+                    </label>
+                    <select
+                      value={kit}
+                      onChange={(e) => setKit(e.target.value)}
+                      className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">Select a team or club kit</option>
+                      {availableOutfieldKits.map(k => (
+                          <option key={k.id} value={k.id}>{k.name}</option>
+                        ))}
+                    </select>
+                    {availableOutfieldKits.length === 0 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        No team or club match kits are available for this fixture.
+                      </p>
+                    )}
+                    {selectedKit && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
+                        <div className="flex items-center gap-1">
+                          <div className="flex flex-col items-center">
+                            <div
+                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                              style={{ backgroundColor: selectedKit.shirtColor }}
+                              title="Shirt"
+                            />
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <div
+                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                              style={{ backgroundColor: selectedKit.shortsColor }}
+                              title="Shorts"
+                            />
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <div
+                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                              style={{ backgroundColor: selectedKit.socksColor }}
+                              title="Socks"
+                            />
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="label">
-                    Home Score
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={homeScore}
-                    onChange={(e) => setHomeScore(e.target.value)}
-                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="0"
-                  />
-                </div>
+                  <div>
+                    <label className="label">
+                      Goalkeeper Kit
+                    </label>
+                    <select
+                      value={goalkeeperKit}
+                      onChange={(e) => setGoalkeeperKit(e.target.value)}
+                      className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <option value="">Select a team or club goalkeeper kit (optional)</option>
+                      {availableGoalkeeperKits.map(k => (
+                          <option key={k.id} value={k.id}>{k.name}</option>
+                        ))}
+                    </select>
+                    {availableGoalkeeperKits.length === 0 && (
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        No team or club goalkeeper kits are available for this fixture.
+                      </p>
+                    )}
+                    {selectedGoalkeeperKit && (
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">Colors:</span>
+                        <div className="flex items-center gap-1">
+                          <div className="flex flex-col items-center">
+                            <div
+                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                              style={{ backgroundColor: selectedGoalkeeperKit.shirtColor }}
+                              title="Shirt"
+                            />
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shirt</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <div
+                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                              style={{ backgroundColor: selectedGoalkeeperKit.shortsColor }}
+                              title="Shorts"
+                            />
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Shorts</span>
+                          </div>
+                          <div className="flex flex-col items-center">
+                            <div
+                              className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
+                              style={{ backgroundColor: selectedGoalkeeperKit.socksColor }}
+                              title="Socks"
+                            />
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">Socks</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="label">
-                    Away Score
-                  </label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={awayScore}
-                    onChange={(e) => setAwayScore(e.target.value)}
-                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="0"
-                  />
+                  <div>
+                    <label className="label">
+                      Home Score
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={homeScore}
+                      onChange={(e) => setHomeScore(e.target.value)}
+                      className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">
+                      Away Score
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={awayScore}
+                      onChange={(e) => setAwayScore(e.target.value)}
+                      className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="0"
+                    />
+                  </div>
                 </div>
 
                 <div>

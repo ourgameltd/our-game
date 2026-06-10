@@ -283,39 +283,40 @@ export default function MatchReportPage() {
                 )}
               </div>
             </div>
-            {match.homeScore != null && match.awayScore != null && (
-              <div className="flex items-center gap-4 mt-4 md:mt-0">
-                <span className="text-4xl font-bold text-gray-900 dark:text-white">
-                  {match.homeScore} - {match.awayScore}
-                </span>
+            {(match.homeScore != null && match.awayScore != null || match.primaryKit || match.goalkeeperKit) && (
+              <div className="flex items-center gap-6 mt-4 md:mt-0">
+                {match.homeScore != null && match.awayScore != null && (
+                  <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                    {match.homeScore} - {match.awayScore}
+                  </span>
+                )}
+                {(match.primaryKit || match.goalkeeperKit) && (
+                  <div className="flex flex-col gap-2">
+                    {match.primaryKit && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kit:</span>
+                        <div className="flex items-center gap-1">
+                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.shirtColor }} title="Shirt" />
+                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.shortsColor }} title="Shorts" />
+                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.socksColor }} title="Socks" />
+                        </div>
+                      </div>
+                    )}
+                    {match.goalkeeperKit && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">GK Kit:</span>
+                        <div className="flex items-center gap-1">
+                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.shirtColor }} title="Shirt" />
+                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.shortsColor }} title="Shorts" />
+                          <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.socksColor }} title="Socks" />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
           </div>
-
-          {(match.primaryKit || match.goalkeeperKit) && (
-            <div className="mt-3 flex flex-wrap gap-4">
-              {match.primaryKit && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kit:</span>
-                  <div className="flex items-center gap-1">
-                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.shirtColor }} title="Shirt" />
-                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.shortsColor }} title="Shorts" />
-                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.primaryKit.socksColor }} title="Socks" />
-                  </div>
-                </div>
-              )}
-              {match.goalkeeperKit && (
-                <div className="flex items-center gap-2">
-                  <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">GK Kit:</span>
-                  <div className="flex items-center gap-1">
-                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.shirtColor }} title="Shirt" />
-                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.shortsColor }} title="Shorts" />
-                    <div className="w-5 h-5 rounded border border-gray-300 dark:border-gray-600" style={{ backgroundColor: match.goalkeeperKit.socksColor }} title="Socks" />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
 
           {match.notes && (
             <div className="mt-4 bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border-l-4 border-blue-600 dark:border-blue-400">
@@ -350,7 +351,7 @@ export default function MatchReportPage() {
                           <div key={index} className={`flex items-center justify-between p-3 rounded-lg ${isCaptain ? 'bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700' : 'bg-green-50 dark:bg-green-900/20'}`}>
                             <div className="flex items-center gap-3 flex-1">
                               {player.position && (
-                                <span className="px-1.5 py-0.5 bg-green-600 text-white rounded text-[11px] font-semibold min-w-[2.25rem] text-center leading-none">
+                                <span className="px-1.5 py-0.5 bg-green-600 text-white rounded text-[11px] font-semibold min-w-9 text-center leading-none">
                                   {player.position}
                                 </span>
                               )}
@@ -361,7 +362,7 @@ export default function MatchReportPage() {
                                   className="w-8 h-8 rounded-full object-cover"
                                 />
                               ) : (
-                                <div className="w-8 h-8 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                <div className="w-8 h-8 bg-linear-to-br from-secondary-400 to-secondary-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                                   {player.firstName[0]}{player.lastName[0]}
                                 </div>
                               )}
@@ -414,7 +415,7 @@ export default function MatchReportPage() {
                             </div>
                             {rating && rating.rating !== null && rating.rating !== undefined && (
                               <div className="ml-2">
-                                <span className="font-bold text-gray-900 dark:text-white min-w-[2.5rem] text-right text-sm">
+                                <span className="font-bold text-gray-900 dark:text-white min-w-10 text-right text-sm">
                                   {Number(rating.rating).toFixed(1)}
                                 </span>
                               </div>
@@ -447,7 +448,7 @@ export default function MatchReportPage() {
                                     className="w-8 h-8 rounded-full object-cover"
                                   />
                                 ) : (
-                                  <div className="w-8 h-8 bg-gradient-to-br from-secondary-400 to-secondary-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                                  <div className="w-8 h-8 bg-linear-to-br from-secondary-400 to-secondary-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
                                     {player.firstName[0]}{player.lastName[0]}
                                   </div>
                                 )}
@@ -497,7 +498,7 @@ export default function MatchReportPage() {
                               </div>
                               {rating && rating.rating !== null && rating.rating !== undefined && (
                                 <div className="ml-2">
-                                  <span className="font-bold text-gray-900 dark:text-white min-w-[2.5rem] text-right text-sm">
+                                  <span className="font-bold text-gray-900 dark:text-white min-w-10 text-right text-sm">
                                     {Number(rating.rating).toFixed(1)}
                                   </span>
                                 </div>
@@ -521,10 +522,10 @@ export default function MatchReportPage() {
                               <img
                                 src={coach.photo}
                                 alt={`${coach.firstName} ${coach.lastName}`}
-                                className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+                                className="w-10 h-10 rounded-full object-cover shrink-0"
                               />
                             ) : (
-                              <div className="w-10 h-10 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                              <div className="w-10 h-10 bg-linear-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-sm font-bold shrink-0">
                                 {coach.firstName[0]}{coach.lastName[0]}
                               </div>
                             )}
