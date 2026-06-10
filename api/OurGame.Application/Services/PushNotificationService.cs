@@ -1,3 +1,6 @@
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using Lib.Net.Http.WebPush;
 using Lib.Net.Http.WebPush.Authentication;
 using Microsoft.EntityFrameworkCore;
@@ -48,135 +51,120 @@ public interface IPushNotificationService
 /// <summary>
 /// Implementation of <see cref="IPushNotificationService"/> using VAPID Web Push (RFC 8291 aes128gcm).
 /// </summary>
-public class PushNotificationService : IPushNotificationService
+public class PushNotificationService(
+    OurGameContext db,
+    IConfiguration configuration,
+    ILogger<PushNotificationService> logger) : IPushNotificationService
 {
-    private readonly OurGameContext _db;
-    private readonly IConfiguration _configuration;
-    private readonly ILogger<PushNotificationService> _logger;
-
-    public PushNotificationService(
-        OurGameContext db,
-        IConfiguration configuration,
-        ILogger<PushNotificationService> logger)
+    private static readonly JsonSerializerOptions JsonOptions = new()
     {
-        _db = db;
-        _configuration = configuration;
-        _logger = logger;
-    }
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+    };
 
     public async Task SendToUserAsync(Guid userId, PushPayload payload, CancellationToken cancellationToken = default)
     {
-        var vapidPublicKey = _configuration["Vapid:PublicKey"];
-        var vapidPrivateKey = _configuration["Vapid:PrivateKey"];
-        var vapidSubject = _configuration["Vapid:Subject"] ?? "mailto:admin@isourgame.com";
+        var vapidPublicKey = configuration["Vapid:PublicKey"];
+        var vapidPrivateKey = configuration["Vapid:PrivateKey"];
+        var vapidSubject = configuration["Vapid:Subject"] ?? "mailto:admin@isourgame.com";
 
         if (string.IsNullOrEmpty(vapidPublicKey) || string.IsNullOrEmpty(vapidPrivateKey))
         {
-            _logger.LogWarning("VAPID keys are not configured – skipping push notification for user {UserId}", userId);
+            logger.LogWarning("VAPID keys are not configured – skipping push notification for user {UserId}", userId);
             return;
         }
 
-        var subscriptions = await _db.PushSubscriptions
+        var subscriptions = await db.PushSubscriptions
             .Where(ps => ps.UserId == userId)
             .ToListAsync(cancellationToken);
 
         if (subscriptions.Count == 0)
         {
-            _logger.LogInformation("No push subscriptions found for user {UserId} – skipping push", userId);
+            logger.LogInformation("No push subscriptions found for user {UserId} – skipping push", userId);
             return;
         }
 
-        _logger.LogInformation("Sending push notification to {Count} subscription(s) for user {UserId}", subscriptions.Count, userId);
+        logger.LogInformation("Sending push notification to {Count} subscription(s) for user {UserId}", subscriptions.Count, userId);
 
-        var payloadJson = System.Text.Json.JsonSerializer.Serialize(new
+        var payloadJson = JsonSerializer.Serialize(new
         {
             title = payload.Title,
             body = payload.Body,
             url = payload.Url ?? "/notifications",
             icon = payload.Icon,
             tag = payload.Tag,
-        }, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
+        }, JsonOptions);
 
         using var vapidAuthentication = new VapidAuthentication(vapidPublicKey, vapidPrivateKey)
         {
             Subject = vapidSubject
         };
 
-        using var httpClient = new System.Net.Http.HttpClient(new PushErrorLoggingHandler(_logger));
+        using var httpClient = new HttpClient(new PushErrorLoggingHandler(logger));
         var pushClient = new PushServiceClient(httpClient)
         {
             DefaultAuthentication = vapidAuthentication
         };
 
-        var staleSubscriptions = new List<OurGame.Persistence.Models.PushSubscription>();
+        var staleSubscriptions = new List<PushSubscription>();
 
         foreach (var sub in subscriptions)
         {
             try
             {
-                var pushSubscription = new Lib.Net.Http.WebPush.PushSubscription();
-                pushSubscription.Endpoint = sub.Endpoint;
+                var pushSubscription = new Lib.Net.Http.WebPush.PushSubscription
+                {
+                    Endpoint = sub.Endpoint
+                };
                 pushSubscription.SetKey(PushEncryptionKeyName.P256DH, sub.P256dh);
                 pushSubscription.SetKey(PushEncryptionKeyName.Auth, sub.Auth);
 
                 var message = new PushMessage(payloadJson)
                 {
-                    Topic = payload.Tag,
                     Urgency = PushMessageUrgency.High,
                     TimeToLive = 86400,
                 };
 
                 await pushClient.RequestPushMessageDeliveryAsync(pushSubscription, message, vapidAuthentication, VapidAuthenticationScheme.Vapid, cancellationToken);
-                _logger.LogInformation("Push notification sent successfully to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
+                logger.LogInformation("Push notification sent successfully to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
             }
             catch (PushServiceClientException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Gone || ex.StatusCode == System.Net.HttpStatusCode.NotFound)
             {
-                _logger.LogInformation("Removing stale push subscription {SubscriptionId} for user {UserId} (HTTP {StatusCode})", sub.Id, userId, (int)ex.StatusCode);
+                logger.LogInformation("Removing stale push subscription {SubscriptionId} for user {UserId} (HTTP {StatusCode})", sub.Id, userId, (int)ex.StatusCode);
                 staleSubscriptions.Add(sub);
             }
             catch (PushServiceClientException ex)
             {
-                // ex.Message is just the HTTP reason phrase; the inner exception may carry the response body
                 var detail = ex.InnerException?.Message ?? ex.Message;
-                _logger.LogError(ex, "Push delivery failed for subscription {SubscriptionId} user {UserId} – HTTP {StatusCode}: {Detail}",
+                logger.LogError(ex, "Push delivery failed for subscription {SubscriptionId} user {UserId} – HTTP {StatusCode}: {Detail}",
                     sub.Id, userId, (int)ex.StatusCode, detail);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Unexpected error sending push to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
+                logger.LogError(ex, "Unexpected error sending push to subscription {SubscriptionId} for user {UserId}", sub.Id, userId);
             }
         }
 
         if (staleSubscriptions.Count > 0)
         {
-            _db.PushSubscriptions.RemoveRange(staleSubscriptions);
-            await _db.SaveChangesAsync(cancellationToken);
+            db.PushSubscriptions.RemoveRange(staleSubscriptions);
+            await db.SaveChangesAsync(cancellationToken);
         }
     }
 
-    private sealed class PushErrorLoggingHandler : System.Net.Http.DelegatingHandler
+    private sealed class PushErrorLoggingHandler(ILogger logger) : DelegatingHandler(new HttpClientHandler())
     {
-        private readonly ILogger _logger;
-
-        public PushErrorLoggingHandler(ILogger logger)
-            : base(new System.Net.Http.HttpClientHandler())
-        {
-            _logger = logger;
-        }
-
-        protected override async Task<System.Net.Http.HttpResponseMessage> SendAsync(
-            System.Net.Http.HttpRequestMessage request, CancellationToken cancellationToken)
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var response = await base.SendAsync(request, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
                 var body = await response.Content.ReadAsStringAsync(cancellationToken);
-                _logger.LogError("Push service {Host} returned {StatusCode}: {Body}",
+                logger.LogError("Push service {Host} returned {StatusCode}: {Body}",
                     request.RequestUri?.Host, (int)response.StatusCode, body);
 
-                var buffered = new System.Net.Http.ByteArrayContent(
-                    System.Text.Encoding.UTF8.GetBytes(body));
+                var buffered = new ByteArrayContent(Encoding.UTF8.GetBytes(body));
                 foreach (var (key, values) in response.Content.Headers)
                     buffered.Headers.TryAddWithoutValidation(key, values);
                 response.Content = buffered;
