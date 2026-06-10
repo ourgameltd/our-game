@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Kit } from '@/types';
-import { kitTypes } from '@/data/referenceData';
+import { kitTypes, stripTypes, StripTypeValue } from '@/data/referenceData';
 import { Trash2 } from 'lucide-react';
 import FormActions from '@components/common/FormActions';
 import KitStrip from '@components/kit/KitStrip';
@@ -16,13 +16,15 @@ export default function KitBuilder({ kit, onSave, onCancel, onDelete }: KitBuild
   const [name, setName] = useState(kit?.name || '');
   const [type, setType] = useState<Kit['type']>(kit?.type || 'home');
   const [shirtColor, setShirtColor] = useState(kit?.shirtColor || '#FF0000');
+  const [shirtColor2, setShirtColor2] = useState(kit?.shirtColor2 || '#FFFFFF');
+  const [stripType, setStripType] = useState<StripTypeValue>(kit?.stripType ?? 'plain');
   const [shortsColor, setShortsColor] = useState(kit?.shortsColor || '#000000');
   const [socksColor, setSocksColor] = useState(kit?.socksColor || '#FFFFFF');
   const [isActive, setIsActive] = useState(kit?.isActive ?? true);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!name.trim()) {
       alert('Please enter a kit name');
       return;
@@ -32,6 +34,8 @@ export default function KitBuilder({ kit, onSave, onCancel, onDelete }: KitBuild
       name: name.trim(),
       type,
       shirtColor,
+      shirtColor2: stripType !== 'plain' ? shirtColor2 : undefined,
+      stripType,
       shortsColor,
       socksColor,
       isActive,
@@ -97,13 +101,18 @@ export default function KitBuilder({ kit, onSave, onCancel, onDelete }: KitBuild
           <div>
             {/* Live kit preview */}
             <div className="flex justify-center mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
-              <KitStrip size="lg" shirtColor={shirtColor} shortsColor={shortsColor} socksColor={socksColor} />
+              <KitStrip
+                size="lg"
+                shirtColor={shirtColor}
+                shirtColor2={shirtColor2}
+                stripType={stripType}
+                shortsColor={shortsColor}
+                socksColor={socksColor}
+              />
             </div>
 
             <div>
-              <label className="label">
-                Shirt Color *
-              </label>
+              <label className="label">Shirt Colour *</label>
               <div className="flex gap-3 items-center">
                 <input
                   type="color"
@@ -120,11 +129,43 @@ export default function KitBuilder({ kit, onSave, onCancel, onDelete }: KitBuild
                 />
               </div>
             </div>
-            
-             <div>
-              <label className="label">
-                Shorts Color *
-              </label>
+
+            <div className="mt-2">
+              <label className="label">Strip Design</label>
+              <select
+                value={stripType}
+                onChange={(e) => setStripType(e.target.value as StripTypeValue)}
+                className="input"
+              >
+                {stripTypes.map(st => (
+                  <option key={st.value} value={st.value}>{st.label}</option>
+                ))}
+              </select>
+            </div>
+
+            {stripType !== 'plain' && (
+              <div className="mt-2">
+                <label className="label">Second Shirt Colour *</label>
+                <div className="flex gap-3 items-center">
+                  <input
+                    type="color"
+                    value={shirtColor2}
+                    onChange={(e) => setShirtColor2(e.target.value)}
+                    className="h-10 w-20 rounded border border-gray-300 dark:border-gray-600"
+                  />
+                  <input
+                    type="text"
+                    value={shirtColor2}
+                    onChange={(e) => setShirtColor2(e.target.value)}
+                    className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    placeholder="#FFFFFF"
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="mt-2">
+              <label className="label">Shorts Colour *</label>
               <div className="flex gap-3 items-center">
                 <input
                   type="color"
@@ -142,10 +183,8 @@ export default function KitBuilder({ kit, onSave, onCancel, onDelete }: KitBuild
               </div>
             </div>
 
-            <div>
-              <label className="label">
-                Socks Color *
-              </label>
+            <div className="mt-2">
+              <label className="label">Socks Colour *</label>
               <div className="flex gap-3 items-center">
                 <input
                   type="color"

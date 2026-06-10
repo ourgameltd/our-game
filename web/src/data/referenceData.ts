@@ -44,6 +44,18 @@ export const kitTypes = [
 
 export type KitTypeValue = typeof kitTypes[number]['value'];
 
+// Strip design types
+export const stripTypes = [
+  { value: 'plain',         label: 'Plain' },
+  { value: 'hooped',        label: 'Hooped' },
+  { value: 'striped',       label: 'Striped (vertical)' },
+  { value: 'sash',          label: 'Sash' },
+  { value: 'half-and-half', label: 'Half and half' },
+  { value: 'sleeves',       label: 'Sleeves' },
+] as const;
+
+export type StripTypeValue = typeof stripTypes[number]['value'];
+
 // Image/Album tags
 export const imageTags = [
   { value: 'training', label: 'Training' },

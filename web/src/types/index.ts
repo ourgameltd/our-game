@@ -7,6 +7,8 @@ export interface Kit {
   name: string; // e.g., 'Home Kit', 'Away Kit', 'Third Kit'
   type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
   shirtColor: string; // Hex color
+  shirtColor2?: string; // Second shirt colour for patterned strips
+  stripType?: 'plain' | 'hooped' | 'striped' | 'sash' | 'half-and-half' | 'sleeves';
   shortsColor: string; // Hex color
   socksColor: string; // Hex color
   season?: string;
