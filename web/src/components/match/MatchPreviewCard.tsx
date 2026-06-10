@@ -207,12 +207,12 @@ export default function MatchPreviewCard({
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Kit to Wear</h3>
           <div className="flex flex-row items-start gap-6">
             <div className="flex flex-col items-center gap-2">
-              <KitStrip size="md" shirtColor={primaryKit.shirtColor} shortsColor={primaryKit.shortsColor} socksColor={primaryKit.socksColor} />
+              <KitStrip size="md" shirtColor={primaryKit.shirtColor} shirtColor2={primaryKit.shirtColor2} stripType={primaryKit.stripType} shortsColor={primaryKit.shortsColor} socksColor={primaryKit.socksColor} />
               <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{primaryKit.name}</span>
             </div>
             {goalkeeperKit && (
               <div className="flex flex-col items-center gap-2">
-                <KitStrip size="md" shirtColor={goalkeeperKit.shirtColor} shortsColor={goalkeeperKit.shortsColor} socksColor={goalkeeperKit.socksColor} />
+                <KitStrip size="md" shirtColor={goalkeeperKit.shirtColor} shirtColor2={goalkeeperKit.shirtColor2} stripType={goalkeeperKit.stripType} shortsColor={goalkeeperKit.shortsColor} socksColor={goalkeeperKit.socksColor} />
                 <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{goalkeeperKit.name}</span>
               </div>
             )}

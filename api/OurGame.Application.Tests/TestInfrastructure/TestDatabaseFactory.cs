@@ -338,7 +338,9 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
         Guid clubId,
         Guid? teamId = null,
         string name = "Home Kit",
-        KitType type = KitType.Home)
+        KitType type = KitType.Home,
+        string? stripType = null,
+        string? shirtColor2 = null)
     {
         var kitId = Guid.NewGuid();
         var now = DateTime.UtcNow;
@@ -351,6 +353,8 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
             Name = name,
             Type = type,
             ShirtColor = "#ff0000",
+            ShirtColor2 = shirtColor2 ?? string.Empty,
+            StripType = stripType ?? string.Empty,
             ShortsColor = "#ffffff",
             SocksColor = "#000000",
             Season = "2025-26",

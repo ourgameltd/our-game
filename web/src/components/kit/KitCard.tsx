@@ -46,6 +46,8 @@ export default function KitCard({
           <KitStrip
             size="lg"
             shirtColor={kit.shirtColor}
+            shirtColor2={kit.shirtColor2}
+            stripType={kit.stripType}
             shortsColor={kit.shortsColor}
             socksColor={kit.socksColor}
           />

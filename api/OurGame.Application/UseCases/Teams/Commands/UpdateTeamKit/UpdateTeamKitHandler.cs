@@ -15,6 +15,8 @@ namespace OurGame.Application.UseCases.Teams.Commands.UpdateTeamKit;
 public class UpdateTeamKitHandler : IRequestHandler<UpdateTeamKitCommand, TeamKitDto>
 {
     private static readonly Regex HexColorRegex = new(@"^#([0-9a-fA-F]{6})$", RegexOptions.Compiled);
+    private static readonly HashSet<string> ValidStripTypes = new(StringComparer.OrdinalIgnoreCase)
+        { "plain", "hooped", "striped", "sash", "half-and-half", "sleeves" };
 
     private readonly OurGameContext _db;
 
@@ -67,6 +69,9 @@ public class UpdateTeamKitHandler : IRequestHandler<UpdateTeamKitCommand, TeamKi
         if (!string.IsNullOrEmpty(dto.ShirtColor) && !HexColorRegex.IsMatch(dto.ShirtColor))
             errors.Add("ShirtColor", new[] { "Shirt color must be a valid hex color (e.g. #FF0000)." });
 
+        if (!string.IsNullOrEmpty(dto.ShirtColor2) && !HexColorRegex.IsMatch(dto.ShirtColor2))
+            errors.Add("ShirtColor2", new[] { "Second shirt color must be a valid hex color (e.g. #FFFFFF)." });
+
         if (!string.IsNullOrEmpty(dto.ShortsColor) && !HexColorRegex.IsMatch(dto.ShortsColor))
             errors.Add("ShortsColor", new[] { "Shorts color must be a valid hex color (e.g. #FFFFFF)." });
 
@@ -80,13 +85,20 @@ public class UpdateTeamKitHandler : IRequestHandler<UpdateTeamKitCommand, TeamKi
             errors.Add("Type", new[] { $"Invalid kit type: {dto.Type}. Must be one of: home, away, third, goalkeeper, training." });
         }
 
+        // 5. Validate strip type
+        if (!string.IsNullOrEmpty(dto.StripType) && !ValidStripTypes.Contains(dto.StripType))
+        {
+            errors.Add("StripType", new[] { $"Invalid strip type: {dto.StripType}. Must be one of: plain, hooped, striped, sash, half-and-half, sleeves." });
+        }
+
         if (errors.Count > 0)
         {
             throw new ValidationException(errors);
         }
 
-        // 5. Prepare season value
         var season = dto.Season ?? string.Empty;
+        var shirtColor2 = dto.ShirtColor2 ?? string.Empty;
+        var stripType = dto.StripType ?? string.Empty;
 
         // 6. Execute the UPDATE
         var rowsAffected = await _db.Database.ExecuteSqlInterpolatedAsync($@"
@@ -95,6 +107,8 @@ public class UpdateTeamKitHandler : IRequestHandler<UpdateTeamKitCommand, TeamKi
                 Name = {dto.Name},
                 Type = {(int)kitType!.Value},
                 ShirtColor = {dto.ShirtColor},
+                ShirtColor2 = {shirtColor2},
+                StripType = {stripType},
                 ShortsColor = {dto.ShortsColor},
                 SocksColor = {dto.SocksColor},
                 Season = {season},
@@ -110,11 +124,13 @@ public class UpdateTeamKitHandler : IRequestHandler<UpdateTeamKitCommand, TeamKi
         // 7. Query back the updated kit
         var kit = await _db.Database
             .SqlQueryRaw<KitRawDto>(@"
-                SELECT 
+                SELECT
                     k.Id,
                     k.Name,
                     k.Type,
                     k.ShirtColor,
+                    k.ShirtColor2,
+                    k.StripType,
                     k.ShortsColor,
                     k.SocksColor,
                     k.Season,
@@ -136,6 +152,8 @@ public class UpdateTeamKitHandler : IRequestHandler<UpdateTeamKitCommand, TeamKi
             Name = kit.Name ?? string.Empty,
             Type = MapKitTypeToString(kit.Type),
             ShirtColor = kit.ShirtColor ?? string.Empty,
+            ShirtColor2 = string.IsNullOrEmpty(kit.ShirtColor2) ? null : kit.ShirtColor2,
+            StripType = string.IsNullOrEmpty(kit.StripType) ? null : kit.StripType,
             ShortsColor = kit.ShortsColor ?? string.Empty,
             SocksColor = kit.SocksColor ?? string.Empty,
             Season = kit.Season,
@@ -143,9 +161,6 @@ public class UpdateTeamKitHandler : IRequestHandler<UpdateTeamKitCommand, TeamKi
         };
     }
 
-    /// <summary>
-    /// Parse kit type from string to enum.
-    /// </summary>
     private static KitType? ParseKitType(string type)
     {
         return type.ToLowerInvariant() switch
@@ -159,33 +174,26 @@ public class UpdateTeamKitHandler : IRequestHandler<UpdateTeamKitCommand, TeamKi
         };
     }
 
-    /// <summary>
-    /// Map kit type enum to lowercase string.
-    /// </summary>
     private static string MapKitTypeToString(int type)
     {
         return ((KitType)type).ToString().ToLowerInvariant();
     }
 }
 
-/// <summary>
-/// Raw SQL query result for kit existence check.
-/// </summary>
 internal class KitCheckResult
 {
     public Guid Id { get; set; }
     public Guid? TeamId { get; set; }
 }
 
-/// <summary>
-/// Raw SQL query result for kit data.
-/// </summary>
 internal class KitRawDto
 {
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public int Type { get; set; }
     public string? ShirtColor { get; set; }
+    public string? ShirtColor2 { get; set; }
+    public string? StripType { get; set; }
     public string? ShortsColor { get; set; }
     public string? SocksColor { get; set; }
     public string? Season { get; set; }

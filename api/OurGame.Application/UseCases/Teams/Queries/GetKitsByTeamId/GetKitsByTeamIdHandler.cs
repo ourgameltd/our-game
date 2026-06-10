@@ -33,6 +33,8 @@ public class KitRawDto
     public string? Name { get; set; }
     public int Type { get; set; }
     public string? ShirtColor { get; set; }
+    public string? ShirtColor2 { get; set; }
+    public string? StripType { get; set; }
     public string? ShortsColor { get; set; }
     public string? SocksColor { get; set; }
     public string? Season { get; set; }
@@ -76,11 +78,13 @@ public class GetKitsByTeamIdHandler : IRequestHandler<GetKitsByTeamIdQuery, Resu
 
         // Fetch team kits
         var kitsSql = @"
-            SELECT 
+            SELECT
                 k.Id,
                 k.Name,
                 k.Type,
                 k.ShirtColor,
+                k.ShirtColor2,
+                k.StripType,
                 k.ShortsColor,
                 k.SocksColor,
                 k.Season,
@@ -99,6 +103,8 @@ public class GetKitsByTeamIdHandler : IRequestHandler<GetKitsByTeamIdQuery, Resu
             Name = k.Name ?? string.Empty,
             Type = MapKitType(k.Type),
             ShirtColor = k.ShirtColor ?? "#000000",
+            ShirtColor2 = string.IsNullOrEmpty(k.ShirtColor2) ? null : k.ShirtColor2,
+            StripType = string.IsNullOrEmpty(k.StripType) ? null : k.StripType,
             ShortsColor = k.ShortsColor ?? "#000000",
             SocksColor = k.SocksColor ?? "#000000",
             Season = k.Season,

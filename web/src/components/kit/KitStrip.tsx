@@ -24,7 +24,7 @@ export default function KitStrip({
   socksColor,
   size = 'md',
 }: KitStripProps) {
-  const uid = useId();
+  const uid = useId().replace(/:/g, '');
   const clipId = `shirt-clip-${uid}`;
   const width = sizeWidths[size];
   const stroke = 'rgba(0,0,0,0.18)';

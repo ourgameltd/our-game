@@ -20,6 +20,10 @@ public partial class Kit
 
     public string ShirtColor { get; set; }
 
+    public string ShirtColor2 { get; set; }
+
+    public string StripType { get; set; }
+
     public string ShortsColor { get; set; }
 
     public string SocksColor { get; set; }

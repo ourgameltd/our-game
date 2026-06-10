@@ -54,6 +54,23 @@ public class GetKitsByClubIdHandlerTests
         Assert.Equal("Club Kit", result[0].Name);
     }
 
+    [Fact]
+    public async Task Handle_ReturnsMappedStripTypeAndShirtColor2()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        await db.SeedKitAsync(clubId, null, "Home Kit", KitType.Home,
+            stripType: "half-and-half", shirtColor2: "#0000ff");
+        var handler = new GetKitsByClubIdHandler(db.Context);
+        var query = new GetKitsByClubIdQuery(clubId);
+
+        var result = await handler.Handle(query, CancellationToken.None);
+
+        Assert.Single(result);
+        Assert.Equal("half-and-half", result[0].StripType);
+        Assert.Equal("#0000ff", result[0].ShirtColor2);
+    }
+
     [Theory]
     [InlineData(KitType.Home, "home")]
     [InlineData(KitType.Away, "away")]

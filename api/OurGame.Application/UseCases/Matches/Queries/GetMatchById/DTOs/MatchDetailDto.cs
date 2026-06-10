@@ -193,6 +193,8 @@ public record MatchKitDto
     public string Name { get; init; } = string.Empty;
     public string Type { get; init; } = string.Empty;
     public string ShirtColor { get; init; } = string.Empty;
+    public string? ShirtColor2 { get; init; }
+    public string? StripType { get; init; }
     public string ShortsColor { get; init; } = string.Empty;
     public string SocksColor { get; init; } = string.Empty;
 }

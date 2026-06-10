@@ -15,6 +15,8 @@ namespace OurGame.Application.UseCases.Teams.Commands.CreateTeamKit;
 public class CreateTeamKitHandler : IRequestHandler<CreateTeamKitCommand, TeamKitDto>
 {
     private static readonly Regex HexColorRegex = new(@"^#([0-9a-fA-F]{6})$", RegexOptions.Compiled);
+    private static readonly HashSet<string> ValidStripTypes = new(StringComparer.OrdinalIgnoreCase)
+        { "plain", "hooped", "striped", "sash", "half-and-half", "sleeves" };
 
     private readonly OurGameContext _db;
 
@@ -61,6 +63,9 @@ public class CreateTeamKitHandler : IRequestHandler<CreateTeamKitCommand, TeamKi
         if (!string.IsNullOrEmpty(dto.ShirtColor) && !HexColorRegex.IsMatch(dto.ShirtColor))
             errors.Add("ShirtColor", new[] { "Shirt color must be a valid hex color (e.g. #FF0000)." });
 
+        if (!string.IsNullOrEmpty(dto.ShirtColor2) && !HexColorRegex.IsMatch(dto.ShirtColor2))
+            errors.Add("ShirtColor2", new[] { "Second shirt color must be a valid hex color (e.g. #FFFFFF)." });
+
         if (!string.IsNullOrEmpty(dto.ShortsColor) && !HexColorRegex.IsMatch(dto.ShortsColor))
             errors.Add("ShortsColor", new[] { "Shorts color must be a valid hex color (e.g. #FFFFFF)." });
 
@@ -74,31 +79,41 @@ public class CreateTeamKitHandler : IRequestHandler<CreateTeamKitCommand, TeamKi
             errors.Add("Type", new[] { $"Invalid kit type: {dto.Type}. Must be one of: home, away, third, goalkeeper, training." });
         }
 
+        // 5. Validate strip type
+        if (!string.IsNullOrEmpty(dto.StripType) && !ValidStripTypes.Contains(dto.StripType))
+        {
+            errors.Add("StripType", new[] { $"Invalid strip type: {dto.StripType}. Must be one of: plain, hooped, striped, sash, half-and-half, sleeves." });
+        }
+
         if (errors.Count > 0)
         {
             throw new ValidationException(errors);
         }
 
-        // 5. Generate ID and timestamp
+        // 6. Generate ID and timestamp
         var kitId = Guid.NewGuid();
         var now = DateTime.UtcNow;
         var season = dto.Season ?? string.Empty;
+        var shirtColor2 = dto.ShirtColor2 ?? string.Empty;
+        var stripType = dto.StripType ?? string.Empty;
 
-        // 6. Insert kit into Kits table
+        // 7. Insert kit into Kits table
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
-            INSERT INTO Kits (Id, ClubId, TeamId, Name, Type, ShirtColor, ShortsColor, SocksColor, Season, IsActive, CreatedAt)
-            VALUES ({kitId}, {team.ClubId}, {teamId}, {dto.Name}, {(int)kitType!.Value}, 
-                    {dto.ShirtColor}, {dto.ShortsColor}, {dto.SocksColor}, {season}, {dto.IsActive}, {now})
+            INSERT INTO Kits (Id, ClubId, TeamId, Name, Type, ShirtColor, ShirtColor2, StripType, ShortsColor, SocksColor, Season, IsActive, CreatedAt)
+            VALUES ({kitId}, {team.ClubId}, {teamId}, {dto.Name}, {(int)kitType!.Value},
+                    {dto.ShirtColor}, {shirtColor2}, {stripType}, {dto.ShortsColor}, {dto.SocksColor}, {season}, {dto.IsActive}, {now})
         ", cancellationToken);
 
-        // 7. Query back the created kit
+        // 8. Query back the created kit
         var kit = await _db.Database
             .SqlQueryRaw<KitRawDto>(@"
-                SELECT 
+                SELECT
                     k.Id,
                     k.Name,
                     k.Type,
                     k.ShirtColor,
+                    k.ShirtColor2,
+                    k.StripType,
                     k.ShortsColor,
                     k.SocksColor,
                     k.Season,
@@ -113,13 +128,15 @@ public class CreateTeamKitHandler : IRequestHandler<CreateTeamKitCommand, TeamKi
             throw new Exception("Failed to retrieve created kit.");
         }
 
-        // 8. Map to TeamKitDto
+        // 9. Map to TeamKitDto
         return new TeamKitDto
         {
             Id = kit.Id,
             Name = kit.Name ?? string.Empty,
             Type = MapKitTypeToString(kit.Type),
             ShirtColor = kit.ShirtColor ?? string.Empty,
+            ShirtColor2 = string.IsNullOrEmpty(kit.ShirtColor2) ? null : kit.ShirtColor2,
+            StripType = string.IsNullOrEmpty(kit.StripType) ? null : kit.StripType,
             ShortsColor = kit.ShortsColor ?? string.Empty,
             SocksColor = kit.SocksColor ?? string.Empty,
             Season = kit.Season,
@@ -127,9 +144,6 @@ public class CreateTeamKitHandler : IRequestHandler<CreateTeamKitCommand, TeamKi
         };
     }
 
-    /// <summary>
-    /// Parse kit type from string to enum.
-    /// </summary>
     private static KitType? ParseKitType(string type)
     {
         return type.ToLowerInvariant() switch
@@ -143,33 +157,26 @@ public class CreateTeamKitHandler : IRequestHandler<CreateTeamKitCommand, TeamKi
         };
     }
 
-    /// <summary>
-    /// Map kit type enum to lowercase string.
-    /// </summary>
     private static string MapKitTypeToString(int type)
     {
         return ((KitType)type).ToString().ToLowerInvariant();
     }
 }
 
-/// <summary>
-/// Raw SQL query result for team lookup.
-/// </summary>
 internal class TeamLookupResult
 {
     public Guid Id { get; set; }
     public Guid ClubId { get; set; }
 }
 
-/// <summary>
-/// Raw SQL query result for kit data.
-/// </summary>
 internal class KitRawDto
 {
     public Guid Id { get; set; }
     public string? Name { get; set; }
     public int Type { get; set; }
     public string? ShirtColor { get; set; }
+    public string? ShirtColor2 { get; set; }
+    public string? StripType { get; set; }
     public string? ShortsColor { get; set; }
     public string? SocksColor { get; set; }
     public string? Season { get; set; }

@@ -26,6 +26,16 @@ public class TeamKitDto
     public string ShirtColor { get; set; } = string.Empty;
 
     /// <summary>
+    /// Second shirt color for patterned strips (hex format)
+    /// </summary>
+    public string? ShirtColor2 { get; set; }
+
+    /// <summary>
+    /// Strip design type (plain, hooped, striped, sash, half-and-half, sleeves)
+    /// </summary>
+    public string? StripType { get; set; }
+
+    /// <summary>
     /// Shorts color (hex format)
     /// </summary>
     public string ShortsColor { get; set; } = string.Empty;

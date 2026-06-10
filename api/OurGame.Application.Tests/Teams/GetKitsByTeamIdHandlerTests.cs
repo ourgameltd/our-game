@@ -39,7 +39,8 @@ public class GetKitsByTeamIdHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
-        var kitId = await db.SeedKitAsync(clubId, teamId, "Home Kit", KitType.Home);
+        var kitId = await db.SeedKitAsync(clubId, teamId, "Home Kit", KitType.Home,
+            stripType: "hooped", shirtColor2: "#0000ff");
         var handler = new GetKitsByTeamIdHandler(db.Context);
         var query = new GetKitsByTeamIdQuery(teamId);
 
@@ -51,6 +52,8 @@ public class GetKitsByTeamIdHandlerTests
         Assert.Equal(kitId, kit.Id);
         Assert.Equal("Home Kit", kit.Name);
         Assert.Equal("home", kit.Type);
+        Assert.Equal("hooped", kit.StripType);
+        Assert.Equal("#0000ff", kit.ShirtColor2);
         Assert.True(kit.IsActive);
     }
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { Shirt } from 'lucide-react';
 import { Kit } from '@/types';
-import { ClubKitDto } from '@/api/client';
+import { ClubKitDto, TeamKitDto } from '@/api/client';
 import { CreateTeamKitRequest, UpdateTeamKitRequest } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import {
@@ -18,12 +18,29 @@ import KitCard from '@/components/kit/KitCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
 
+function mapTeamKitDtoToKit(apiKit: TeamKitDto): Kit {
+  return {
+    id: apiKit.id,
+    name: apiKit.name,
+    type: apiKit.type,
+    shirtColor: apiKit.shirtColor,
+    shirtColor2: apiKit.shirtColor2,
+    stripType: apiKit.stripType as Kit['stripType'],
+    shortsColor: apiKit.shortsColor,
+    socksColor: apiKit.socksColor,
+    season: apiKit.season,
+    isActive: apiKit.isActive,
+  };
+}
+
 function mapClubKitToKit(apiKit: ClubKitDto): Kit {
   return {
     id: apiKit.id,
     name: apiKit.name,
     type: apiKit.type,
     shirtColor: apiKit.shirtColor,
+    shirtColor2: apiKit.shirtColor2,
+    stripType: apiKit.stripType as Kit['stripType'],
     shortsColor: apiKit.shortsColor,
     socksColor: apiKit.socksColor,
     season: apiKit.season,
@@ -72,7 +89,7 @@ export default function TeamKitsPage() {
   }
 
   const team = teamOverview?.team;
-  const teamKits = teamKitsData?.kits || [];
+  const teamKits = (teamKitsData?.kits || []).map(mapTeamKitDtoToKit);
   const clubKits = (clubKitsData || []).map(mapClubKitToKit);
   const isArchived = team?.isArchived || false;
   const isLoading = overviewLoading || kitsLoading || clubKitsLoading;
@@ -84,6 +101,8 @@ export default function TeamKitsPage() {
         name: kitData.name,
         type: kitData.type,
         shirtColor: kitData.shirtColor,
+        shirtColor2: kitData.shirtColor2,
+        stripType: kitData.stripType,
         shortsColor: kitData.shortsColor,
         socksColor: kitData.socksColor,
         season: kitData.season,
@@ -99,6 +118,8 @@ export default function TeamKitsPage() {
         name: kitData.name,
         type: kitData.type,
         shirtColor: kitData.shirtColor,
+        shirtColor2: kitData.shirtColor2,
+        stripType: kitData.stripType,
         shortsColor: kitData.shortsColor,
         socksColor: kitData.socksColor,
         season: kitData.season,

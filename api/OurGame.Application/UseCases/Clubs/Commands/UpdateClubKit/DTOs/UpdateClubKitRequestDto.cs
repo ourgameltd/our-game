@@ -19,6 +19,12 @@ public record UpdateClubKitRequestDto
     [StringLength(7)]
     public string ShirtColor { get; init; } = string.Empty;
 
+    [StringLength(7)]
+    public string? ShirtColor2 { get; init; }
+
+    [StringLength(20)]
+    public string? StripType { get; init; }
+
     [Required]
     [StringLength(7)]
     public string ShortsColor { get; init; } = string.Empty;

@@ -636,6 +636,8 @@ export interface TeamKitDto {
   name: string;
   type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
   shirtColor: string;
+  shirtColor2?: string;
+  stripType?: string;
   shortsColor: string;
   socksColor: string;
   season?: string;
@@ -654,6 +656,8 @@ export interface CreateTeamKitRequest {
   name: string;
   type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
   shirtColor: string;
+  shirtColor2?: string;
+  stripType?: string;
   shortsColor: string;
   socksColor: string;
   season?: string;
@@ -664,6 +668,8 @@ export interface UpdateTeamKitRequest {
   name: string;
   type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
   shirtColor: string;
+  shirtColor2?: string;
+  stripType?: string;
   shortsColor: string;
   socksColor: string;
   season?: string;
@@ -1116,6 +1122,8 @@ export interface ClubKitDto {
   name: string;
   type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
   shirtColor: string;
+  shirtColor2?: string;
+  stripType?: string;
   shortsColor: string;
   socksColor: string;
   season?: string;
@@ -1126,6 +1134,8 @@ export interface CreateClubKitRequest {
   name: string;
   type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
   shirtColor: string;
+  shirtColor2?: string;
+  stripType?: string;
   shortsColor: string;
   socksColor: string;
   season?: string;
@@ -1136,6 +1146,8 @@ export interface UpdateClubKitRequest {
   name: string;
   type: 'home' | 'away' | 'third' | 'goalkeeper' | 'training';
   shirtColor: string;
+  shirtColor2?: string;
+  stripType?: string;
   shortsColor: string;
   socksColor: string;
   season?: string;
@@ -2256,6 +2268,8 @@ export interface MatchKitDto {
   name: string;
   type: string;
   shirtColor: string;
+  shirtColor2?: string;
+  stripType?: string;
   shortsColor: string;
   socksColor: string;
 }

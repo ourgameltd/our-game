@@ -135,6 +135,36 @@ public class CreateClubKitHandlerTests
         Assert.Equal(type, result.Type);
     }
 
+    [Fact]
+    public async Task Handle_WithStripTypeAndShirtColor2_PersistsAndReturnsFields()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var handler = new CreateClubKitHandler(db.Context);
+        var command = new CreateClubKitCommand(clubId,
+            CreateValidDto() with { StripType = "sleeves", ShirtColor2 = "#ffffff" });
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal("sleeves", result.StripType);
+        Assert.Equal("#ffffff", result.ShirtColor2);
+    }
+
+    [Fact]
+    public async Task Handle_WithInvalidStripType_ThrowsValidationException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var clubId = await db.SeedClubAsync();
+        var handler = new CreateClubKitHandler(db.Context);
+        var command = new CreateClubKitCommand(clubId,
+            CreateValidDto() with { StripType = "polkadot" });
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(command, CancellationToken.None));
+
+        Assert.True(ex.Errors.ContainsKey("StripType"));
+    }
+
     private static CreateClubKitRequestDto CreateValidDto() => new()
     {
         Type = "home",

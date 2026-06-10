@@ -111,10 +111,57 @@ public class CreateTeamKitHandlerTests
         Assert.Equal("Home 2025", result.Name);
         Assert.Equal("home", result.Type);
         Assert.Equal("#ff0000", result.ShirtColor);
+        Assert.Null(result.ShirtColor2);
+        Assert.Null(result.StripType);
         Assert.Equal("#ffffff", result.ShortsColor);
         Assert.Equal("#000000", result.SocksColor);
         Assert.Equal("2025-26", result.Season);
         Assert.True(result.IsActive);
+    }
+
+    [Fact]
+    public async Task Handle_WithStripTypeAndShirtColor2_PersistsAndReturnsFields()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var handler = new CreateTeamKitHandler(db.Context);
+        var command = new CreateTeamKitCommand(teamId,
+            CreateValidDto() with { StripType = "hooped", ShirtColor2 = "#0000ff" });
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal("hooped", result.StripType);
+        Assert.Equal("#0000ff", result.ShirtColor2);
+    }
+
+    [Fact]
+    public async Task Handle_WithInvalidStripType_ThrowsValidationException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var handler = new CreateTeamKitHandler(db.Context);
+        var command = new CreateTeamKitCommand(teamId,
+            CreateValidDto() with { StripType = "polkadot" });
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(command, CancellationToken.None));
+
+        Assert.True(ex.Errors.ContainsKey("StripType"));
+    }
+
+    [Fact]
+    public async Task Handle_WithInvalidShirtColor2_ThrowsValidationException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var handler = new CreateTeamKitHandler(db.Context);
+        var command = new CreateTeamKitCommand(teamId,
+            CreateValidDto() with { ShirtColor2 = "notahex" });
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(command, CancellationToken.None));
+
+        Assert.True(ex.Errors.ContainsKey("ShirtColor2"));
     }
 
     [Theory]

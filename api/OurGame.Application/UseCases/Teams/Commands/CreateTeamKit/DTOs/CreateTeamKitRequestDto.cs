@@ -29,6 +29,18 @@ public record CreateTeamKitRequestDto
     public string ShirtColor { get; init; } = string.Empty;
 
     /// <summary>
+    /// Second shirt color for patterned strips (e.g. "#FFFFFF").
+    /// </summary>
+    [StringLength(7)]
+    public string? ShirtColor2 { get; init; }
+
+    /// <summary>
+    /// Strip design type (plain, hooped, striped, sash, half-and-half, sleeves).
+    /// </summary>
+    [StringLength(20)]
+    public string? StripType { get; init; }
+
+    /// <summary>
     /// Shorts color as hex string (e.g. "#FFFFFF").
     /// </summary>
     [Required]

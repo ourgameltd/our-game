@@ -15,6 +15,8 @@ namespace OurGame.Application.UseCases.Clubs.Commands.CreateClubKit;
 public class CreateClubKitHandler : IRequestHandler<CreateClubKitCommand, ClubKitDto>
 {
     private static readonly Regex HexColorRegex = new(@"^#([0-9a-fA-F]{6})$", RegexOptions.Compiled);
+    private static readonly HashSet<string> ValidStripTypes = new(StringComparer.OrdinalIgnoreCase)
+        { "plain", "hooped", "striped", "sash", "half-and-half", "sleeves" };
 
     private readonly OurGameContext _db;
 
@@ -58,6 +60,9 @@ public class CreateClubKitHandler : IRequestHandler<CreateClubKitCommand, ClubKi
         if (!string.IsNullOrEmpty(dto.ShirtColor) && !HexColorRegex.IsMatch(dto.ShirtColor))
             errors.Add("ShirtColor", new[] { "Shirt color must be a valid hex color (e.g. #FF0000)." });
 
+        if (!string.IsNullOrEmpty(dto.ShirtColor2) && !HexColorRegex.IsMatch(dto.ShirtColor2))
+            errors.Add("ShirtColor2", new[] { "Second shirt color must be a valid hex color (e.g. #FFFFFF)." });
+
         if (!string.IsNullOrEmpty(dto.ShortsColor) && !HexColorRegex.IsMatch(dto.ShortsColor))
             errors.Add("ShortsColor", new[] { "Shorts color must be a valid hex color (e.g. #FFFFFF)." });
 
@@ -70,6 +75,11 @@ public class CreateClubKitHandler : IRequestHandler<CreateClubKitCommand, ClubKi
             errors.Add("Type", new[] { $"Invalid kit type: {dto.Type}. Must be one of: home, away, third, goalkeeper, training." });
         }
 
+        if (!string.IsNullOrEmpty(dto.StripType) && !ValidStripTypes.Contains(dto.StripType))
+        {
+            errors.Add("StripType", new[] { $"Invalid strip type: {dto.StripType}. Must be one of: plain, hooped, striped, sash, half-and-half, sleeves." });
+        }
+
         if (errors.Count > 0)
         {
             throw new ValidationException(errors);
@@ -78,12 +88,14 @@ public class CreateClubKitHandler : IRequestHandler<CreateClubKitCommand, ClubKi
         var kitId = Guid.NewGuid();
         var now = DateTime.UtcNow;
         var season = dto.Season ?? string.Empty;
+        var shirtColor2 = dto.ShirtColor2 ?? string.Empty;
+        var stripType = dto.StripType ?? string.Empty;
         Guid? teamId = null;
 
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
-            INSERT INTO Kits (Id, ClubId, TeamId, Name, Type, ShirtColor, ShortsColor, SocksColor, Season, IsActive, CreatedAt)
+            INSERT INTO Kits (Id, ClubId, TeamId, Name, Type, ShirtColor, ShirtColor2, StripType, ShortsColor, SocksColor, Season, IsActive, CreatedAt)
             VALUES ({kitId}, {clubId}, {teamId}, {dto.Name}, {(int)kitType!.Value},
-                    {dto.ShirtColor}, {dto.ShortsColor}, {dto.SocksColor}, {season}, {dto.IsActive}, {now})
+                    {dto.ShirtColor}, {shirtColor2}, {stripType}, {dto.ShortsColor}, {dto.SocksColor}, {season}, {dto.IsActive}, {now})
         ", cancellationToken);
 
         var kit = await _db.Database
@@ -93,6 +105,8 @@ public class CreateClubKitHandler : IRequestHandler<CreateClubKitCommand, ClubKi
                     k.Name,
                     k.Type,
                     k.ShirtColor,
+                    k.ShirtColor2,
+                    k.StripType,
                     k.ShortsColor,
                     k.SocksColor,
                     k.Season,
@@ -113,6 +127,8 @@ public class CreateClubKitHandler : IRequestHandler<CreateClubKitCommand, ClubKi
             Name = kit.Name ?? string.Empty,
             Type = MapKitTypeToString(kit.Type),
             ShirtColor = kit.ShirtColor ?? string.Empty,
+            ShirtColor2 = string.IsNullOrEmpty(kit.ShirtColor2) ? null : kit.ShirtColor2,
+            StripType = string.IsNullOrEmpty(kit.StripType) ? null : kit.StripType,
             ShortsColor = kit.ShortsColor ?? string.Empty,
             SocksColor = kit.SocksColor ?? string.Empty,
             Season = kit.Season,
@@ -150,6 +166,8 @@ internal class KitRawDto
     public string? Name { get; set; }
     public int Type { get; set; }
     public string? ShirtColor { get; set; }
+    public string? ShirtColor2 { get; set; }
+    public string? StripType { get; set; }
     public string? ShortsColor { get; set; }
     public string? SocksColor { get; set; }
     public string? Season { get; set; }

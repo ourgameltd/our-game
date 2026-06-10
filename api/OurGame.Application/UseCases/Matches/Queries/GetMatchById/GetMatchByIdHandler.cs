@@ -54,11 +54,15 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 pk.Name AS PrimaryKitName,
                 pk.Type AS PrimaryKitType,
                 pk.ShirtColor AS PrimaryKitShirtColor,
+                pk.ShirtColor2 AS PrimaryKitShirtColor2,
+                pk.StripType AS PrimaryKitStripType,
                 pk.ShortsColor AS PrimaryKitShortsColor,
                 pk.SocksColor AS PrimaryKitSocksColor,
                 gk.Name AS GoalkeeperKitName,
                 gk.Type AS GoalkeeperKitType,
                 gk.ShirtColor AS GoalkeeperKitShirtColor,
+                gk.ShirtColor2 AS GoalkeeperKitShirtColor2,
+                gk.StripType AS GoalkeeperKitStripType,
                 gk.ShortsColor AS GoalkeeperKitShortsColor,
                 gk.SocksColor AS GoalkeeperKitSocksColor,
                 m.HomeScore,
@@ -333,6 +337,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 Name = match.PrimaryKitName,
                 Type = MapKitTypeToString(match.PrimaryKitType),
                 ShirtColor = match.PrimaryKitShirtColor ?? string.Empty,
+                ShirtColor2 = string.IsNullOrEmpty(match.PrimaryKitShirtColor2) ? null : match.PrimaryKitShirtColor2,
+                StripType = string.IsNullOrEmpty(match.PrimaryKitStripType) ? null : match.PrimaryKitStripType,
                 ShortsColor = match.PrimaryKitShortsColor ?? string.Empty,
                 SocksColor = match.PrimaryKitSocksColor ?? string.Empty,
             } : null,
@@ -342,6 +348,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 Name = match.GoalkeeperKitName,
                 Type = MapKitTypeToString(match.GoalkeeperKitType),
                 ShirtColor = match.GoalkeeperKitShirtColor ?? string.Empty,
+                ShirtColor2 = string.IsNullOrEmpty(match.GoalkeeperKitShirtColor2) ? null : match.GoalkeeperKitShirtColor2,
+                StripType = string.IsNullOrEmpty(match.GoalkeeperKitStripType) ? null : match.GoalkeeperKitStripType,
                 ShortsColor = match.GoalkeeperKitShortsColor ?? string.Empty,
                 SocksColor = match.GoalkeeperKitSocksColor ?? string.Empty,
             } : null,
@@ -539,11 +547,15 @@ public class MatchRaw
     public string? PrimaryKitName { get; set; }
     public int? PrimaryKitType { get; set; }
     public string? PrimaryKitShirtColor { get; set; }
+    public string? PrimaryKitShirtColor2 { get; set; }
+    public string? PrimaryKitStripType { get; set; }
     public string? PrimaryKitShortsColor { get; set; }
     public string? PrimaryKitSocksColor { get; set; }
     public string? GoalkeeperKitName { get; set; }
     public int? GoalkeeperKitType { get; set; }
     public string? GoalkeeperKitShirtColor { get; set; }
+    public string? GoalkeeperKitShirtColor2 { get; set; }
+    public string? GoalkeeperKitStripType { get; set; }
     public string? GoalkeeperKitShortsColor { get; set; }
     public string? GoalkeeperKitSocksColor { get; set; }
     public int? HomeScore { get; set; }

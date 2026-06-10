@@ -110,6 +110,38 @@ public class UpdateTeamKitHandlerTests
         Assert.False(result.IsActive);
     }
 
+    [Fact]
+    public async Task Handle_WithStripTypeAndShirtColor2_PersistsAndReturnsFields()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var kitId = await db.SeedKitAsync(clubId, teamId);
+        var handler = new UpdateTeamKitHandler(db.Context);
+        var command = new UpdateTeamKitCommand(teamId, kitId,
+            CreateValidDto() with { StripType = "striped", ShirtColor2 = "#00ff00" });
+
+        var result = await handler.Handle(command, CancellationToken.None);
+
+        Assert.Equal("striped", result.StripType);
+        Assert.Equal("#00ff00", result.ShirtColor2);
+    }
+
+    [Fact]
+    public async Task Handle_WithInvalidStripType_ThrowsValidationException()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var kitId = await db.SeedKitAsync(clubId, teamId);
+        var handler = new UpdateTeamKitHandler(db.Context);
+        var command = new UpdateTeamKitCommand(teamId, kitId,
+            CreateValidDto() with { StripType = "polkadot" });
+
+        var ex = await Assert.ThrowsAsync<ValidationException>(() =>
+            handler.Handle(command, CancellationToken.None));
+
+        Assert.True(ex.Errors.ContainsKey("StripType"));
+    }
+
     private static UpdateTeamKitRequestDto CreateValidDto() =>
         new()
         {

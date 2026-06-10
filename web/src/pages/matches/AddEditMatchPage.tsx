@@ -1931,7 +1931,7 @@ export default function AddEditMatchPage() {
                     )}
                     {selectedKit && (
                       <div className="mt-2">
-                        <KitStrip size="md" shirtColor={selectedKit.shirtColor} shortsColor={selectedKit.shortsColor} socksColor={selectedKit.socksColor} />
+                        <KitStrip size="md" shirtColor={selectedKit.shirtColor} shirtColor2={selectedKit.shirtColor2} stripType={selectedKit.stripType as never} shortsColor={selectedKit.shortsColor} socksColor={selectedKit.socksColor} />
                       </div>
                     )}
                   </div>
@@ -1957,7 +1957,7 @@ export default function AddEditMatchPage() {
                     )}
                     {selectedGoalkeeperKit && (
                       <div className="mt-2">
-                        <KitStrip size="md" shirtColor={selectedGoalkeeperKit.shirtColor} shortsColor={selectedGoalkeeperKit.shortsColor} socksColor={selectedGoalkeeperKit.socksColor} />
+                        <KitStrip size="md" shirtColor={selectedGoalkeeperKit.shirtColor} shirtColor2={selectedGoalkeeperKit.shirtColor2} stripType={selectedGoalkeeperKit.stripType as never} shortsColor={selectedGoalkeeperKit.shortsColor} socksColor={selectedGoalkeeperKit.socksColor} />
                       </div>
                     )}
                   </div>

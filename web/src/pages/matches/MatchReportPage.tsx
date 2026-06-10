@@ -295,13 +295,13 @@ export default function MatchReportPage() {
                   <div className="flex items-end gap-4">
                     {match.primaryKit && (
                       <div className="flex flex-col items-center gap-1">
-                        <KitStrip size="sm" shirtColor={match.primaryKit.shirtColor} shortsColor={match.primaryKit.shortsColor} socksColor={match.primaryKit.socksColor} />
+                        <KitStrip size="sm" shirtColor={match.primaryKit.shirtColor} shirtColor2={match.primaryKit.shirtColor2} stripType={match.primaryKit.stripType as never} shortsColor={match.primaryKit.shortsColor} socksColor={match.primaryKit.socksColor} />
                         <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">Kit</span>
                       </div>
                     )}
                     {match.goalkeeperKit && (
                       <div className="flex flex-col items-center gap-1">
-                        <KitStrip size="sm" shirtColor={match.goalkeeperKit.shirtColor} shortsColor={match.goalkeeperKit.shortsColor} socksColor={match.goalkeeperKit.socksColor} />
+                        <KitStrip size="sm" shirtColor={match.goalkeeperKit.shirtColor} shirtColor2={match.goalkeeperKit.shirtColor2} stripType={match.goalkeeperKit.stripType as never} shortsColor={match.goalkeeperKit.shortsColor} socksColor={match.goalkeeperKit.socksColor} />
                         <span className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wider">GK Kit</span>
                       </div>
                     )}
