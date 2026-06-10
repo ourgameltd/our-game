@@ -1,4 +1,5 @@
 import { Match, Kit } from '@/types';
+import KitStrip from '@components/kit/KitStrip';
 
 interface MatchPreviewCardProps {
   match: Match;
@@ -204,56 +205,15 @@ export default function MatchPreviewCard({
       {primaryKit && (
         <div className="mb-4 pb-6 border-b border-gray-200 dark:border-gray-700">
           <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Kit to Wear</h3>
-          <div className="flex flex-row items-start gap-4">
-            <div className="min-w-0">
-              <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                {primaryKit.name}
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="flex gap-1">
-                  <div 
-                    className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                    style={{ backgroundColor: primaryKit.shirtColor }}
-                    title={`Shirt: ${primaryKit.shirtColor}`}
-                  />
-                  <div 
-                    className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                    style={{ backgroundColor: primaryKit.shortsColor }}
-                    title={`Shorts: ${primaryKit.shortsColor}`}
-                  />
-                  <div 
-                    className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                    style={{ backgroundColor: primaryKit.socksColor }}
-                    title={`Socks: ${primaryKit.socksColor}`}
-                  />
-                </div>
-              </div>
+          <div className="flex flex-row items-start gap-6">
+            <div className="flex flex-col items-center gap-2">
+              <KitStrip size="md" shirtColor={primaryKit.shirtColor} shortsColor={primaryKit.shortsColor} socksColor={primaryKit.socksColor} />
+              <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{primaryKit.name}</span>
             </div>
-            
             {goalkeeperKit && (
-              <div className="min-w-0">
-                <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  {goalkeeperKit.name}
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="flex gap-1">
-                    <div 
-                      className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                      style={{ backgroundColor: goalkeeperKit.shirtColor }}
-                      title={`Shirt: ${goalkeeperKit.shirtColor}`}
-                    />
-                    <div 
-                      className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                      style={{ backgroundColor: goalkeeperKit.shortsColor }}
-                      title={`Shorts: ${goalkeeperKit.shortsColor}`}
-                    />
-                    <div 
-                      className="w-8 h-8 rounded border-2 border-gray-300 dark:border-gray-600"
-                      style={{ backgroundColor: goalkeeperKit.socksColor }}
-                      title={`Socks: ${goalkeeperKit.socksColor}`}
-                    />
-                  </div>
-                </div>
+              <div className="flex flex-col items-center gap-2">
+                <KitStrip size="md" shirtColor={goalkeeperKit.shirtColor} shortsColor={goalkeeperKit.shortsColor} socksColor={goalkeeperKit.socksColor} />
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{goalkeeperKit.name}</span>
               </div>
             )}
           </div>
