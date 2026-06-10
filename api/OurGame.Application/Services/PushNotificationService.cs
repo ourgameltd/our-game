@@ -121,7 +121,8 @@ public class PushNotificationService : IPushNotificationService
                 var message = new PushMessage(payloadJson)
                 {
                     Topic = payload.Tag,
-                    Urgency = PushMessageUrgency.High
+                    Urgency = PushMessageUrgency.High,
+                    TimeToLive = 86400,
                 };
 
                 await pushClient.RequestPushMessageDeliveryAsync(pushSubscription, message, cancellationToken);
@@ -134,8 +135,10 @@ public class PushNotificationService : IPushNotificationService
             }
             catch (PushServiceClientException ex)
             {
-                _logger.LogError(ex, "Push delivery failed for subscription {SubscriptionId} user {UserId} – HTTP {StatusCode}: {Message}",
-                    sub.Id, userId, (int)ex.StatusCode, ex.Message);
+                // ex.Message is just the HTTP reason phrase; the inner exception may carry the response body
+                var detail = ex.InnerException?.Message ?? ex.Message;
+                _logger.LogError(ex, "Push delivery failed for subscription {SubscriptionId} user {UserId} – HTTP {StatusCode}: {Detail}",
+                    sub.Id, userId, (int)ex.StatusCode, detail);
             }
             catch (Exception ex)
             {
