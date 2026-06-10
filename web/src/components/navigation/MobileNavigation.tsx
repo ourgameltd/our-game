@@ -1053,15 +1053,17 @@ export default function MobileNavigation() {
               </button>
             </li>
 
-            <li className="mobile-nav-item">
-              <Link 
-                to="/help" 
-                className="mobile-nav-link"
-              >
-                <HelpCircle className="mobile-nav-icon" />
-                <span className="mobile-nav-text">Help & Support</span>
-              </Link>
-            </li>
+            {profile.isCoach && !!clubId && (
+              <li className="mobile-nav-item">
+                <Link
+                  to="/help"
+                  className="mobile-nav-link"
+                >
+                  <HelpCircle className="mobile-nav-icon" />
+                  <span className="mobile-nav-text">Help & Support</span>
+                </Link>
+              </li>
+            )}
 
             <li className="mobile-nav-item">
               <a 
