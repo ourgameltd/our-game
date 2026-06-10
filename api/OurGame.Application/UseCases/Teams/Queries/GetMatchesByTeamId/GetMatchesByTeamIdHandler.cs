@@ -64,7 +64,8 @@ public class GetMatchesByTeamIdHandler : IRequestHandler<GetMatchesByTeamIdQuery
                 m.IsHome,
                 m.HomeScore,
                 m.AwayScore,
-                mr.Id AS ReportId
+                mr.Id AS ReportId,
+                m.PitchType
             FROM Matches m
             LEFT JOIN MatchReports mr ON m.Id = mr.MatchId
             WHERE m.TeamId = @teamId";
@@ -138,7 +139,8 @@ public class GetMatchesByTeamIdHandler : IRequestHandler<GetMatchesByTeamIdQuery
             HomeScore = m.HomeScore,
             AwayScore = m.AwayScore,
             HasReport = m.ReportId.HasValue,
-            ReportId = m.ReportId
+            ReportId = m.ReportId,
+            PitchType = m.PitchType
         }).ToList();
 
         return new TeamMatchesDto
@@ -201,4 +203,5 @@ public class MatchRaw
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
     public Guid? ReportId { get; set; }
+    public string? PitchType { get; set; }
 }

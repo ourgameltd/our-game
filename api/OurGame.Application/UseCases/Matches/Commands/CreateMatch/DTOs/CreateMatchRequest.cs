@@ -61,6 +61,12 @@ public record CreateMatchRequest
     public int? WeatherTemperature { get; init; }
 
     /// <summary>
+    /// Pitch type: grass, astro, indoor
+    /// </summary>
+    [StringLength(50)]
+    public string? PitchType { get; init; }
+
+    /// <summary>
     /// Lineup containing formation, tactic, and players
     /// </summary>
     public CreateMatchLineupRequest? Lineup { get; init; }

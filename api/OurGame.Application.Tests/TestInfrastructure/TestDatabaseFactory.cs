@@ -31,7 +31,7 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
 
         // Create the unique test database
         var masterOptions = new DbContextOptionsBuilder<OurGameContext>()
-            .UseSqlServer(MasterConnection)
+            .UseSqlServer(MasterConnection, o => o.CommandTimeout(180))
             .Options;
         await using (var masterContext = new OurGameContext(masterOptions))
         {
@@ -40,7 +40,7 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
         }
 
         var options = new DbContextOptionsBuilder<OurGameContext>()
-            .UseSqlServer(connectionString)
+            .UseSqlServer(connectionString, o => o.CommandTimeout(180))
             .Options;
 
         var context = new OurGameContext(options);
@@ -612,7 +612,7 @@ public sealed class TestDatabaseFactory : IAsyncDisposable
 
         // Drop the test database
         var masterOptions = new DbContextOptionsBuilder<OurGameContext>()
-            .UseSqlServer(MasterConnection)
+            .UseSqlServer(MasterConnection, o => o.CommandTimeout(180))
             .Options;
         await using var masterContext = new OurGameContext(masterOptions);
         await masterContext.Database.ExecuteSqlRawAsync(

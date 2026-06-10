@@ -41,6 +41,9 @@ public record TrainingSessionDetailDto
     /// <summary>Additional notes about the session</summary>
     public string? Notes { get; init; }
 
+    /// <summary>Pitch type: grass, astro, or indoor</summary>
+    public string? PitchType { get; init; }
+
     /// <summary>Current status of the session: scheduled, in-progress, completed, or cancelled</summary>
     public string Status { get; init; } = string.Empty;
 

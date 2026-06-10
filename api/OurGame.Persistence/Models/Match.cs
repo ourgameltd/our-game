@@ -50,6 +50,8 @@ public partial class Match
 
     public int? WeatherTemperature { get; set; }
 
+    public string PitchType { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

@@ -34,6 +34,7 @@ public class UpdateMySessionAttendanceHandlerTests
         await handler.Handle(new UpdateMySessionAttendanceCommand(sessionId, "player-session-auth", "confirmed"), CancellationToken.None);
 
         var record = await db.Context.SessionAttendances
+            .AsNoTracking()
             .FirstAsync(a => a.SessionId == sessionId && a.PlayerId == playerId);
         Assert.True(record.Present);
     }
@@ -62,6 +63,7 @@ public class UpdateMySessionAttendanceHandlerTests
         await handler.Handle(new UpdateMySessionAttendanceCommand(sessionId, "player-session-auth-2", "declined"), CancellationToken.None);
 
         var record = await db.Context.SessionAttendances
+            .AsNoTracking()
             .FirstAsync(a => a.SessionId == sessionId && a.PlayerId == playerId);
         Assert.False(record.Present);
     }
@@ -90,6 +92,7 @@ public class UpdateMySessionAttendanceHandlerTests
         await handler.Handle(new UpdateMySessionAttendanceCommand(sessionId, "coach-session-auth", "confirmed"), CancellationToken.None);
 
         var record = await db.Context.SessionCoaches
+            .AsNoTracking()
             .FirstAsync(c => c.SessionId == sessionId && c.CoachId == coachId);
         Assert.Equal("confirmed", record.Status);
     }
@@ -133,6 +136,7 @@ public class UpdateMySessionAttendanceHandlerTests
             CancellationToken.None);
 
         var record = await db.Context.SessionAttendances
+            .AsNoTracking()
             .FirstAsync(a => a.SessionId == sessionId && a.PlayerId == childPlayerId);
         Assert.True(record.Present);
     }

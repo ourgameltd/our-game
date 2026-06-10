@@ -69,7 +69,7 @@ public class EnsureUserByAuthIdHandlerTests
         var handler = new EnsureUserByAuthIdHandler(db.Context, mediator, b2CService);
 
         var result = await handler.Handle(
-            new EnsureUserByAuthIdCommand("auth-new-claims", "jane@example.com", "Jane", "Jane Doe", "Doe"),
+            new EnsureUserByAuthIdCommand("auth-new-claims", "jane@example.com", "Jane Doe", "Jane", "Doe"),
             CancellationToken.None);
 
         Assert.NotNull(result);

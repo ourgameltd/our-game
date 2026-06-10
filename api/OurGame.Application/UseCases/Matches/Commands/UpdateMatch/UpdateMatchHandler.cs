@@ -61,6 +61,7 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
         var competition = dto.Competition ?? string.Empty;
         var notes = dto.Notes ?? string.Empty;
         var weatherCondition = dto.WeatherCondition;
+        var pitchType = dto.PitchType;
 
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
@@ -89,6 +90,7 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
                 Notes = {notes},
                 WeatherCondition = {weatherCondition},
                 WeatherTemperature = {dto.WeatherTemperature},
+                PitchType = {pitchType},
                 UpdatedAt = {now}
             WHERE Id = {matchId}
         ", cancellationToken);

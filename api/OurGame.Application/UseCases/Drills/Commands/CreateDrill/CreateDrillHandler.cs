@@ -106,10 +106,10 @@ public class CreateDrillHandler : IRequestHandler<CreateDrillCommand, DrillDetai
             // Insert into Drills table
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
                 INSERT INTO Drills (Id, Name, Description, DurationMinutes, Category, Equipment,
-                    Diagram, DrillDiagramConfig, Instructions, Variations, CreatedBy, IsPublic, CreatedAt, UpdatedAt)
+                    Diagram, DrillDiagramConfig, Instructions, Variations, CreatedBy, IsPublic, IsArchived, CreatedAt, UpdatedAt)
                 VALUES ({drillId}, {dto.Name}, {dto.Description}, {dto.DurationMinutes}, {(int)category},
                     {equipmentJson}, {(string?)null}, {drillDiagramConfigJson}, {instructionsJson}, {variationsJson},
-                    {coachId}, {dto.IsPublic}, {now}, {now})
+                    {coachId}, {dto.IsPublic}, {false}, {now}, {now})
             ", cancellationToken);
 
             // Insert competency links

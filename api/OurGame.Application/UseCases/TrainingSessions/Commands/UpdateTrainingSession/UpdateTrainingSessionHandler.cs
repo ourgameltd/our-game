@@ -39,6 +39,7 @@ public class UpdateTrainingSessionHandler : IRequestHandler<UpdateTrainingSessio
         var focusAreasJson = JsonSerializer.Serialize(dto.FocusAreas);
         var notes = dto.Notes ?? string.Empty;
         var templateId = dto.TemplateId ?? dto.AppliedTemplates.FirstOrDefault()?.TemplateId;
+        var pitchType = dto.PitchType;
 
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
@@ -55,6 +56,7 @@ public class UpdateTrainingSessionHandler : IRequestHandler<UpdateTrainingSessio
                     FocusAreas = {focusAreasJson},
                     TemplateId = {templateId},
                     Notes = {notes},
+                    PitchType = {pitchType},
                     Status = {statusInt},
                     IsLocked = {dto.IsLocked},
                     UpdatedAt = {now}

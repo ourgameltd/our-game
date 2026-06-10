@@ -68,6 +68,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 m.Notes,
                 m.WeatherCondition,
                 m.WeatherTemperature,
+                m.PitchType,
                 m.CreatedAt,
                 m.UpdatedAt
             FROM Matches m
@@ -351,6 +352,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             Notes = match.Notes,
             WeatherCondition = match.WeatherCondition,
             WeatherTemperature = match.WeatherTemperature,
+            PitchType = match.PitchType,
             CreatedAt = match.CreatedAt,
             UpdatedAt = match.UpdatedAt,
             IsPublished = report?.IsPublished ?? false,
@@ -551,6 +553,7 @@ public class MatchRaw
     public string? Notes { get; set; }
     public string? WeatherCondition { get; set; }
     public int? WeatherTemperature { get; set; }
+    public string? PitchType { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

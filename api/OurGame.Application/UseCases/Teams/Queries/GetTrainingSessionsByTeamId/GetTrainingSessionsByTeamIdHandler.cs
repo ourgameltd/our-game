@@ -65,6 +65,7 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
                 ts.Location,
                 ts.FocusAreas,
                 ts.TemplateId,
+                ts.PitchType,
                 ts.Status,
                 ts.IsLocked,
                 (SELECT STRING_AGG(CAST(sd.DrillId AS VARCHAR(36)), ',') 
@@ -161,7 +162,8 @@ public class GetTrainingSessionsByTeamIdHandler : IRequestHandler<GetTrainingSes
             DrillCount = s.DrillCount,
             AttendanceCount = s.AttendanceCount,
             CoachCount = s.CoachCount,
-            ConfirmedCoachCount = s.ConfirmedCoachCount
+            ConfirmedCoachCount = s.ConfirmedCoachCount,
+            PitchType = s.PitchType
         }).ToList();
 
         return new TeamTrainingSessionsDto
@@ -287,6 +289,7 @@ public class TrainingSessionRaw
     public string? Location { get; set; }
     public string? FocusAreas { get; set; }
     public Guid? TemplateId { get; set; }
+    public string? PitchType { get; set; }
     public int Status { get; set; }
     public bool IsLocked { get; set; }
     public string? DrillIdsString { get; set; }

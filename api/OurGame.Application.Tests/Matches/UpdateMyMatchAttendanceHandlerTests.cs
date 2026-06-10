@@ -35,6 +35,7 @@ public class UpdateMyMatchAttendanceHandlerTests
         await handler.Handle(new UpdateMyMatchAttendanceCommand(matchId, "player-auth", "confirmed"), CancellationToken.None);
 
         var record = await db.Context.MatchAttendances
+            .AsNoTracking()
             .FirstAsync(a => a.MatchId == matchId && a.PlayerId == playerId);
         Assert.Equal("confirmed", record.Status);
     }
@@ -64,6 +65,7 @@ public class UpdateMyMatchAttendanceHandlerTests
         await handler.Handle(new UpdateMyMatchAttendanceCommand(matchId, "player-auth-2", "declined"), CancellationToken.None);
 
         var record = await db.Context.MatchAttendances
+            .AsNoTracking()
             .FirstAsync(a => a.MatchId == matchId && a.PlayerId == playerId);
         Assert.Equal("declined", record.Status);
     }
@@ -92,6 +94,7 @@ public class UpdateMyMatchAttendanceHandlerTests
         await handler.Handle(new UpdateMyMatchAttendanceCommand(matchId, "coach-auth", "confirmed"), CancellationToken.None);
 
         var record = await db.Context.MatchCoaches
+            .AsNoTracking()
             .FirstAsync(c => c.MatchId == matchId && c.CoachId == coachId);
         Assert.Equal("confirmed", record.Status);
     }
@@ -136,6 +139,7 @@ public class UpdateMyMatchAttendanceHandlerTests
             CancellationToken.None);
 
         var record = await db.Context.MatchAttendances
+            .AsNoTracking()
             .FirstAsync(a => a.MatchId == matchId && a.PlayerId == childPlayerId);
         Assert.Equal("confirmed", record.Status);
     }

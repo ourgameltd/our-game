@@ -57,18 +57,19 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
         var competition = dto.Competition ?? string.Empty;
         var notes = dto.Notes ?? string.Empty;
         var weatherCondition = dto.WeatherCondition;
+        var pitchType = dto.PitchType;
 
         // Insert match
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
             INSERT INTO Matches (Id, TeamId, SeasonId, SquadSize, Opposition, MatchDate, MeetTime, KickOffTime,
                 Location, IsHome, Competition, PrimaryKitId, SecondaryKitId, GoalkeeperKitId,
-                HomeScore, AwayScore, Status, IsLocked, Notes, WeatherCondition, WeatherTemperature,
+                HomeScore, AwayScore, Status, IsLocked, Notes, WeatherCondition, WeatherTemperature, PitchType,
                 CreatedAt, UpdatedAt)
             VALUES ({matchId}, {dto.TeamId}, {dto.SeasonId}, {squadSizeInt}, {dto.Opposition}, {dto.MatchDate},
                 {dto.MeetTime}, {dto.KickOffTime}, {location}, {dto.IsHome}, {competition},
                 {dto.PrimaryKitId}, {dto.SecondaryKitId}, {dto.GoalkeeperKitId},
                 {dto.HomeScore}, {dto.AwayScore}, {statusInt}, {false}, {notes},
-                {weatherCondition}, {dto.WeatherTemperature}, {now}, {now})
+                {weatherCondition}, {dto.WeatherTemperature}, {pitchType}, {now}, {now})
         ", cancellationToken);
 
         // Insert lineup if provided

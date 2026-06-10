@@ -25,6 +25,7 @@ function mapTeamMatchToMatch(dto: TeamMatchDto, teamId: string): Match {
       ? { home: dto.homeScore, away: dto.awayScore }
       : undefined,
     status: dto.status as Match['status'],
+    pitchType: dto.pitchType || undefined,
   };
 }
 

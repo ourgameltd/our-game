@@ -2017,6 +2017,7 @@ function mapTrainingSessionDetailToUi(dto: TrainingSessionDetailDto): TrainingSe
       notes: att.notes || undefined
     })),
     notes: dto.notes || undefined,
+    pitchType: dto.pitchType || undefined,
     status: dto.status as 'scheduled' | 'in-progress' | 'completed' | 'cancelled'
   };
 }

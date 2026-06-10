@@ -27,6 +27,15 @@ export const squadSizes = [
 
 export type SquadSizeValue = typeof squadSizes[number]['value'];
 
+// Pitch types
+export const pitchTypes = [
+  { value: 'grass', label: 'Grass' },
+  { value: 'astro', label: 'Astro (3G)' },
+  { value: 'indoor', label: 'Indoor' },
+] as const;
+
+export type PitchTypeValue = typeof pitchTypes[number]['value'];
+
 // Weather conditions for matches
 export const weatherConditions = [
   { value: 'clear', label: 'Clear' },

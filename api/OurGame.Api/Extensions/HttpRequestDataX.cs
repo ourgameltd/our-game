@@ -127,8 +127,8 @@ public static class HttpRequestDataX
     public static string? GetUserEmail(this HttpRequestData req)
     {
         var principal = req.GetClientPrincipal();
-        return principal?.FindFirst("emails")?.Value ??
-               principal?.FindFirst(ClaimTypes.Email)?.Value ??
+        return principal?.FindFirst(ClaimTypes.Email)?.Value ??
+               principal?.FindFirst("emails")?.Value ??
                principal?.FindFirst("email")?.Value ??
                principal?.FindFirst("preferred_username")?.Value ??
                req.GetFirstHeaderValue("x-user-email");

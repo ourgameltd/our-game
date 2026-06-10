@@ -48,6 +48,12 @@ public record CreateTrainingSessionDto
     public string? Notes { get; init; }
 
     /// <summary>
+    /// Pitch type: grass, astro, indoor
+    /// </summary>
+    [StringLength(50)]
+    public string? PitchType { get; init; }
+
+    /// <summary>
     /// Session status: Scheduled, InProgress, Completed, or Cancelled
     /// </summary>
     [Required]

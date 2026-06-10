@@ -64,4 +64,9 @@ public record TeamMatchDto
     /// Unique identifier of the match report (null if no report exists)
     /// </summary>
     public Guid? ReportId { get; init; }
+
+    /// <summary>
+    /// Pitch type: grass, astro, indoor
+    /// </summary>
+    public string? PitchType { get; init; }
 }

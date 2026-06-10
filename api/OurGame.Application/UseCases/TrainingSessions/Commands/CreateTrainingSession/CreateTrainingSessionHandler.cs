@@ -54,6 +54,7 @@ public class CreateTrainingSessionHandler : IRequestHandler<CreateTrainingSessio
         var notes = dto.Notes ?? string.Empty;
         var focusAreasJson = JsonSerializer.Serialize(dto.FocusAreas);
         var templateId = dto.AppliedTemplates.FirstOrDefault()?.TemplateId;
+        var pitchType = dto.PitchType;
 
         await using var transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
@@ -61,8 +62,8 @@ public class CreateTrainingSessionHandler : IRequestHandler<CreateTrainingSessio
         {
             // Insert training session
             await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                INSERT INTO TrainingSessions (Id, TeamId, SessionDate, MeetTime, DurationMinutes, Location, FocusAreas, TemplateId, Notes, Status, IsLocked, CreatedAt, UpdatedAt)
-                VALUES ({sessionId}, {dto.TeamId}, {dto.SessionDate}, {dto.MeetTime}, {dto.DurationMinutes}, {dto.Location}, {focusAreasJson}, {templateId}, {notes}, {statusInt}, {dto.IsLocked}, {now}, {now})
+                INSERT INTO TrainingSessions (Id, TeamId, SessionDate, MeetTime, DurationMinutes, Location, FocusAreas, TemplateId, Notes, PitchType, Status, IsLocked, CreatedAt, UpdatedAt)
+                VALUES ({sessionId}, {dto.TeamId}, {dto.SessionDate}, {dto.MeetTime}, {dto.DurationMinutes}, {dto.Location}, {focusAreasJson}, {templateId}, {notes}, {pitchType}, {statusInt}, {dto.IsLocked}, {now}, {now})
             ", cancellationToken);
 
             // Insert session drills

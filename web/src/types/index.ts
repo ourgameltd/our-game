@@ -293,6 +293,7 @@ export interface Match {
   status: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   coachIds?: string[]; // Coaches assigned to this match
   notes?: string; // Additional notes/details about the match
+  pitchType?: string; // Pitch type: grass, astro, indoor
   attendance?: {
     playerId: string;
     status: 'confirmed' | 'declined' | 'maybe' | 'pending';
@@ -366,6 +367,7 @@ export interface TrainingSession {
     notes?: string;
   }[];
   notes?: string; // Free text area for session plan and additional details
+  pitchType?: string; // Pitch type: grass, astro, indoor
   status?: 'scheduled' | 'in-progress' | 'completed' | 'cancelled';
   coachCount?: number;
   confirmedCoachCount?: number;

@@ -243,7 +243,7 @@ public class MatchFunctionsTests
         Assert.True(payload.Success);
         Assert.NotNull(payload.Data);
         Assert.Equal(matchId, payload.Data!.MatchId);
-        Assert.Equal("Blues vs City United match report", payload.Data.OgTitle);
+        Assert.Equal("Blues 3 – 1 City United | Match Report", payload.Data.OgTitle);
     }
 
     [Fact]

@@ -26,6 +26,8 @@ public partial class TrainingSession
 
     public string Notes { get; set; }
 
+    public string PitchType { get; set; }
+
     public SessionStatus Status { get; set; }
 
     public bool IsLocked { get; set; }
