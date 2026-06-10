@@ -79,4 +79,9 @@ public record TeamTrainingSessionDto
     /// Number of coaches who confirmed attendance
     /// </summary>
     public int ConfirmedCoachCount { get; init; }
+
+    /// <summary>
+    /// Pitch type: grass, astro, indoor
+    /// </summary>
+    public string? PitchType { get; init; }
 }

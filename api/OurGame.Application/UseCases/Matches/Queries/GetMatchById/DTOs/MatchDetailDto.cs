@@ -36,6 +36,7 @@ public record MatchDetailDto
     public string? Notes { get; init; }
     public string? WeatherCondition { get; init; }
     public int? WeatherTemperature { get; init; }
+    public string? PitchType { get; init; }
     public DateTime CreatedAt { get; init; }
     public DateTime UpdatedAt { get; init; }
     public bool IsPublished { get; init; }

@@ -104,7 +104,7 @@ export default function TrainingSessionsListContent({
           {/* Location - mobile only as card footer */}
           <div className="text-xs text-gray-600 dark:text-gray-400 md:hidden border-t border-gray-100 dark:border-gray-700 pt-2 -mx-4 px-4 -mb-1 flex items-center gap-1">
             <MapPin className="w-3 h-3" />
-            {session.location}
+            {session.location}{session.pitchType && ` · 🏟️ ${session.pitchType === 'astro' ? 'Astro (3G)' : session.pitchType === 'indoor' ? 'Indoor' : 'Grass'}`}
           </div>
 
           {/* Desktop-only: Duration */}
@@ -120,6 +120,11 @@ export default function TrainingSessionsListContent({
               <MapPin className="w-3 h-3 inline" />
               {session.location}
             </span>
+            {session.pitchType && (
+              <span className="text-xs text-gray-500 dark:text-gray-500 truncate block">
+                🏟️ {session.pitchType === 'astro' ? 'Astro (3G)' : session.pitchType === 'indoor' ? 'Indoor' : 'Grass'}
+              </span>
+            )}
           </div>
 
           {/* Status/Attendance */}

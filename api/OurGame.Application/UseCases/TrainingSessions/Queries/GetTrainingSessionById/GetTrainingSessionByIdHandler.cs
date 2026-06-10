@@ -35,6 +35,7 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
                 ts.FocusAreas,
                 ts.TemplateId,
                 ts.Notes,
+                ts.PitchType,
                 ts.Status,
                 ts.IsLocked,
                 ts.CreatedAt,
@@ -141,6 +142,7 @@ public class GetTrainingSessionByIdHandler : IRequestHandler<GetTrainingSessionB
             FocusAreas = ParseFocusAreas(session.FocusAreas),
             TemplateId = session.TemplateId,
             Notes = session.Notes,
+            PitchType = session.PitchType,
             Status = MapSessionStatusToString(session.Status),
             IsLocked = session.IsLocked,
             CreatedAt = session.CreatedAt,
@@ -318,6 +320,7 @@ public class TrainingSessionRaw
     public string? FocusAreas { get; set; }
     public Guid? TemplateId { get; set; }
     public string? Notes { get; set; }
+    public string? PitchType { get; set; }
     public int Status { get; set; }
     public bool IsLocked { get; set; }
     public DateTime CreatedAt { get; set; }

@@ -247,6 +247,12 @@ export default function MatchReportPage() {
                     )}
                   </>
                 )}
+                {match.pitchType && (
+                  <>
+                    <span>•</span>
+                    <span>🏟️ {match.pitchType === 'astro' ? 'Astro (3G)' : match.pitchType === 'indoor' ? 'Indoor' : 'Grass'}</span>
+                  </>
+                )}
               </div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
                 <span>📍 {match.location}</span>

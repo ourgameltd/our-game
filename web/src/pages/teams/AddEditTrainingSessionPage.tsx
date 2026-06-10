@@ -5,7 +5,7 @@ import { ClipboardList, Users, Plus, MapPin, X, Link as LinkIcon, Clock, Calenda
 import { useTrainingSession, useTeamPlayers, useTeamCoaches, useTeamOverview, useClubById, useDrillsByScope, useDrillTemplatesByScope, useNotifyTrainingSession } from '@/api/hooks';
 import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest, DrillListDto, DrillTemplateListDto } from '@/api/client';
 import { sessionDurations } from '@/data/referenceData';
-import { drillCategories, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory } from '@/constants/referenceData';
+import { drillCategories, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory, pitchTypes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import { SessionDrill } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -77,6 +77,7 @@ export default function AddEditTrainingSessionPage() {
   const [sessionDrills, setSessionDrills] = useState<SessionDrill[]>([]);
   const [appliedTemplates, setAppliedTemplates] = useState<{ templateId: string; appliedAt: Date; drillIds: string[] }[]>([]);
   const [notes, setNotes] = useState('');
+  const [pitchType, setPitchType] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   
   // Coach assignment state
@@ -110,6 +111,7 @@ export default function AddEditTrainingSessionPage() {
     setLocation(existingSession.location || '');
     setFocusAreas(existingSession.focusAreas || []);
     setNotes(existingSession.notes || '');
+    setPitchType(existingSession.pitchType || '');
     const coachIds = existingSession.coachIds || [];
     setAssignedCoachIds(coachIds);
     if (existingSession.coaches && existingSession.coaches.length > 0) {
@@ -370,6 +372,7 @@ export default function AddEditTrainingSessionPage() {
           location,
           focusAreas,
           notes: notes || undefined,
+          pitchType: pitchType || undefined,
           status: existingSession?.status || 'scheduled',
           drills: sessionDrills.map(sd => ({
             drillId: sd.drillId,
@@ -402,6 +405,7 @@ export default function AddEditTrainingSessionPage() {
           location,
           focusAreas,
           notes: notes || undefined,
+          pitchType: pitchType || undefined,
           status: 'scheduled',
           sessionDrills: sessionDrills.map(sd => ({
             drillId: sd.drillId,
@@ -716,6 +720,22 @@ export default function AddEditTrainingSessionPage() {
                       <span className="hidden sm:inline">Map</span>
                     </button>
                   </div>
+                </div>
+
+                <div>
+                  <label className="label">
+                    Pitch Type
+                  </label>
+                  <select
+                    value={pitchType}
+                    onChange={(e) => setPitchType(e.target.value)}
+                    className="input"
+                  >
+                    <option value="">Select pitch type</option>
+                    {pitchTypes.map(p => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

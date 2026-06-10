@@ -159,7 +159,7 @@ export default function MatchesListContent({
 
           {/* Location - mobile only as card footer */}
           <div className="text-xs text-gray-600 dark:text-gray-400 text-center md:hidden border-t border-gray-100 dark:border-gray-700 pt-2 -mx-4 px-4">
-            📍 {match.location}
+            📍 {match.location}{match.pitchType && ` · 🏟️ ${match.pitchType === 'astro' ? 'Astro (3G)' : match.pitchType === 'indoor' ? 'Indoor' : 'Grass'}`}
           </div>
 
           {/* Mobile actions */}
@@ -196,6 +196,11 @@ export default function MatchesListContent({
             <span className="text-xs text-gray-600 dark:text-gray-400 truncate block">
               📍 {match.location}
             </span>
+            {match.pitchType && (
+              <span className="text-xs text-gray-500 dark:text-gray-500 truncate block">
+                🏟️ {match.pitchType === 'astro' ? 'Astro (3G)' : match.pitchType === 'indoor' ? 'Indoor' : 'Grass'}
+              </span>
+            )}
           </div>
 
           {/* Status/Actions */}

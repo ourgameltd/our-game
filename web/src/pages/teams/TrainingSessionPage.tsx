@@ -178,7 +178,12 @@ export default function TrainingSessionPage() {
               )}
             </div>
             {session.location && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">📍 {session.location}</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                📍 {session.location}
+                {session.pitchType && (
+                  <span className="ml-2">🏟️ {session.pitchType === 'astro' ? 'Astro (3G)' : session.pitchType === 'indoor' ? 'Indoor' : 'Grass'}</span>
+                )}
+              </p>
             )}
             {session.focusAreas.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">

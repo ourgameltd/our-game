@@ -33,6 +33,12 @@ public record UpdateTrainingSessionRequest
     public string? Notes { get; init; }
 
     /// <summary>
+    /// Pitch type: grass, astro, indoor
+    /// </summary>
+    [StringLength(50)]
+    public string? PitchType { get; init; }
+
+    /// <summary>
     /// Session status: scheduled, in-progress, completed, cancelled
     /// </summary>
     [Required]

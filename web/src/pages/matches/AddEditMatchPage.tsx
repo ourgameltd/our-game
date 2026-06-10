@@ -12,7 +12,7 @@ import StyleIcon from '@mui/icons-material/Style';
 import HealingIcon from '@mui/icons-material/Healing';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { getResolvedPositions, ResolvedPosition } from '@/data/tactics';
-import { weatherConditions, squadSizes, cardTypes, injurySeverities } from '@/constants/referenceData';
+import { weatherConditions, squadSizes, cardTypes, injurySeverities, pitchTypes } from '@/constants/referenceData';
 import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, Tactic, TacticalPositionOverride, TacticPrinciple } from '@/types';
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
@@ -380,6 +380,7 @@ export default function AddEditMatchPage() {
   const { data: selectedTacticDetail } = useTactic(tacticId || undefined);
   const [weather, setWeather] = useState('');
   const [temperature, setTemperature] = useState('');
+  const [pitchType, setPitchType] = useState('');
   
   // Match result state
   const [homeScore, setHomeScore] = useState('');
@@ -547,6 +548,7 @@ export default function AddEditMatchPage() {
       setTacticId(existingMatch.lineup?.tacticId || '');
       setWeather(existingMatch.weatherCondition || '');
       setTemperature(existingMatch.weatherTemperature?.toString() || '');
+      setPitchType(existingMatch.pitchType || '');
       setHomeScore(existingMatch.homeScore?.toString() || '');
       setAwayScore(existingMatch.awayScore?.toString() || '');
       setMatchStatus((existingMatch.status as 'scheduled' | 'in-progress' | 'completed' | 'postponed' | 'cancelled') || 'scheduled');
@@ -648,6 +650,7 @@ export default function AddEditMatchPage() {
       setTacticId('');
       setWeather('');
       setTemperature('');
+      setPitchType('');
       setHomeScore('');
       setAwayScore('');
       setMatchStatus('scheduled');
@@ -1513,6 +1516,7 @@ export default function AddEditMatchPage() {
       status: matchStatus,
       weatherCondition: weather || undefined,
       weatherTemperature: temperature ? parseFloat(temperature) : undefined,
+      pitchType: pitchType || undefined,
       lineup: {
         formationId: formationId || undefined,
         tacticId: tacticId || undefined,
@@ -1847,6 +1851,22 @@ export default function AddEditMatchPage() {
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     Type the location or click Map to search on Google Maps. Copy the address and paste it here.
                   </p>
+                </div>
+
+                <div>
+                  <label className="label">
+                    Pitch Type
+                  </label>
+                  <select
+                    value={pitchType}
+                    onChange={(e) => setPitchType(e.target.value)}
+                    className="input"
+                  >
+                    <option value="">Select pitch type</option>
+                    {pitchTypes.map(p => (
+                      <option key={p.value} value={p.value}>{p.label}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

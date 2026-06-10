@@ -609,6 +609,7 @@ export interface TeamTrainingSessionDto {
   durationMinutes?: number;
   location: string;
   focusAreas: string[];
+  pitchType?: string;
 }
 
 export interface SystemFormationPositionDto {
@@ -690,6 +691,7 @@ export interface TeamMatchDto {
   awayScore?: number;
   hasReport: boolean;
   reportId?: string;
+  pitchType?: string;
 }
 
 export interface TeamInfoDto {
@@ -734,6 +736,7 @@ export interface TeamTrainingSessionDto {
   attendanceCount: number;
   coachCount: number;
   confirmedCoachCount: number;
+  pitchType?: string;
 }
 
 export interface AttendanceDto {
@@ -936,6 +939,7 @@ export interface TrainingSessionDetailDto {
   focusAreas: string[];
   templateId?: string;
   notes?: string;
+  pitchType?: string;
   status: string;
   createdAt: string;
   updatedAt: string;
@@ -993,6 +997,7 @@ export interface CreateTrainingSessionRequest {
   location?: string;
   focusAreas: string[];
   notes?: string;
+  pitchType?: string;
   status: string;
   sessionDrills: CreateSessionDrillRequest[];
   coaches: CreateTrainingSessionCoachRequest[];
@@ -1040,6 +1045,7 @@ export interface UpdateTrainingSessionRequest {
   focusAreas: string[];
   templateId?: string;
   notes?: string;
+  pitchType?: string;
   status: string;
   drills: UpdateSessionDrillRequest[];
   coaches: UpdateTrainingSessionCoachRequest[];
@@ -2282,6 +2288,7 @@ export interface MatchDetailDto {
   notes?: string;
   weatherCondition?: string;
   weatherTemperature?: number;
+  pitchType?: string;
   isPublished: boolean;
   createdAt: string;
   updatedAt: string;
@@ -2476,6 +2483,7 @@ export interface CreateMatchRequest {
   notes?: string;
   weatherCondition?: string;
   weatherTemperature?: number;
+  pitchType?: string;
   lineup?: CreateMatchLineupRequest;
   report?: CreateMatchReportRequest;
   coaches: MatchCoachRequest[];
@@ -2575,6 +2583,7 @@ export interface UpdateMatchRequest {
   notes?: string;
   weatherCondition?: string;
   weatherTemperature?: number;
+  pitchType?: string;
   lineup?: UpdateMatchLineupRequest;
   report?: UpdateMatchReportRequest;
   coaches: MatchCoachRequest[];

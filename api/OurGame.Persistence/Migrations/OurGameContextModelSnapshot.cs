@@ -1777,6 +1777,10 @@ namespace OurGame.Persistence.Migrations
                     b.Property<int?>("WeatherTemperature")
                         .HasColumnType("int");
 
+                    b.Property<string>("PitchType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("GoalkeeperKitId");
@@ -3159,6 +3163,10 @@ namespace OurGame.Persistence.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("PitchType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
 
                     b.HasKey("Id");
 
