@@ -69,11 +69,7 @@ public class BlobStorageService : IBlobStorageService
         // Parse base64 data URI: "data:<contentType>;base64,<data>"
         if (!imageData.StartsWith("data:", StringComparison.OrdinalIgnoreCase))
         {
-            // Unrecognised format (e.g. a legacy relative path) — return as-is so callers
-            // are not broken by seed data or previously stored values we cannot reupload.
-            _logger.LogWarning("UploadImageAsync: unrecognised image data format; returning as-is. Value starts with: {Prefix}",
-                imageData.Length > 20 ? imageData[..20] : imageData);
-            return imageData;
+            throw new ArgumentException($"Invalid image data: expected a data URI starting with 'data:'. Received: '{(imageData.Length > 20 ? imageData[..20] : imageData)}'");
         }
 
         var (contentType, imageBytes) = ParseDataUri(imageData);
