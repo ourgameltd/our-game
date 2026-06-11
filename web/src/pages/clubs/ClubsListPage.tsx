@@ -611,17 +611,37 @@ export default function ClubsListPage() {
 
                     const avatar = (
                       <div className="flex flex-col items-center gap-1 flex-shrink-0 group">
-                        <div
-                          className="w-24 h-24 rounded-full flex items-center justify-center text-base font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
-                          style={{ backgroundColor: team.colors?.primary || club?.primaryColor || '#3b82f6' }}
-                        >
-                          {(team.name || '').substring(0, 2)}
+                        <div className="relative">
+                          <div
+                            className="w-24 h-24 rounded-full flex items-center justify-center text-base font-bold text-white border-2 border-gray-200 dark:border-gray-600 group-hover:border-primary-500 transition-colors"
+                            style={{ backgroundColor: team.colors?.primary || club?.primaryColor || '#3b82f6' }}
+                          >
+                            {(team.name || '').substring(0, 2)}
+                          </div>
+                          {/* Club badge - bottom right corner */}
+                          {club && (
+                            <div className="absolute bottom-0 right-0 w-7 h-7 rounded-full border-2 border-white dark:border-gray-800 overflow-hidden shadow-sm">
+                              {club.logo ? (
+                                <img src={club.logo} alt={club.name} className="w-full h-full object-cover" />
+                              ) : (
+                                <div
+                                  className="w-full h-full flex items-center justify-center text-[8px] font-bold text-white"
+                                  style={{ backgroundColor: club.primaryColor || '#6b7280' }}
+                                >
+                                  {(club.shortName || club.name).substring(0, 2)}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          {/* Age group badge - top right corner */}
+                          {team.ageGroupName && (
+                            <div className="absolute -top-1 -right-2 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 text-[8px] font-semibold px-1.5 py-0.5 rounded-full leading-none whitespace-nowrap">
+                              {team.ageGroupName}
+                            </div>
+                          )}
                         </div>
                         <span className="text-xs text-gray-600 dark:text-gray-400 group-hover:text-primary-600 dark:group-hover:text-primary-400 truncate max-w-[108px] text-center">
                           {team.name}
-                        </span>
-                        <span className="text-[10px] text-gray-400 dark:text-gray-500 truncate max-w-[108px] text-center -mt-0.5">
-                          {team.ageGroupName}
                         </span>
                       </div>
                     );
