@@ -11,30 +11,37 @@ export default function RecentPerformanceCard({
   performances, 
   clubId
 }: RecentPerformanceCardProps) {
-  const getRatingColor = (rating: number) => {
+  const getRatingColor = (rating: number | null) => {
+    if (rating === null) return 'gray';
     if (rating >= 8.5) return 'green';
     if (rating >= 7.0) return 'yellow';
     return 'red';
   };
 
-  const getRatingClasses = (rating: number) => {
+  const getRatingClasses = (rating: number | null) => {
     const color = getRatingColor(rating);
     return {
-      bg: color === 'green' 
-        ? 'bg-green-50 dark:bg-green-900/20' 
-        : color === 'yellow' 
-        ? 'bg-yellow-50 dark:bg-yellow-900/20' 
-        : 'bg-red-50 dark:bg-red-900/20',
+      bg: color === 'green'
+        ? 'bg-green-50 dark:bg-green-900/20'
+        : color === 'yellow'
+        ? 'bg-yellow-50 dark:bg-yellow-900/20'
+        : color === 'red'
+        ? 'bg-red-50 dark:bg-red-900/20'
+        : 'bg-gray-50 dark:bg-gray-800',
       border: color === 'green'
         ? 'border-green-200 dark:border-green-800'
         : color === 'yellow'
         ? 'border-yellow-200 dark:border-yellow-800'
-        : 'border-red-200 dark:border-red-800',
+        : color === 'red'
+        ? 'border-red-200 dark:border-red-800'
+        : 'border-gray-200 dark:border-gray-700',
       text: color === 'green'
         ? 'text-green-600 dark:text-green-400'
         : color === 'yellow'
         ? 'text-yellow-600 dark:text-yellow-400'
-        : 'text-red-600 dark:text-red-400'
+        : color === 'red'
+        ? 'text-red-600 dark:text-red-400'
+        : 'text-gray-600 dark:text-gray-400'
     };
   };
 
@@ -78,7 +85,7 @@ export default function RecentPerformanceCard({
                 </div>
                 <div className="text-right">
                   <div className={`text-2xl font-bold ${classes.text}`}>
-                    {performance.rating.toFixed(1)}
+                    {performance.rating !== null ? performance.rating.toFixed(1) : '—'}
                   </div>
                   <div className="text-xs text-gray-600 dark:text-gray-400">Rating</div>
                 </div>
