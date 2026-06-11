@@ -48,7 +48,7 @@
     "gh-pages": "6.3.0",
     "postcss": "8.5.8",
     "prettier": "3.8.1",
-    "puppeteer": "24.40.0",
+    "puppeteer": "25.1.0",
     "storybook": "10.3.3",
     "tailwindcss": "4.2.2",
     "typescript": "5.9.3",
