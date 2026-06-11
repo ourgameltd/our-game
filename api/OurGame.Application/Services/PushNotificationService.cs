@@ -1,4 +1,5 @@
 using System.Net.Http;
+using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using Lib.Net.Http.WebPush;
@@ -124,6 +125,7 @@ public class PushNotificationService(
                 {
                     Urgency = PushMessageUrgency.High,
                     TimeToLive = 86400,
+                    Topic = SafeTopic(payload.Tag),
                 };
 
                 await pushClient.RequestPushMessageDeliveryAsync(pushSubscription, message, vapidAuthentication, VapidAuthenticationScheme.Vapid, cancellationToken);
@@ -152,6 +154,11 @@ public class PushNotificationService(
             await db.SaveChangesAsync(cancellationToken);
         }
     }
+
+    // Apple Web Push topic: 1-32 chars, alphanumeric/hyphen/underscore only.
+    // MD5 hex is always exactly 32 lowercase alphanumeric characters.
+    internal static string? SafeTopic(string? tag) =>
+        tag is null ? null : Convert.ToHexString(MD5.HashData(Encoding.UTF8.GetBytes(tag))).ToLowerInvariant();
 
     private sealed class PushErrorLoggingHandler(ILogger logger) : DelegatingHandler(new HttpClientHandler())
     {
