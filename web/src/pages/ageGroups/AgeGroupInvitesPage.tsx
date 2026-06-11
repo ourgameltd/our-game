@@ -149,7 +149,7 @@ export default function AgeGroupInvitesPage() {
         ) : (
           <div className="space-y-3">
             {inviteRoles.map(role => (
-              <div key={role.type} className="card">
+              <div key={role.type} className="card !p-4">
                 <div className="flex items-stretch gap-3">
                   <div
                     className={`w-1 self-stretch rounded-full shrink-0 ${
@@ -159,10 +159,10 @@ export default function AgeGroupInvitesPage() {
                     }`}
                   />
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between gap-3 mb-3">
+                    <div className="flex items-center justify-between gap-3 mb-2">
                       <div className="min-w-0">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{role.label}</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white">{role.label}</h3>
+                        <p className="text-xs text-gray-600 dark:text-gray-400">
                           {role.type === 'Parent'
                             ? 'Parents can link multiple players.'
                             : 'Users can link one account and switch if needed.'}
@@ -175,12 +175,12 @@ export default function AgeGroupInvitesPage() {
                           disabled={creating[role.type]}
                           title="Create invite link"
                           aria-label="Create invite link"
-                          className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 shrink-0"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 shrink-0"
                         >
                           {creating[role.type] ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <Plus className="w-5 h-5" />
+                            <Plus className="w-4 h-4" />
                           )}
                         </button>
                       )}
@@ -193,7 +193,7 @@ export default function AgeGroupInvitesPage() {
                           readOnly
                           value={inviteLinks[role.type]}
                           onFocus={(e) => e.currentTarget.select()}
-                          className="flex-1 min-w-0 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-mono truncate"
+                          className="flex-1 min-w-0 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 text-gray-700 dark:text-gray-200 font-mono truncate"
                         />
                         <button
                           type="button"
@@ -210,12 +210,12 @@ export default function AgeGroupInvitesPage() {
                           disabled={regenerating[role.type]}
                           title="Regenerate link (invalidates the current one)"
                           aria-label="Regenerate invite link"
-                          className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 shrink-0"
+                          className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 shrink-0"
                         >
                           {regenerating[role.type] ? (
-                            <Loader2 className="w-5 h-5 animate-spin" />
+                            <Loader2 className="w-4 h-4 animate-spin" />
                           ) : (
-                            <RefreshCw className="w-5 h-5" />
+                            <RefreshCw className="w-4 h-4" />
                           )}
                         </button>
                       </div>
