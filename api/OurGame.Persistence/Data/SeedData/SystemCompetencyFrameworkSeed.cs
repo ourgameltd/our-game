@@ -49,70 +49,76 @@ public static class SystemCompetencyFrameworkSeed
 
     private static readonly FrameworkDefinition[] Definitions = new[]
     {
-        // Balanced: mirrors the spec workbook §4.4 distribution.
+        // Balanced: all-round development. Skills lead at small formats; intelligence and
+        // mental weight grow smoothly toward 11-a-side (no category drops away suddenly).
         new FrameworkDefinition(Balanced_Id, "Balanced",
-            "All-round profile that matches the original Grassroot Football Competency Framework distribution. Skill emphasis shifts down and mental emphasis up as the format grows.",
+            "A well-rounded development profile based on the Grassroot Football Competency Framework. Technical skills lead at small-sided formats, with game intelligence and mental qualities growing in weight as players progress to the full-sided game.",
             new Dictionary<GameFormat, int[]>
             {
-                { GameFormat.FiveASide,   new[] { 18, 7, 24, 9,  6,  5,  10, 14,  7 } },
-                { GameFormat.SevenASide,  new[] { 14, 8, 18, 8,  7,  10, 9,  12, 14 } },
-                { GameFormat.NineASide,   new[] { 11, 9, 15, 7,  9,  15, 8,  10, 16 } },
-                { GameFormat.ElevenASide, new[] { 8,  9, 13, 3,  10, 25, 7,  17, 8  } },
+                { GameFormat.FiveASide,   new[] { 18, 8,  22, 9,  6,  6,  10, 14, 7  } },
+                { GameFormat.SevenASide,  new[] { 14, 9,  18, 8,  8,  10, 9,  12, 12 } },
+                { GameFormat.NineASide,   new[] { 11, 10, 14, 7,  9,  15, 8,  11, 15 } },
+                { GameFormat.ElevenASide, new[] { 9,  10, 11, 6,  10, 20, 7,  12, 15 } },
             }),
 
-        // Tikitaka: passing, control, intelligence dominate. Less defending, less physical.
+        // Tikitaka: passing held at 22 across all formats; control tapers as
+        // intelligence rises. Speed/physical deliberately minimal throughout.
         new FrameworkDefinition(Tikitaka_Id, "Tiki-Taka",
-            "Possession-based football. Passing, control and game intelligence dominate. Less emphasis on raw physicality.",
+            "Possession-first football built on short passing, first-touch control and constant scanning. Rewards players who keep the ball under pressure and find the spare man; raw pace and physicality are deliberately secondary.",
             new Dictionary<GameFormat, int[]>
             {
-                { GameFormat.FiveASide,   new[] { 20, 22, 16, 8,  4,  14, 4,  6,  6 } },
-                { GameFormat.SevenASide,  new[] { 18, 22, 14, 8,  4,  18, 4,  6,  6 } },
-                { GameFormat.NineASide,   new[] { 16, 22, 12, 6,  4,  22, 4,  6,  8 } },
+                { GameFormat.FiveASide,   new[] { 22, 22, 16, 6,  4,  14, 4,  6,  6 } },
+                { GameFormat.SevenASide,  new[] { 20, 22, 14, 6,  4,  18, 4,  6,  6 } },
+                { GameFormat.NineASide,   new[] { 17, 22, 12, 6,  4,  21, 4,  6,  8 } },
                 { GameFormat.ElevenASide, new[] { 14, 22, 10, 6,  4,  26, 4,  6,  8 } },
             }),
 
-        // Gegenpress: aggressive recovery. Defending, speed, stamina dominate.
+        // Gegenpress: defending and pressing intelligence climb with format size;
+        // physical literacy fixed at 16 and mental at 8 (pressing discipline).
         new FrameworkDefinition(Gegenpress_Id, "Gegenpress",
-            "High-intensity counter-pressing. Defending, speed and physical literacy dominate, with strong mental discipline.",
+            "High-intensity pressing and rapid ball recovery. Prioritises defensive duels, repeat-sprint capacity and the discipline to press as a unit — players must win the ball back fast and go again.",
             new Dictionary<GameFormat, int[]>
             {
-                { GameFormat.FiveASide,   new[] { 10, 8,  12, 6,  18, 10, 14, 16, 6  } },
-                { GameFormat.SevenASide,  new[] { 8,  8,  10, 6,  20, 12, 14, 16, 6  } },
-                { GameFormat.NineASide,   new[] { 8,  8,  10, 6,  20, 14, 12, 16, 6  } },
-                { GameFormat.ElevenASide, new[] { 6,  8,  8,  6,  22, 16, 12, 16, 6  } },
+                { GameFormat.FiveASide,   new[] { 10, 8,  12, 6,  18, 8,  14, 16, 8  } },
+                { GameFormat.SevenASide,  new[] { 8,  8,  10, 6,  20, 10, 14, 16, 8  } },
+                { GameFormat.NineASide,   new[] { 8,  8,  8,  6,  20, 13, 13, 16, 8  } },
+                { GameFormat.ElevenASide, new[] { 6,  8,  6,  6,  22, 16, 12, 16, 8  } },
             }),
 
-        // Long ball: direct play. Striking, physicality, speed dominate.
+        // Long ball: striking and physical (aerial) emphasis stay high at large
+        // formats where direct play depends on winning the second ball.
         new FrameworkDefinition(LongBall_Id, "Long Ball",
-            "Direct, vertical football. Heavy on striking, long passing, physical strength and pace.",
+            "Direct, vertical football that moves the ball forward early. Built on long-range distribution, clinical finishing, aerial strength and the pace to chase the channels.",
             new Dictionary<GameFormat, int[]>
             {
-                { GameFormat.FiveASide,   new[] { 6,  16, 6,  20, 10, 6,  14, 16, 6  } },
-                { GameFormat.SevenASide,  new[] { 6,  18, 6,  20, 10, 8,  12, 14, 6  } },
-                { GameFormat.NineASide,   new[] { 6,  18, 6,  20, 10, 10, 12, 12, 6  } },
-                { GameFormat.ElevenASide, new[] { 6,  20, 6,  20, 10, 10, 10, 12, 6  } },
+                { GameFormat.FiveASide,   new[] { 6,  14, 6,  20, 10, 6,  14, 18, 6  } },
+                { GameFormat.SevenASide,  new[] { 6,  16, 6,  20, 10, 8,  12, 16, 6  } },
+                { GameFormat.NineASide,   new[] { 6,  18, 6,  18, 10, 10, 11, 15, 6  } },
+                { GameFormat.ElevenASide, new[] { 6,  20, 6,  18, 10, 10, 9,  15, 6  } },
             }),
 
-        // Physical: ~50% of total on physical category + mental discipline.
+        // Physical: speed + physical literacy + mental resilience ≈ 52-56% across
+        // formats; technical categories pinned at the floor.
         new FrameworkDefinition(Physical_Id, "Physical",
-            "Maximises raw physical attributes and mental resilience. Suited to direct, athletic teams.",
+            "An athletic development profile that puts speed, strength, stamina and resilience first. Suited to teams who out-run and out-muscle opponents, with technique developed on top of a powerful physical base.",
             new Dictionary<GameFormat, int[]>
             {
                 { GameFormat.FiveASide,   new[] { 6,  6,  8,  6,  12, 6,  18, 26, 12 } },
                 { GameFormat.SevenASide,  new[] { 6,  6,  8,  6,  12, 8,  18, 24, 12 } },
-                { GameFormat.NineASide,   new[] { 6,  6,  8,  6,  10, 10, 18, 24, 12 } },
-                { GameFormat.ElevenASide, new[] { 6,  6,  6,  6,  10, 12, 18, 24, 12 } },
+                { GameFormat.NineASide,   new[] { 6,  6,  6,  6,  12, 10, 18, 24, 12 } },
+                { GameFormat.ElevenASide, new[] { 6,  6,  6,  6,  12, 12, 16, 24, 12 } },
             }),
 
-        // Skill-based: technical excellence above all. Skills category ~55-60%.
+        // Skill-based: the four technical competencies carry ~68% at 5-a-side,
+        // tapering to ~53% at 11-a-side as game intelligence takes over.
         new FrameworkDefinition(SkillBased_Id, "Skill-Based",
-            "Maximises technical skill. Heavy on control, dribbling, striking and passing. De-emphasises physical category.",
+            "A technique-first profile that maximises time on the ball. Control, dribbling, striking and passing carry most of the weight, developing confident ball-players before physical outcomes.",
             new Dictionary<GameFormat, int[]>
             {
-                { GameFormat.FiveASide,   new[] { 18, 14, 18, 14, 6,  10, 4,  8,  8  } },
-                { GameFormat.SevenASide,  new[] { 16, 14, 16, 14, 6,  14, 4,  8,  8  } },
-                { GameFormat.NineASide,   new[] { 14, 14, 14, 14, 6,  16, 4,  8,  10 } },
-                { GameFormat.ElevenASide, new[] { 12, 14, 12, 14, 6,  18, 4,  10, 10 } },
+                { GameFormat.FiveASide,   new[] { 20, 14, 20, 14, 4,  8,  4,  8,  8  } },
+                { GameFormat.SevenASide,  new[] { 18, 14, 18, 14, 4,  12, 4,  8,  8  } },
+                { GameFormat.NineASide,   new[] { 15, 14, 15, 14, 5,  15, 4,  8,  10 } },
+                { GameFormat.ElevenASide, new[] { 13, 14, 13, 13, 5,  18, 4,  10, 10 } },
             }),
     };
 
