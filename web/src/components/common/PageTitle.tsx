@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
+import type { ReactNode } from 'react';
 import { ArrowLeft, Plus, Settings } from 'lucide-react';
 
 interface PageTitleProps {
   title: string;
+  titleIcon?: ReactNode;
   subtitle?: string;
   badge?: string | number;
   backLink?: string;
@@ -23,7 +25,7 @@ interface PageTitleProps {
   };
 }
 
-export default function PageTitle({ title, subtitle, badge, backLink, backState, image, action }: PageTitleProps) {
+export default function PageTitle({ title, titleIcon, subtitle, badge, backLink, backState, image, action }: PageTitleProps) {
   const getActionButtonClass = (variant: string = 'primary') => {
     const baseClass = 'btn btn-md';
     const variantClass = {
@@ -74,8 +76,9 @@ export default function PageTitle({ title, subtitle, badge, backLink, backState,
           )
         )}
         <div>
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {title}
+          <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+            <span>{title}</span>
+            {titleIcon}
             {badge !== undefined && (
               <span className="ml-2 text-base font-normal text-gray-600 dark:text-gray-400">
                 ({badge})

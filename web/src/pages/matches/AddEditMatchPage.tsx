@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell, Pencil, Bold, Italic, Heading1, Heading2, Heading3, Heading4, List, ListOrdered, Quote, Share2 } from 'lucide-react';
+import { ClipboardList, Users, Activity, Plus, MapPin, X, ExternalLink, CheckSquare, ChevronDown, Trash2, Bell, Pencil, Bold, Italic, Heading1, Heading2, Heading3, Heading4, List, ListOrdered, Quote, Share2, CheckCircle2, XCircle, CalendarClock } from 'lucide-react';
 const Timeline = ({ className, children }: { className?: string; children?: React.ReactNode }) => <ul className={className}>{children}</ul>;
 const TimelineItem = ({ className, children }: { className?: string; children?: React.ReactNode }) => <li className={className}>{children}</li>;
 const TimelineHeader = ({ className, children }: { className?: string; children?: React.ReactNode }) => <div className={`flex items-center ${className ?? ''}`}>{children}</div>;
@@ -28,6 +28,21 @@ const supportedSquadSizes: SquadSize[] = [4, 5, 7, 9, 11];
 
 function isSupportedSquadSize(value: number): value is SquadSize {
   return supportedSquadSizes.includes(value as SquadSize);
+}
+
+function renderStatusIcon(status?: string) {
+  switch (status) {
+    case 'completed':
+      return <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" aria-label="Completed"><title>Completed</title></CheckCircle2>;
+    case 'in-progress':
+      return <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" aria-label="In progress"><title>In progress</title></Activity>;
+    case 'cancelled':
+      return <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" aria-label="Cancelled"><title>Cancelled</title></XCircle>;
+    case 'postponed':
+      return <CalendarClock className="w-5 h-5 text-amber-600 dark:text-amber-400" aria-label="Postponed"><title>Postponed</title></CalendarClock>;
+    default:
+      return undefined;
+  }
 }
 
 function utcIsoToLocalDatetimeInput(utcIso: string): string {
@@ -1645,16 +1660,10 @@ export default function AddEditMatchPage() {
       <main className="mx-auto px-4 py-4">
         <PageTitle
           title={isEditing ? 'Edit Match' : 'Add New Match'}
+          titleIcon={isEditing ? renderStatusIcon(existingMatch?.status) : undefined}
           subtitle={team.team.name}
           backLink={Routes.matches(clubId!, ageGroupId!, teamId!)}
         />
-        {isEditing && existingMatch?.status === 'completed' && (
-          <div className="flex items-center gap-3 mb-4">
-            <span className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 rounded-lg font-medium">
-              ✓ Completed
-            </span>
-          </div>
-        )}
 
 
         {/* Tabs */}

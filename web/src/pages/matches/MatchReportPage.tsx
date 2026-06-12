@@ -228,12 +228,6 @@ export default function MatchReportPage() {
             <div>
               <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <span>📅 {new Date(asUtc(match.matchDate)).toLocaleDateString()}</span>
-                {match.kickOffTime && (
-                  <>
-                    <span>•</span>
-                    <span>⚽ {new Date(asUtc(match.kickOffTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  </>
-                )}
                 <span>•</span>
                 <span>🏆 {match.competition}</span>
                 {match.weatherCondition && (
@@ -267,22 +261,31 @@ export default function MatchReportPage() {
                 >
                   <Map className="w-4 h-4" />
                 </a>
-                {match.meetTime && (
-                  <>
-                    <span>•</span>
-                    <span>🕐 Meet: {new Date(asUtc(match.meetTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                    <button
-                      type="button"
-                      onClick={handleAddToCalendar}
-                      aria-label="Add to calendar"
-                      title="Add to calendar"
-                      className="btn-sm btn-secondary btn-icon"
-                    >
-                      <CalendarPlus className="w-4 h-4" />
-                    </button>
-                  </>
-                )}
               </div>
+              {(match.kickOffTime || match.meetTime) && (
+                <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  {match.meetTime && (
+                    <>
+                      <span>🕐 Meet: {new Date(asUtc(match.meetTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                      <button
+                        type="button"
+                        onClick={handleAddToCalendar}
+                        aria-label="Add to calendar"
+                        title="Add to calendar"
+                        className="btn-sm btn-secondary btn-icon"
+                      >
+                        <CalendarPlus className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                  {match.kickOffTime && (
+                    <>
+                      {match.meetTime && <span>•</span>}
+                      <span>⚽ KO: {new Date(asUtc(match.kickOffTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
             {(match.homeScore != null && match.awayScore != null || match.primaryKit || match.goalkeeperKit) && (
               <div className="flex items-center gap-6 mt-4 md:mt-0">
