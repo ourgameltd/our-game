@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link, useLocation, matchPath } from 'react-router-dom';
 import {
   Users,
@@ -127,22 +127,31 @@ export default function MobileNavigation() {
     }
   }, [isTacticsPage]);
 
-  // Load unread notification count for the badge
+  const loadUnread = useCallback(async () => {
+    const response = await apiClient.notifications.getMyNotifications({ unreadOnly: true, pageSize: 50 });
+    if (response.success && response.data) {
+      setUnreadNotificationCount(response.data.totalCount);
+    } else if (!response.success) {
+      setUnreadNotificationCount(0);
+    }
+  }, []);
+
+  // Load unread notification count for the badge on every route change
   useEffect(() => {
-    let cancelled = false;
-    const loadUnread = async () => {
-      const response = await apiClient.notifications.getMyNotifications({ unreadOnly: true, pageSize: 50 });
-      if (!cancelled && response.success && response.data) {
-        setUnreadNotificationCount(response.data.totalCount);
-      } else if (!cancelled && !response.success) {
-        setUnreadNotificationCount(0);
+    void loadUnread();
+  }, [location.pathname, loadUnread]);
+
+  // Update badge immediately when a push notification arrives
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === 'PUSH_RECEIVED') {
+        void loadUnread();
       }
     };
-    void loadUnread();
-    return () => {
-      cancelled = true;
-    };
-  }, [location.pathname]);
+    navigator.serviceWorker.addEventListener('message', handleMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', handleMessage);
+  }, [loadUnread]);
 
   useEffect(() => {
     const handleNotificationsRead = (e: Event) => {
