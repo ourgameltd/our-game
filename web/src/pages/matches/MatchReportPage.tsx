@@ -218,9 +218,10 @@ export default function MatchReportPage() {
                 rel="noopener noreferrer"
                 aria-label="View Published Report"
                 title="View Published Report"
-                className="btn-sm btn-secondary btn-icon"
+                className="btn-sm btn-secondary border border-gray-300 dark:border-gray-600 gap-1.5"
               >
                 <FileText className="w-4 h-4" />
+                <span>Report</span>
               </a>
             )}
           </div>
@@ -257,26 +258,16 @@ export default function MatchReportPage() {
                   rel="noopener noreferrer"
                   aria-label="Open in Google Maps"
                   title="Open in Google Maps"
-                  className="btn-sm btn-secondary btn-icon"
+                  className="btn-sm btn-secondary border border-gray-300 dark:border-gray-600 gap-1.5"
                 >
                   <Map className="w-4 h-4" />
+                  <span>Map</span>
                 </a>
               </div>
               {(match.kickOffTime || match.meetTime) && (
                 <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
                   {match.meetTime && (
-                    <>
-                      <span>🕐 Meet: {new Date(asUtc(match.meetTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      <button
-                        type="button"
-                        onClick={handleAddToCalendar}
-                        aria-label="Add to calendar"
-                        title="Add to calendar"
-                        className="btn-sm btn-secondary btn-icon"
-                      >
-                        <CalendarPlus className="w-4 h-4" />
-                      </button>
-                    </>
+                    <span>🕐 Meet: {new Date(asUtc(match.meetTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                   )}
                   {match.kickOffTime && (
                     <>
@@ -284,6 +275,16 @@ export default function MatchReportPage() {
                       <span>⚽ KO: {new Date(asUtc(match.kickOffTime)).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                     </>
                   )}
+                  <button
+                    type="button"
+                    onClick={handleAddToCalendar}
+                    aria-label="Add to calendar"
+                    title="Add to calendar"
+                    className="btn-sm btn-secondary border border-gray-300 dark:border-gray-600 gap-1.5"
+                  >
+                    <CalendarPlus className="w-4 h-4" />
+                    <span>Add</span>
+                  </button>
                 </div>
               )}
             </div>
