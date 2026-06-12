@@ -18,12 +18,13 @@ const PAGE_SIZE = 50;
 function CoachCardSkeleton() {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-card p-3 border border-gray-200 dark:border-gray-700 animate-pulse">
-      <div className="flex items-center gap-2">
-        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 min-h-[2.5rem]" />
-        <div className="w-9 h-9 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
+      <div className="flex items-start gap-3">
+        <div className="w-1 self-stretch rounded-full bg-gray-200 dark:bg-gray-700 min-h-[3.5rem]" />
+        <div className="w-14 h-14 rounded-full bg-gray-200 dark:bg-gray-700 shrink-0" />
         <div className="flex-1 min-w-0">
           <div className="h-4 w-32 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
-          <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded" />
+          <div className="h-3 w-20 bg-gray-200 dark:bg-gray-700 rounded mb-2" />
+          <div className="h-3 w-16 bg-gray-200 dark:bg-gray-700 rounded" />
         </div>
       </div>
     </div>

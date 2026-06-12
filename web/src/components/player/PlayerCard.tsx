@@ -60,10 +60,10 @@ export default function PlayerCard({
       }`}
       onClick={onClick}
     >
-      <div className={`flex items-center gap-2 h-full ${!forceCard ? 'md:items-stretch md:gap-3' : ''}`}>
+      <div className={`flex gap-2 h-full ${forceCard ? 'items-start' : 'items-center md:items-stretch md:gap-3'}`}>
         <div className={`w-1 self-stretch rounded-full shrink-0 ${indicatorClass}`} />
 
-        <div className={`flex items-center gap-2 flex-1 min-w-0 ${!forceCard ? 'md:flex-row md:items-center md:gap-4' : ''}`}>
+        <div className={`flex gap-2 flex-1 min-w-0 ${forceCard ? 'items-start gap-3' : 'items-center md:flex-row md:items-center md:gap-4'}`}>
           {/* Squad Number */}
           {squadNumber !== undefined && (
             <div className={`w-7 h-7 bg-gray-900 dark:bg-gray-100 rounded flex items-center justify-center text-white dark:text-gray-900 text-xs font-bold shrink-0 ${!forceCard ? 'md:order-1' : ''}`}>
@@ -77,33 +77,57 @@ export default function PlayerCard({
               <img
                 src={player.photo}
                 alt={`${player.firstName} ${player.lastName}`}
-                className={`w-9 h-9 rounded-full object-cover ${!forceCard ? 'md:w-10 md:h-10' : ''}`}
+                className={`rounded-full object-cover ${forceCard ? 'w-14 h-14' : 'w-9 h-9 md:w-10 md:h-10'}`}
               />
             ) : (
-              <div className={`w-9 h-9 bg-linear-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white text-sm font-bold ${!forceCard ? 'md:w-10 md:h-10' : ''}`}>
+              <div className={`bg-linear-to-br from-primary-400 to-primary-600 dark:from-primary-600 dark:to-primary-800 rounded-full flex items-center justify-center text-white font-bold ${forceCard ? 'w-14 h-14 text-lg' : 'w-9 h-9 text-sm md:w-10 md:h-10'}`}>
                 {player.firstName[0]}{player.lastName[0]}
               </div>
             )}
           </div>
 
-          {/* Name + compact info — always visible; hidden on md when in list mode */}
-          <div className={`flex-1 min-w-0 ${!forceCard ? 'md:hidden' : ''}`}>
-            <p className="text-sm font-semibold text-gray-900 dark:text-white truncate leading-tight">
-              {player.firstName} {player.lastName}
-              {isCaptain && <span className="ml-1 text-amber-500">©</span>}
-            </p>
-            <div className="flex items-center gap-1 flex-wrap mt-0.5">
-              {age !== null && <span className="text-xs text-gray-500 dark:text-gray-400">Age {age}</span>}
-              {player.preferredPositions.slice(0, 2).map(pos => (
-                <span key={pos} className="badge-primary text-[10px] px-1.5 py-0.5">{pos}</span>
-              ))}
-              {forceCard && detailDisplay === 'banding' && competencyBand && (
-                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${BAND_COLOURS[competencyBand]}`}>
-                  {competencyBand}
-                </span>
+          {/* Card mode — stacked detail, each on its own line */}
+          {forceCard && (
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate leading-tight">
+                {player.firstName} {player.lastName}
+                {isCaptain && <span className="ml-1 text-amber-500">©</span>}
+              </p>
+              {age !== null && (
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Age {age}</p>
+              )}
+              {player.preferredPositions.length > 0 && (
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {player.preferredPositions.map(pos => (
+                    <span key={pos} className="badge-primary text-[10px] px-1.5 py-0.5">{pos}</span>
+                  ))}
+                </div>
+              )}
+              {detailDisplay === 'banding' && competencyBand && (
+                <div className="mt-1">
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-semibold ${BAND_COLOURS[competencyBand]}`}>
+                    {competencyBand}
+                  </span>
+                </div>
               )}
             </div>
-          </div>
+          )}
+
+          {/* Name + compact info — mobile list mode; hidden on md */}
+          {!forceCard && (
+            <div className="flex-1 min-w-0 md:hidden">
+              <p className="text-sm font-semibold text-gray-900 dark:text-white truncate leading-tight">
+                {player.firstName} {player.lastName}
+                {isCaptain && <span className="ml-1 text-amber-500">©</span>}
+              </p>
+              <div className="flex items-center gap-1 flex-wrap mt-0.5">
+                {age !== null && <span className="text-xs text-gray-500 dark:text-gray-400">Age {age}</span>}
+                {player.preferredPositions.slice(0, 2).map(pos => (
+                  <span key={pos} className="badge-primary text-[10px] px-1.5 py-0.5">{pos}</span>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Name — desktop list mode only */}
           {!forceCard && (

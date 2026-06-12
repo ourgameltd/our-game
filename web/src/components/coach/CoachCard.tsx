@@ -23,20 +23,20 @@ export default function CoachCard({ coach, onClick, badges, actions, forceCard =
       } ${onClick ? 'cursor-pointer' : ''}`}
       onClick={onClick}
     >
-      <div className={`flex items-center gap-2 h-full ${!forceCard ? 'md:items-stretch md:gap-3' : ''}`}>
+      <div className={`flex gap-2 h-full ${forceCard ? 'items-start' : 'items-center md:items-stretch md:gap-3'}`}>
         <div className={`w-1 self-stretch rounded-full shrink-0 ${indicatorClass}`} />
 
-        <div className={`flex items-center gap-2 flex-1 min-w-0 ${!forceCard ? 'md:flex-row md:items-center md:gap-4' : ''}`}>
+        <div className={`flex gap-2 flex-1 min-w-0 ${forceCard ? 'items-start gap-3' : 'items-center md:flex-row md:items-center md:gap-4'}`}>
           {/* Avatar */}
           <div className={`shrink-0 ${!forceCard ? 'md:order-1' : ''}`}>
             {coach.photo ? (
               <img
                 src={coach.photo}
                 alt={`${coach.firstName} ${coach.lastName}`}
-                className={`w-9 h-9 rounded-full object-cover ${!forceCard ? 'md:w-10 md:h-10' : ''}`}
+                className={`rounded-full object-cover ${forceCard ? 'w-14 h-14' : 'w-9 h-9 md:w-10 md:h-10'}`}
               />
             ) : (
-              <div className={`w-9 h-9 bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white text-sm font-bold ${!forceCard ? 'md:w-10 md:h-10' : ''}`}>
+              <div className={`bg-gradient-to-br from-secondary-400 to-secondary-600 dark:from-secondary-600 dark:to-secondary-800 rounded-full flex items-center justify-center text-white font-bold ${forceCard ? 'w-14 h-14 text-lg' : 'w-9 h-9 text-sm md:w-10 md:h-10'}`}>
                 {coach.firstName[0]}{coach.lastName[0]}
               </div>
             )}
