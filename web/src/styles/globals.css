@@ -274,7 +274,7 @@
   }
 
   .mobile-nav-user-profile {
-    @apply flex items-center gap-3 no-underline;
+    @apply flex items-center gap-3 no-underline px-2 py-1;
   }
 
   .mobile-nav-user-avatar {
