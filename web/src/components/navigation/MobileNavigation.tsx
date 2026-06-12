@@ -130,7 +130,15 @@ export default function MobileNavigation() {
   const loadUnread = useCallback(async () => {
     const response = await apiClient.notifications.getMyNotifications({ unreadOnly: true, pageSize: 50 });
     if (response.success && response.data) {
-      setUnreadNotificationCount(response.data.totalCount);
+      const count = response.data.totalCount;
+      setUnreadNotificationCount(count);
+      if ('setAppBadge' in navigator) {
+        if (count > 0) {
+          navigator.setAppBadge(count).catch(() => {});
+        } else {
+          navigator.clearAppBadge().catch(() => {});
+        }
+      }
     } else if (!response.success) {
       setUnreadNotificationCount(0);
     }

@@ -35,6 +35,9 @@ public class PushPayload
 
     /// <summary>Optional tag for notification deduplication.</summary>
     public string? Tag { get; set; }
+
+    /// <summary>Number of unread notifications for this user — used to set the OS app icon badge.</summary>
+    public int? BadgeCount { get; set; }
 }
 
 /// <summary>
@@ -92,9 +95,10 @@ public class PushNotificationService(
         {
             title = payload.Title,
             body = payload.Body,
-            url = payload.Url ?? "/notifications",
+            url = payload.Url ?? "/feed",
             icon = payload.Icon,
             tag = payload.Tag,
+            badgeCount = payload.BadgeCount,
         }, JsonOptions);
 
         using var vapidAuthentication = new VapidAuthentication(vapidPublicKey, vapidPrivateKey)

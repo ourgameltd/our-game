@@ -56,12 +56,16 @@ self.addEventListener('push', (event) => {
     badge: payload.badge || '/icons/icon-96x96.png',
     tag: payload.tag || 'our-game-notification',
     data: {
-      url: payload.url || '/notifications',
+      url: payload.url || '/feed',
       ...(payload.data || {}),
     },
     requireInteraction: false,
     silent: false,
   };
+
+  if (typeof self.navigator !== 'undefined' && 'setAppBadge' in self.navigator && typeof payload.badgeCount === 'number') {
+    self.navigator.setAppBadge(payload.badgeCount).catch(() => {});
+  }
 
   event.waitUntil(
     Promise.all([
@@ -81,7 +85,7 @@ self.addEventListener('notificationclick', (event) => {
 
   const targetUrl = (event.notification.data && event.notification.data.url)
     ? event.notification.data.url
-    : '/notifications';
+    : '/feed';
 
   event.waitUntil(
     clients

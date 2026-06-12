@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using OurGame.Persistence.Models;
 
@@ -58,14 +59,24 @@ internal class NotificationService : INotificationService
         {
             try
             {
+                var unreadCount = await (
+                    from n in _db.Notifications.AsNoTracking()
+                    join nr in _db.NotificationReads.AsNoTracking().Where(r => r.UserId == userId.Value)
+                        on n.Id equals nr.NotificationId into reads
+                    from nr in reads.DefaultIfEmpty()
+                    where (n.UserId == null || n.UserId == userId.Value) && nr == null
+                    select n.Id
+                ).CountAsync(cancellationToken);
+
                 await _pushNotificationService.SendToUserAsync(
                     userId.Value,
                     new PushPayload
                     {
                         Title = title,
                         Body = message,
-                        Url = url ?? "/notifications",
-                        Tag = $"notification:{notification.Id}"
+                        Url = url ?? "/feed",
+                        Tag = $"notification:{notification.Id}",
+                        BadgeCount = unreadCount,
                     },
                     cancellationToken);
             }
