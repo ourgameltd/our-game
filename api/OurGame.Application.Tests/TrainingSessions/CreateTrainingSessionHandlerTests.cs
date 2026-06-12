@@ -110,7 +110,7 @@ public class CreateTrainingSessionHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
-        var playerId = await db.SeedPlayerAsync(clubId: clubId);
+        var playerId = await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
 
         var handler = new CreateTrainingSessionHandler(db.Context);
         var dto = ValidDto(teamId) with
@@ -132,7 +132,7 @@ public class CreateTrainingSessionHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
-        var playerId = await db.SeedPlayerAsync(clubId: clubId);
+        var playerId = await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
 
         var handler = new CreateTrainingSessionHandler(db.Context);
         var dto = ValidDto(teamId) with
@@ -154,7 +154,7 @@ public class CreateTrainingSessionHandlerTests
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
         var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
-        var playerId = await db.SeedPlayerAsync(clubId: clubId);
+        var playerId = await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
 
         var handler = new CreateTrainingSessionHandler(db.Context);
         var dto = ValidDto(teamId) with
@@ -169,5 +169,67 @@ public class CreateTrainingSessionHandlerTests
 
         Assert.Single(result.Attendance);
         Assert.Equal("pending", result.Attendance[0].Status);
+    }
+
+    [Fact]
+    public async Task Handle_WithTeamPlayers_AutoPopulatesAttendanceAsPending()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var playerOneId = await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId, "Alice", "One");
+        var playerTwoId = await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId, "Bob", "Two");
+
+        var handler = new CreateTrainingSessionHandler(db.Context);
+        var result = await handler.Handle(new CreateTrainingSessionCommand(ValidDto(teamId)), CancellationToken.None);
+
+        Assert.Equal(2, result.Attendance.Count);
+        Assert.All(result.Attendance, a => Assert.Equal("pending", a.Status));
+        Assert.Contains(result.Attendance, a => a.PlayerId == playerOneId);
+        Assert.Contains(result.Attendance, a => a.PlayerId == playerTwoId);
+    }
+
+    [Fact]
+    public async Task Handle_WithArchivedTeamPlayer_ExcludesArchivedPlayer()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var activePlayerId = await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
+        var archivedPlayerId = await db.SeedPlayerAsync(clubId, isArchived: true);
+        db.Context.PlayerTeams.Add(new OurGame.Persistence.Models.PlayerTeam
+        {
+            Id = Guid.NewGuid(),
+            PlayerId = archivedPlayerId,
+            TeamId = teamId,
+            AssignedAt = DateTime.UtcNow
+        });
+        await db.Context.SaveChangesAsync();
+
+        var handler = new CreateTrainingSessionHandler(db.Context);
+        var result = await handler.Handle(new CreateTrainingSessionCommand(ValidDto(teamId)), CancellationToken.None);
+
+        Assert.Single(result.Attendance);
+        Assert.Equal(activePlayerId, result.Attendance[0].PlayerId);
+    }
+
+    [Fact]
+    public async Task Handle_WithExplicitAttendanceStatus_OverridesPendingDefault()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, ageGroupId, teamId) = await db.SeedClubWithTeamAsync();
+        var playerId = await db.SeedPlayerWithTeamAsync(clubId, teamId, ageGroupId);
+
+        var handler = new CreateTrainingSessionHandler(db.Context);
+        var dto = ValidDto(teamId) with
+        {
+            Attendance = new List<CreateSessionAttendanceDto>
+            {
+                new() { PlayerId = playerId, Status = "confirmed", Notes = "Confirmed by coach" }
+            }
+        };
+
+        var result = await handler.Handle(new CreateTrainingSessionCommand(dto), CancellationToken.None);
+
+        Assert.Single(result.Attendance);
+        Assert.Equal("confirmed", result.Attendance[0].Status);
     }
 }

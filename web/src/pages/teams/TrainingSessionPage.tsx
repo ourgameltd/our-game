@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { CalendarPlus } from 'lucide-react';
+import { CalendarPlus, Map } from 'lucide-react';
 import PageTitle from '@components/common/PageTitle';
 import { apiClient } from '@/api';
 import type { TrainingSessionDetailDto } from '@/api';
@@ -161,29 +161,34 @@ export default function TrainingSessionPage() {
           <div className="mb-2">
             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
               <span>📅 {sessionDate.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</span>
-              {session.meetTime && (
-                <>
-                  <span>•</span>
-                  <span>🕐 Meet: {new Date(session.meetTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                  <button type="button" onClick={handleAddToCalendar} className="btn-sm btn-secondary btn-icon" title="Add to calendar">
-                    <CalendarPlus className="w-4 h-4" />
-                  </button>
-                </>
-              )}
               {session.durationMinutes && (
                 <>
                   <span>•</span>
                   <span>⏱ {session.durationMinutes} min</span>
                 </>
               )}
+              {session.pitchType && (
+                <>
+                  <span>•</span>
+                  <span>🏟️ {session.pitchType === 'astro' ? 'Astro (3G)' : session.pitchType === 'indoor' ? 'Indoor' : 'Grass'}</span>
+                </>
+              )}
             </div>
             {session.location && (
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                📍 {session.location}
-                {session.pitchType && (
-                  <span className="ml-2">🏟️ {session.pitchType === 'astro' ? 'Astro (3G)' : session.pitchType === 'indoor' ? 'Indoor' : 'Grass'}</span>
-                )}
-              </p>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                <span>📍 {session.location}</span>
+                <a
+                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(session.location)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Open in Google Maps"
+                  title="Open in Google Maps"
+                  className="btn-sm btn-secondary gap-1.5"
+                >
+                  <Map className="w-4 h-4" />
+                  <span>Map</span>
+                </a>
+              </div>
             )}
             {session.focusAreas.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-2">
@@ -192,6 +197,15 @@ export default function TrainingSessionPage() {
                     {area}
                   </span>
                 ))}
+              </div>
+            )}
+            {session.meetTime && (
+              <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 mt-2">
+                <span>🕐 Meet: {new Date(session.meetTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                <button type="button" onClick={handleAddToCalendar} className="btn-sm btn-secondary gap-1.5" title="Add to calendar">
+                  <CalendarPlus className="w-4 h-4" />
+                  <span>Add</span>
+                </button>
               </div>
             )}
           </div>

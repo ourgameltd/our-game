@@ -89,15 +89,29 @@ public class CreateTrainingSessionHandler : IRequestHandler<CreateTrainingSessio
                 ", cancellationToken);
             }
 
-            // Insert session attendances
-            foreach (var attendance in dto.Attendance)
+            // Auto-populate all non-archived team players as pending; apply any explicit overrides from dto.Attendance
+            var teamPlayerIds = await _db.PlayerTeams
+                .Where(pt => pt.TeamId == dto.TeamId && !pt.Player.IsArchived)
+                .Select(pt => pt.PlayerId)
+                .ToListAsync(cancellationToken);
+
+            var manualAttendance = dto.Attendance.ToDictionary(a => a.PlayerId, a => a);
+
+            foreach (var playerId in teamPlayerIds)
             {
                 var attendanceId = Guid.NewGuid();
-                var present = MapAttendanceStatus(attendance.Status);
-                var attendanceNotes = attendance.Notes ?? string.Empty;
+                bool? present = null;
+                var attendanceNotes = string.Empty;
+
+                if (manualAttendance.TryGetValue(playerId, out var manual))
+                {
+                    present = MapAttendanceStatus(manual.Status);
+                    attendanceNotes = manual.Notes ?? string.Empty;
+                }
+
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
                     INSERT INTO SessionAttendances (Id, SessionId, PlayerId, Present, Notes)
-                    VALUES ({attendanceId}, {sessionId}, {attendance.PlayerId}, {present}, {attendanceNotes})
+                    VALUES ({attendanceId}, {sessionId}, {playerId}, {present}, {attendanceNotes})
                 ", cancellationToken);
             }
 
