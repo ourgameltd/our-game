@@ -610,11 +610,13 @@ export default function AddEditTrainingSessionPage() {
           {activeTab === 'details' && (
             <div className="mt-4 space-y-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="label">
-                    <Calendar className="w-4 h-4 inline mr-1" />
-                    Session Date & Time *
-                  </label>
+                <div className="min-w-0">
+                  <div className="flex items-center mb-2">
+                    <label className="label mb-0">
+                      <Calendar className="w-4 h-4 inline mr-1" />
+                      Session Date & Time *
+                    </label>
+                  </div>
                   <input
                     type="datetime-local"
                     value={sessionDate}
@@ -623,7 +625,7 @@ export default function AddEditTrainingSessionPage() {
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <label className="label">
                       <Clock className="w-4 h-4 inline mr-1" />

@@ -275,7 +275,7 @@ export default function ProfilePage() {
               <div>
                 <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
                   {isEditing ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
                       <input
                         type="text"
                         value={formData.firstName}

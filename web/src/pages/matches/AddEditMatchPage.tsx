@@ -1825,7 +1825,7 @@ export default function AddEditMatchPage() {
                   </p>
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <label className="label">
                     Kick Off Time *
                   </label>
@@ -1837,7 +1837,7 @@ export default function AddEditMatchPage() {
                   />
                 </div>
 
-                <div>
+                <div className="min-w-0">
                   <div className="flex items-center justify-between mb-2">
                     <label className="label">
                       Meet Time
@@ -1882,9 +1882,9 @@ export default function AddEditMatchPage() {
                 </div>
 
                 <div>
-                  <label className="label">
-                    Location *
-                  </label>
+                  <div className="flex items-center mb-2">
+                    <label className="label mb-0">Location *</label>
+                  </div>
                   <div className="flex gap-2">
                     <input
                       type="text"
