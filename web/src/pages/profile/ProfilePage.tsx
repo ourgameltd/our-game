@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { User, Mail, Calendar, Save, Moon, Sun, Monitor, Loader2, Camera, X, RefreshCw } from 'lucide-react';
+import { User, Mail, Calendar, Save, Moon, Sun, Monitor, Loader2, Camera, X } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { getCurrentUser, syncUserFromB2C, UserProfile } from '@/api/users';
+import { getCurrentUser, UserProfile } from '@/api/users';
 import { useUpdateCurrentUser, UpdateCurrentUserRequest } from '@/api';
 import PageTitle from '@components/common/PageTitle';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -31,9 +31,6 @@ export default function ProfilePage() {
   // Mutation hook for updating profile
   const { updateCurrentUser, data: updatedProfile, isSubmitting, error } = useUpdateCurrentUser();
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncError, setSyncError] = useState<string | null>(null);
 
   // Fetch user profile
   useEffect(() => {
@@ -108,26 +105,6 @@ export default function ProfilePage() {
     setPhotoChange('');
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
-    }
-  };
-
-  const handleSyncFromB2C = async () => {
-    setSyncError(null);
-    setSuccessMessage(null);
-    setIsSyncing(true);
-    try {
-      const updated = await syncUserFromB2C();
-      setUserProfile(updated);
-      setFormData({ firstName: updated.firstName, lastName: updated.lastName });
-      setPhotoPreview(updated.photo || '');
-      window.dispatchEvent(new Event(USER_PROFILE_UPDATED_EVENT));
-      setSuccessMessage('Profile synced from your account. Email and name have been updated.');
-      const timeout = setTimeout(() => setSuccessMessage(null), 5000);
-      return () => clearTimeout(timeout);
-    } catch (err) {
-      setSyncError(err instanceof Error ? err.message : 'Sync failed. Please try again.');
-    } finally {
-      setIsSyncing(false);
     }
   };
 
@@ -212,13 +189,6 @@ export default function ProfilePage() {
                 )}
               </ul>
             )}
-          </div>
-        )}
-
-        {/* Sync error banner */}
-        {syncError && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <p className="text-sm font-medium text-red-800 dark:text-red-300">{syncError}</p>
           </div>
         )}
 
@@ -320,25 +290,9 @@ export default function ProfilePage() {
 
           {/* Profile Information */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Mail className="w-5 h-5 text-gray-400 dark:text-gray-500" />
-                <span className="text-gray-900 dark:text-white">{userProfile.email}</span>
-              </div>
-              <button
-                type="button"
-                onClick={handleSyncFromB2C}
-                disabled={isSyncing || isEditing}
-                title="Sync email and name from your account"
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSyncing ? (
-                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                ) : (
-                  <RefreshCw className="w-3.5 h-3.5" />
-                )}
-                {isSyncing ? 'Syncing...' : 'Sync from account'}
-              </button>
+            <div className="flex items-center space-x-2">
+              <Mail className="w-5 h-5 text-gray-400 dark:text-gray-500" />
+              <span className="text-gray-900 dark:text-white">{userProfile.email}</span>
             </div>
 
             <div className="flex items-center space-x-2">
