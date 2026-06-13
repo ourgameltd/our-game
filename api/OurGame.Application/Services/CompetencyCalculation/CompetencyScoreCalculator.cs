@@ -20,11 +20,18 @@ public static class CompetencyScoreCalculator
         IReadOnlyDictionary<Guid, CompetencyBand> competencyLevelsByCompetencyId,
         IReadOnlyList<AttributeCompetencyMapping> attributeMappings,
         CompetencyFrameworkSnapshot framework,
-        GameFormat format)
+        GameFormat format,
+        bool isGoalkeeper = false)
     {
         if (framework is null) throw new ArgumentNullException(nameof(framework));
         if (attributeMappings is null) throw new ArgumentNullException(nameof(attributeMappings));
         if (competencyLevelsByCompetencyId is null) throw new ArgumentNullException(nameof(competencyLevelsByCompetencyId));
+
+        // Frameworks created before goalkeeper support carry no GK weight rows; fall back
+        // to the outfield set so keepers still score.
+        var weights = isGoalkeeper && framework.GoalkeeperAttributeWeights.Count > 0
+            ? framework.GoalkeeperAttributeWeights
+            : framework.AttributeWeights;
 
         var bandToScore = framework.BandThresholds;
         var derived = new Dictionary<Guid, int>(attributeMappings.Count);
@@ -43,7 +50,7 @@ public static class CompetencyScoreCalculator
                 competencyScore = DefaultBandScore(band);
             }
 
-            framework.AttributeWeights.TryGetValue((attr.AttributeId, format), out var weightPercent);
+            weights.TryGetValue((attr.AttributeId, format), out var weightPercent);
             var weightFactor = weightPercent / 100m;
 
             baseScore += competencyScore * weightFactor;

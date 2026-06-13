@@ -5,7 +5,8 @@ using OurGame.Persistence.Enums;
 namespace OurGame.Persistence.Models;
 
 /// <summary>
-/// Editable rubric text for one competency at one band, per framework. 9 competencies x 4 bands = 36 rows per framework.
+/// Editable rubric text for one competency at one band, per framework. 9 competencies x 4 bands = 36 rows
+/// per framework per position set (outfield and goalkeeper rows discriminated by IsGoalkeeper).
 /// </summary>
 public partial class CompetencyFrameworkCompetencyDescription
 {
@@ -18,6 +19,8 @@ public partial class CompetencyFrameworkCompetencyDescription
     public CompetencyBand Band { get; set; }
 
     public string Description { get; set; }
+
+    public bool IsGoalkeeper { get; set; }
 
     public virtual CompetencyFramework Framework { get; set; }
 

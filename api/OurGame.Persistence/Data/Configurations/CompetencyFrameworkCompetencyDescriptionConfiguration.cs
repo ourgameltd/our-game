@@ -12,8 +12,9 @@ public class CompetencyFrameworkCompetencyDescriptionConfiguration : IEntityType
         builder.HasKey(d => d.Id);
         builder.Property(d => d.Band).HasConversion<int>();
         builder.Property(d => d.Description).HasMaxLength(1024).IsRequired();
+        builder.Property(d => d.IsGoalkeeper).HasDefaultValue(false);
 
-        builder.HasIndex(d => new { d.FrameworkId, d.CompetencyId, d.Band }).IsUnique();
+        builder.HasIndex(d => new { d.FrameworkId, d.CompetencyId, d.Band, d.IsGoalkeeper }).IsUnique();
 
         builder.HasOne(d => d.Framework)
             .WithMany(f => f.CompetencyDescriptions)

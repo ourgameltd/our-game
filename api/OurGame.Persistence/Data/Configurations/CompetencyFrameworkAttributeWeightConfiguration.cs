@@ -11,8 +11,9 @@ public class CompetencyFrameworkAttributeWeightConfiguration : IEntityTypeConfig
         builder.ToTable("CompetencyFrameworkAttributeWeights");
         builder.HasKey(w => w.Id);
         builder.Property(w => w.Format).HasConversion<int>();
+        builder.Property(w => w.IsGoalkeeper).HasDefaultValue(false);
 
-        builder.HasIndex(w => new { w.FrameworkId, w.AttributeId, w.Format }).IsUnique();
+        builder.HasIndex(w => new { w.FrameworkId, w.AttributeId, w.Format, w.IsGoalkeeper }).IsUnique();
 
         builder.HasOne(w => w.Framework)
             .WithMany(f => f.AttributeWeights)

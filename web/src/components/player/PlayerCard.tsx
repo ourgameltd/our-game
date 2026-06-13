@@ -1,5 +1,6 @@
 import { Player } from '@/types';
-import { groupAttributes } from '@/utils/attributeHelpers';
+import { groupAttributes, getAttributeLabel } from '@/utils/attributeHelpers';
+import { isGoalkeeper } from '@/utils/positionHelpers';
 import { ReactNode } from 'react';
 import { calculateAge } from '@/utils/dateOfBirth';
 import type { CompetencyBand } from '@api/competencies';
@@ -38,6 +39,7 @@ export default function PlayerCard({
 }: PlayerCardProps) {
   const age = calculateAge(player.dateOfBirth);
   const indicatorClass = player.isArchived ? 'bg-gray-300 dark:bg-gray-600' : 'bg-primary-500 dark:bg-primary-400';
+  const playerIsGoalkeeper = isGoalkeeper(player.preferredPositions);
 
   const topAttributes = detailDisplay === 'attributes'
     ? [
@@ -168,7 +170,7 @@ export default function PlayerCard({
               <div className="md:flex md:gap-4 md:justify-end">
                 {topAttributes.map(attribute => (
                   <div key={attribute.name} className="flex md:flex-row md:items-center md:gap-2 text-sm gap-1">
-                    <span className="text-gray-600 dark:text-gray-400 truncate text-xs">{attribute.name}</span>
+                    <span className="text-gray-600 dark:text-gray-400 truncate text-xs">{getAttributeLabel(attribute.name, playerIsGoalkeeper)}</span>
                     <span className="font-medium text-gray-900 dark:text-white shrink-0">{attribute.rating}</span>
                   </div>
                 ))}

@@ -174,6 +174,64 @@ public class CompetencyScoreCalculatorTests
     }
 
     [Fact]
+    public void Calculate_GoalkeeperFlag_UsesGoalkeeperWeights()
+    {
+        // Outfield weights all on A1; GK weights all on A2. Same bands, different score.
+        var framework = new CompetencyFrameworkSnapshot
+        {
+            UpliftPercent = 5m,
+            BandThresholds = DefaultThresholds,
+            AttributeWeights = new Dictionary<(Guid, GameFormat), int>
+            {
+                { (A1, GameFormat.ElevenASide), 100 },
+                { (A2, GameFormat.ElevenASide), 0 },
+            },
+            GoalkeeperAttributeWeights = new Dictionary<(Guid, GameFormat), int>
+            {
+                { (A1, GameFormat.ElevenASide), 0 },
+                { (A2, GameFormat.ElevenASide), 100 },
+            },
+        };
+
+        var levels = new Dictionary<Guid, CompetencyBand>
+        {
+            { C1, CompetencyBand.Elite },        // A1 -> 70
+            { C2, CompetencyBand.Development },   // A2 -> 18
+        };
+        var mappings = new List<AttributeCompetencyMapping> { new(A1, C1), new(A2, C2) };
+
+        var outfield = CompetencyScoreCalculator.Calculate(levels, mappings, framework, GameFormat.ElevenASide, isGoalkeeper: false);
+        var goalkeeper = CompetencyScoreCalculator.Calculate(levels, mappings, framework, GameFormat.ElevenASide, isGoalkeeper: true);
+
+        Assert.Equal(70m, outfield.BaseScore);    // outfield weights -> A1 dominates
+        Assert.Equal(18m, goalkeeper.BaseScore);  // GK weights -> A2 dominates
+    }
+
+    [Fact]
+    public void Calculate_GoalkeeperFlag_FallsBackToOutfieldWhenNoGoalkeeperWeights()
+    {
+        // Framework predates GK support: no GoalkeeperAttributeWeights. A GK still scores
+        // off the outfield weights rather than scoring zero.
+        var framework = new CompetencyFrameworkSnapshot
+        {
+            UpliftPercent = 5m,
+            BandThresholds = DefaultThresholds,
+            AttributeWeights = new Dictionary<(Guid, GameFormat), int>
+            {
+                { (A1, GameFormat.ElevenASide), 100 },
+            },
+            // GoalkeeperAttributeWeights left empty.
+        };
+
+        var levels = new Dictionary<Guid, CompetencyBand> { { C1, CompetencyBand.Elite } };
+        var mappings = new List<AttributeCompetencyMapping> { new(A1, C1) };
+
+        var result = CompetencyScoreCalculator.Calculate(levels, mappings, framework, GameFormat.ElevenASide, isGoalkeeper: true);
+
+        Assert.Equal(70m, result.BaseScore);
+    }
+
+    [Fact]
     public void Calculate_FormatPicksTheRightWeightProfile()
     {
         var framework = new CompetencyFrameworkSnapshot

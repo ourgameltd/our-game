@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Player, AttributeEvaluation } from '@/types';
-import { groupAttributes, getQualityColor, calculateOverallRating } from '@/utils/attributeHelpers';
+import { groupAttributes, getQualityColor, calculateOverallRating, getAttributeLabel } from '@/utils/attributeHelpers';
+import { isGoalkeeper } from '@/utils/positionHelpers';
 
 interface CoachEvaluationFormProps {
   player: Player;
@@ -30,6 +31,7 @@ export default function CoachEvaluationForm({
   const [selectedCategory, setSelectedCategory] = useState<'skills' | 'physical' | 'mental'>('skills');
 
   const grouped = groupAttributes(player.attributes);
+  const playerIsGoalkeeper = isGoalkeeper(player.preferredPositions);
 
   const handleAttributeChange = (attributeName: string, rating: number) => {
     setAttributeRatings(prev => {
@@ -157,7 +159,7 @@ export default function CoachEvaluationForm({
               <div key={attr.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-2">
                   <label className="font-medium text-gray-900 dark:text-white">
-                    {attr.name}
+                    {getAttributeLabel(attr.name, playerIsGoalkeeper)}
                   </label>
                   <span className={`text-lg font-bold ${quality}`}>
                     {currentRating}/99

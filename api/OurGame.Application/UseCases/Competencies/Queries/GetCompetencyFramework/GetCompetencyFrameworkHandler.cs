@@ -34,12 +34,14 @@ public class GetCompetencyFrameworkHandler : IRequestHandler<GetCompetencyFramew
             {
                 a.Id,
                 a.Name,
+                a.GoalkeeperName,
                 a.DisplayOrder,
                 a.CategoryId,
                 CategoryName = a.Category.Name,
                 CategoryOrder = a.Category.DisplayOrder,
                 a.CompetencyId,
                 CompetencyName = a.Competency.Name,
+                CompetencyGoalkeeperName = a.Competency.GoalkeeperName,
             })
             .ToListAsync(cancellationToken);
 
@@ -48,6 +50,12 @@ public class GetCompetencyFrameworkHandler : IRequestHandler<GetCompetencyFramew
             .ToListAsync(cancellationToken);
 
         var weightsByAttribute = weights
+            .Where(w => !w.IsGoalkeeper)
+            .GroupBy(w => w.AttributeId)
+            .ToDictionary(g => g.Key, g => g.ToDictionary(w => w.Format, w => w.WeightPercent));
+
+        var goalkeeperWeightsByAttribute = weights
+            .Where(w => w.IsGoalkeeper)
             .GroupBy(w => w.AttributeId)
             .ToDictionary(g => g.Key, g => g.ToDictionary(w => w.Format, w => w.WeightPercent));
 
@@ -63,11 +71,16 @@ public class GetCompetencyFrameworkHandler : IRequestHandler<GetCompetencyFramew
                 {
                     AttributeId = a.Id,
                     AttributeName = a.Name,
+                    AttributeGoalkeeperName = a.GoalkeeperName,
                     DisplayOrder = a.DisplayOrder,
                     CompetencyId = a.CompetencyId,
                     CompetencyName = a.CompetencyName,
+                    CompetencyGoalkeeperName = a.CompetencyGoalkeeperName,
                     WeightsByFormat = weightsByAttribute.TryGetValue(a.Id, out var w)
                         ? w
+                        : new Dictionary<GameFormat, int>(),
+                    GoalkeeperWeightsByFormat = goalkeeperWeightsByAttribute.TryGetValue(a.Id, out var gw)
+                        ? gw
                         : new Dictionary<GameFormat, int>(),
                 }).ToList(),
             })
@@ -82,10 +95,14 @@ public class GetCompetencyFrameworkHandler : IRequestHandler<GetCompetencyFramew
         {
             CompetencyId = c.Id,
             CompetencyName = c.Name,
+            CompetencyGoalkeeperName = c.GoalkeeperName,
             DisplayOrder = c.DisplayOrder,
             Descriptions = Enum.GetValues<CompetencyBand>().ToDictionary(
                 band => band,
-                band => descriptions.FirstOrDefault(d => d.CompetencyId == c.Id && d.Band == band)?.Description ?? string.Empty),
+                band => descriptions.FirstOrDefault(d => !d.IsGoalkeeper && d.CompetencyId == c.Id && d.Band == band)?.Description ?? string.Empty),
+            GoalkeeperDescriptions = Enum.GetValues<CompetencyBand>().ToDictionary(
+                band => band,
+                band => descriptions.FirstOrDefault(d => d.IsGoalkeeper && d.CompetencyId == c.Id && d.Band == band)?.Description ?? string.Empty),
         }).ToList();
 
         return new CompetencyFrameworkDetailDto

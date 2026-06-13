@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePlayer } from '@api/hooks';
 import { usePlayerCompetencies, type CompetencyBand, GAME_FORMAT_LABELS } from '@api/competencies';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -83,6 +83,18 @@ export default function PlayerAbilitiesPage() {
   const { actualTheme } = useTheme();
   const { setEntityName } = useNavigation();
   const isDark = actualTheme === 'dark';
+
+  const [viewPosition, setViewPosition] = useState<'outfield' | 'goalkeeper'>('outfield');
+  useEffect(() => {
+    if (competencies) setViewPosition(competencies.isGoalkeeper ? 'goalkeeper' : 'outfield');
+  }, [competencies?.isGoalkeeper]);
+  const showGk = viewPosition === 'goalkeeper';
+  const competencyLabel = (c: { competencyName: string; competencyGoalkeeperName?: string }) =>
+    showGk ? (c.competencyGoalkeeperName ?? c.competencyName) : c.competencyName;
+  const competencyRubric = (
+    c: { descriptions: Record<CompetencyBand, string>; goalkeeperDescriptions: Record<CompetencyBand, string> },
+    band: CompetencyBand,
+  ) => (showGk ? c.goalkeeperDescriptions : c.descriptions)?.[band] ?? '';
 
   useEffect(() => {
     if (player) {
@@ -174,8 +186,8 @@ export default function PlayerAbilitiesPage() {
     .slice()
     .sort((a, b) => a.displayOrder - b.displayOrder)
     .map(c => ({
-      competency: c.competencyName.split(' ')[0], // short label for spoke
-      fullLabel: c.competencyName,
+      competency: competencyLabel(c).split(' ')[0], // short label for spoke
+      fullLabel: competencyLabel(c),
       bandValue: c.band ? BAND_VALUE[c.band] : 0,
       fullMark: 4,
     })) ?? [];
@@ -209,6 +221,25 @@ export default function PlayerAbilitiesPage() {
         ) : null}
 
         {!playerLoading && player && <PlayerSubNav />}
+
+        {!loading && competencies && (
+          <div className="flex items-center justify-end gap-1 mb-4">
+            <span className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mr-1">View</span>
+            {(['outfield', 'goalkeeper'] as const).map((p) => (
+              <button
+                key={p}
+                onClick={() => setViewPosition(p)}
+                className={`px-2.5 py-1.5 text-xs rounded-lg border transition-colors capitalize ${
+                  viewPosition === p
+                    ? 'bg-blue-600 text-white border-blue-600'
+                    : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
@@ -401,7 +432,7 @@ export default function PlayerAbilitiesPage() {
                       >
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {c.competencyName}
+                            {competencyLabel(c)}
                           </span>
                           <span className={`text-xs px-1.5 py-0.5 rounded-full ${CATEGORY_COLOURS[c.categoryName] ?? 'bg-gray-100 text-gray-700'}`}>
                             {c.categoryName}
@@ -415,7 +446,7 @@ export default function PlayerAbilitiesPage() {
                                 <BandBadge band={c.band} />
                               </div>
                               <p className="text-xs text-gray-500 dark:text-gray-400 leading-snug">
-                                {c.descriptions[c.band]}
+                                {competencyRubric(c, c.band)}
                               </p>
                             </div>
                             {nb && (
@@ -425,7 +456,7 @@ export default function PlayerAbilitiesPage() {
                                   <BandBadge band={nb} />
                                 </div>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-snug">
-                                  {c.descriptions[nb]}
+                                  {competencyRubric(c, nb)}
                                 </p>
                               </div>
                             )}
@@ -458,7 +489,7 @@ export default function PlayerAbilitiesPage() {
                       >
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {c.competencyName}
+                            {competencyLabel(c)}
                           </span>
                           <span className={`text-xs px-1.5 py-0.5 rounded-full ${CATEGORY_COLOURS[c.categoryName] ?? 'bg-gray-100 text-gray-700'}`}>
                             {c.categoryName}
@@ -472,7 +503,7 @@ export default function PlayerAbilitiesPage() {
                                 <BandBadge band={c.band} />
                               </div>
                               <p className="text-xs text-gray-500 dark:text-gray-400 leading-snug">
-                                {c.descriptions[c.band]}
+                                {competencyRubric(c, c.band)}
                               </p>
                             </div>
                             {nb && (
@@ -482,7 +513,7 @@ export default function PlayerAbilitiesPage() {
                                   <BandBadge band={nb} />
                                 </div>
                                 <p className="text-xs text-gray-500 dark:text-gray-400 leading-snug">
-                                  {c.descriptions[nb]}
+                                  {competencyRubric(c, nb)}
                                 </p>
                               </div>
                             )}

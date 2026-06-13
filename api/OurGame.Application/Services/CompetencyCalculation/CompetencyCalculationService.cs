@@ -51,7 +51,7 @@ public class CompetencyCalculationService : ICompetencyCalculationService
 
         var weights = await _db.CompetencyFrameworkAttributeWeights
             .Where(w => w.FrameworkId == frameworkId)
-            .Select(w => new { w.AttributeId, w.Format, w.WeightPercent })
+            .Select(w => new { w.AttributeId, w.Format, w.WeightPercent, w.IsGoalkeeper })
             .ToListAsync(cancellationToken);
 
         return new CompetencyFrameworkSnapshot
@@ -60,26 +60,34 @@ public class CompetencyCalculationService : ICompetencyCalculationService
             Name = framework.Name ?? string.Empty,
             UpliftPercent = framework.UpliftPercent,
             BandThresholds = thresholds.ToDictionary(t => t.Band, t => t.Threshold),
-            AttributeWeights = weights.ToDictionary(w => (w.AttributeId, w.Format), w => w.WeightPercent),
+            AttributeWeights = weights
+                .Where(w => !w.IsGoalkeeper)
+                .ToDictionary(w => (w.AttributeId, w.Format), w => w.WeightPercent),
+            GoalkeeperAttributeWeights = weights
+                .Where(w => w.IsGoalkeeper)
+                .ToDictionary(w => (w.AttributeId, w.Format), w => w.WeightPercent),
         };
     }
 
     public CompetencyScoreResult Preview(
         IReadOnlyDictionary<Guid, CompetencyBand> competencyLevels,
         CompetencyFrameworkSnapshot framework,
-        GameFormat format)
+        GameFormat format,
+        bool isGoalkeeper = false)
     {
         var mappings = _db.CompetencyAttributes
             .AsNoTracking()
             .Select(a => new AttributeCompetencyMapping(a.Id, a.CompetencyId))
             .ToList();
-        return CompetencyScoreCalculator.Calculate(competencyLevels, mappings, framework, format);
+        return CompetencyScoreCalculator.Calculate(competencyLevels, mappings, framework, format, isGoalkeeper);
     }
 
     public async Task RecalculatePlayerScoresAsync(Guid playerId, CancellationToken cancellationToken = default)
     {
         var player = await _db.Players.FirstOrDefaultAsync(p => p.Id == playerId, cancellationToken);
         if (player is null) return;
+
+        var isGoalkeeper = GoalkeeperDetection.IsGoalkeeper(player.PreferredPositions);
 
         var levels = await _db.PlayerCompetencyLevels
             .Where(l => l.PlayerId == playerId)
@@ -118,7 +126,7 @@ public class CompetencyCalculationService : ICompetencyCalculationService
             var framework = await ResolveFrameworkForTeamAsync(teamId, cancellationToken);
             if (framework is null) continue;
 
-            var result = CompetencyScoreCalculator.Calculate(levels, mappings, framework, format);
+            var result = CompetencyScoreCalculator.Calculate(levels, mappings, framework, format, isGoalkeeper);
 
             _db.PlayerTeamScores.Add(new PlayerTeamScore
             {

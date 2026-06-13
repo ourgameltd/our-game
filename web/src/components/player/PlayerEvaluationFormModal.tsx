@@ -2,7 +2,8 @@ import { useMemo, useState } from 'react';
 import { Target, Dumbbell, Brain } from 'lucide-react';
 import { useCreatePlayerAbilityEvaluation } from '@api/hooks';
 import { CreatePlayerAbilityEvaluationRequest, PlayerAbilitiesDto } from '@api/client';
-import { groupAttributes, getQualityColor } from '@utils/attributeHelpers';
+import { groupAttributes, getQualityColor, getAttributeLabel } from '@utils/attributeHelpers';
+import { isGoalkeeper } from '@/utils/positionHelpers';
 import { PlayerAttributes } from '@/types';
 
 interface PlayerEvaluationFormModalProps {
@@ -60,6 +61,7 @@ export default function PlayerEvaluationFormModal({
     () => groupAttributes(abilities.attributes),
     [abilities.attributes]
   );
+  const playerIsGoalkeeper = isGoalkeeper(abilities.preferredPositions);
 
   const activeEvaluations = useMemo(
     () => (abilities.evaluations || []).filter((e) => !e.isArchived),
@@ -195,7 +197,7 @@ export default function PlayerEvaluationFormModal({
               return (
                 <div key={attr.name} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <label className="font-medium text-gray-900 dark:text-white">{attr.name}</label>
+                    <label className="font-medium text-gray-900 dark:text-white">{getAttributeLabel(attr.name, playerIsGoalkeeper)}</label>
                     <span className={`text-lg font-bold ${quality}`}>{currentRating}/99</span>
                   </div>
                   <input

@@ -11,6 +11,7 @@ public class CompetencyConfiguration : IEntityTypeConfiguration<Competency>
         builder.ToTable("Competencies");
         builder.HasKey(c => c.Id);
         builder.Property(c => c.Name).HasMaxLength(128).IsRequired();
+        builder.Property(c => c.GoalkeeperName).HasMaxLength(128);
         builder.HasIndex(c => c.Name).IsUnique();
     }
 }
