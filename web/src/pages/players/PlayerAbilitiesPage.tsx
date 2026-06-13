@@ -2,6 +2,7 @@ import { useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { usePlayer } from '@api/hooks';
 import { usePlayerCompetencies, type CompetencyBand, GAME_FORMAT_LABELS } from '@api/competencies';
+import { prioritisedFocusAreas, getCompetencyPriority } from '@utils/positionCompetencyPriority';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useNavigation } from '@/contexts/NavigationContext';
 import { usePageTitle } from '@/hooks/usePageTitle';
@@ -164,7 +165,13 @@ export default function PlayerAbilitiesPage() {
     : [];
 
   const top3 = sortedCompetencies.slice(0, 3);
-  const bottom3 = [...sortedCompetencies].reverse().slice(0, 3);
+  const focusAreas = competencies
+    ? prioritisedFocusAreas(
+        competencies.competencies,
+        player?.preferredPositions ?? [],
+        (band) => (band ? (BAND_VALUE[band as CompetencyBand] ?? 0) : 0),
+      )
+    : [];
 
   // Framework completion percentage
   const totalPossible = (competencies?.competencies.length ?? 0) * 4;
@@ -473,15 +480,26 @@ export default function PlayerAbilitiesPage() {
 
             {/* Top 3 Improvement Areas */}
             <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">
-                Areas to Focus
-              </h3>
-              {bottom3.length === 0 ? (
+              <div className="mb-3">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  Areas to Focus
+                </h3>
+                {(player?.preferredPositions?.length ?? 0) > 0 && !competencies?.isGoalkeeper && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    Prioritised for {player!.preferredPositions.filter(p => p !== 'GK').join(', ')}
+                  </p>
+                )}
+              </div>
+              {focusAreas.length === 0 ? (
                 <p className="text-sm text-gray-400 dark:text-gray-500">No competencies assessed yet.</p>
               ) : (
                 <div className="space-y-3">
-                  {bottom3.map(c => {
+                  {focusAreas.map(c => {
                     const nb = c.band ? nextBand(c.band) : null;
+                    const outfieldPositions = (player?.preferredPositions ?? []).filter(p => p !== 'GK');
+                    const priority = outfieldPositions.length
+                      ? getCompetencyPriority(outfieldPositions, c.displayOrder)
+                      : null;
                     return (
                       <div
                         key={c.competencyId}
@@ -494,6 +512,16 @@ export default function PlayerAbilitiesPage() {
                           <span className={`text-xs px-1.5 py-0.5 rounded-full ${CATEGORY_COLOURS[c.categoryName] ?? 'bg-gray-100 text-gray-700'}`}>
                             {c.categoryName}
                           </span>
+                          {priority === 'high' && (
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 font-medium">
+                              Key for position
+                            </span>
+                          )}
+                          {priority === 'low' && (
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
+                              Less position-specific
+                            </span>
+                          )}
                         </div>
                         {c.band ? (
                           <div className="space-y-2">
