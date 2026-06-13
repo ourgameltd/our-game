@@ -113,9 +113,9 @@ internal static class SocialMatchReportHtml
               </header>
               <main style="max-width:48rem;margin:0 auto;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1rem;">
                 {PotmHtml(match.Report!.PlayerOfMatchName, match.Report.PlayerOfMatchPhoto)}
-                {LineupHtml(match)}
                 {EventsHtml(match)}
                 {SummaryHtml(match.Report.Summary)}
+                {LineupHtml(match)}
                 <p style="text-align:center;font-size:0.75rem;padding-bottom:0.5rem;" class="muted">
                   Shared via <a href="/" style="color:inherit;text-decoration:underline;">OurGame</a>
                 </p>

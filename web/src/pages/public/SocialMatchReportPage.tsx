@@ -348,14 +348,6 @@ export default function SocialMatchReportPage() {
           </div>
         )}
 
-        {/* Starting XI + Substitutes — side by side */}
-        {((data.startingPlayers?.length ?? 0) > 0 || (data.substitutes?.length ?? 0) > 0) && (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-start">
-            <LineupList heading="Starting XI" players={data.startingPlayers ?? []} />
-            <LineupList heading="Substitutes" players={data.substitutes ?? []} />
-          </div>
-        )}
-
         {/* Events — two-column home / away layout */}
         {(() => {
           const grouped = buildEvents(data);
@@ -417,6 +409,14 @@ export default function SocialMatchReportPage() {
             <div className="prose prose-sm dark:prose-invert mt-3 max-w-none text-gray-700 dark:text-gray-300">
               <ReactMarkdown>{data.summary}</ReactMarkdown>
             </div>
+          </div>
+        )}
+
+        {/* Starting XI + Substitutes — side by side */}
+        {((data.startingPlayers?.length ?? 0) > 0 || (data.substitutes?.length ?? 0) > 0) && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-start">
+            <LineupList heading="Starting XI" players={data.startingPlayers ?? []} />
+            <LineupList heading="Substitutes" players={data.substitutes ?? []} />
           </div>
         )}
 
