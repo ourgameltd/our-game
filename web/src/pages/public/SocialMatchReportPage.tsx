@@ -143,11 +143,6 @@ function LineupList({ heading, players }: { heading: string; players: PublishedL
             <span className="flex-1 text-sm text-gray-900 dark:text-white">
               {p.firstName} {p.lastName}
             </span>
-            {p.position && (
-              <span className="shrink-0 rounded bg-gray-100 px-1.5 py-0.5 text-xs font-medium text-gray-500 dark:bg-gray-700 dark:text-gray-400">
-                {p.position}
-              </span>
-            )}
           </li>
         ))}
       </ol>

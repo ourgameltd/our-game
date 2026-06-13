@@ -50,7 +50,8 @@ internal static class SocialMatchReportHtml
                   .txt { color: #111827; }
                   .sep { border-color: #f3f4f6; }
                   .vsep { background: #e5e7eb; }
-                  .chip { background: #f3f4f6; }
+                  .lineup-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; align-items: start; }
+                  @media (min-width: 640px) { .lineup-grid { grid-template-columns: 1fr 1fr; } }
                   .md > :first-child { margin-top: 0; }
                   .md > :last-child { margin-bottom: 0; }
                   .md p { margin: 0.5rem 0; }
@@ -74,7 +75,6 @@ internal static class SocialMatchReportHtml
                     .txt { color: #f9fafb; }
                     .sep { border-color: #374151; }
                     .vsep { background: #4b5563; }
-                    .chip { background: #374151; }
                     .md a { color: #60a5fa; }
                     .md blockquote { border-left-color: #4b5563; color: #9ca3af; }
                     .md code, .md pre { background: #374151; }
@@ -190,7 +190,7 @@ internal static class SocialMatchReportHtml
 
         return $"""
             <div class="card" style="border-radius:0.5rem;padding:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+              <div class="lineup-grid">
                 {LineupColumnHtml("Starting XI", starting)}
                 {LineupColumnHtml("Substitutes", subs)}
               </div>
@@ -210,14 +210,10 @@ internal static class SocialMatchReportHtml
             var num = p.SquadNumber.HasValue
                 ? $"""<span style="width:1.5rem;flex-shrink:0;text-align:right;font-size:0.75rem;font-variant-numeric:tabular-nums;" class="muted">{p.SquadNumber}</span>"""
                 : """<span style="width:1.5rem;flex-shrink:0;"></span>""";
-            var pos = !string.IsNullOrEmpty(p.Position)
-                ? $"""<span style="flex-shrink:0;border-radius:0.25rem;padding:0.1rem 0.35rem;font-size:0.7rem;font-weight:500;" class="chip muted">{H(p.Position)}</span>"""
-                : string.Empty;
             sb.Append($"""
                 <li style="display:flex;align-items:center;gap:0.5rem;padding:0.375rem 0;border-bottom:1px solid;" class="sep">
                   {num}
                   <span style="flex:1;font-size:0.875rem;" class="txt">{H(p.FirstName)} {H(p.LastName)}</span>
-                  {pos}
                 </li>
                 """);
         }
