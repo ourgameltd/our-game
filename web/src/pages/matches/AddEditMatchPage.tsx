@@ -1525,6 +1525,135 @@ export default function AddEditMatchPage() {
   const handleFullTime = async () => {
     if (!matchId) return;
     setIsEndingMatch(true);
+
+    // Derive scores from current goal events
+    const regularGoals = goals.filter(g => g.period !== 'penalties');
+    const penaltyGoals = goals.filter(g => g.period === 'penalties');
+    const ourRegular = regularGoals.filter(g => !g.isOpponent).length;
+    const oppRegular = regularGoals.filter(g => g.isOpponent).length;
+    const ourPens = penaltyGoals.filter(g => !g.isOpponent).length;
+    const oppPens = penaltyGoals.filter(g => g.isOpponent).length;
+    const computedHomeScore = isHome ? ourRegular : oppRegular;
+    const computedAwayScore = isHome ? oppRegular : ourRegular;
+    const hasPenaltyGoals = penaltyGoals.length > 0;
+    const computedHomePen = hasPenaltyGoals ? (isHome ? ourPens : oppPens) : null;
+    const computedAwayPen = hasPenaltyGoals ? (isHome ? oppPens : ourPens) : null;
+
+    // Populate empty score fields from events; leave non-empty fields untouched
+    const finalHomeScore = homeScore !== '' ? homeScore : String(computedHomeScore);
+    const finalAwayScore = awayScore !== '' ? awayScore : String(computedAwayScore);
+    const finalHomePenScore = homePenScore !== '' ? homePenScore : (computedHomePen !== null ? String(computedHomePen) : '');
+    const finalAwayPenScore = awayPenScore !== '' ? awayPenScore : (computedAwayPen !== null ? String(computedAwayPen) : '');
+
+    if (homeScore === '') setHomeScore(finalHomeScore);
+    if (awayScore === '') setAwayScore(finalAwayScore);
+    if (homePenScore === '' && finalHomePenScore !== '') setHomePenScore(finalHomePenScore);
+    if (awayPenScore === '' && finalAwayPenScore !== '') setAwayPenScore(finalAwayPenScore);
+
+    // Save the match (including goals) so the backend has the latest data when sending the notification
+    if (opposition && kickOffTime && location && competition && kit) {
+      await updateMatch({
+        teamId: teamId!,
+        seasonId: seasonId || defaultSeason,
+        squadSize,
+        opposition,
+        matchDate: new Date(kickOffTime).toISOString(),
+        kickOffTime: new Date(kickOffTime).toISOString(),
+        meetTime: meetTime ? new Date(meetTime).toISOString() : undefined,
+        location,
+        isHome,
+        competition,
+        primaryKitId: kit || undefined,
+        goalkeeperKitId: goalkeeperKit || undefined,
+        homeScore: finalHomeScore ? parseInt(finalHomeScore) : undefined,
+        awayScore: finalAwayScore ? parseInt(finalAwayScore) : undefined,
+        homePenScore: finalHomePenScore ? parseInt(finalHomePenScore) : undefined,
+        awayPenScore: finalAwayPenScore ? parseInt(finalAwayPenScore) : undefined,
+        status: matchStatus,
+        weatherCondition: weather || undefined,
+        weatherTemperature: temperature ? parseFloat(temperature) : undefined,
+        pitchType: pitchType || undefined,
+        lineup: {
+          formationId: formationId || undefined,
+          tacticId: tacticId || undefined,
+          players: [
+            ...[...startingPlayers].sort((l, r) => l.positionIndex - r.positionIndex).map(p => ({
+              playerId: p.playerId,
+              position: lineupSlotsByPositionIndex.get(p.positionIndex)?.positionLabel || p.positionLabel,
+              positionIndex: p.positionIndex,
+              squadNumber: p.squadNumber,
+              isStarting: true,
+            })),
+            ...substitutes.map(s => ({
+              playerId: s.playerId,
+              position: undefined,
+              positionIndex: undefined,
+              squadNumber: s.squadNumber,
+              isStarting: false,
+            })),
+          ],
+        },
+        report: {
+          summary: summary || undefined,
+          captainId: captainId || undefined,
+          playerOfMatchId: playerOfTheMatch || undefined,
+          goals: goals.filter(g => g.isOpponent || g.playerId).map(g => ({
+            playerId: g.isOpponent ? undefined : g.playerId,
+            isOpponent: g.isOpponent ?? false,
+            opponentName: g.isOpponent ? g.opponentName : undefined,
+            opponentJerseyNumber: g.isOpponent ? g.opponentJerseyNumber : undefined,
+            minute: g.minute,
+            period: g.period,
+            addedTimeMinutes: g.addedTimeMinutes && g.addedTimeMinutes > 0 ? g.addedTimeMinutes : undefined,
+            isExtraTime: g.isExtraTime,
+            isPenalty: g.isPenalty,
+            assistPlayerId: g.isOpponent ? undefined : g.assistPlayerId,
+          })),
+          cards: cards.filter(c => c.isOpponent || c.playerId).map(c => ({
+            playerId: c.isOpponent ? undefined : c.playerId,
+            isOpponent: c.isOpponent ?? false,
+            opponentName: c.isOpponent ? c.opponentName : undefined,
+            opponentJerseyNumber: c.isOpponent ? c.opponentJerseyNumber : undefined,
+            type: c.type,
+            minute: c.minute,
+            period: c.period,
+            addedTimeMinutes: c.addedTimeMinutes && c.addedTimeMinutes > 0 ? c.addedTimeMinutes : undefined,
+            reason: c.reason,
+          })),
+          injuries: injuries.filter(i => i.isOpponent || i.playerId).map(i => ({
+            playerId: i.isOpponent ? undefined : i.playerId,
+            isOpponent: i.isOpponent ?? false,
+            opponentName: i.isOpponent ? i.opponentName : undefined,
+            opponentJerseyNumber: i.isOpponent ? i.opponentJerseyNumber : undefined,
+            minute: i.minute,
+            period: i.period,
+            addedTimeMinutes: i.addedTimeMinutes && i.addedTimeMinutes > 0 ? i.addedTimeMinutes : undefined,
+            description: i.description,
+            severity: i.severity,
+          })),
+          performanceRatings: ratings,
+        },
+        coaches: coachAttendance.map(ca => ({
+          coachId: ca.coachId,
+          status: ca.status,
+          notes: ca.notes || undefined,
+        })),
+        substitutions: substitutions.map(s => ({
+          minute: s.minute,
+          period: s.period,
+          addedTimeMinutes: s.addedTimeMinutes && s.addedTimeMinutes > 0 ? s.addedTimeMinutes : undefined,
+          playerOutId: s.playerOut,
+          playerInId: s.playerIn,
+        })),
+        attendance: attendance.filter(a => invitedPlayerIdSet.has(a.playerId)).map(a => ({
+          playerId: a.playerId,
+          status: a.status,
+          notes: a.notes || undefined,
+        })),
+        notes: notes || undefined,
+      } as UpdateMatchRequest);
+    }
+
     const res = await apiClient.matches.end(matchId);
     setIsEndingMatch(false);
     if (res.success) {
@@ -1631,7 +1760,7 @@ export default function AddEditMatchPage() {
         captainId: captainId || undefined,
         playerOfMatchId: playerOfTheMatch || undefined,
         goals: goals
-          .filter(goal => goal.isOpponent ? goal.opponentName?.trim() : goal.playerId)
+          .filter(goal => goal.isOpponent || goal.playerId)
           .map(goal => ({
             playerId: goal.isOpponent ? undefined : goal.playerId,
             isOpponent: goal.isOpponent ?? false,
@@ -1645,7 +1774,7 @@ export default function AddEditMatchPage() {
             assistPlayerId: goal.isOpponent ? undefined : goal.assistPlayerId,
           })),
         cards: cards
-          .filter(card => card.isOpponent ? card.opponentName?.trim() : card.playerId)
+          .filter(card => card.isOpponent || card.playerId)
           .map(card => ({
             playerId: card.isOpponent ? undefined : card.playerId,
             isOpponent: card.isOpponent ?? false,
@@ -1658,7 +1787,7 @@ export default function AddEditMatchPage() {
             reason: card.reason,
           })),
         injuries: injuries
-          .filter(injury => injury.isOpponent ? injury.opponentName?.trim() : injury.playerId)
+          .filter(injury => injury.isOpponent || injury.playerId)
           .map(injury => ({
             playerId: injury.isOpponent ? undefined : injury.playerId,
             isOpponent: injury.isOpponent ?? false,
