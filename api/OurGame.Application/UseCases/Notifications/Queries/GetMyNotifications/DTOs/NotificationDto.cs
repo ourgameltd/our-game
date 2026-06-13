@@ -12,6 +12,8 @@ public class NotificationDto
 
     public string? Url { get; set; }
 
+    public string? Audience { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public bool IsRead { get; set; }

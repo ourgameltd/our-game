@@ -164,7 +164,14 @@ export default function MobileNavigation() {
   useEffect(() => {
     const handleNotificationsRead = (e: Event) => {
       const delta = (e as CustomEvent<{ delta: number }>).detail.delta;
-      setUnreadNotificationCount(prev => Math.max(0, prev - delta));
+      setUnreadNotificationCount(prev => {
+        const newCount = Math.max(0, prev - delta);
+        if ('setAppBadge' in navigator) {
+          if (newCount > 0) void navigator.setAppBadge(newCount);
+          else void navigator.clearAppBadge();
+        }
+        return newCount;
+      });
     };
     window.addEventListener(NOTIFICATIONS_READ_EVENT, handleNotificationsRead);
     return () => window.removeEventListener(NOTIFICATIONS_READ_EVENT, handleNotificationsRead);

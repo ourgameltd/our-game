@@ -87,6 +87,7 @@ public class SendTrainingSessionNotificationHandler : IRequestHandler<SendTraini
                 message,
                 url,
                 sendPush: true,
+                audience: null,
                 cancellationToken);
         }
     }

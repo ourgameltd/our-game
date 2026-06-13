@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageTitle from '@/components/common/PageTitle';
-import { Bell, BellOff, Check, CheckCheck, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2, Newspaper } from 'lucide-react';
+import { Bell, BellOff, Check, CheckCheck, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2, Newspaper, Target, Square } from 'lucide-react';
 import { getNotificationTypeColors } from '@/data/referenceData';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -71,11 +71,16 @@ export default function FeedPage() {
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
-      case 'match': return <Trophy className="w-5 h-5" />;
+      case 'match':
+      case 'match_reminder': return <Bell className="w-5 h-5" />;
       case 'training': return <Calendar className="w-5 h-5" />;
       case 'team': return <Users className="w-5 h-5" />;
       case 'announcement': return <Megaphone className="w-5 h-5" />;
       case 'message': return <MessageSquare className="w-5 h-5" />;
+      case 'goal': return <Target className="w-5 h-5" />;
+      case 'result': return <Trophy className="w-5 h-5" />;
+      case 'card_yellow':
+      case 'card_red': return <Square className="w-5 h-5" />;
       default: return <Bell className="w-5 h-5" />;
     }
   };
@@ -155,9 +160,16 @@ export default function FeedPage() {
                   <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed mb-2">
                     {item.message}
                   </p>
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
-                    {formatTimestamp(new Date(item.createdAt))}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
+                      {formatTimestamp(new Date(item.createdAt))}
+                    </span>
+                    {item.audience && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 capitalize">
+                        {item.audience}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {!item.isRead && (
                   <button

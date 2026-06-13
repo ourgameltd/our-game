@@ -1739,6 +1739,38 @@ export function useNotifyMatch(matchId: string): {
   return { notifyMatch, isSubmitting, error };
 }
 
+export function useNotifyGoal(matchId: string): {
+  notifyGoal: (data: { scorerName: string; minute: number; period: string; homeScore: number; awayScore: number }) => Promise<ApiResponse<void>>;
+  isSubmitting: boolean;
+  error: ApiError | null;
+} {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const notifyGoal = useCallback(async (data: { scorerName: string; minute: number; period: string; homeScore: number; awayScore: number }): Promise<ApiResponse<void>> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.matches.notifyGoal(matchId, data);
+      if (!response.success) {
+        setError({
+          message: response.error?.message || 'Failed to send goal notification',
+          statusCode: response.error?.statusCode,
+        });
+      }
+      return response;
+    } catch (err) {
+      const apiError = { message: err instanceof Error ? err.message : 'An unexpected error occurred' };
+      setError(apiError);
+      return { success: false, error: apiError };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [matchId]);
+
+  return { notifyGoal, isSubmitting, error };
+}
+
 export function useNotifyTrainingSession(sessionId: string): {
   notifySession: () => Promise<ApiResponse<void>>;
   isSubmitting: boolean;

@@ -15,6 +15,7 @@ using OurGame.Application.UseCases.Matches.Commands.UpdateMatch.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.SendMatchNotification;
+using OurGame.Application.UseCases.Matches.Commands.SendGoalNotification;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMyMatchAttendance;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
@@ -627,6 +628,101 @@ public class MatchFunctions
             await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Failed to send notifications", 500), ct);
             return error;
         }
+    }
+
+    /// <summary>
+    /// Send a goal push notification to all match participants.
+    /// </summary>
+    [Function("NotifyGoal")]
+    [OpenApiOperation(
+        operationId: "NotifyGoal",
+        tags: new[] { "Matches" },
+        Summary = "Notify goal scored",
+        Description = "Sends a push notification to all players and coaches for the match announcing a goal.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The match ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(NotifyGoalRequest), Required = true, Description = "Goal details")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Notifications sent")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Match not found")]
+    public async Task<HttpResponseData> NotifyGoal(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/matches/{id}/notify-goal")] HttpRequestData req,
+        string id,
+        CancellationToken ct = default)
+    {
+        var userId = req.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+        }
+
+        if (!Guid.TryParse(id, out var matchGuid))
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid match ID format", 400), ct);
+            return badRequest;
+        }
+
+        NotifyGoalRequest? body;
+        try
+        {
+            body = await req.ReadFromJsonAsync<NotifyGoalRequest>();
+        }
+        catch
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid request body", 400), ct);
+            return badRequest;
+        }
+
+        if (body == null || string.IsNullOrWhiteSpace(body.ScorerName) || string.IsNullOrWhiteSpace(body.Period))
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("ScorerName and Period are required", 400), ct);
+            return badRequest;
+        }
+
+        try
+        {
+            await _mediator.Send(new SendGoalNotificationCommand(
+                matchGuid,
+                body.ScorerName,
+                body.Minute,
+                body.Period,
+                body.HomeScore,
+                body.AwayScore), ct);
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFound;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending goal notification for {MatchId}", matchGuid);
+            var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Failed to send goal notification", 500), ct);
+            return error;
+        }
+    }
+
+    public class NotifyGoalRequest
+    {
+        public string ScorerName { get; set; } = string.Empty;
+        public int Minute { get; set; }
+        public string Period { get; set; } = string.Empty;
+        public int HomeScore { get; set; }
+        public int AwayScore { get; set; }
     }
 
     /// <summary>

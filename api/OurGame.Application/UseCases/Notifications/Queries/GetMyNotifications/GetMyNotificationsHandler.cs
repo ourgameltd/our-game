@@ -41,6 +41,7 @@ public class GetMyNotificationsHandler : IRequestHandler<GetMyNotificationsQuery
                 Title = notification.Title,
                 Message = notification.Message,
                 Url = notification.Url,
+                Audience = notification.Audience,
                 CreatedAt = notification.CreatedAt,
                 IsRead = read != null
             };

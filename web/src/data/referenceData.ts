@@ -361,10 +361,15 @@ export function getLinkTypeLabel(type: string): string {
 
 export const notificationTypes = [
   { value: 'match', label: 'Match', icon: 'Trophy', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30', textColor: 'text-yellow-700 dark:text-yellow-400' },
+  { value: 'match_reminder', label: 'Match Reminder', icon: 'Bell', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30', textColor: 'text-yellow-700 dark:text-yellow-400' },
   { value: 'training', label: 'Training', icon: 'Calendar', bgColor: 'bg-blue-100 dark:bg-blue-900/30', textColor: 'text-blue-700 dark:text-blue-400' },
   { value: 'team', label: 'Team', icon: 'Users', bgColor: 'bg-green-100 dark:bg-green-900/30', textColor: 'text-green-700 dark:text-green-400' },
   { value: 'announcement', label: 'Announcement', icon: 'Megaphone', bgColor: 'bg-purple-100 dark:bg-purple-900/30', textColor: 'text-purple-700 dark:text-purple-400' },
   { value: 'message', label: 'Message', icon: 'MessageSquare', bgColor: 'bg-pink-100 dark:bg-pink-900/30', textColor: 'text-pink-700 dark:text-pink-400' },
+  { value: 'goal', label: 'Goal', icon: 'Target', bgColor: 'bg-orange-100 dark:bg-orange-900/30', textColor: 'text-orange-700 dark:text-orange-400' },
+  { value: 'result', label: 'Result', icon: 'Trophy', bgColor: 'bg-emerald-100 dark:bg-emerald-900/30', textColor: 'text-emerald-700 dark:text-emerald-400' },
+  { value: 'card_yellow', label: 'Yellow Card', icon: 'Square', bgColor: 'bg-yellow-100 dark:bg-yellow-900/30', textColor: 'text-yellow-600 dark:text-yellow-400' },
+  { value: 'card_red', label: 'Red Card', icon: 'Square', bgColor: 'bg-red-100 dark:bg-red-900/30', textColor: 'text-red-700 dark:text-red-400' },
 ] as const;
 
 export type NotificationType = typeof notificationTypes[number]['value'];
