@@ -20,6 +20,8 @@ public class ClubMatchDto
     public string Competition { get; set; } = string.Empty;
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
+    public int? HomePenScore { get; set; }
+    public int? AwayPenScore { get; set; }
     public string Status { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
     public string? WeatherCondition { get; set; }

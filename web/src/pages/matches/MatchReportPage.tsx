@@ -19,7 +19,6 @@ export default function MatchReportPage() {
   const { data: myChildren } = useMyChildren();
   const { submit: submitAttendance, isSubmitting: attendanceSubmitting } = useUpdateMyMatchAttendance(matchId || '');
   const [isPublished, setIsPublished] = useState(false);
-  // Track attendance status overrides after user responds
   const [attendanceOverrides, setAttendanceOverrides] = useState<Record<string, string>>({});
 
   const handleAttendanceRespond = async (status: 'confirmed' | 'declined', playerId?: string) => {

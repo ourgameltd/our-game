@@ -43,6 +43,10 @@ public record UpdateMatchRequest
 
     public int? AwayScore { get; init; }
 
+    public int? HomePenScore { get; init; }
+
+    public int? AwayPenScore { get; init; }
+
     /// <summary>
     /// Match status: scheduled, in-progress, completed, postponed, cancelled
     /// </summary>

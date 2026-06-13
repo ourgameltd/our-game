@@ -12,6 +12,8 @@ using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.SendMatchNotification;
 using OurGame.Application.UseCases.Matches.Commands.SendGoalNotification;
 using OurGame.Application.UseCases.Matches.Commands.SendCardNotification;
+using OurGame.Application.UseCases.Matches.Commands.StartMatch;
+using OurGame.Application.UseCases.Matches.Commands.EndMatch;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 
@@ -761,6 +763,172 @@ public class MatchFunctionsTests
         var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/notify-card", authId, body);
 
         var response = await sut.NotifyCard(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    // ───────────────────────────────────────────────
+    // StartMatch
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task StartMatch_ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        var matchId = Guid.NewGuid();
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("POST", $"https://localhost/v1/matches/{matchId}/start");
+
+        var response = await sut.StartMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task StartMatch_ReturnsBadRequest_WhenIdIsNotValidGuid()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var sut = BuildSut(new TestMediator());
+        var req = CreateAuthedRequest("POST", "https://localhost/v1/matches/not-a-guid/start", authId);
+
+        var response = await sut.StartMatch(req, "not-a-guid");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<object>(response);
+        Assert.Equal("Invalid match ID format", payload.Error?.Message);
+    }
+
+    [Fact]
+    public async Task StartMatch_ReturnsNotFound_WhenMatchNotFound()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<StartMatchCommand>((_, _) =>
+            throw new NotFoundException("Match", matchId));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/start", authId);
+
+        var response = await sut.StartMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task StartMatch_ReturnsForbidden_WhenNotCoach()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<StartMatchCommand>((_, _) =>
+            throw new ForbiddenException("You are not a coach for this team."));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/start", authId);
+
+        var response = await sut.StartMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task StartMatch_ReturnsNoContent_WhenSuccessful()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<StartMatchCommand>((_, _) => Task.CompletedTask);
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/start", authId);
+
+        var response = await sut.StartMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
+    }
+
+    // ───────────────────────────────────────────────
+    // EndMatch
+    // ───────────────────────────────────────────────
+
+    [Fact]
+    public async Task EndMatch_ReturnsUnauthorized_WhenNotAuthenticated()
+    {
+        var matchId = Guid.NewGuid();
+        var sut = BuildSut(new TestMediator());
+        var req = CreateRequest("POST", $"https://localhost/v1/matches/{matchId}/end");
+
+        var response = await sut.EndMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task EndMatch_ReturnsBadRequest_WhenIdIsNotValidGuid()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var sut = BuildSut(new TestMediator());
+        var req = CreateAuthedRequest("POST", "https://localhost/v1/matches/not-a-guid/end", authId);
+
+        var response = await sut.EndMatch(req, "not-a-guid");
+
+        Assert.Equal(System.Net.HttpStatusCode.BadRequest, response.StatusCode);
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<object>(response);
+        Assert.Equal("Invalid match ID format", payload.Error?.Message);
+    }
+
+    [Fact]
+    public async Task EndMatch_ReturnsNotFound_WhenMatchNotFound()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<EndMatchCommand>((_, _) =>
+            throw new NotFoundException("Match", matchId));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/end", authId);
+
+        var response = await sut.EndMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.NotFound, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task EndMatch_ReturnsForbidden_WhenNotCoach()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<EndMatchCommand>((_, _) =>
+            throw new ForbiddenException("You are not a coach for this team."));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/end", authId);
+
+        var response = await sut.EndMatch(req, matchId.ToString());
+
+        Assert.Equal(System.Net.HttpStatusCode.Forbidden, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task EndMatch_ReturnsNoContent_WhenSuccessful()
+    {
+        var authId = Guid.NewGuid().ToString("N");
+        var matchId = Guid.NewGuid();
+
+        var mediator = new TestMediator();
+        mediator.Register<EndMatchCommand>((_, _) => Task.CompletedTask);
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("POST", $"https://localhost/v1/matches/{matchId}/end", authId);
+
+        var response = await sut.EndMatch(req, matchId.ToString());
 
         Assert.Equal(System.Net.HttpStatusCode.NoContent, response.StatusCode);
     }

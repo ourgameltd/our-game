@@ -86,6 +86,8 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
                 GoalkeeperKitId = {dto.GoalkeeperKitId},
                 HomeScore = {dto.HomeScore},
                 AwayScore = {dto.AwayScore},
+                HomePenScore = {dto.HomePenScore},
+                AwayPenScore = {dto.AwayPenScore},
                 Status = {statusInt},
                 IsLocked = {dto.IsLocked},
                 Notes = {notes},

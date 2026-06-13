@@ -47,6 +47,8 @@ public class GetMatchesByClubIdHandler : IRequestHandler<GetMatchesByClubIdQuery
                 m.Competition,
                 m.HomeScore,
                 m.AwayScore,
+                m.HomePenScore,
+                m.AwayPenScore,
                 m.Status,
                 m.IsLocked,
                 m.WeatherCondition,
@@ -148,6 +150,8 @@ public class GetMatchesByClubIdHandler : IRequestHandler<GetMatchesByClubIdQuery
             Competition = m.Competition ?? string.Empty,
             HomeScore = m.HomeScore,
             AwayScore = m.AwayScore,
+            HomePenScore = m.HomePenScore,
+            AwayPenScore = m.AwayPenScore,
             Status = MapStatusToString(m.Status),
             IsLocked = m.IsLocked,
             WeatherCondition = m.WeatherCondition,
@@ -216,6 +220,8 @@ public class MatchRawDto
     public string? Competition { get; set; }
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
+    public int? HomePenScore { get; set; }
+    public int? AwayPenScore { get; set; }
     public int Status { get; set; }
     public bool IsLocked { get; set; }
     public string? WeatherCondition { get; set; }

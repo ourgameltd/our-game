@@ -2317,6 +2317,8 @@ export interface MatchDetailDto {
   goalkeeperKit?: MatchKitDto;
   homeScore?: number;
   awayScore?: number;
+  homePenScore?: number;
+  awayPenScore?: number;
   status: string;
   notes?: string;
   weatherCondition?: string;
@@ -2521,6 +2523,8 @@ export interface CreateMatchRequest {
   goalkeeperKitId?: string;
   homeScore?: number;
   awayScore?: number;
+  homePenScore?: number;
+  awayPenScore?: number;
   status: string;
   notes?: string;
   weatherCondition?: string;
@@ -2630,6 +2634,8 @@ export interface UpdateMatchRequest {
   goalkeeperKitId?: string;
   homeScore?: number;
   awayScore?: number;
+  homePenScore?: number;
+  awayPenScore?: number;
   status: string;
   notes?: string;
   weatherCondition?: string;
@@ -4236,6 +4242,30 @@ export const apiClient = {
     updateMyAttendance: async (matchId: string, status: 'confirmed' | 'declined', playerId?: string): Promise<ApiResponse<void>> => {
       try {
         await axiosInstance.patch(`/v1/matches/${matchId}/my-attendance`, { status, playerId });
+        return { success: true, statusCode: 204 };
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Mark a match as in-progress (kick off) and notify all participants
+     */
+    start: async (matchId: string): Promise<ApiResponse<void>> => {
+      try {
+        await axiosInstance.post(`/v1/matches/${matchId}/start`);
+        return { success: true, statusCode: 204 };
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Mark a match as completed (full time) and notify all participants
+     */
+    end: async (matchId: string): Promise<ApiResponse<void>> => {
+      try {
+        await axiosInstance.post(`/v1/matches/${matchId}/end`);
         return { success: true, statusCode: 204 };
       } catch (error) {
         return handleApiError(error);

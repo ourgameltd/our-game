@@ -67,6 +67,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 gk.SocksColor AS GoalkeeperKitSocksColor,
                 m.HomeScore,
                 m.AwayScore,
+                m.HomePenScore,
+                m.AwayPenScore,
                 m.Status,
                 m.IsLocked,
                 m.Notes,
@@ -364,6 +366,8 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
             } : null,
             HomeScore = match.HomeScore,
             AwayScore = match.AwayScore,
+            HomePenScore = match.HomePenScore,
+            AwayPenScore = match.AwayPenScore,
             Status = MapStatusToString(match.Status),
             IsLocked = match.IsLocked,
             Notes = match.Notes,
@@ -578,6 +582,8 @@ public class MatchRaw
     public string? GoalkeeperKitSocksColor { get; set; }
     public int? HomeScore { get; set; }
     public int? AwayScore { get; set; }
+    public int? HomePenScore { get; set; }
+    public int? AwayPenScore { get; set; }
     public int Status { get; set; }
     public bool IsLocked { get; set; }
     public string? Notes { get; set; }

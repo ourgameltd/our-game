@@ -64,12 +64,12 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
         await _db.Database.ExecuteSqlInterpolatedAsync($@"
             INSERT INTO Matches (Id, TeamId, SeasonId, SquadSize, Opposition, MatchDate, MeetTime, KickOffTime,
                 Location, IsHome, Competition, PrimaryKitId, SecondaryKitId, GoalkeeperKitId,
-                HomeScore, AwayScore, Status, IsLocked, Notes, WeatherCondition, WeatherTemperature, PitchType,
+                HomeScore, AwayScore, HomePenScore, AwayPenScore, Status, IsLocked, Notes, WeatherCondition, WeatherTemperature, PitchType,
                 CreatedAt, UpdatedAt)
             VALUES ({matchId}, {dto.TeamId}, {dto.SeasonId}, {squadSizeInt}, {dto.Opposition}, {dto.MatchDate},
                 {dto.MeetTime}, {dto.KickOffTime}, {location}, {dto.IsHome}, {competition},
                 {dto.PrimaryKitId}, {dto.SecondaryKitId}, {dto.GoalkeeperKitId},
-                {dto.HomeScore}, {dto.AwayScore}, {statusInt}, {false}, {notes},
+                {dto.HomeScore}, {dto.AwayScore}, {dto.HomePenScore}, {dto.AwayPenScore}, {statusInt}, {false}, {notes},
                 {weatherCondition}, {dto.WeatherTemperature}, {pitchType}, {now}, {now})
         ", cancellationToken);
 

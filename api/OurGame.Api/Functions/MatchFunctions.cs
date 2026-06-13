@@ -18,6 +18,8 @@ using OurGame.Application.UseCases.Matches.Commands.SendMatchNotification;
 using OurGame.Application.UseCases.Matches.Commands.SendGoalNotification;
 using OurGame.Application.UseCases.Matches.Commands.SendCardNotification;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMyMatchAttendance;
+using OurGame.Application.UseCases.Matches.Commands.StartMatch;
+using OurGame.Application.UseCases.Matches.Commands.EndMatch;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 using System.Net;
@@ -827,6 +829,144 @@ public class MatchFunctions
         public string Period { get; set; } = string.Empty;
         public int HomeScore { get; set; }
         public int AwayScore { get; set; }
+    }
+
+    /// <summary>
+    /// Mark a match as in-progress (kicked off) and notify all participants.
+    /// </summary>
+    [Function("StartMatch")]
+    [OpenApiOperation(
+        operationId: "StartMatch",
+        tags: new[] { "Matches" },
+        Summary = "Start a match",
+        Description = "Sets the match status to in-progress and sends a kick-off push notification to all players and coaches. Caller must be a coach for the team.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The match ID")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Match started and notifications sent")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.Forbidden,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Caller is not a coach for this team")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Match not found")]
+    public async Task<HttpResponseData> StartMatch(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/matches/{id}/start")] HttpRequestData req,
+        string id,
+        CancellationToken ct = default)
+    {
+        var authId = req.GetUserId();
+        if (string.IsNullOrEmpty(authId))
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+
+        if (!Guid.TryParse(id, out var matchGuid))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid match ID format", 400), ct);
+            return bad;
+        }
+
+        try
+        {
+            await _mediator.Send(new StartMatchCommand(matchGuid, authId), ct);
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFound;
+        }
+        catch (ForbiddenException ex)
+        {
+            var forbidden = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbidden.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(ex.Message, 403), ct);
+            return forbidden;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error starting match {MatchId}", matchGuid);
+            var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Failed to start match", 500), ct);
+            return error;
+        }
+    }
+
+    /// <summary>
+    /// Mark a match as completed (full time) and notify all participants.
+    /// </summary>
+    [Function("EndMatch")]
+    [OpenApiOperation(
+        operationId: "EndMatch",
+        tags: new[] { "Matches" },
+        Summary = "End a match",
+        Description = "Sets the match status to completed and sends a full-time push notification to all players and coaches. Penalty scores are derived automatically from goals recorded in the penalties period. Caller must be a coach for the team.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The match ID")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Match ended and notifications sent")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.Forbidden,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Caller is not a coach for this team")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Match not found")]
+    public async Task<HttpResponseData> EndMatch(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/matches/{id}/end")] HttpRequestData req,
+        string id,
+        CancellationToken ct = default)
+    {
+        var authId = req.GetUserId();
+        if (string.IsNullOrEmpty(authId))
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+
+        if (!Guid.TryParse(id, out var matchGuid))
+        {
+            var bad = req.CreateResponse(HttpStatusCode.BadRequest);
+            await bad.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid match ID format", 400), ct);
+            return bad;
+        }
+
+        try
+        {
+            await _mediator.Send(new EndMatchCommand(matchGuid, authId), ct);
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFound;
+        }
+        catch (ForbiddenException ex)
+        {
+            var forbidden = req.CreateResponse(HttpStatusCode.Forbidden);
+            await forbidden.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse(ex.Message, 403), ct);
+            return forbidden;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error ending match {MatchId}", matchGuid);
+            var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Failed to end match", 500), ct);
+            return error;
+        }
     }
 
     /// <summary>

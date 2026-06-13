@@ -8,6 +8,7 @@ import type {
   AgeGroupListDto
 } from '@/api';
 import type { SquadSize } from '@/types';
+import { useClubMatches } from '@/api/hooks';
 import AgeGroupListCard from '@components/ageGroup/AgeGroupListCard';
 import PageTitle from '@components/common/PageTitle';
 import EmptyState from '@components/common/EmptyState';
@@ -27,6 +28,9 @@ export default function ClubOverviewPage() {
   const [ageGroups, setAgeGroups] = useState<AgeGroupListDto[]>([]);
   const [ageGroupsLoading, setAgeGroupsLoading] = useState(true);
   const [ageGroupsError, setAgeGroupsError] = useState<string | null>(null);
+
+  const { data: matchesData } = useClubMatches(clubId ?? undefined, { status: 'all' });
+  const liveMatches = matchesData?.matches.filter(m => m.status === 'in-progress') ?? [];
 
   usePageTitle([club?.name ?? 'Club', 'Overview'], !!club);
 
@@ -147,6 +151,49 @@ export default function ClubOverviewPage() {
             variant: 'primary'
           }}
         />
+
+        {/* Live Now Section */}
+        {liveMatches.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">Live Now</h3>
+            <div className="space-y-2">
+              {liveMatches.map(match => {
+                const homeTeam = match.isHome ? match.teamName : match.opposition;
+                const awayTeam = match.isHome ? match.opposition : match.teamName;
+                const hasScore = match.homeScore != null && match.awayScore != null;
+                return (
+                  <Link
+                    key={match.id}
+                    to={Routes.matchReport(clubId!, match.ageGroupId, match.teamId, match.id)}
+                    className="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-3 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0 text-center">
+                        <span className="relative flex h-2.5 w-2.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                        </span>
+                        <div className="text-[9px] font-semibold text-green-600 dark:text-green-400 uppercase tracking-wide mt-0.5">Live</div>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-gray-900 dark:text-white text-sm truncate">{homeTeam}</span>
+                          {hasScore ? (
+                            <span className="font-bold text-gray-900 dark:text-white text-sm flex-shrink-0">{match.homeScore} – {match.awayScore}</span>
+                          ) : (
+                            <span className="text-gray-400 dark:text-gray-500 text-sm flex-shrink-0">vs</span>
+                          )}
+                          <span className="font-semibold text-gray-900 dark:text-white text-sm truncate">{awayTeam}</span>
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{match.teamName} · {match.competition}</div>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Age Groups Section */}
         <div className="mb-4">

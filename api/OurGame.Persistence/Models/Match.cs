@@ -40,6 +40,10 @@ public partial class Match
 
     public int? AwayScore { get; set; }
 
+    public int? HomePenScore { get; set; }
+
+    public int? AwayPenScore { get; set; }
+
     public MatchStatus Status { get; set; }
 
     public bool IsLocked { get; set; }

@@ -31,6 +31,8 @@ public record MatchDetailDto
     public MatchKitDto? GoalkeeperKit { get; init; }
     public int? HomeScore { get; init; }
     public int? AwayScore { get; init; }
+    public int? HomePenScore { get; init; }
+    public int? AwayPenScore { get; init; }
     public string Status { get; init; } = string.Empty;
     public bool IsLocked { get; init; }
     public string? Notes { get; init; }

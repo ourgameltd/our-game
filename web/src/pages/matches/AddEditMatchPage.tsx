@@ -17,8 +17,8 @@ import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, 
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch, useNotifyGoal, useNotifyCard, usePublishMatchReport } from '@/api/hooks';
-import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch, useNotifyGoal, useNotifyCard, usePublishMatchReport, useCurrentUser } from '@/api/hooks';
+import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest, apiClient } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
 import Markdown from 'react-markdown';
@@ -302,7 +302,8 @@ export default function AddEditMatchPage() {
   // Fetch data from API
   const { data: team, isLoading: teamLoading, error: teamError } = useTeamOverview(teamId);
   const { data: ageGroup, isLoading: ageGroupLoading } = useAgeGroupById(ageGroupId);
-  const { data: existingMatch, isLoading: matchLoading } = useMatch(isEditing ? matchId : undefined);
+  const { data: existingMatch, isLoading: matchLoading, refetch: refetchMatch } = useMatch(isEditing ? matchId : undefined);
+  const { data: currentUser } = useCurrentUser();
   const { data: teamPlayers = [], isLoading: playersLoading } = useTeamPlayers(teamId);
   const { data: teamCoaches = [], isLoading: coachesLoading } = useTeamCoaches(teamId);
   const { data: systemFormationDtos, isLoading: formationsLoading, error: formationsError } = useSystemFormations();
@@ -412,6 +413,8 @@ export default function AddEditMatchPage() {
   // Match result state
   const [homeScore, setHomeScore] = useState('');
   const [awayScore, setAwayScore] = useState('');
+  const [homePenScore, setHomePenScore] = useState('');
+  const [awayPenScore, setAwayPenScore] = useState('');
   const [matchStatus, setMatchStatus] = useState<'scheduled' | 'in-progress' | 'completed' | 'postponed' | 'cancelled'>('scheduled');
   const [summary, setSummary] = useState('');
   const [summaryTab, setSummaryTab] = useState<'write' | 'preview'>('write');
@@ -443,6 +446,10 @@ export default function AddEditMatchPage() {
 
   const [isPublished, setIsPublished] = useState(false);
   const [publishError, setPublishError] = useState<string | null>(null);
+
+  // Kick Off / Full Time state
+  const [isStartingMatch, setIsStartingMatch] = useState(false);
+  const [isEndingMatch, setIsEndingMatch] = useState(false);
 
   const [activeTab, setActiveTab] = useState<'details' | 'lineup' | 'events' | 'report' | 'attendance'>('details');
   const [showWeatherSection, setShowWeatherSection] = useState(false);
@@ -578,6 +585,8 @@ export default function AddEditMatchPage() {
       setPitchType(existingMatch.pitchType || '');
       setHomeScore(existingMatch.homeScore?.toString() || '');
       setAwayScore(existingMatch.awayScore?.toString() || '');
+      setHomePenScore(existingMatch.homePenScore?.toString() || '');
+      setAwayPenScore(existingMatch.awayPenScore?.toString() || '');
       setMatchStatus((existingMatch.status as 'scheduled' | 'in-progress' | 'completed' | 'postponed' | 'cancelled') || 'scheduled');
       setSummary(existingMatch.report?.summary || '');
       const usedPositionIndices = new Set<number>();
@@ -689,6 +698,8 @@ export default function AddEditMatchPage() {
       setPitchType('');
       setHomeScore('');
       setAwayScore('');
+      setHomePenScore('');
+      setAwayPenScore('');
       setMatchStatus('scheduled');
       setSummary('');
       setStartingPlayers([]);
@@ -1497,6 +1508,34 @@ export default function AddEditMatchPage() {
     }
   };
 
+  const handleKickOff = async () => {
+    if (!matchId) return;
+    setIsStartingMatch(true);
+    const res = await apiClient.matches.start(matchId);
+    setIsStartingMatch(false);
+    if (res.success) {
+      setMatchStatus('in-progress');
+      addToast('success', 'Match kicked off — participants notified');
+      await refetchMatch();
+    } else {
+      addToast('error', res.error?.message || 'Failed to start match');
+    }
+  };
+
+  const handleFullTime = async () => {
+    if (!matchId) return;
+    setIsEndingMatch(true);
+    const res = await apiClient.matches.end(matchId);
+    setIsEndingMatch(false);
+    if (res.success) {
+      setMatchStatus('completed');
+      addToast('success', 'Full time — participants notified');
+      await refetchMatch();
+    } else {
+      addToast('error', res.error?.message || 'Failed to end match');
+    }
+  };
+
   const handlePublishToggle = async () => {
     setPublishError(null);
     const nextPublishedState = !isPublished;
@@ -1561,6 +1600,8 @@ export default function AddEditMatchPage() {
       goalkeeperKitId: goalkeeperKit || undefined,
       homeScore: homeScore ? parseInt(homeScore) : undefined,
       awayScore: awayScore ? parseInt(awayScore) : undefined,
+      homePenScore: homePenScore ? parseInt(homePenScore) : undefined,
+      awayPenScore: awayPenScore ? parseInt(awayPenScore) : undefined,
       status: matchStatus,
       weatherCondition: weather || undefined,
       weatherTemperature: temperature ? parseFloat(temperature) : undefined,
@@ -2037,6 +2078,34 @@ export default function AddEditMatchPage() {
                       onChange={(e) => setAwayScore(e.target.value)}
                       className="input disabled:opacity-50 disabled:cursor-not-allowed"
                       placeholder="0"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">
+                      Home Pen Score
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={homePenScore}
+                      onChange={(e) => setHomePenScore(e.target.value)}
+                      className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="—"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="label">
+                      Away Pen Score
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={awayPenScore}
+                      onChange={(e) => setAwayPenScore(e.target.value)}
+                      className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="—"
                     />
                   </div>
                 </div>
@@ -2618,7 +2687,10 @@ export default function AddEditMatchPage() {
           {/* Match Events Tab */}
           {activeTab === 'events' && (
             <div className="mt-4 space-y-4">
-              <div className="relative h-14">
+
+              <div className="space-y-3">
+                {/* SpeedDial + Kick Off / Full Time on the same row */}
+                <div className="relative h-10 flex items-center">
                 <SpeedDial
                   ariaLabel="Add match event"
                   icon={<SpeedDialIcon />}
@@ -2638,9 +2710,10 @@ export default function AddEditMatchPage() {
                       boxShadow: 'none',
                     },
                   }}
-                  open={isEventSpeedDialOpen}
+                  hidden={matchStatus !== 'in-progress'}
+                  open={isEventSpeedDialOpen && matchStatus === 'in-progress'}
                   onOpen={(_, reason) => {
-                    if (reason === 'toggle') {
+                    if (reason === 'toggle' && matchStatus === 'in-progress') {
                       setIsEventSpeedDialOpen(true);
                     }
                   }}
@@ -2661,10 +2734,38 @@ export default function AddEditMatchPage() {
                         },
                       }}
                       onClick={() => handleOpenCreateEventModal(action.eventType)}
-                      
+
                     />
                   ))}
                 </SpeedDial>
+
+                  {/* Kick Off / Full Time inline with SpeedDial */}
+                  <div className="ml-auto flex items-center gap-2">
+                    {isEditing && currentUser?.coachId && matchStatus === 'scheduled' && (
+                      <button
+                        type="button"
+                        onClick={handleKickOff}
+                        disabled={isStartingMatch}
+                        className="btn btn-primary btn-sm flex items-center gap-1.5"
+                      >
+                        {isStartingMatch && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                        {isStartingMatch ? 'Starting…' : 'Kick Off'}
+                      </button>
+                    )}
+                    {isEditing && currentUser?.coachId && matchStatus === 'in-progress' && (
+                      <button
+                        type="button"
+                        onClick={handleFullTime}
+                        disabled={isEndingMatch}
+                        className="btn btn-secondary btn-sm flex items-center gap-1.5"
+                      >
+                        {isEndingMatch && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                        {isEndingMatch ? 'Ending…' : 'Full Time'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+
               </div>
 
               {timelineSectionsWithEvents.length === 0 && (
