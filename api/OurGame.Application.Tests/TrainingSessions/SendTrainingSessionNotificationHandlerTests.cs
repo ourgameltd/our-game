@@ -122,6 +122,7 @@ public class SendTrainingSessionNotificationHandlerTests
             string message,
             string? url = null,
             bool sendPush = false,
+            string? audience = null,
             CancellationToken cancellationToken = default)
         {
             var notification = new Notification

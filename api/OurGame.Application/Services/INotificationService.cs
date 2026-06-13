@@ -13,6 +13,7 @@ public interface INotificationService
         string message,
         string? url = null,
         bool sendPush = false,
+        string? audience = null,
         CancellationToken cancellationToken = default);
 }
 
@@ -39,6 +40,7 @@ internal class NotificationService : INotificationService
         string message,
         string? url = null,
         bool sendPush = false,
+        string? audience = null,
         CancellationToken cancellationToken = default)
     {
         var notification = new Notification
@@ -49,6 +51,7 @@ internal class NotificationService : INotificationService
             Title = title,
             Message = message,
             Url = url,
+            Audience = audience,
             CreatedAt = DateTime.UtcNow
         };
 

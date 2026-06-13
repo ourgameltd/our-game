@@ -21,6 +21,8 @@ public partial class Notification
 
     public string Url { get; set; }
 
+    public string Audience { get; set; }
+
     public DateTime CreatedAt { get; set; }
 
     public virtual User User { get; set; }

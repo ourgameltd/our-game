@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageTitle from '@/components/common/PageTitle';
 import EmptyState from '@/components/common/EmptyState';
-import { Bell, BellOff, Check, CheckCheck, ChevronDown, ChevronUp, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2 } from 'lucide-react';
+import { Bell, BellOff, Check, CheckCheck, ChevronDown, ChevronUp, Trophy, Users, Calendar, Megaphone, MessageSquare, Smartphone, AlertCircle, Loader2, Target, Square } from 'lucide-react';
 import { getNotificationTypeColors } from '@/data/referenceData';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -74,17 +74,16 @@ export default function NotificationsPage() {
   const getNotificationIcon = (type: string) => {
     switch (type) {
       case 'match':
-        return <Trophy className="w-5 h-5" />;
-      case 'training':
-        return <Calendar className="w-5 h-5" />;
-      case 'team':
-        return <Users className="w-5 h-5" />;
-      case 'announcement':
-        return <Megaphone className="w-5 h-5" />;
-      case 'message':
-        return <MessageSquare className="w-5 h-5" />;
-      default:
-        return <Bell className="w-5 h-5" />;
+      case 'match_reminder': return <Bell className="w-5 h-5" />;
+      case 'training': return <Calendar className="w-5 h-5" />;
+      case 'team': return <Users className="w-5 h-5" />;
+      case 'announcement': return <Megaphone className="w-5 h-5" />;
+      case 'message': return <MessageSquare className="w-5 h-5" />;
+      case 'goal': return <Target className="w-5 h-5" />;
+      case 'result': return <Trophy className="w-5 h-5" />;
+      case 'card_yellow':
+      case 'card_red': return <Square className="w-5 h-5" />;
+      default: return <Bell className="w-5 h-5" />;
     }
   };
 
@@ -171,9 +170,16 @@ export default function NotificationsPage() {
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     {notification.message}
                   </p>
-                  <span className="text-xs text-gray-500 dark:text-gray-500">
-                    {formatTimestamp(new Date(notification.createdAt))}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-500">
+                      {formatTimestamp(new Date(notification.createdAt))}
+                    </span>
+                    {notification.audience && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 capitalize">
+                        {notification.audience}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 {!notification.isRead && (
                   <button

@@ -24,6 +24,7 @@ export interface NotificationDto {
   title: string;
   message: string;
   url?: string;
+  audience?: string;
   createdAt: string;
   isRead: boolean;
 }
@@ -4199,6 +4200,18 @@ export const apiClient = {
     notify: async (matchId: string): Promise<ApiResponse<void>> => {
       try {
         await axiosInstance.post(`/v1/matches/${matchId}/notify`);
+        return { success: true, statusCode: 204 };
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Send a goal push notification to all match participants
+     */
+    notifyGoal: async (matchId: string, data: { scorerName: string; minute: number; period: string; homeScore: number; awayScore: number }): Promise<ApiResponse<void>> => {
+      try {
+        await axiosInstance.post(`/v1/matches/${matchId}/notify-goal`, data);
         return { success: true, statusCode: 204 };
       } catch (error) {
         return handleApiError(error);

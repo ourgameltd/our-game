@@ -1,25 +1,45 @@
 using MediatR;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Services;
 using OurGame.Persistence.Models;
 
-namespace OurGame.Application.UseCases.Matches.Commands.SendMatchNotification;
+namespace OurGame.Application.UseCases.Matches.Commands.SendGoalNotification;
 
-public record SendMatchNotificationCommand(Guid MatchId) : IRequest;
+public record SendGoalNotificationCommand(
+    Guid MatchId,
+    string ScorerName,
+    int Minute,
+    string Period,
+    int HomeScore,
+    int AwayScore) : IRequest;
 
-public class SendMatchNotificationHandler : IRequestHandler<SendMatchNotificationCommand>
+public class SendGoalNotificationValidator : AbstractValidator<SendGoalNotificationCommand>
+{
+    public SendGoalNotificationValidator()
+    {
+        RuleFor(x => x.MatchId).NotEmpty();
+        RuleFor(x => x.ScorerName).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.Minute).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.Period).NotEmpty().MaximumLength(50);
+        RuleFor(x => x.HomeScore).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.AwayScore).GreaterThanOrEqualTo(0);
+    }
+}
+
+public class SendGoalNotificationHandler : IRequestHandler<SendGoalNotificationCommand>
 {
     private readonly OurGameContext _db;
     private readonly INotificationService _notificationService;
 
-    public SendMatchNotificationHandler(OurGameContext db, INotificationService notificationService)
+    public SendGoalNotificationHandler(OurGameContext db, INotificationService notificationService)
     {
         _db = db;
         _notificationService = notificationService;
     }
 
-    public async Task Handle(SendMatchNotificationCommand command, CancellationToken cancellationToken)
+    public async Task Handle(SendGoalNotificationCommand command, CancellationToken cancellationToken)
     {
         var match = await _db.Matches
             .Where(m => m.Id == command.MatchId)
@@ -27,13 +47,12 @@ public class SendMatchNotificationHandler : IRequestHandler<SendMatchNotificatio
             {
                 m.Id,
                 m.Opposition,
-                m.KickOffTime,
-                m.Location,
-                m.IsHome,
                 m.TeamId,
                 TeamName = m.Team.Name,
                 m.Team.AgeGroupId,
                 m.Team.ClubId,
+                HomeTeamName = m.IsHome ? m.Team.Name : m.Opposition,
+                AwayTeamName = m.IsHome ? m.Opposition : m.Team.Name,
             })
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -42,21 +61,16 @@ public class SendMatchNotificationHandler : IRequestHandler<SendMatchNotificatio
             throw new NotFoundException("Match", command.MatchId.ToString());
         }
 
-        // Players invited to the match
         var invitedPlayerIds = await _db.MatchAttendances
             .Where(ma => ma.MatchId == command.MatchId)
             .Select(ma => ma.PlayerId)
             .ToListAsync(cancellationToken);
 
-        // User IDs from three sources, all deduplicated into one set:
-
-        // 1. Players who have a linked user account
         var playerUserIds = await _db.Players
             .Where(p => invitedPlayerIds.Contains(p.Id) && p.UserId != null)
             .Select(p => p.UserId!.Value)
             .ToListAsync(cancellationToken);
 
-        // 2. Parents/guardians of invited players via EmergencyContacts
         var parentUserIds = await _db.EmergencyContacts
             .Where(ec => ec.PlayerId != null
                       && invitedPlayerIds.Contains(ec.PlayerId.Value)
@@ -64,7 +78,6 @@ public class SendMatchNotificationHandler : IRequestHandler<SendMatchNotificatio
             .Select(ec => ec.UserId!.Value)
             .ToListAsync(cancellationToken);
 
-        // 3. Coaches on the team (TeamCoaches) who have a linked user account
         var coachUserIds = await _db.TeamCoaches
             .Where(tc => tc.TeamId == match.TeamId && tc.Coach.UserId != null)
             .Select(tc => tc.Coach.UserId!.Value)
@@ -82,17 +95,15 @@ public class SendMatchNotificationHandler : IRequestHandler<SendMatchNotificatio
             return;
         }
 
-        var kickOff = match.KickOffTime?.ToString("ddd d MMM, h:mmtt") ?? "TBC";
-        var venue = match.IsHome ? $"{match.Location} (Home)" : $"{match.Location} (Away)";
-        var title = $"Match: {match.TeamName} vs {match.Opposition}";
-        var message = $"Kick off {kickOff} at {venue}";
         var url = $"/dashboard/{match.ClubId}/age-groups/{match.AgeGroupId}/teams/{match.TeamId}/matches/{match.Id}";
+        var title = $"GOAL! {command.ScorerName}";
+        var message = $"{command.Minute}' ({command.Period}) — {match.HomeTeamName} {command.HomeScore}–{command.AwayScore} {match.AwayTeamName}";
 
         foreach (var userId in playerAndParentUserIds)
         {
             await _notificationService.CreateAsync(
                 userId,
-                "match_reminder",
+                "goal",
                 title,
                 message,
                 url,
@@ -105,7 +116,7 @@ public class SendMatchNotificationHandler : IRequestHandler<SendMatchNotificatio
         {
             await _notificationService.CreateAsync(
                 userId,
-                "match_reminder",
+                "goal",
                 title,
                 message,
                 url,
