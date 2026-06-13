@@ -1740,14 +1740,14 @@ export function useNotifyMatch(matchId: string): {
 }
 
 export function useNotifyGoal(matchId: string): {
-  notifyGoal: (data: { scorerName: string; minute: number; period: string; homeScore: number; awayScore: number }) => Promise<ApiResponse<void>>;
+  notifyGoal: (data: { scorerName: string; minute?: number; addedTimeMinutes?: number; period: string; homeScore: number; awayScore: number; homePenScore?: number; awayPenScore?: number }) => Promise<ApiResponse<void>>;
   isSubmitting: boolean;
   error: ApiError | null;
 } {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<ApiError | null>(null);
 
-  const notifyGoal = useCallback(async (data: { scorerName: string; minute: number; period: string; homeScore: number; awayScore: number }): Promise<ApiResponse<void>> => {
+  const notifyGoal = useCallback(async (data: { scorerName: string; minute?: number; addedTimeMinutes?: number; period: string; homeScore: number; awayScore: number; homePenScore?: number; awayPenScore?: number }): Promise<ApiResponse<void>> => {
     setIsSubmitting(true);
     setError(null);
     try {
@@ -1769,6 +1769,38 @@ export function useNotifyGoal(matchId: string): {
   }, [matchId]);
 
   return { notifyGoal, isSubmitting, error };
+}
+
+export function useNotifyCard(matchId: string): {
+  notifyCard: (data: { playerName: string; cardType: string; minute: number; period: string; homeScore: number; awayScore: number }) => Promise<ApiResponse<void>>;
+  isSubmitting: boolean;
+  error: ApiError | null;
+} {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<ApiError | null>(null);
+
+  const notifyCard = useCallback(async (data: { playerName: string; cardType: string; minute: number; period: string; homeScore: number; awayScore: number }): Promise<ApiResponse<void>> => {
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const response: ApiResponse<void> = await apiClient.matches.notifyCard(matchId, data);
+      if (!response.success) {
+        setError({
+          message: response.error?.message || 'Failed to send card notification',
+          statusCode: response.error?.statusCode,
+        });
+      }
+      return response;
+    } catch (err) {
+      const apiError = { message: err instanceof Error ? err.message : 'An unexpected error occurred' };
+      setError(apiError);
+      return { success: false, error: apiError };
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [matchId]);
+
+  return { notifyCard, isSubmitting, error };
 }
 
 export function useNotifyTrainingSession(sessionId: string): {

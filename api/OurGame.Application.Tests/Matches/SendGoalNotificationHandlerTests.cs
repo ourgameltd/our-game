@@ -150,6 +150,93 @@ public class SendGoalNotificationHandlerTests
     }
 
     [Fact]
+    public async Task Handle_WhenMinuteIsNull_OmitsMinuteFromMessage()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, _, teamId) = await db.SeedClubWithTeamAsync();
+        var matchId = await db.SeedMatchAsync(teamId, "Rivals FC", MatchStatus.InProgress);
+
+        var playerUserId = await db.SeedUserAsync("player-user");
+        var playerId = await db.SeedPlayerAsync(clubId, userId: playerUserId);
+        db.Context.MatchAttendances.Add(new MatchAttendance
+        {
+            Id = Guid.NewGuid(),
+            MatchId = matchId,
+            PlayerId = playerId,
+            Status = "invited"
+        });
+        await db.Context.SaveChangesAsync();
+
+        var fake = new FakeNotificationService();
+        var handler = BuildHandler(db, fake);
+
+        var command = new SendGoalNotificationCommand(matchId, "Alex Vale", null, "First Half", 2, 1);
+        await handler.Handle(command, CancellationToken.None);
+
+        var notif = Assert.Single(fake.CreatedNotifications);
+        Assert.DoesNotContain("'", notif.Message);
+        Assert.Contains("First Half", notif.Message);
+    }
+
+    [Fact]
+    public async Task Handle_WhenAddedTimeMinutesProvided_IncludesAddedTimeInMessage()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, _, teamId) = await db.SeedClubWithTeamAsync();
+        var matchId = await db.SeedMatchAsync(teamId, "Rivals FC", MatchStatus.InProgress);
+
+        var playerUserId = await db.SeedUserAsync("player-user");
+        var playerId = await db.SeedPlayerAsync(clubId, userId: playerUserId);
+        db.Context.MatchAttendances.Add(new MatchAttendance
+        {
+            Id = Guid.NewGuid(),
+            MatchId = matchId,
+            PlayerId = playerId,
+            Status = "invited"
+        });
+        await db.Context.SaveChangesAsync();
+
+        var fake = new FakeNotificationService();
+        var handler = BuildHandler(db, fake);
+
+        var command = new SendGoalNotificationCommand(matchId, "Alex Vale", 45, "First Half", 2, 1, AddedTimeMinutes: 3);
+        await handler.Handle(command, CancellationToken.None);
+
+        var notif = Assert.Single(fake.CreatedNotifications);
+        Assert.Contains("45+3'", notif.Message);
+    }
+
+    [Fact]
+    public async Task Handle_WhenPeriodIsPenalties_UsesPenaltyTitleAndPenScore()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (clubId, _, teamId) = await db.SeedClubWithTeamAsync();
+        var matchId = await db.SeedMatchAsync(teamId, "Rivals FC", MatchStatus.InProgress);
+
+        var playerUserId = await db.SeedUserAsync("player-user");
+        var playerId = await db.SeedPlayerAsync(clubId, userId: playerUserId);
+        db.Context.MatchAttendances.Add(new MatchAttendance
+        {
+            Id = Guid.NewGuid(),
+            MatchId = matchId,
+            PlayerId = playerId,
+            Status = "invited"
+        });
+        await db.Context.SaveChangesAsync();
+
+        var fake = new FakeNotificationService();
+        var handler = BuildHandler(db, fake);
+
+        var command = new SendGoalNotificationCommand(matchId, "Alex Vale", null, "Penalties", 2, 1, HomePenScore: 3, AwayPenScore: 2);
+        await handler.Handle(command, CancellationToken.None);
+
+        var notif = Assert.Single(fake.CreatedNotifications);
+        Assert.Equal("PENALTY! Alex Vale", notif.Title);
+        Assert.Contains("Pens: 3", notif.Message);
+        Assert.Contains("2", notif.Message);
+    }
+
+    [Fact]
     public async Task Handle_DeduplicatesWhenPlayerAndParentShareUserId()
     {
         await using var db = await TestDatabaseFactory.CreateAsync();
@@ -228,6 +315,14 @@ public class SendGoalNotificationHandlerTests
             var result = _validator.TestValidate(new SendGoalNotificationCommand(
                 Guid.NewGuid(), "Alex Vale", -1, "First Half", 1, 0));
             result.ShouldHaveValidationErrorFor(x => x.Minute);
+        }
+
+        [Fact]
+        public void Validate_WhenMinuteIsNull_Passes()
+        {
+            var result = _validator.TestValidate(new SendGoalNotificationCommand(
+                Guid.NewGuid(), "Alex Vale", null, "First Half", 1, 0));
+            result.ShouldNotHaveValidationErrorFor(x => x.Minute);
         }
 
         [Fact]

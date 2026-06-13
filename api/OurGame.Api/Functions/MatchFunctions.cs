@@ -16,6 +16,7 @@ using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport;
 using OurGame.Application.UseCases.Matches.Commands.PublishMatchReport.DTOs;
 using OurGame.Application.UseCases.Matches.Commands.SendMatchNotification;
 using OurGame.Application.UseCases.Matches.Commands.SendGoalNotification;
+using OurGame.Application.UseCases.Matches.Commands.SendCardNotification;
 using OurGame.Application.UseCases.Matches.Commands.UpdateMyMatchAttendance;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
@@ -698,7 +699,10 @@ public class MatchFunctions
                 body.Minute,
                 body.Period,
                 body.HomeScore,
-                body.AwayScore), ct);
+                body.AwayScore,
+                body.AddedTimeMinutes,
+                body.HomePenScore,
+                body.AwayPenScore), ct);
             return req.CreateResponse(HttpStatusCode.NoContent);
         }
         catch (NotFoundException ex)
@@ -719,6 +723,106 @@ public class MatchFunctions
     public class NotifyGoalRequest
     {
         public string ScorerName { get; set; } = string.Empty;
+        public int? Minute { get; set; }
+        public int? AddedTimeMinutes { get; set; }
+        public string Period { get; set; } = string.Empty;
+        public int HomeScore { get; set; }
+        public int AwayScore { get; set; }
+        public int? HomePenScore { get; set; }
+        public int? AwayPenScore { get; set; }
+    }
+
+    /// <summary>
+    /// Notify participants of a card event during a match.
+    /// </summary>
+    [Function("NotifyCard")]
+    [OpenApiOperation(
+        operationId: "NotifyCard",
+        tags: new[] { "Matches" },
+        Summary = "Notify card issued",
+        Description = "Sends a push notification to all players and coaches for the match announcing a yellow or red card.")]
+    [OpenApiParameter(
+        name: "id",
+        In = ParameterLocation.Path,
+        Required = true,
+        Type = typeof(Guid),
+        Description = "The match ID")]
+    [OpenApiRequestBody(contentType: "application/json", bodyType: typeof(NotifyCardRequest), Required = true, Description = "Card details")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.NoContent, Description = "Notifications sent")]
+    [OpenApiResponseWithoutBody(statusCode: HttpStatusCode.Unauthorized, Description = "User not authenticated")]
+    [OpenApiResponseWithBody(
+        statusCode: HttpStatusCode.NotFound,
+        contentType: "application/json",
+        bodyType: typeof(ApiResponse<object>),
+        Description = "Match not found")]
+    public async Task<HttpResponseData> NotifyCard(
+        [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "v1/matches/{id}/notify-card")] HttpRequestData req,
+        string id,
+        CancellationToken ct = default)
+    {
+        var userId = req.GetUserId();
+        if (string.IsNullOrEmpty(userId))
+        {
+            return req.CreateResponse(HttpStatusCode.Unauthorized);
+        }
+
+        if (!Guid.TryParse(id, out var matchGuid))
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid match ID format", 400), ct);
+            return badRequest;
+        }
+
+        NotifyCardRequest? body;
+        try
+        {
+            body = await req.ReadFromJsonAsync<NotifyCardRequest>();
+        }
+        catch
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Invalid request body", 400), ct);
+            return badRequest;
+        }
+
+        if (body == null || string.IsNullOrWhiteSpace(body.PlayerName) || string.IsNullOrWhiteSpace(body.CardType) || string.IsNullOrWhiteSpace(body.Period))
+        {
+            var badRequest = req.CreateResponse(HttpStatusCode.BadRequest);
+            await badRequest.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("PlayerName, CardType and Period are required", 400), ct);
+            return badRequest;
+        }
+
+        try
+        {
+            await _mediator.Send(new SendCardNotificationCommand(
+                matchGuid,
+                body.PlayerName,
+                body.CardType,
+                body.Minute,
+                body.Period,
+                body.HomeScore,
+                body.AwayScore), ct);
+            return req.CreateResponse(HttpStatusCode.NoContent);
+        }
+        catch (NotFoundException ex)
+        {
+            var notFound = req.CreateResponse(HttpStatusCode.NotFound);
+            await notFound.WriteAsJsonAsync(ApiResponse<object>.NotFoundResponse(ex.Message), ct);
+            return notFound;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error sending card notification for {MatchId}", matchGuid);
+            var error = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await error.WriteAsJsonAsync(ApiResponse<object>.ErrorResponse("Failed to send card notification", 500), ct);
+            return error;
+        }
+    }
+
+    public class NotifyCardRequest
+    {
+        public string PlayerName { get; set; } = string.Empty;
+        public string CardType { get; set; } = string.Empty;
         public int Minute { get; set; }
         public string Period { get; set; } = string.Empty;
         public int HomeScore { get; set; }

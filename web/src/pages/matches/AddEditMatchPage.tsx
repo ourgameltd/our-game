@@ -17,7 +17,7 @@ import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, 
 import { Routes } from '@utils/routes';
 import PageTitle from '@components/common/PageTitle';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
-import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch, useNotifyGoal, usePublishMatchReport } from '@/api/hooks';
+import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch, useNotifyGoal, useNotifyCard, usePublishMatchReport } from '@/api/hooks';
 import { CreateMatchRequest, ResolvedPositionDto, SystemFormationDto, TacticListDto, UpdateMatchRequest } from '@/api/client';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import { useToast } from '@/contexts/ToastContext';
@@ -313,6 +313,7 @@ export default function AddEditMatchPage() {
   const { updateMatch, isSubmitting: isUpdating, error: updateError } = useUpdateMatch(matchId || '');
   const { notifyMatch, isSubmitting: isNotifying } = useNotifyMatch(matchId || '');
   const { notifyGoal, isSubmitting: isNotifyingGoal } = useNotifyGoal(matchId || '');
+  const { notifyCard, isSubmitting: isNotifyingCard } = useNotifyCard(matchId || '');
   const { publishMatchReport, isSubmitting: isPublishing } = usePublishMatchReport(matchId || '');
   
   // Get available seasons from age group
@@ -2728,16 +2729,25 @@ export default function AddEditMatchPage() {
                                             ? (goal.opponentName || 'Opponent')
                                             : (getPlayerName(goal.playerId) || 'Unknown');
                                           const periodLabel = timelineSections.find(s => s.period === goal.period)?.label ?? goal.period;
-                                          const clubGoalCount = goals.filter(g => !g.isOpponent).length;
-                                          const opponentGoalCount = goals.filter(g => g.isOpponent).length;
-                                          const home = isHome ? clubGoalCount : opponentGoalCount;
-                                          const away = isHome ? opponentGoalCount : clubGoalCount;
+                                          const isPenaltyGoal = goal.period === 'penalties';
+                                          const regularGoals = goals.filter(g => g.period !== 'penalties');
+                                          const clubRegular = regularGoals.filter(g => !g.isOpponent).length;
+                                          const oppRegular = regularGoals.filter(g => g.isOpponent).length;
+                                          const home = isHome ? clubRegular : oppRegular;
+                                          const away = isHome ? oppRegular : clubRegular;
+                                          const penGoals = goals.filter(g => g.period === 'penalties');
+                                          const clubPens = penGoals.filter(g => !g.isOpponent).length;
+                                          const oppPens = penGoals.filter(g => g.isOpponent).length;
+                                          const homePen = isHome ? clubPens : oppPens;
+                                          const awayPen = isHome ? oppPens : clubPens;
                                           void notifyGoal({
                                             scorerName,
-                                            minute: goal.minute ?? 0,
+                                            minute: goal.minute,
+                                            addedTimeMinutes: goal.addedTimeMinutes,
                                             period: periodLabel,
                                             homeScore: home,
                                             awayScore: away,
+                                            ...(isPenaltyGoal ? { homePenScore: homePen, awayPenScore: awayPen } : {}),
                                           });
                                         }}
                                         className="p-1.5 rounded bg-green-600 hover:bg-green-700 text-white transition-colors disabled:opacity-60"
@@ -2779,6 +2789,35 @@ export default function AddEditMatchPage() {
                                     )}
                                   </div>
                                   <div className="flex items-center gap-1 shrink-0">
+                                    {matchStatus === 'in-progress' && matchId && (
+                                      <button
+                                        type="button"
+                                        disabled={isNotifyingCard}
+                                        onClick={() => {
+                                          const playerName = isOppCard
+                                            ? (card.opponentName || 'Opponent')
+                                            : (getPlayerName(card.playerId) || 'Unknown');
+                                          const periodLabel = timelineSections.find(s => s.period === card.period)?.label ?? card.period ?? '';
+                                          const regularGoals = goals.filter(g => g.period !== 'penalties');
+                                          const clubGoalCount = regularGoals.filter(g => !g.isOpponent).length;
+                                          const opponentGoalCount = regularGoals.filter(g => g.isOpponent).length;
+                                          const home = isHome ? clubGoalCount : opponentGoalCount;
+                                          const away = isHome ? opponentGoalCount : clubGoalCount;
+                                          void notifyCard({
+                                            playerName,
+                                            cardType: card.type,
+                                            minute: card.minute ?? 0,
+                                            period: periodLabel,
+                                            homeScore: home,
+                                            awayScore: away,
+                                          });
+                                        }}
+                                        className="p-1.5 rounded bg-green-600 hover:bg-green-700 text-white transition-colors disabled:opacity-60"
+                                        title="Notify participants of this card"
+                                      >
+                                        {isNotifyingCard ? <Loader2 className="w-4 h-4 animate-spin" /> : <Bell className="w-4 h-4" />}
+                                      </button>
+                                    )}
                                     <button type="button" onClick={() => handleOpenEditEventModal('card', event.index)} className="p-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white transition-colors" title="Edit"><Pencil className="w-4 h-4" /></button>
                                     <button type="button" onClick={() => handleDeleteTimelineEvent('card', event.index)} className="p-1.5 rounded bg-red-600 hover:bg-red-700 text-white transition-colors" title="Delete"><Trash2 className="w-4 h-4" /></button>
                                   </div>

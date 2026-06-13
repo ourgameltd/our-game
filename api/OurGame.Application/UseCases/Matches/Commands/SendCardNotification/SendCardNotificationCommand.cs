@@ -5,45 +5,44 @@ using OurGame.Application.Abstractions.Exceptions;
 using OurGame.Application.Services;
 using OurGame.Persistence.Models;
 
-namespace OurGame.Application.UseCases.Matches.Commands.SendGoalNotification;
+namespace OurGame.Application.UseCases.Matches.Commands.SendCardNotification;
 
-public record SendGoalNotificationCommand(
+public record SendCardNotificationCommand(
     Guid MatchId,
-    string ScorerName,
-    int? Minute,
+    string PlayerName,
+    string CardType,
+    int Minute,
     string Period,
     int HomeScore,
-    int AwayScore,
-    int? AddedTimeMinutes = null,
-    int? HomePenScore = null,
-    int? AwayPenScore = null) : IRequest;
+    int AwayScore) : IRequest;
 
-public class SendGoalNotificationValidator : AbstractValidator<SendGoalNotificationCommand>
+public class SendCardNotificationValidator : AbstractValidator<SendCardNotificationCommand>
 {
-    public SendGoalNotificationValidator()
+    public SendCardNotificationValidator()
     {
         RuleFor(x => x.MatchId).NotEmpty();
-        RuleFor(x => x.ScorerName).NotEmpty().MaximumLength(200);
-        RuleFor(x => x.Minute).GreaterThanOrEqualTo(0).When(x => x.Minute.HasValue);
-        RuleFor(x => x.AddedTimeMinutes).GreaterThanOrEqualTo(1).When(x => x.AddedTimeMinutes.HasValue);
+        RuleFor(x => x.PlayerName).NotEmpty().MaximumLength(200);
+        RuleFor(x => x.CardType).NotEmpty().Must(t => t == "yellow" || t == "red")
+            .WithMessage("CardType must be 'yellow' or 'red'");
+        RuleFor(x => x.Minute).GreaterThanOrEqualTo(0);
         RuleFor(x => x.Period).NotEmpty().MaximumLength(50);
         RuleFor(x => x.HomeScore).GreaterThanOrEqualTo(0);
         RuleFor(x => x.AwayScore).GreaterThanOrEqualTo(0);
     }
 }
 
-public class SendGoalNotificationHandler : IRequestHandler<SendGoalNotificationCommand>
+public class SendCardNotificationHandler : IRequestHandler<SendCardNotificationCommand>
 {
     private readonly OurGameContext _db;
     private readonly INotificationService _notificationService;
 
-    public SendGoalNotificationHandler(OurGameContext db, INotificationService notificationService)
+    public SendCardNotificationHandler(OurGameContext db, INotificationService notificationService)
     {
         _db = db;
         _notificationService = notificationService;
     }
 
-    public async Task Handle(SendGoalNotificationCommand command, CancellationToken cancellationToken)
+    public async Task Handle(SendCardNotificationCommand command, CancellationToken cancellationToken)
     {
         var match = await _db.Matches
             .Where(m => m.Id == command.MatchId)
@@ -100,28 +99,16 @@ public class SendGoalNotificationHandler : IRequestHandler<SendGoalNotificationC
         }
 
         var url = $"/dashboard/{match.ClubId}/age-groups/{match.AgeGroupId}/teams/{match.TeamId}/matches/{match.Id}";
-        var isPenalty = command.Period.Equals("Penalties", StringComparison.OrdinalIgnoreCase);
-        var title = isPenalty ? $"PENALTY! {command.ScorerName}" : $"GOAL! {command.ScorerName}";
-        string message;
-        if (isPenalty)
-        {
-            message = $"{match.HomeTeamName} {command.HomeScore}–{command.AwayScore} (Pens: {command.HomePenScore}–{command.AwayPenScore})";
-        }
-        else
-        {
-            var minutePrefix = command.Minute.HasValue
-                ? (command.AddedTimeMinutes.HasValue
-                    ? $"{command.Minute}+{command.AddedTimeMinutes}' "
-                    : $"{command.Minute}' ")
-                : string.Empty;
-            message = $"{minutePrefix}({command.Period}) — {match.HomeTeamName} {command.HomeScore}–{command.AwayScore} {match.AwayTeamName}";
-        }
+        var cardEmoji = command.CardType == "red" ? "🟥" : "🟨";
+        var cardLabel = command.CardType == "red" ? "Red" : "Yellow";
+        var title = $"{cardEmoji} {cardLabel} Card: {command.PlayerName}";
+        var message = $"{command.Minute}' ({command.Period}) — {match.HomeTeamName} {command.HomeScore}–{command.AwayScore} {match.AwayTeamName}";
 
         foreach (var userId in playerAndParentUserIds)
         {
             await _notificationService.CreateAsync(
                 userId,
-                "goal",
+                "card",
                 title,
                 message,
                 url,
@@ -134,7 +121,7 @@ public class SendGoalNotificationHandler : IRequestHandler<SendGoalNotificationC
         {
             await _notificationService.CreateAsync(
                 userId,
-                "goal",
+                "card",
                 title,
                 message,
                 url,

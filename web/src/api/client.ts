@@ -4209,9 +4209,21 @@ export const apiClient = {
     /**
      * Send a goal push notification to all match participants
      */
-    notifyGoal: async (matchId: string, data: { scorerName: string; minute: number; period: string; homeScore: number; awayScore: number }): Promise<ApiResponse<void>> => {
+    notifyGoal: async (matchId: string, data: { scorerName: string; minute?: number; addedTimeMinutes?: number; period: string; homeScore: number; awayScore: number; homePenScore?: number; awayPenScore?: number }): Promise<ApiResponse<void>> => {
       try {
         await axiosInstance.post(`/v1/matches/${matchId}/notify-goal`, data);
+        return { success: true, statusCode: 204 };
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+
+    /**
+     * Send a card push notification to all match participants
+     */
+    notifyCard: async (matchId: string, data: { playerName: string; cardType: string; minute: number; period: string; homeScore: number; awayScore: number }): Promise<ApiResponse<void>> => {
+      try {
+        await axiosInstance.post(`/v1/matches/${matchId}/notify-card`, data);
         return { success: true, statusCode: 204 };
       } catch (error) {
         return handleApiError(error);
