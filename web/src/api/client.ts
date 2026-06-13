@@ -2339,6 +2339,8 @@ export interface PublishedGoalDto {
   minute?: number;
   isPenalty: boolean;
   period?: string;
+  isOpponent: boolean;
+  opponentName?: string;
 }
 
 export interface PublishedCardDto {
@@ -2346,6 +2348,8 @@ export interface PublishedCardDto {
   type: string;
   minute?: number;
   period?: string;
+  isOpponent: boolean;
+  opponentName?: string;
 }
 
 export interface PublishedLineupPlayerDto {

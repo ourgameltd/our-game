@@ -84,21 +84,23 @@ const PERIOD_LABELS: Record<string, string> = {
 };
 
 type MatchEvent =
-  | { kind: 'goal'; period: string; minute?: number; data: PublishedGoalDto }
-  | { kind: 'card'; period: string; minute?: number; data: PublishedCardDto };
+  | { kind: 'goal'; period: string; minute?: number; isOpponent: boolean; data: PublishedGoalDto }
+  | { kind: 'card'; period: string; minute?: number; isOpponent: boolean; data: PublishedCardDto };
 
-function buildEvents(data: PublishedMatchReportDto): Map<string, MatchEvent[]> {
+function buildEvents(data: PublishedMatchReportDto): Map<string, { home: MatchEvent[]; away: MatchEvent[] }> {
   const events: MatchEvent[] = [
     ...(data.goals ?? []).map(g => ({
       kind: 'goal' as const,
       period: g.period ?? 'first',
       minute: g.minute ?? undefined,
+      isOpponent: g.isOpponent,
       data: g,
     })),
     ...(data.cards ?? []).map(c => ({
       kind: 'card' as const,
       period: c.period ?? 'first',
       minute: c.minute ?? undefined,
+      isOpponent: c.isOpponent,
       data: c,
     })),
   ];
@@ -110,10 +112,15 @@ function buildEvents(data: PublishedMatchReportDto): Map<string, MatchEvent[]> {
     return (a.minute ?? 999) - (b.minute ?? 999);
   });
 
-  const grouped = new Map<string, MatchEvent[]>();
+  const grouped = new Map<string, { home: MatchEvent[]; away: MatchEvent[] }>();
   for (const e of events) {
-    if (!grouped.has(e.period)) grouped.set(e.period, []);
-    grouped.get(e.period)!.push(e);
+    if (!grouped.has(e.period)) grouped.set(e.period, { home: [], away: [] });
+    // Home column = events by the actual home team.
+    // When our team is home: non-opponent events → home; opponent → away.
+    // When our team is away: opponent events → home; non-opponent → away.
+    const isHomeEvent = data.isHome ? !e.isOpponent : e.isOpponent;
+    const bucket = grouped.get(e.period)!;
+    (isHomeEvent ? bucket.home : bucket.away).push(e);
   }
   return grouped;
 }
@@ -148,20 +155,25 @@ function LineupList({ heading, players }: { heading: string; players: PublishedL
   );
 }
 
-function EventRow({ event }: { event: MatchEvent }) {
+function EventRow({ event, opposition, align }: { event: MatchEvent; opposition: string; align: 'left' | 'right' }) {
+  const isRight = align === 'right';
+
   if (event.kind === 'goal') {
     const goal = event.data;
+    const name = goal.isOpponent
+      ? (goal.opponentName?.trim() || opposition)
+      : goal.scorerName;
     return (
-      <div className="flex items-center gap-3 py-1.5">
-        <span className="text-base leading-none">⚽</span>
-        <span className="text-sm text-gray-900 dark:text-white">
-          {goal.scorerName}
+      <div className={`flex items-center gap-2 py-1 ${isRight ? 'flex-row-reverse' : ''}`}>
+        <span className="shrink-0 text-sm leading-none">⚽</span>
+        <span className={`flex-1 text-sm text-gray-900 dark:text-white ${isRight ? 'text-right' : ''}`}>
+          {name}
           {goal.isPenalty && (
             <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">(pen)</span>
           )}
         </span>
         {goal.minute != null && (
-          <span className="ml-auto text-xs tabular-nums text-gray-400 dark:text-gray-500">
+          <span className="shrink-0 text-xs tabular-nums text-gray-400 dark:text-gray-500">
             {goal.minute}'
           </span>
         )}
@@ -171,12 +183,17 @@ function EventRow({ event }: { event: MatchEvent }) {
 
   const card = event.data;
   const isRed = card.type === 'red';
+  const name = card.isOpponent
+    ? (card.opponentName?.trim() || opposition)
+    : card.playerName;
   return (
-    <div className="flex items-center gap-3 py-1.5">
+    <div className={`flex items-center gap-2 py-1 ${isRight ? 'flex-row-reverse' : ''}`}>
       <span className={`h-4 w-3 shrink-0 rounded-sm ${isRed ? 'bg-red-500' : 'bg-yellow-400'}`} />
-      <span className="text-sm text-gray-900 dark:text-white">{card.playerName}</span>
+      <span className={`flex-1 text-sm text-gray-900 dark:text-white ${isRight ? 'text-right' : ''}`}>
+        {name}
+      </span>
       {card.minute != null && (
-        <span className="ml-auto text-xs tabular-nums text-gray-400 dark:text-gray-500">
+        <span className="shrink-0 text-xs tabular-nums text-gray-400 dark:text-gray-500">
           {card.minute}'
         </span>
       )}
@@ -337,25 +354,60 @@ export default function SocialMatchReportPage() {
         {/* Substitutes */}
         <LineupList heading="Substitutes" players={data.substitutes ?? []} />
 
-        {/* Events */}
+        {/* Events — two-column home / away layout */}
         {(() => {
           const grouped = buildEvents(data);
           if (grouped.size === 0) return null;
+          // When our team is home: home col = us, away col = opposition. Flip when away.
+          const homeLabel = data.isHome ? data.teamName : data.opposition;
+          const awayLabel = data.isHome ? data.opposition : data.teamName;
           return (
             <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
-              <h2 className="text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
+              <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Events
               </h2>
-              {Array.from(grouped.entries()).map(([period, events]) => (
-                <div key={period} className="mt-3">
-                  <p className="mb-1 text-xs font-medium text-gray-400 dark:text-gray-500">
-                    {PERIOD_LABELS[period] ?? period}
-                  </p>
-                  <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                    {events.map((e, i) => <EventRow key={i} event={e} />)}
+              {/* Column headers */}
+              <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-center gap-x-2">
+                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{homeLabel}</span>
+                <span className="h-4 w-px bg-gray-200 dark:bg-gray-600" />
+                <span className="text-right text-xs font-medium text-gray-700 dark:text-gray-300">{awayLabel}</span>
+              </div>
+              {Array.from(grouped.entries()).map(([period, { home, away }]) => {
+                const maxRows = Math.max(home.length, away.length);
+                if (maxRows === 0) return null;
+                return (
+                  <div key={period} className="mt-3">
+                    <p className="mb-1 text-xs font-medium text-gray-400 dark:text-gray-500">
+                      {PERIOD_LABELS[period] ?? period}
+                    </p>
+                    <div className="divide-y divide-gray-100 dark:divide-gray-700">
+                      {Array.from({ length: maxRows }, (_, i) => (
+                        <div key={i} className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 py-0.5">
+                          <div>
+                            {home[i] && (
+                              <EventRow
+                                event={home[i]}
+                                opposition={data.opposition}
+                                align="left"
+                              />
+                            )}
+                          </div>
+                          <span className="h-full w-px self-stretch bg-gray-200 dark:bg-gray-600" />
+                          <div>
+                            {away[i] && (
+                              <EventRow
+                                event={away[i]}
+                                opposition={data.opposition}
+                                align="right"
+                              />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
         })()}

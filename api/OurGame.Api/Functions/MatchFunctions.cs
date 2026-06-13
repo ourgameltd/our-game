@@ -280,10 +280,10 @@ public class MatchFunctions
             PlayerOfMatchName = match.Report.PlayerOfMatchName,
             PlayerOfMatchPhoto = match.Report.PlayerOfMatchPhoto,
             Goals = match.Report.Goals
-                .Select(g => new PublishedGoalDto(g.ScorerName, g.Minute, g.IsPenalty, g.Period))
+                .Select(g => new PublishedGoalDto(g.ScorerName, g.Minute, g.IsPenalty, g.Period, g.IsOpponent, g.OpponentName))
                 .ToList(),
             Cards = match.Report.Cards
-                .Select(c => new PublishedCardDto(c.PlayerName, c.Type, c.Minute, c.Period))
+                .Select(c => new PublishedCardDto(c.PlayerName, c.Type, c.Minute, c.Period, c.IsOpponent, c.OpponentName))
                 .ToList(),
             StartingPlayers = (match.Lineup?.Players ?? [])
                 .Where(p => p.IsStarting)
@@ -1197,6 +1197,6 @@ public class PublishedMatchReportDto
     public string? OgImage { get; set; }
 }
 
-public record PublishedGoalDto(string ScorerName, int? Minute, bool IsPenalty, string? Period);
-public record PublishedCardDto(string PlayerName, string Type, int? Minute, string? Period);
+public record PublishedGoalDto(string ScorerName, int? Minute, bool IsPenalty, string? Period, bool IsOpponent, string? OpponentName);
+public record PublishedCardDto(string PlayerName, string Type, int? Minute, string? Period, bool IsOpponent, string? OpponentName);
 public record PublishedLineupPlayerDto(string FirstName, string LastName, string? Position, int? SquadNumber);
