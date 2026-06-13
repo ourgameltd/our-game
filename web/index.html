@@ -22,11 +22,29 @@
 
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="/manifest.webmanifest" />
-    <meta name="theme-color" content="#0284c7" />
+    <meta name="theme-color" content="#f9fafb" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="OurGame" />
+
+    <!-- Apply theme before first paint to avoid a white flash on launch/resume.
+         Mirrors the logic in src/contexts/ThemeContext.tsx (default 'system'). -->
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem('theme');
+          var systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          var dark = stored === 'dark' || ((stored === 'system' || !stored) && systemDark);
+          if (dark) {
+            document.documentElement.classList.add('dark');
+            var meta = document.querySelector('meta[name="theme-color"]');
+            if (meta) meta.setAttribute('content', '#111827');
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
     <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
     <link rel="apple-touch-icon" sizes="144x144" href="/icons/icon-144x144.png" />

@@ -7,6 +7,7 @@ import { apiClient, CreateTrainingSessionRequest, UpdateTrainingSessionRequest, 
 import { sessionDurations } from '@/data/referenceData';
 import { drillCategories, getDrillCategoryColors, getDrillCategoryLabel, normalizeDrillCategory, pitchTypes } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
+import { openExternalLink } from '@utils/openExternalLink';
 import { SessionDrill } from '@/types';
 import { usePageTitle } from '@/hooks/usePageTitle';
 import PageTitle from '@components/common/PageTitle';
@@ -713,7 +714,7 @@ export default function AddEditTrainingSessionPage() {
                       type="button"
                       onClick={() => {
                         const searchQuery = location || 'football pitch near me';
-                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`, '_blank');
+                        openExternalLink(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`);
                       }}
                       className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors flex items-center gap-2"
                       title="Open Google Maps to find location"

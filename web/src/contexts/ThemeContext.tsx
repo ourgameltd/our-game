@@ -10,6 +10,18 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+// Keep the browser chrome / status-bar colour in sync with the page background
+// (gray-50 / gray-900) so it doesn't flash the wrong colour on launch or theme change.
+const applyThemeToDom = (effectiveTheme: 'light' | 'dark') => {
+  const root = document.documentElement;
+  root.classList.toggle('dark', effectiveTheme === 'dark');
+
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) {
+    meta.setAttribute('content', effectiveTheme === 'dark' ? '#111827' : '#f9fafb');
+  }
+};
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem('theme') as Theme;
@@ -24,8 +36,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const root = document.documentElement;
-    
     let effectiveTheme: 'light' | 'dark';
     if (theme === 'system') {
       effectiveTheme = getSystemTheme();
@@ -34,12 +44,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
 
     setActualTheme(effectiveTheme);
-
-    if (effectiveTheme === 'dark') {
-      root.classList.add('dark');
-    } else {
-      root.classList.remove('dark');
-    }
+    applyThemeToDom(effectiveTheme);
   }, [theme]);
 
   // Listen for system theme changes when in system mode
@@ -48,12 +53,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handler = (e: MediaQueryListEvent) => {
-      setActualTheme(e.matches ? 'dark' : 'light');
-      if (e.matches) {
-        document.documentElement.classList.add('dark');
-      } else {
-        document.documentElement.classList.remove('dark');
-      }
+      const effectiveTheme = e.matches ? 'dark' : 'light';
+      setActualTheme(effectiveTheme);
+      applyThemeToDom(effectiveTheme);
     };
 
     mediaQuery.addEventListener('change', handler);

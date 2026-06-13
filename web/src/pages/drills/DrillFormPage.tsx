@@ -5,6 +5,7 @@ import { useToast } from '@/contexts/ToastContext';
 import { drillCategories, normalizeDrillCategory, drillCompetencies } from '@/constants/referenceData';
 import { Routes } from '@utils/routes';
 import { detectLinkProvider } from '@utils/linkProviders';
+import { openExternalLink } from '@utils/openExternalLink';
 import PageTitle from '@components/common/PageTitle';
 import FormActions from '@components/common/FormActions';
 import DrillDiagramEditor from '@components/training/DrillDiagramEditor';
@@ -283,7 +284,7 @@ export default function DrillFormPage() {
       return;
     }
 
-    window.open(link.url, '_blank', 'noopener,noreferrer');
+    openExternalLink(link.url);
   };
 
   const handleDeleteLink = (indexToDelete: number) => {

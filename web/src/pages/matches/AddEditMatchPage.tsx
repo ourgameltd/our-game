@@ -15,6 +15,7 @@ import { getResolvedPositions, ResolvedPosition } from '@/data/tactics';
 import { weatherConditions, squadSizes, cardTypes, injurySeverities, pitchTypes } from '@/constants/referenceData';
 import { Formation, FormationScope, PlayerDirection, PlayerPosition, SquadSize, Tactic, TacticalPositionOverride, TacticPrinciple } from '@/types';
 import { Routes } from '@utils/routes';
+import { openExternalLink } from '@utils/openExternalLink';
 import PageTitle from '@components/common/PageTitle';
 import TacticDisplay from '@/components/tactics/TacticDisplay';
 import { useMatch, useTeamPlayers, useTeamCoaches, useTacticsByScope, useTeamOverview, useAgeGroupById, useTeamKits, useClubKits, useSystemFormations, useCreateMatch, useUpdateMatch, useTactic, useNotifyMatch, useNotifyGoal, useNotifyCard, usePublishMatchReport, useCurrentUser } from '@/api/hooks';
@@ -2060,7 +2061,7 @@ export default function AddEditMatchPage() {
                       type="button"
                       onClick={() => {
                         const searchQuery = location || 'football pitch near me';
-                        window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`, '_blank');
+                        openExternalLink(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(searchQuery)}`);
                       }}
                         className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                       title="Open Google Maps to find location"
