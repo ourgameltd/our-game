@@ -424,35 +424,35 @@ public class UpdateMatchHandler : IRequestHandler<UpdateMatchCommand, MatchDetai
 
         var invalidGoals = report.Goals
             .Select((g, i) => new { g, i })
-            .Where(x => x.g.IsOpponent ? string.IsNullOrWhiteSpace(x.g.OpponentName) : x.g.PlayerId == null || x.g.PlayerId == Guid.Empty)
+            .Where(x => !x.g.IsOpponent && (x.g.PlayerId == null || x.g.PlayerId == Guid.Empty))
             .Select(x => x.i + 1)
             .ToList();
 
         if (invalidGoals.Count > 0)
         {
-            errors["Report.Goals"] = [$"Opponent goals require an OpponentName; non-opponent goals require a PlayerId. Invalid entries: {string.Join(", ", invalidGoals)}."];
+            errors["Report.Goals"] = [$"Non-opponent goals require a PlayerId. Invalid entries: {string.Join(", ", invalidGoals)}."];
         }
 
         var invalidCards = report.Cards
             .Select((c, i) => new { c, i })
-            .Where(x => x.c.IsOpponent ? string.IsNullOrWhiteSpace(x.c.OpponentName) : x.c.PlayerId == null || x.c.PlayerId == Guid.Empty)
+            .Where(x => !x.c.IsOpponent && (x.c.PlayerId == null || x.c.PlayerId == Guid.Empty))
             .Select(x => x.i + 1)
             .ToList();
 
         if (invalidCards.Count > 0)
         {
-            errors["Report.Cards"] = [$"Opponent cards require an OpponentName; non-opponent cards require a PlayerId. Invalid entries: {string.Join(", ", invalidCards)}."];
+            errors["Report.Cards"] = [$"Non-opponent cards require a PlayerId. Invalid entries: {string.Join(", ", invalidCards)}."];
         }
 
         var invalidInjuries = report.Injuries
             .Select((inj, i) => new { inj, i })
-            .Where(x => x.inj.IsOpponent ? string.IsNullOrWhiteSpace(x.inj.OpponentName) : x.inj.PlayerId == null || x.inj.PlayerId == Guid.Empty)
+            .Where(x => !x.inj.IsOpponent && (x.inj.PlayerId == null || x.inj.PlayerId == Guid.Empty))
             .Select(x => x.i + 1)
             .ToList();
 
         if (invalidInjuries.Count > 0)
         {
-            errors["Report.Injuries"] = [$"Opponent injuries require an OpponentName; non-opponent injuries require a PlayerId. Invalid entries: {string.Join(", ", invalidInjuries)}."];
+            errors["Report.Injuries"] = [$"Non-opponent injuries require a PlayerId. Invalid entries: {string.Join(", ", invalidInjuries)}."];
         }
 
         if (errors.Count > 0)

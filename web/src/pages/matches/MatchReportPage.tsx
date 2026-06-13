@@ -575,7 +575,7 @@ export default function MatchReportPage() {
                         <span className="text-base">⚽</span>
                         <div className="flex-1">
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {goal.opponentName}
+                            {goal.opponentName || match.opposition}
                             {goal.opponentJerseyNumber != null && (
                               <span className="ml-1 text-gray-500 dark:text-gray-400 text-sm">(#{goal.opponentJerseyNumber})</span>
                             )}
@@ -593,7 +593,7 @@ export default function MatchReportPage() {
                         <span className="text-base">{card.type === 'yellow' ? '🟨' : '🟥'}</span>
                         <div className="flex-1">
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {card.opponentName}
+                            {card.opponentName || match.opposition}
                             {card.opponentJerseyNumber != null && (
                               <span className="ml-1 text-gray-500 dark:text-gray-400 text-sm">(#{card.opponentJerseyNumber})</span>
                             )}
@@ -611,7 +611,7 @@ export default function MatchReportPage() {
                         <span className="text-base">🏥</span>
                         <div className="flex-1">
                           <span className="font-medium text-gray-900 dark:text-white">
-                            {injury.opponentName}
+                            {injury.opponentName || match.opposition}
                             {injury.opponentJerseyNumber != null && (
                               <span className="ml-1 text-gray-500 dark:text-gray-400 text-sm">(#{injury.opponentJerseyNumber})</span>
                             )}

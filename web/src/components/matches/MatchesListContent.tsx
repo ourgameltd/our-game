@@ -133,6 +133,14 @@ export default function MatchesListContent({
                     </div>
                   )}
                 </div>
+              ) : match.status === 'in-progress' ? (
+                <div className="text-center">
+                  <span className="relative flex h-2 w-2 mx-auto mb-0.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+                  </span>
+                  <div className="text-[10px] font-semibold text-green-600 dark:text-green-400 leading-tight uppercase tracking-wide">Live</div>
+                </div>
               ) : isPast && !match.score ? (
                 <div className="text-center">
                   <div className="text-xs font-semibold text-orange-600 dark:text-orange-400 leading-tight">

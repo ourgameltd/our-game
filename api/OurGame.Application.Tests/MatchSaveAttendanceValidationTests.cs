@@ -154,7 +154,7 @@ public class MatchSaveAttendanceValidationTests
     }
 
     [Fact]
-    public async Task CreateMatch_WithOpponentGoalMissingOpponentName_ThrowsValidationException()
+    public async Task CreateMatch_WithOpponentGoalMissingOpponentName_Succeeds()
     {
         await using var database = await TestDatabase.CreateAsync();
         var data = await database.SeedBaseDataAsync();
@@ -176,10 +176,11 @@ public class MatchSaveAttendanceValidationTests
                 IsPenalty = false,
             }]);
 
-        var exception = await Assert.ThrowsAsync<ValidationException>(async () =>
-            await handler.Handle(new CreateMatchCommand(request), CancellationToken.None));
+        var result = await handler.Handle(new CreateMatchCommand(request), CancellationToken.None);
 
-        Assert.True(exception.Errors.ContainsKey("Report.Goals"));
+        Assert.NotNull(result);
+        var goal = Assert.Single(result.Report!.Goals!);
+        Assert.True(goal.IsOpponent);
     }
 
     [Fact]

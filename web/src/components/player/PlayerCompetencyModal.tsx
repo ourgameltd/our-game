@@ -83,6 +83,7 @@ export default function PlayerCompetencyModal({ playerId, playerName, onClose, o
     setCoachNotes('');
     await refetch();
     if (onSuccess) await onSuccess();
+    onClose();
   };
 
   return (
