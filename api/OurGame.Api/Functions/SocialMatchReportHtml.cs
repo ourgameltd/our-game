@@ -1,12 +1,19 @@
 using System.Globalization;
 using System.Net;
 using System.Text;
+using Markdig;
 using OurGame.Application.UseCases.Matches.Queries.GetMatchById.DTOs;
 
 namespace OurGame.Api.Functions;
 
 internal static class SocialMatchReportHtml
 {
+    // Render markdown but disable raw HTML so user-authored summaries can't inject scripts.
+    private static readonly MarkdownPipeline MarkdownPipeline = new MarkdownPipelineBuilder()
+        .DisableHtml()
+        .UseAutoLinks()
+        .Build();
+
     private static readonly string[] PeriodOrder = ["first", "second", "third", "etFirst", "etSecond", "penalties"];
 
     private static readonly Dictionary<string, string> PeriodLabels = new()
@@ -43,6 +50,22 @@ internal static class SocialMatchReportHtml
                   .txt { color: #111827; }
                   .sep { border-color: #f3f4f6; }
                   .vsep { background: #e5e7eb; }
+                  .md > :first-child { margin-top: 0; }
+                  .md > :last-child { margin-bottom: 0; }
+                  .md p { margin: 0.5rem 0; }
+                  .md h1, .md h2, .md h3, .md h4 { margin: 1rem 0 0.5rem; line-height: 1.3; font-weight: 700; }
+                  .md h1 { font-size: 1.25rem; }
+                  .md h2 { font-size: 1.1rem; }
+                  .md h3 { font-size: 1rem; }
+                  .md h4 { font-size: 0.9rem; }
+                  .md ul, .md ol { margin: 0.5rem 0; padding-left: 1.5rem; }
+                  .md li { margin: 0.25rem 0; }
+                  .md a { color: #2563eb; }
+                  .md blockquote { margin: 0.75rem 0; padding: 0.25rem 0 0.25rem 0.75rem; border-left: 3px solid #d1d5db; color: #6b7280; }
+                  .md code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 0.85em; background: #f3f4f6; padding: 0.1rem 0.3rem; border-radius: 0.25rem; }
+                  .md pre { background: #f3f4f6; padding: 0.75rem; border-radius: 0.375rem; overflow-x: auto; }
+                  .md pre code { background: none; padding: 0; }
+                  .md img { max-width: 100%; height: auto; }
                   @media (prefers-color-scheme: dark) {
                     body { background: #111827; color: #f9fafb; }
                     .card { background: #1f2937; }
@@ -50,6 +73,9 @@ internal static class SocialMatchReportHtml
                     .txt { color: #f9fafb; }
                     .sep { border-color: #374151; }
                     .vsep { background: #4b5563; }
+                    .md a { color: #60a5fa; }
+                    .md blockquote { border-left-color: #4b5563; color: #9ca3af; }
+                    .md code, .md pre { background: #374151; }
                   }
                   """;
 
@@ -253,14 +279,11 @@ internal static class SocialMatchReportHtml
     private static string SummaryHtml(string? summary)
     {
         if (string.IsNullOrWhiteSpace(summary)) return string.Empty;
-        var paragraphs = summary
-            .Split('\n', StringSplitOptions.RemoveEmptyEntries)
-            .Where(p => !string.IsNullOrWhiteSpace(p))
-            .Select(p => $"""<p style="margin:0.5rem 0;font-size:0.875rem;line-height:1.6;" class="txt">{H(p.Trim())}</p>""");
+        var rendered = Markdown.ToHtml(summary, MarkdownPipeline);
         return $"""
             <div class="card" style="border-radius:0.5rem;padding:1.25rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
               <h2 style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.75rem;" class="muted">Match report</h2>
-              <div>{string.Join("", paragraphs)}</div>
+              <div class="md txt" style="font-size:0.875rem;line-height:1.6;">{rendered}</div>
             </div>
             """;
     }
