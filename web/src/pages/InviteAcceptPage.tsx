@@ -32,11 +32,7 @@ export default function InviteAcceptPage() {
   }, []);
 
   useEffect(() => {
-    if (!code) {
-      setPageState('ERROR');
-      setErrorMessage('Invalid invite link.');
-      return;
-    }
+    if (!code || authLoading) return;
 
     const load = async () => {
       setPageState('LOADING');
@@ -78,7 +74,7 @@ export default function InviteAcceptPage() {
     };
 
     load();
-  }, [code, isAuthenticated]);
+  }, [code, authLoading, isAuthenticated]);
 
   const roleLabel = useMemo(
     () => (invite ? INVITE_TYPE_LABELS[invite.type] || 'Member' : 'Member'),
