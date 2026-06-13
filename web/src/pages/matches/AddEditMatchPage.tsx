@@ -1074,10 +1074,7 @@ export default function AddEditMatchPage() {
 
     if (eventDraft.eventType === 'goal') {
       if (eventDraft.isOpponent) {
-        if (!eventDraft.opponentName?.trim()) {
-          alert('Please enter the opponent player name.');
-          return;
-        }
+        // opponent name is optional
       } else {
         if (!eventDraft.playerId) {
           alert('Please select a goal scorer.');
@@ -1113,10 +1110,7 @@ export default function AddEditMatchPage() {
 
     if (eventDraft.eventType === 'card') {
       if (eventDraft.isOpponent) {
-        if (!eventDraft.opponentName?.trim()) {
-          alert('Please enter the opponent player name.');
-          return;
-        }
+        // opponent name is optional
       } else {
         if (!eventDraft.playerId) {
           alert('Please select a player for the card event.');
@@ -1149,10 +1143,7 @@ export default function AddEditMatchPage() {
 
     if (eventDraft.eventType === 'injury') {
       if (eventDraft.isOpponent) {
-        if (!eventDraft.opponentName?.trim()) {
-          alert('Please enter the opponent player name.');
-          return;
-        }
+        // opponent name is optional
       } else {
         if (!eventDraft.playerId) {
           alert('Please select a player for the injury event.');
@@ -1533,7 +1524,7 @@ export default function AddEditMatchPage() {
       return;
     }
 
-    const invalidGoalIndex = goals.findIndex(goal => (goal.isOpponent ? !goal.opponentName?.trim() : !goal.playerId) || !goal.period || (goal.minute !== undefined && goal.minute < 1));
+    const invalidGoalIndex = goals.findIndex(goal => (!goal.isOpponent && !goal.playerId) || !goal.period || (goal.minute !== undefined && goal.minute < 1));
     if (invalidGoalIndex >= 0) {
       alert(`Goal ${invalidGoalIndex + 1} requires scorer and period. If minute is entered it must be 1 or greater.`);
       return;
@@ -2701,20 +2692,20 @@ export default function AddEditMatchPage() {
                           const goal = goals[event.index];
                           const isOppGoal = goal.isOpponent;
                           const goalLabel = isOppGoal
-                            ? `${goal.opponentName}${goal.opponentJerseyNumber ? ` (#${goal.opponentJerseyNumber})` : ''}`
+                            ? `${goal.opponentName || opposition}${goal.opponentJerseyNumber ? ` (#${goal.opponentJerseyNumber})` : ''}`
                             : getPlayerName(goal.playerId);
                           return (
-                            <TimelineItem key={event.id} className="relative pb-2">
+                            <TimelineItem key={event.id} className="relative pb-1 sm:pb-2">
                               {hasConnector && (
                                 <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
                               )}
-                              <TimelineHeader className={`relative rounded-xl border py-2.5 pl-3 pr-3 shadow-sm ${isOppGoal ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+                              <TimelineHeader className={`relative rounded-xl border py-1.5 sm:py-2.5 pl-3 pr-3 shadow-sm ${isOppGoal ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
                                 <TimelineIcon className={`p-0 ${isOppGoal ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-gray-100 dark:bg-gray-700'}`}>
-                                  <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
+                                  <span className="flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
                                 </TimelineIcon>
                                 <div className="ml-3 flex w-full items-start justify-between gap-3">
                                   <div className="min-w-0">
-                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">⚽ Goal • {goalLabel}{isOppGoal && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
+                                    <p className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">⚽ Goal • {goalLabel}{isOppGoal && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
                                     {!isOppGoal && goal.assistPlayerId && (
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Assist: {getPlayerName(goal.assistPlayerId)}</p>
                                     )}
@@ -2770,20 +2761,20 @@ export default function AddEditMatchPage() {
                           const card = cards[event.index];
                           const isOppCard = card.isOpponent;
                           const cardLabel = isOppCard
-                            ? `${card.opponentName}${card.opponentJerseyNumber ? ` (#${card.opponentJerseyNumber})` : ''}`
+                            ? `${card.opponentName || opposition}${card.opponentJerseyNumber ? ` (#${card.opponentJerseyNumber})` : ''}`
                             : getPlayerName(card.playerId);
                           return (
-                            <TimelineItem key={event.id} className="relative pb-2">
+                            <TimelineItem key={event.id} className="relative pb-1 sm:pb-2">
                               {hasConnector && (
                                 <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
                               )}
-                              <TimelineHeader className={`relative rounded-xl border py-2.5 pl-3 pr-3 shadow-sm ${isOppCard ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+                              <TimelineHeader className={`relative rounded-xl border py-1.5 sm:py-2.5 pl-3 pr-3 shadow-sm ${isOppCard ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
                                 <TimelineIcon className={`p-0 ${isOppCard ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-gray-100 dark:bg-gray-700'}`}>
-                                  <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
+                                  <span className="flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
                                 </TimelineIcon>
                                 <div className="ml-3 flex w-full items-start justify-between gap-3">
                                   <div className="min-w-0">
-                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{card.type === 'red' ? '🟥' : '🟨'} Card • {cardLabel}{isOppCard && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
+                                    <p className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">{card.type === 'red' ? '🟥' : '🟨'} Card • {cardLabel}{isOppCard && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
                                     {card.reason?.trim() && (
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{card.reason}</p>
                                     )}
@@ -2832,20 +2823,20 @@ export default function AddEditMatchPage() {
                           const injury = injuries[event.index];
                           const isOppInjury = injury.isOpponent;
                           const injuryLabel = isOppInjury
-                            ? `${injury.opponentName}${injury.opponentJerseyNumber ? ` (#${injury.opponentJerseyNumber})` : ''}`
+                            ? `${injury.opponentName || opposition}${injury.opponentJerseyNumber ? ` (#${injury.opponentJerseyNumber})` : ''}`
                             : getPlayerName(injury.playerId);
                           return (
-                            <TimelineItem key={event.id} className="relative pb-2">
+                            <TimelineItem key={event.id} className="relative pb-1 sm:pb-2">
                               {hasConnector && (
                                 <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
                               )}
-                              <TimelineHeader className={`relative rounded-xl border py-2.5 pl-3 pr-3 shadow-sm ${isOppInjury ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+                              <TimelineHeader className={`relative rounded-xl border py-1.5 sm:py-2.5 pl-3 pr-3 shadow-sm ${isOppInjury ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
                                 <TimelineIcon className={`p-0 ${isOppInjury ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-gray-100 dark:bg-gray-700'}`}>
-                                  <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
+                                  <span className="flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
                                 </TimelineIcon>
                                 <div className="ml-3 flex w-full items-start justify-between gap-3">
                                   <div className="min-w-0">
-                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">🏥 Injury • {injuryLabel}{isOppInjury && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
+                                    <p className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">🏥 Injury • {injuryLabel}{isOppInjury && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
                                     {injury.description.trim() && (
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{injury.description}</p>
                                     )}
@@ -2863,17 +2854,17 @@ export default function AddEditMatchPage() {
 
                         const substitution = substitutions[event.index];
                         return (
-                          <TimelineItem key={event.id} className="relative pb-2">
+                          <TimelineItem key={event.id} className="relative pb-1 sm:pb-2">
                             {hasConnector && (
                               <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
                             )}
-                            <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2.5 pl-3 pr-3 shadow-sm">
+                            <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-1.5 sm:py-2.5 pl-3 pr-3 shadow-sm">
                               <TimelineIcon className="p-0 bg-gray-100 dark:bg-gray-700">
-                                <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
+                                <span className="flex h-8 w-8 sm:h-11 sm:w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
                               </TimelineIcon>
                               <div className="ml-3 flex w-full items-start justify-between gap-3">
                                 <div className="min-w-0">
-                                  <p className="text-lg font-semibold text-gray-900 dark:text-white">🔄 Substitution • {getPlayerName(substitution.playerOut)}</p>
+                                  <p className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">🔄 Substitution • {getPlayerName(substitution.playerOut)}</p>
                                   <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{getPlayerName(substitution.playerOut)} → {getPlayerName(substitution.playerIn)}</p>
                                 </div>
                                 <div className="flex items-center gap-1 shrink-0">
@@ -2920,7 +2911,7 @@ export default function AddEditMatchPage() {
                       </label>
                       {eventDraft.isOpponent ? (
                         <>
-                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name *" />
+                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name (optional)" />
                           <input type="number" min="1" value={eventDraft.opponentJerseyNumber ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentJerseyNumber: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Jersey number (optional)" />
                         </>
                       ) : (
@@ -2968,7 +2959,7 @@ export default function AddEditMatchPage() {
                       </label>
                       {eventDraft.isOpponent ? (
                         <>
-                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name *" />
+                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name (optional)" />
                           <input type="number" min="1" value={eventDraft.opponentJerseyNumber ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentJerseyNumber: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Jersey number (optional)" />
                         </>
                       ) : (
@@ -3003,7 +2994,7 @@ export default function AddEditMatchPage() {
                       </label>
                       {eventDraft.isOpponent ? (
                         <>
-                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name *" />
+                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name (optional)" />
                           <input type="number" min="1" value={eventDraft.opponentJerseyNumber ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentJerseyNumber: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Jersey number (optional)" />
                         </>
                       ) : (

@@ -4158,7 +4158,7 @@ export const apiClient = {
           `/v1/matches/${matchId}/report/publish`,
           { isPublished }
         );
-        return response.data;
+        return response.data ?? { success: true };
       } catch (error) {
         return handleApiError(error);
       }

@@ -139,4 +139,36 @@ public class UpdateMatchHandlerTests
         Assert.Equal("declined", coach.Status);
         Assert.Null(coach.Notes);
     }
+
+    [Fact]
+    public async Task Handle_WithOpponentGoalWithoutName_Succeeds()
+    {
+        await using var db = await TestDatabaseFactory.CreateAsync();
+        var (_, _, teamId) = await db.SeedClubWithTeamAsync();
+        var matchId = await db.SeedMatchAsync(teamId, "Rivals FC");
+        var handler = new UpdateMatchHandler(db.Context);
+
+        var dto = new UpdateMatchRequest
+        {
+            SeasonId = "2025-26",
+            SquadSize = 11,
+            Opposition = "Rivals FC",
+            MatchDate = DateTime.UtcNow.AddDays(7),
+            IsHome = true,
+            Status = "scheduled",
+            Report = new UpdateMatchReportRequest
+            {
+                Goals = new List<UpdateGoalRequest>
+                {
+                    new() { IsOpponent = true, OpponentName = null, Period = "first-half" }
+                }
+            }
+        };
+
+        var result = await handler.Handle(new UpdateMatchCommand(matchId, dto), CancellationToken.None);
+
+        Assert.NotNull(result);
+        var goal = Assert.Single(result.Report!.Goals!);
+        Assert.True(goal.IsOpponent);
+    }
 }
