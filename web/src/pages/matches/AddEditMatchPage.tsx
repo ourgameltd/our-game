@@ -1935,7 +1935,7 @@ export default function AddEditMatchPage() {
           {activeTab === 'details' && (
             <div className="mt-4 space-y-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
+                <div className="md:col-span-2">
                   <label className="label">
                     Opposition *
                   </label>
@@ -1989,7 +1989,7 @@ export default function AddEditMatchPage() {
                   </p>
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 flex flex-col">
                   <label className="label">
                     Kick Off Time *
                   </label>
@@ -1997,11 +1997,11 @@ export default function AddEditMatchPage() {
                     type="datetime-local"
                     value={kickOffTime}
                     onChange={(e) => setKickOffTime(e.target.value)}
-                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
                   />
                 </div>
 
-                <div className="min-w-0">
+                <div className="min-w-0 flex flex-col">
                   <div className="flex items-center justify-between mb-2">
                     <label className="label">
                       Meet Time
@@ -2040,7 +2040,7 @@ export default function AddEditMatchPage() {
                     type="datetime-local"
                     value={meetTime}
                     onChange={(e) => setMeetTime(e.target.value)}
-                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
                     placeholder="Optional: Team meeting time before kick off"
                   />
                 </div>
@@ -2093,6 +2093,19 @@ export default function AddEditMatchPage() {
 
                 <div>
                   <label className="label">
+                    Competition *
+                  </label>
+                  <input
+                    type="text"
+                    value={competition}
+                    onChange={(e) => setCompetition(e.target.value)}
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                    placeholder="e.g., County League Division 1"
+                  />
+                </div>
+
+                <div>
+                  <label className="label">
                     Venue Type *
                   </label>
                   <div className="flex gap-4">
@@ -2117,72 +2130,7 @@ export default function AddEditMatchPage() {
                   </div>
                 </div>
 
-                <div>
-                  <label className="label">
-                    Competition *
-                  </label>
-                  <input
-                    type="text"
-                    value={competition}
-                    onChange={(e) => setCompetition(e.target.value)}
-                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                    placeholder="e.g., County League Division 1"
-                  />
-                </div>
-
                 <div className="col-span-full grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div>
-                    <label className="label">
-                      Kit *
-                    </label>
-                    <select
-                      value={kit}
-                      onChange={(e) => setKit(e.target.value)}
-                      className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <option value="">Select a team or club kit</option>
-                      {availableOutfieldKits.map(k => (
-                          <option key={k.id} value={k.id}>{k.name}</option>
-                        ))}
-                    </select>
-                    {availableOutfieldKits.length === 0 && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        No team or club match kits are available for this fixture.
-                      </p>
-                    )}
-                    {selectedKit && (
-                      <div className="mt-2">
-                        <KitStrip size="md" shirtColor={selectedKit.shirtColor} shirtColor2={selectedKit.shirtColor2} stripType={selectedKit.stripType as never} shortsColor={selectedKit.shortsColor} socksColor={selectedKit.socksColor} />
-                      </div>
-                    )}
-                  </div>
-
-                  <div>
-                    <label className="label">
-                      Goalkeeper Kit
-                    </label>
-                    <select
-                      value={goalkeeperKit}
-                      onChange={(e) => setGoalkeeperKit(e.target.value)}
-                      className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      <option value="">Select a team or club goalkeeper kit (optional)</option>
-                      {availableGoalkeeperKits.map(k => (
-                          <option key={k.id} value={k.id}>{k.name}</option>
-                        ))}
-                    </select>
-                    {availableGoalkeeperKits.length === 0 && (
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                        No team or club goalkeeper kits are available for this fixture.
-                      </p>
-                    )}
-                    {selectedGoalkeeperKit && (
-                      <div className="mt-2">
-                        <KitStrip size="md" shirtColor={selectedGoalkeeperKit.shirtColor} shirtColor2={selectedGoalkeeperKit.shirtColor2} stripType={selectedGoalkeeperKit.stripType as never} shortsColor={selectedGoalkeeperKit.shortsColor} socksColor={selectedGoalkeeperKit.socksColor} />
-                      </div>
-                    )}
-                  </div>
-
                   <div>
                     <label className="label">
                       Home Score
@@ -2221,7 +2169,7 @@ export default function AddEditMatchPage() {
                       value={homePenScore}
                       onChange={(e) => setHomePenScore(e.target.value)}
                       className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder="—"
+                      placeholder="0"
                     />
                   </div>
 
@@ -2235,9 +2183,61 @@ export default function AddEditMatchPage() {
                       value={awayPenScore}
                       onChange={(e) => setAwayPenScore(e.target.value)}
                       className="input disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder="—"
+                      placeholder="0"
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="label">
+                    Kit *
+                  </label>
+                  <select
+                    value={kit}
+                    onChange={(e) => setKit(e.target.value)}
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select a team or club kit</option>
+                    {availableOutfieldKits.map(k => (
+                        <option key={k.id} value={k.id}>{k.name}</option>
+                      ))}
+                  </select>
+                  {availableOutfieldKits.length === 0 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      No team or club match kits are available for this fixture.
+                    </p>
+                  )}
+                  {selectedKit && (
+                    <div className="mt-2">
+                      <KitStrip size="md" shirtColor={selectedKit.shirtColor} shirtColor2={selectedKit.shirtColor2} stripType={selectedKit.stripType as never} shortsColor={selectedKit.shortsColor} socksColor={selectedKit.socksColor} />
+                    </div>
+                  )}
+                </div>
+
+                <div>
+                  <label className="label">
+                    Goalkeeper Kit
+                  </label>
+                  <select
+                    value={goalkeeperKit}
+                    onChange={(e) => setGoalkeeperKit(e.target.value)}
+                    className="input disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <option value="">Select a team or club goalkeeper kit (optional)</option>
+                    {availableGoalkeeperKits.map(k => (
+                        <option key={k.id} value={k.id}>{k.name}</option>
+                      ))}
+                  </select>
+                  {availableGoalkeeperKits.length === 0 && (
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      No team or club goalkeeper kits are available for this fixture.
+                    </p>
+                  )}
+                  {selectedGoalkeeperKit && (
+                    <div className="mt-2">
+                      <KitStrip size="md" shirtColor={selectedGoalkeeperKit.shirtColor} shirtColor2={selectedGoalkeeperKit.shirtColor2} stripType={selectedGoalkeeperKit.stripType as never} shortsColor={selectedGoalkeeperKit.shortsColor} socksColor={selectedGoalkeeperKit.socksColor} />
+                    </div>
+                  )}
                 </div>
 
                 <div>
