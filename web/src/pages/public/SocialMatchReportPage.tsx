@@ -348,11 +348,13 @@ export default function SocialMatchReportPage() {
           </div>
         )}
 
-        {/* Starting XI */}
-        <LineupList heading="Starting XI" players={data.startingPlayers ?? []} />
-
-        {/* Substitutes */}
-        <LineupList heading="Substitutes" players={data.substitutes ?? []} />
+        {/* Starting XI + Substitutes — side by side */}
+        {((data.startingPlayers?.length ?? 0) > 0 || (data.substitutes?.length ?? 0) > 0) && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-start">
+            <LineupList heading="Starting XI" players={data.startingPlayers ?? []} />
+            <LineupList heading="Substitutes" players={data.substitutes ?? []} />
+          </div>
+        )}
 
         {/* Events — two-column home / away layout */}
         {(() => {
@@ -366,12 +368,6 @@ export default function SocialMatchReportPage() {
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
                 Events
               </h2>
-              {/* Column headers */}
-              <div className="mb-2 grid grid-cols-[1fr_auto_1fr] items-center gap-x-2">
-                <span className="text-xs font-medium text-gray-700 dark:text-gray-300">{homeLabel}</span>
-                <span className="h-4 w-px bg-gray-200 dark:bg-gray-600" />
-                <span className="text-right text-xs font-medium text-gray-700 dark:text-gray-300">{awayLabel}</span>
-              </div>
               {Array.from(grouped.entries()).map(([period, { home, away }]) => {
                 const maxRows = Math.max(home.length, away.length);
                 if (maxRows === 0) return null;

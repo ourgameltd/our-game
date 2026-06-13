@@ -50,6 +50,7 @@ internal static class SocialMatchReportHtml
                   .txt { color: #111827; }
                   .sep { border-color: #f3f4f6; }
                   .vsep { background: #e5e7eb; }
+                  .chip { background: #f3f4f6; }
                   .md > :first-child { margin-top: 0; }
                   .md > :last-child { margin-bottom: 0; }
                   .md p { margin: 0.5rem 0; }
@@ -73,6 +74,7 @@ internal static class SocialMatchReportHtml
                     .txt { color: #f9fafb; }
                     .sep { border-color: #374151; }
                     .vsep { background: #4b5563; }
+                    .chip { background: #374151; }
                     .md a { color: #60a5fa; }
                     .md blockquote { border-left-color: #4b5563; color: #9ca3af; }
                     .md code, .md pre { background: #374151; }
@@ -111,6 +113,7 @@ internal static class SocialMatchReportHtml
               </header>
               <main style="max-width:48rem;margin:0 auto;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1rem;">
                 {PotmHtml(match.Report!.PlayerOfMatchName, match.Report.PlayerOfMatchPhoto)}
+                {LineupHtml(match)}
                 {EventsHtml(match)}
                 {SummaryHtml(match.Report.Summary)}
                 <p style="text-align:center;font-size:0.75rem;padding-bottom:0.5rem;" class="muted">
@@ -171,6 +174,55 @@ internal static class SocialMatchReportHtml
               </div>
             </div>
             """;
+    }
+
+    private static string LineupHtml(MatchDetailDto match)
+    {
+        var players = match.Lineup?.Players;
+        if (players is null || players.Count == 0) return string.Empty;
+
+        var starting = players
+            .Where(p => p.IsStarting)
+            .OrderBy(p => p.PositionIndex ?? int.MaxValue)
+            .ToList();
+        var subs = players.Where(p => !p.IsStarting).ToList();
+        if (starting.Count == 0 && subs.Count == 0) return string.Empty;
+
+        return $"""
+            <div class="card" style="border-radius:0.5rem;padding:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+                {LineupColumnHtml("Starting XI", starting)}
+                {LineupColumnHtml("Substitutes", subs)}
+              </div>
+            </div>
+            """;
+    }
+
+    private static string LineupColumnHtml(string heading, List<LineupPlayerDto> players)
+    {
+        if (players.Count == 0) return string.Empty;
+
+        var sb = new StringBuilder();
+        sb.Append($"""<div><h2 style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.5rem;" class="muted">{H(heading)}</h2>""");
+        sb.Append("""<ol style="list-style:none;margin:0;padding:0;">""");
+        foreach (var p in players)
+        {
+            var num = p.SquadNumber.HasValue
+                ? $"""<span style="width:1.5rem;flex-shrink:0;text-align:right;font-size:0.75rem;font-variant-numeric:tabular-nums;" class="muted">{p.SquadNumber}</span>"""
+                : """<span style="width:1.5rem;flex-shrink:0;"></span>""";
+            var pos = !string.IsNullOrEmpty(p.Position)
+                ? $"""<span style="flex-shrink:0;border-radius:0.25rem;padding:0.1rem 0.35rem;font-size:0.7rem;font-weight:500;" class="chip muted">{H(p.Position)}</span>"""
+                : string.Empty;
+            sb.Append($"""
+                <li style="display:flex;align-items:center;gap:0.5rem;padding:0.375rem 0;border-bottom:1px solid;" class="sep">
+                  {num}
+                  <span style="flex:1;font-size:0.875rem;" class="txt">{H(p.FirstName)} {H(p.LastName)}</span>
+                  {pos}
+                </li>
+                """);
+        }
+        sb.Append("</ol></div>");
+        return sb.ToString();
     }
 
     private sealed record SocialEvent(string Period, int? Minute, bool IsHome, string Icon, string Label);

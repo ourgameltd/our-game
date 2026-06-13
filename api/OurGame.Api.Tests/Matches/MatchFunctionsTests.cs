@@ -251,6 +251,69 @@ public class MatchFunctionsTests
     }
 
     [Fact]
+    public async Task GetSocialMatchReportPageHtml_RendersLineup_WhenPublished()
+    {
+        var matchId = Guid.NewGuid();
+        var expected = new MatchDetailDto
+        {
+            Id = matchId,
+            TeamId = Guid.NewGuid(),
+            ClubId = Guid.NewGuid(),
+            ClubName = "Vale FC",
+            TeamName = "Blues",
+            Opposition = "City United",
+            MatchDate = DateTime.UtcNow.AddDays(-1),
+            Competition = "League",
+            Location = "Vale Park",
+            IsHome = true,
+            HomeScore = 3,
+            AwayScore = 1,
+            Status = "completed",
+            IsPublished = true,
+            Report = new MatchReportDetailDto
+            {
+                Id = Guid.NewGuid(),
+                Summary = "Strong team performance."
+            },
+            Lineup = new MatchLineupDto
+            {
+                Id = Guid.NewGuid(),
+                Players =
+                [
+                    new LineupPlayerDto
+                    {
+                        FirstName = "Harry", LastName = "Keeper",
+                        Position = "GK", SquadNumber = 1, PositionIndex = 0, IsStarting = true
+                    },
+                    new LineupPlayerDto
+                    {
+                        FirstName = "Sam", LastName = "Benchwarmer",
+                        Position = "MID", SquadNumber = 14, IsStarting = false
+                    }
+                ]
+            }
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<GetMatchByIdQuery, MatchDetailDto?>((query, _) =>
+            Task.FromResult<MatchDetailDto?>(query.MatchId == matchId ? expected : null));
+
+        var sut = BuildSut(mediator);
+        var req = CreateRequest("GET", "https://localhost/social-og-page");
+        req.Headers.Add("x-ms-original-url", $"https://localhost/social/match/{matchId}/report");
+
+        var response = await sut.GetSocialMatchReportPageHtml(req);
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+        response.Body.Seek(0, SeekOrigin.Begin);
+        var html = await new StreamReader(response.Body).ReadToEndAsync();
+        Assert.Contains("Starting XI", html);
+        Assert.Contains("Substitutes", html);
+        Assert.Contains("Harry Keeper", html);
+        Assert.Contains("Sam Benchwarmer", html);
+    }
+
+    [Fact]
     public async Task PublishMatchReport_ReturnsNoContent_WhenValid()
     {
         var authId = Guid.NewGuid().ToString("N");
