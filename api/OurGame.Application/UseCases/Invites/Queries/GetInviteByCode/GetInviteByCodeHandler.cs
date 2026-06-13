@@ -42,6 +42,7 @@ public class GetInviteByCodeHandler : IRequestHandler<GetInviteByCodeQuery, Invi
             Type = invite.Type,
             EntityId = invite.EntityId,
             ClubName = invite.Club?.Name ?? string.Empty,
+            ClubLogoUrl = string.IsNullOrEmpty(invite.Club?.Logo) ? null : invite.Club.Logo,
             AgeGroupName = ageGroupName,
             Status = invite.Status,
             ExpiresAt = invite.ExpiresAt,

@@ -477,6 +477,7 @@ public class InviteFunctions
         var spaUrl = $"/invite/{Uri.EscapeDataString(code)}";
         string title;
         string description;
+        string? logoUrl = null;
 
         try
         {
@@ -494,6 +495,7 @@ public class InviteFunctions
                 var ageGroupPart = string.IsNullOrEmpty(result.AgeGroupName) ? string.Empty : $" ({result.AgeGroupName})";
                 title = $"Join {result.ClubName} as {roleLabel}{ageGroupPart}";
                 description = $"You've been invited to join {result.ClubName} on OurGame.";
+                logoUrl = result.ClubLogoUrl;
             }
             else
             {
@@ -510,6 +512,13 @@ public class InviteFunctions
         var safeTitle = System.Net.WebUtility.HtmlEncode(title);
         var safeDescription = System.Net.WebUtility.HtmlEncode(description);
         var safeSpaUrl = System.Net.WebUtility.HtmlEncode(spaUrl);
+        var ogImageTag = logoUrl is not null
+            ? $"""
+                    <meta property="og:image" content="{System.Net.WebUtility.HtmlEncode(logoUrl)}" />
+                    <meta name="twitter:image" content="{System.Net.WebUtility.HtmlEncode(logoUrl)}" />
+                    <meta name="twitter:card" content="summary_large_image" />
+               """
+            : """    <meta name="twitter:card" content="summary" />""";
 
         var html = $"""
             <!DOCTYPE html>
@@ -522,7 +531,7 @@ public class InviteFunctions
                 <meta property="og:description" content="{safeDescription}" />
                 <meta property="og:type" content="website" />
                 <meta property="og:url" content="{safeSpaUrl}" />
-                <meta name="twitter:card" content="summary" />
+            {ogImageTag}
                 <meta name="twitter:title" content="{safeTitle}" />
                 <meta name="twitter:description" content="{safeDescription}" />
                 <meta http-equiv="refresh" content="0;url={safeSpaUrl}" />

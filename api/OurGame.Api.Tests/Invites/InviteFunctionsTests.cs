@@ -123,6 +123,7 @@ public class InviteFunctionsTests
             Type = InviteType.Coach,
             EntityId = Guid.NewGuid(),
             ClubName = "Vale FC",
+            ClubLogoUrl = "https://storage.example.com/clubs/vale-fc-logo.png",
             Status = InviteStatus.Pending,
             ExpiresAt = DateTime.UtcNow.AddDays(30),
             IsOpenInvite = false
@@ -142,6 +143,7 @@ public class InviteFunctionsTests
         Assert.True(payload.Success);
         Assert.NotNull(payload.Data);
         Assert.Equal("Vale FC", payload.Data!.ClubName);
+        Assert.Equal("https://storage.example.com/clubs/vale-fc-logo.png", payload.Data!.ClubLogoUrl);
     }
 
     [Fact]
@@ -598,6 +600,7 @@ public class InviteFunctionsTests
             Type = InviteType.Coach,
             EntityId = Guid.NewGuid(),
             ClubName = "Vale FC",
+            ClubLogoUrl = "https://storage.example.com/clubs/vale-fc-logo.png",
             AgeGroupName = "2015",
             Status = InviteStatus.Pending,
             ExpiresAt = DateTime.UtcNow.AddDays(30),
@@ -619,8 +622,44 @@ public class InviteFunctionsTests
         Assert.Contains("og:title", html);
         Assert.Contains("Join Vale FC as Coach (2015)", html);
         Assert.Contains("og:description", html);
-        Assert.Contains("twitter:card", html);
+        Assert.Contains("og:image", html);
+        Assert.Contains("vale-fc-logo.png", html);
+        Assert.Contains("summary_large_image", html);
         Assert.Contains("/invite/ABC12345", html);
+    }
+
+    [Fact]
+    public async Task GetInvitePreview_ReturnsHtmlWithoutOgImage_WhenNoLogo()
+    {
+        var expected = new InviteDetailsDto
+        {
+            Code = "NOLOG001",
+            MaskedEmail = string.Empty,
+            Type = InviteType.Player,
+            EntityId = Guid.NewGuid(),
+            ClubName = "Vale FC",
+            ClubLogoUrl = null,
+            Status = InviteStatus.Pending,
+            ExpiresAt = DateTime.UtcNow.AddDays(30),
+            IsOpenInvite = true
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<GetInviteByCodeQuery, InviteDetailsDto>((_, _) => Task.FromResult(expected));
+
+        var sut = BuildSut(mediator);
+        var req = CreateRequest("GET", "https://localhost/v1/invites/NOLOG001/preview");
+
+        var response = await sut.GetInvitePreview(req, "NOLOG001");
+
+        Assert.Equal(System.Net.HttpStatusCode.OK, response.StatusCode);
+
+        response.Body.Position = 0;
+        var html = await new StreamReader(response.Body).ReadToEndAsync();
+        Assert.Contains("og:title", html);
+        Assert.Contains("twitter:card", html);
+        Assert.DoesNotContain("og:image", html);
+        Assert.Contains("summary\"", html);
     }
 
     [Fact]

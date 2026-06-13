@@ -32,11 +32,7 @@ export default function InviteAcceptPage() {
   }, []);
 
   useEffect(() => {
-    if (!code) {
-      setPageState('ERROR');
-      setErrorMessage('Invalid invite link.');
-      return;
-    }
+    if (!code || authLoading) return;
 
     const load = async () => {
       setPageState('LOADING');
@@ -78,7 +74,7 @@ export default function InviteAcceptPage() {
     };
 
     load();
-  }, [code, isAuthenticated]);
+  }, [code, authLoading, isAuthenticated]);
 
   const roleLabel = useMemo(
     () => (invite ? INVITE_TYPE_LABELS[invite.type] || 'Member' : 'Member'),
@@ -164,11 +160,27 @@ export default function InviteAcceptPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
       <div className="card max-w-xl w-full mx-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Invite</h1>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          Join <strong className="text-gray-900 dark:text-white">{invite?.clubName}</strong> as{' '}
-          <strong className="text-gray-900 dark:text-white">{roleLabel}</strong>.
-        </p>
+        <div className="flex items-center gap-3 mb-3">
+          {invite?.clubLogoUrl ? (
+            <img
+              src={invite.clubLogoUrl}
+              alt={`${invite.clubName} logo`}
+              className="w-12 h-12 rounded-lg object-contain bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 p-1 shrink-0"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-lg bg-primary-100 dark:bg-primary-900/30 border border-primary-200 dark:border-primary-800 flex items-center justify-center shrink-0">
+              <span className="text-lg font-bold text-primary-600 dark:text-primary-400">
+                {invite?.clubName?.[0] ?? '?'}
+              </span>
+            </div>
+          )}
+          <div>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white leading-tight">{invite?.clubName}</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Invite to join as <strong className="text-gray-900 dark:text-white">{roleLabel}</strong>
+            </p>
+          </div>
+        </div>
 
         {!isAuthenticated ? (
           <a href={signInUrl} className="btn-primary btn-md">
