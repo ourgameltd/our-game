@@ -231,10 +231,13 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
         if (report != null)
         {
             var goalsSql = @"
-                SELECT 
+                SELECT
                     g.Id,
                     g.PlayerId,
-                    p.FirstName + ' ' + p.LastName AS ScorerName,
+                    CASE WHEN g.IsOpponent = 1 THEN NULL ELSE p.FirstName + ' ' + p.LastName END AS ScorerName,
+                    g.IsOpponent,
+                    g.OpponentName,
+                    g.OpponentJerseyNumber,
                     g.Minute,
                     g.Period,
                     g.AddedTimeMinutes,
@@ -243,7 +246,7 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     g.AssistPlayerId,
                     ap.FirstName + ' ' + ap.LastName AS AssistPlayerName
                 FROM Goals g
-                INNER JOIN Players p ON g.PlayerId = p.Id
+                LEFT JOIN Players p ON g.PlayerId = p.Id
                 LEFT JOIN Players ap ON g.AssistPlayerId = ap.Id
                 WHERE g.MatchReportId = {0}
                 ORDER BY g.Minute, COALESCE(g.AddedTimeMinutes, 0)";
@@ -253,17 +256,20 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 .ToListAsync(cancellationToken);
 
             var cardsSql = @"
-                SELECT 
+                SELECT
                     c.Id,
                     c.PlayerId,
-                    p.FirstName + ' ' + p.LastName AS PlayerName,
+                    CASE WHEN c.IsOpponent = 1 THEN NULL ELSE p.FirstName + ' ' + p.LastName END AS PlayerName,
+                    c.IsOpponent,
+                    c.OpponentName,
+                    c.OpponentJerseyNumber,
                     c.Type,
                     c.Minute,
                     c.Period,
                     c.AddedTimeMinutes,
                     c.Reason
                 FROM Cards c
-                INNER JOIN Players p ON c.PlayerId = p.Id
+                LEFT JOIN Players p ON c.PlayerId = p.Id
                 WHERE c.MatchReportId = {0}
                 ORDER BY COALESCE(c.Minute, 999), COALESCE(c.AddedTimeMinutes, 0)";
 
@@ -272,17 +278,20 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                 .ToListAsync(cancellationToken);
 
             var injuriesSql = @"
-                SELECT 
+                SELECT
                     i.Id,
                     i.PlayerId,
-                    p.FirstName + ' ' + p.LastName AS PlayerName,
+                    CASE WHEN i.IsOpponent = 1 THEN NULL ELSE p.FirstName + ' ' + p.LastName END AS PlayerName,
+                    i.IsOpponent,
+                    i.OpponentName,
+                    i.OpponentJerseyNumber,
                     i.Minute,
                     i.Period,
                     i.AddedTimeMinutes,
                     i.Description,
                     i.Severity
                 FROM Injuries i
-                INNER JOIN Players p ON i.PlayerId = p.Id
+                LEFT JOIN Players p ON i.PlayerId = p.Id
                 WHERE i.MatchReportId = {0}
                 ORDER BY COALESCE(i.Minute, 999), COALESCE(i.AddedTimeMinutes, 0)";
 
@@ -399,6 +408,9 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     Id = g.Id,
                     PlayerId = g.PlayerId,
                     ScorerName = g.ScorerName ?? string.Empty,
+                    IsOpponent = g.IsOpponent,
+                    OpponentName = g.OpponentName,
+                    OpponentJerseyNumber = g.OpponentJerseyNumber,
                     Minute = g.Minute,
                     Period = g.Period ?? string.Empty,
                     AddedTimeMinutes = g.AddedTimeMinutes,
@@ -412,6 +424,9 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     Id = c.Id,
                     PlayerId = c.PlayerId,
                     PlayerName = c.PlayerName ?? string.Empty,
+                    IsOpponent = c.IsOpponent,
+                    OpponentName = c.OpponentName,
+                    OpponentJerseyNumber = c.OpponentJerseyNumber,
                     Type = MapCardTypeToString(c.Type),
                     Minute = c.Minute,
                     Period = c.Period,
@@ -423,6 +438,9 @@ public class GetMatchByIdHandler : IRequestHandler<GetMatchByIdQuery, MatchDetai
                     Id = i.Id,
                     PlayerId = i.PlayerId,
                     PlayerName = i.PlayerName ?? string.Empty,
+                    IsOpponent = i.IsOpponent,
+                    OpponentName = i.OpponentName,
+                    OpponentJerseyNumber = i.OpponentJerseyNumber,
                     Minute = i.Minute,
                     Period = i.Period,
                     AddedTimeMinutes = i.AddedTimeMinutes,
@@ -631,8 +649,11 @@ public class ReportRaw
 public class GoalRaw
 {
     public Guid Id { get; set; }
-    public Guid PlayerId { get; set; }
+    public Guid? PlayerId { get; set; }
     public string? ScorerName { get; set; }
+    public bool IsOpponent { get; set; }
+    public string? OpponentName { get; set; }
+    public int? OpponentJerseyNumber { get; set; }
     public int? Minute { get; set; }
     public string? Period { get; set; }
     public int? AddedTimeMinutes { get; set; }
@@ -645,8 +666,11 @@ public class GoalRaw
 public class CardRaw
 {
     public Guid Id { get; set; }
-    public Guid PlayerId { get; set; }
+    public Guid? PlayerId { get; set; }
     public string? PlayerName { get; set; }
+    public bool IsOpponent { get; set; }
+    public string? OpponentName { get; set; }
+    public int? OpponentJerseyNumber { get; set; }
     public int Type { get; set; }
     public int? Minute { get; set; }
     public string? Period { get; set; }
@@ -657,8 +681,11 @@ public class CardRaw
 public class InjuryRaw
 {
     public Guid Id { get; set; }
-    public Guid PlayerId { get; set; }
+    public Guid? PlayerId { get; set; }
     public string? PlayerName { get; set; }
+    public bool IsOpponent { get; set; }
+    public string? OpponentName { get; set; }
+    public int? OpponentJerseyNumber { get; set; }
     public int? Minute { get; set; }
     public string? Period { get; set; }
     public int? AddedTimeMinutes { get; set; }

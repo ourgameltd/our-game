@@ -46,6 +46,7 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
         await ValidateLineupReferencesAsync(dto.Lineup, cancellationToken);
         ValidateAttendancePlayers(dto.Lineup, dto.Attendance);
         ValidateGoalTimeline(dto.Report?.Goals);
+        ValidateEventPlayerFields(dto.Report);
 
         // Parse match status
         var statusInt = ParseStatus(dto.Status);
@@ -143,8 +144,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
             {
                 var goalId = Guid.NewGuid();
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO Goals (Id, MatchReportId, PlayerId, Minute, Period, AddedTimeMinutes, IsExtraTime, IsPenalty, AssistPlayerId)
-                    VALUES ({goalId}, {reportId}, {goal.PlayerId}, {goal.Minute}, {goal.Period}, {goal.AddedTimeMinutes}, {goal.IsExtraTime}, {goal.IsPenalty}, {goal.AssistPlayerId})
+                    INSERT INTO Goals (Id, MatchReportId, PlayerId, IsOpponent, OpponentName, OpponentJerseyNumber, Minute, Period, AddedTimeMinutes, IsExtraTime, IsPenalty, AssistPlayerId)
+                    VALUES ({goalId}, {reportId}, {goal.PlayerId}, {goal.IsOpponent}, {goal.OpponentName}, {goal.OpponentJerseyNumber}, {goal.Minute}, {goal.Period}, {goal.AddedTimeMinutes}, {goal.IsExtraTime}, {goal.IsPenalty}, {goal.AssistPlayerId})
                 ", cancellationToken);
             }
 
@@ -155,8 +156,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
                 var cardTypeInt = ParseCardType(card.Type);
                 var reason = card.Reason ?? string.Empty;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO Cards (Id, MatchReportId, PlayerId, Type, Minute, Period, AddedTimeMinutes, Reason)
-                    VALUES ({cardId}, {reportId}, {card.PlayerId}, {cardTypeInt}, {card.Minute}, {card.Period}, {card.AddedTimeMinutes}, {reason})
+                    INSERT INTO Cards (Id, MatchReportId, PlayerId, IsOpponent, OpponentName, OpponentJerseyNumber, Type, Minute, Period, AddedTimeMinutes, Reason)
+                    VALUES ({cardId}, {reportId}, {card.PlayerId}, {card.IsOpponent}, {card.OpponentName}, {card.OpponentJerseyNumber}, {cardTypeInt}, {card.Minute}, {card.Period}, {card.AddedTimeMinutes}, {reason})
                 ", cancellationToken);
             }
 
@@ -167,8 +168,8 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
                 var severityInt = ParseSeverity(injury.Severity);
                 var description = injury.Description ?? string.Empty;
                 await _db.Database.ExecuteSqlInterpolatedAsync($@"
-                    INSERT INTO Injuries (Id, MatchReportId, PlayerId, Minute, Period, AddedTimeMinutes, Description, Severity)
-                    VALUES ({injuryId}, {reportId}, {injury.PlayerId}, {injury.Minute}, {injury.Period}, {injury.AddedTimeMinutes}, {description}, {severityInt})
+                    INSERT INTO Injuries (Id, MatchReportId, PlayerId, IsOpponent, OpponentName, OpponentJerseyNumber, Minute, Period, AddedTimeMinutes, Description, Severity)
+                    VALUES ({injuryId}, {reportId}, {injury.PlayerId}, {injury.IsOpponent}, {injury.OpponentName}, {injury.OpponentJerseyNumber}, {injury.Minute}, {injury.Period}, {injury.AddedTimeMinutes}, {description}, {severityInt})
                 ", cancellationToken);
             }
 
@@ -331,6 +332,54 @@ public class CreateMatchHandler : IRequestHandler<CreateMatchCommand, MatchDetai
                 $"Goal events require a valid minute and period. Invalid goal entries: {string.Join(", ", invalidGoalIndexes)}."
             ]
         });
+    }
+
+    private static void ValidateEventPlayerFields(CreateMatchReportRequest? report)
+    {
+        if (report == null)
+        {
+            return;
+        }
+
+        var errors = new Dictionary<string, string[]>();
+
+        var invalidGoals = report.Goals
+            .Select((g, i) => new { g, i })
+            .Where(x => x.g.IsOpponent ? string.IsNullOrWhiteSpace(x.g.OpponentName) : x.g.PlayerId == null || x.g.PlayerId == Guid.Empty)
+            .Select(x => x.i + 1)
+            .ToList();
+
+        if (invalidGoals.Count > 0)
+        {
+            errors["Report.Goals"] = [$"Opponent goals require an OpponentName; non-opponent goals require a PlayerId. Invalid entries: {string.Join(", ", invalidGoals)}."];
+        }
+
+        var invalidCards = report.Cards
+            .Select((c, i) => new { c, i })
+            .Where(x => x.c.IsOpponent ? string.IsNullOrWhiteSpace(x.c.OpponentName) : x.c.PlayerId == null || x.c.PlayerId == Guid.Empty)
+            .Select(x => x.i + 1)
+            .ToList();
+
+        if (invalidCards.Count > 0)
+        {
+            errors["Report.Cards"] = [$"Opponent cards require an OpponentName; non-opponent cards require a PlayerId. Invalid entries: {string.Join(", ", invalidCards)}."];
+        }
+
+        var invalidInjuries = report.Injuries
+            .Select((inj, i) => new { inj, i })
+            .Where(x => x.inj.IsOpponent ? string.IsNullOrWhiteSpace(x.inj.OpponentName) : x.inj.PlayerId == null || x.inj.PlayerId == Guid.Empty)
+            .Select(x => x.i + 1)
+            .ToList();
+
+        if (invalidInjuries.Count > 0)
+        {
+            errors["Report.Injuries"] = [$"Opponent injuries require an OpponentName; non-opponent injuries require a PlayerId. Invalid entries: {string.Join(", ", invalidInjuries)}."];
+        }
+
+        if (errors.Count > 0)
+        {
+            throw new ValidationException(errors);
+        }
     }
 
     private static int ParseStatus(string? status)

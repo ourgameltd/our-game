@@ -164,7 +164,10 @@ type LineupSlot = {
 type TimelinePeriod = 'first' | 'second' | 'third' | 'etFirst' | 'etSecond' | 'penalties';
 
 type GoalEvent = {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   minute?: number;
   period: TimelinePeriod;
   addedTimeMinutes?: number;
@@ -174,7 +177,10 @@ type GoalEvent = {
 };
 
 type CardEvent = {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   type: 'yellow' | 'red';
   minute?: number;
   period?: TimelinePeriod;
@@ -183,7 +189,10 @@ type CardEvent = {
 };
 
 type InjuryEvent = {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   minute?: number;
   period?: TimelinePeriod;
   addedTimeMinutes?: number;
@@ -609,7 +618,10 @@ export default function AddEditMatchPage() {
       );
       setGoals(
         (existingMatch.report?.goals || []).map(g => ({
-          playerId: g.playerId,
+          playerId: g.playerId ?? undefined,
+          isOpponent: g.isOpponent,
+          opponentName: g.opponentName ?? undefined,
+          opponentJerseyNumber: g.opponentJerseyNumber ?? undefined,
           minute: g.minute && g.minute > 0 ? g.minute : undefined,
           period: parseTimelinePeriod(g.period) || 'first',
           addedTimeMinutes: g.addedTimeMinutes,
@@ -620,7 +632,10 @@ export default function AddEditMatchPage() {
       );
       setCards(
         (existingMatch.report?.cards || []).map(c => ({
-          playerId: c.playerId,
+          playerId: c.playerId ?? undefined,
+          isOpponent: c.isOpponent,
+          opponentName: c.opponentName ?? undefined,
+          opponentJerseyNumber: c.opponentJerseyNumber ?? undefined,
           type: (c.type === 'yellow' || c.type === 'red' ? c.type : 'yellow') as 'yellow' | 'red',
           minute: c.minute,
           period: parseTimelinePeriod(c.period),
@@ -630,7 +645,10 @@ export default function AddEditMatchPage() {
       );
       setInjuries(
         (existingMatch.report?.injuries || []).map(i => ({
-          playerId: i.playerId,
+          playerId: i.playerId ?? undefined,
+          isOpponent: i.isOpponent,
+          opponentName: i.opponentName ?? undefined,
+          opponentJerseyNumber: i.opponentJerseyNumber ?? undefined,
           minute: i.minute,
           period: parseTimelinePeriod(i.period),
           addedTimeMinutes: i.addedTimeMinutes,
@@ -866,7 +884,8 @@ export default function AddEditMatchPage() {
   const assignedCoaches = (teamCoaches || []).filter(coach => coach.id !== undefined && assignedCoachIds.includes(coach.id));
 
 
-  const getPlayerName = (playerId: string) => {
+  const getPlayerName = (playerId: string | undefined) => {
+    if (!playerId) return 'Unknown';
     const player = (teamPlayers || []).find(p => p.id === playerId);
     return player ? `${player.firstName} ${player.lastName}` : 'Unknown';
   };
@@ -955,6 +974,9 @@ export default function AddEditMatchPage() {
       draft = {
         eventType: 'goal',
         playerId: '',
+        isOpponent: false,
+        opponentName: undefined,
+        opponentJerseyNumber: undefined,
         minute: undefined,
         period: defaultTimelinePeriod,
         addedTimeMinutes: undefined,
@@ -966,6 +988,9 @@ export default function AddEditMatchPage() {
       draft = {
         eventType: 'card',
         playerId: '',
+        isOpponent: false,
+        opponentName: undefined,
+        opponentJerseyNumber: undefined,
         type: 'yellow',
         minute: undefined,
         period: defaultTimelinePeriod,
@@ -976,6 +1001,9 @@ export default function AddEditMatchPage() {
       draft = {
         eventType: 'injury',
         playerId: '',
+        isOpponent: false,
+        opponentName: undefined,
+        opponentJerseyNumber: undefined,
         minute: undefined,
         period: defaultTimelinePeriod,
         addedTimeMinutes: undefined,
@@ -1043,9 +1071,16 @@ export default function AddEditMatchPage() {
     const hasInvalidMinute = (minute?: number) => minute !== undefined && (Number.isNaN(minute) || minute < 1);
 
     if (eventDraft.eventType === 'goal') {
-      if (!eventDraft.playerId) {
-        alert('Please select a goal scorer.');
-        return;
+      if (eventDraft.isOpponent) {
+        if (!eventDraft.opponentName?.trim()) {
+          alert('Please enter the opponent player name.');
+          return;
+        }
+      } else {
+        if (!eventDraft.playerId) {
+          alert('Please select a goal scorer.');
+          return;
+        }
       }
 
       if (!eventDraft.period) {
@@ -1068,16 +1103,23 @@ export default function AddEditMatchPage() {
         return;
       }
 
-      if (eventDraft.assistPlayerId && eventDraft.assistPlayerId === eventDraft.playerId) {
+      if (!eventDraft.isOpponent && eventDraft.assistPlayerId && eventDraft.assistPlayerId === eventDraft.playerId) {
         alert('Assist player cannot be the same as the goal scorer.');
         return;
       }
     }
 
     if (eventDraft.eventType === 'card') {
-      if (!eventDraft.playerId) {
-        alert('Please select a player for the card event.');
-        return;
+      if (eventDraft.isOpponent) {
+        if (!eventDraft.opponentName?.trim()) {
+          alert('Please enter the opponent player name.');
+          return;
+        }
+      } else {
+        if (!eventDraft.playerId) {
+          alert('Please select a player for the card event.');
+          return;
+        }
       }
 
       if (!eventDraft.period) {
@@ -1104,9 +1146,16 @@ export default function AddEditMatchPage() {
 
 
     if (eventDraft.eventType === 'injury') {
-      if (!eventDraft.playerId) {
-        alert('Please select a player for the injury event.');
-        return;
+      if (eventDraft.isOpponent) {
+        if (!eventDraft.opponentName?.trim()) {
+          alert('Please enter the opponent player name.');
+          return;
+        }
+      } else {
+        if (!eventDraft.playerId) {
+          alert('Please select a player for the injury event.');
+          return;
+        }
       }
 
       if (!eventDraft.period) {
@@ -1171,67 +1220,57 @@ export default function AddEditMatchPage() {
     const isCreate = eventModal.mode === 'create';
 
     if (eventDraft.eventType === 'goal') {
+      const goalEntry: GoalEvent = {
+        playerId: eventDraft.isOpponent ? undefined : eventDraft.playerId,
+        isOpponent: eventDraft.isOpponent,
+        opponentName: eventDraft.isOpponent ? eventDraft.opponentName : undefined,
+        opponentJerseyNumber: eventDraft.isOpponent ? eventDraft.opponentJerseyNumber : undefined,
+        minute: eventDraft.minute,
+        period: eventDraft.period,
+        addedTimeMinutes: eventDraft.addedTimeMinutes,
+        isExtraTime: eventDraft.isExtraTime,
+        isPenalty: eventDraft.isPenalty,
+        assistPlayerId: eventDraft.isOpponent ? undefined : eventDraft.assistPlayerId,
+      };
       setGoals(previous => isCreate
-        ? [...previous, {
-          playerId: eventDraft.playerId,
-          minute: eventDraft.minute,
-          period: eventDraft.period,
-          addedTimeMinutes: eventDraft.addedTimeMinutes,
-          isExtraTime: eventDraft.isExtraTime,
-          isPenalty: eventDraft.isPenalty,
-          assistPlayerId: eventDraft.assistPlayerId,
-        }]
-        : previous.map((event, index) => index === eventModal.index ? {
-          playerId: eventDraft.playerId,
-          minute: eventDraft.minute,
-          period: eventDraft.period,
-          addedTimeMinutes: eventDraft.addedTimeMinutes,
-          isExtraTime: eventDraft.isExtraTime,
-          isPenalty: eventDraft.isPenalty,
-          assistPlayerId: eventDraft.assistPlayerId,
-        } : event),
+        ? [...previous, goalEntry]
+        : previous.map((event, index) => index === eventModal.index ? goalEntry : event),
       );
     }
 
     if (eventDraft.eventType === 'card') {
+      const cardEntry: CardEvent = {
+        playerId: eventDraft.isOpponent ? undefined : eventDraft.playerId,
+        isOpponent: eventDraft.isOpponent,
+        opponentName: eventDraft.isOpponent ? eventDraft.opponentName : undefined,
+        opponentJerseyNumber: eventDraft.isOpponent ? eventDraft.opponentJerseyNumber : undefined,
+        type: eventDraft.type,
+        minute: eventDraft.minute,
+        period: eventDraft.period,
+        addedTimeMinutes: eventDraft.addedTimeMinutes,
+        reason: eventDraft.reason,
+      };
       setCards(previous => isCreate
-        ? [...previous, {
-          playerId: eventDraft.playerId,
-          type: eventDraft.type,
-          minute: eventDraft.minute,
-          period: eventDraft.period,
-          addedTimeMinutes: eventDraft.addedTimeMinutes,
-          reason: eventDraft.reason,
-        }]
-        : previous.map((event, index) => index === eventModal.index ? {
-          playerId: eventDraft.playerId,
-          type: eventDraft.type,
-          minute: eventDraft.minute,
-          period: eventDraft.period,
-          addedTimeMinutes: eventDraft.addedTimeMinutes,
-          reason: eventDraft.reason,
-        } : event),
+        ? [...previous, cardEntry]
+        : previous.map((event, index) => index === eventModal.index ? cardEntry : event),
       );
     }
 
     if (eventDraft.eventType === 'injury') {
+      const injuryEntry: InjuryEvent = {
+        playerId: eventDraft.isOpponent ? undefined : eventDraft.playerId,
+        isOpponent: eventDraft.isOpponent,
+        opponentName: eventDraft.isOpponent ? eventDraft.opponentName : undefined,
+        opponentJerseyNumber: eventDraft.isOpponent ? eventDraft.opponentJerseyNumber : undefined,
+        minute: eventDraft.minute,
+        period: eventDraft.period,
+        addedTimeMinutes: eventDraft.addedTimeMinutes,
+        description: eventDraft.description,
+        severity: eventDraft.severity,
+      };
       setInjuries(previous => isCreate
-        ? [...previous, {
-          playerId: eventDraft.playerId,
-          minute: eventDraft.minute,
-          period: eventDraft.period,
-          addedTimeMinutes: eventDraft.addedTimeMinutes,
-          description: eventDraft.description,
-          severity: eventDraft.severity,
-        }]
-        : previous.map((event, index) => index === eventModal.index ? {
-          playerId: eventDraft.playerId,
-          minute: eventDraft.minute,
-          period: eventDraft.period,
-          addedTimeMinutes: eventDraft.addedTimeMinutes,
-          description: eventDraft.description,
-          severity: eventDraft.severity,
-        } : event),
+        ? [...previous, injuryEntry]
+        : previous.map((event, index) => index === eventModal.index ? injuryEntry : event),
       );
     }
 
@@ -1492,7 +1531,7 @@ export default function AddEditMatchPage() {
       return;
     }
 
-    const invalidGoalIndex = goals.findIndex(goal => !goal.playerId || !goal.period || (goal.minute !== undefined && goal.minute < 1));
+    const invalidGoalIndex = goals.findIndex(goal => (goal.isOpponent ? !goal.opponentName?.trim() : !goal.playerId) || !goal.period || (goal.minute !== undefined && goal.minute < 1));
     if (invalidGoalIndex >= 0) {
       alert(`Goal ${invalidGoalIndex + 1} requires scorer and period. If minute is entered it must be 1 or greater.`);
       return;
@@ -1558,20 +1597,26 @@ export default function AddEditMatchPage() {
         captainId: captainId || undefined,
         playerOfMatchId: playerOfTheMatch || undefined,
         goals: goals
-          .filter(goal => goal.playerId)
+          .filter(goal => goal.isOpponent ? goal.opponentName?.trim() : goal.playerId)
           .map(goal => ({
-            playerId: goal.playerId,
+            playerId: goal.isOpponent ? undefined : goal.playerId,
+            isOpponent: goal.isOpponent ?? false,
+            opponentName: goal.isOpponent ? goal.opponentName : undefined,
+            opponentJerseyNumber: goal.isOpponent ? goal.opponentJerseyNumber : undefined,
             minute: goal.minute,
             period: goal.period,
             addedTimeMinutes: goal.addedTimeMinutes && goal.addedTimeMinutes > 0 ? goal.addedTimeMinutes : undefined,
             isExtraTime: goal.isExtraTime,
             isPenalty: goal.isPenalty,
-            assistPlayerId: goal.assistPlayerId,
+            assistPlayerId: goal.isOpponent ? undefined : goal.assistPlayerId,
           })),
         cards: cards
-          .filter(card => card.playerId)
+          .filter(card => card.isOpponent ? card.opponentName?.trim() : card.playerId)
           .map(card => ({
-            playerId: card.playerId,
+            playerId: card.isOpponent ? undefined : card.playerId,
+            isOpponent: card.isOpponent ?? false,
+            opponentName: card.isOpponent ? card.opponentName : undefined,
+            opponentJerseyNumber: card.isOpponent ? card.opponentJerseyNumber : undefined,
             type: card.type,
             minute: card.minute,
             period: card.period,
@@ -1579,9 +1624,12 @@ export default function AddEditMatchPage() {
             reason: card.reason,
           })),
         injuries: injuries
-          .filter(injury => injury.playerId)
+          .filter(injury => injury.isOpponent ? injury.opponentName?.trim() : injury.playerId)
           .map(injury => ({
-            playerId: injury.playerId,
+            playerId: injury.isOpponent ? undefined : injury.playerId,
+            isOpponent: injury.isOpponent ?? false,
+            opponentName: injury.isOpponent ? injury.opponentName : undefined,
+            opponentJerseyNumber: injury.isOpponent ? injury.opponentJerseyNumber : undefined,
             minute: injury.minute,
             period: injury.period,
             addedTimeMinutes: injury.addedTimeMinutes && injury.addedTimeMinutes > 0 ? injury.addedTimeMinutes : undefined,
@@ -2649,19 +2697,23 @@ export default function AddEditMatchPage() {
 
                         if (event.eventType === 'goal') {
                           const goal = goals[event.index];
+                          const isOppGoal = goal.isOpponent;
+                          const goalLabel = isOppGoal
+                            ? `${goal.opponentName}${goal.opponentJerseyNumber ? ` (#${goal.opponentJerseyNumber})` : ''}`
+                            : getPlayerName(goal.playerId);
                           return (
                             <TimelineItem key={event.id} className="relative pb-2">
                               {hasConnector && (
                                 <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
                               )}
-                              <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2.5 pl-3 pr-3 shadow-sm">
-                                <TimelineIcon className="p-0 bg-gray-100 dark:bg-gray-700">
+                              <TimelineHeader className={`relative rounded-xl border py-2.5 pl-3 pr-3 shadow-sm ${isOppGoal ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+                                <TimelineIcon className={`p-0 ${isOppGoal ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-gray-100 dark:bg-gray-700'}`}>
                                   <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
                                 </TimelineIcon>
                                 <div className="ml-3 flex w-full items-start justify-between gap-3">
                                   <div className="min-w-0">
-                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">⚽ Goal • {getPlayerName(goal.playerId)}</p>
-                                    {goal.assistPlayerId && (
+                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">⚽ Goal • {goalLabel}{isOppGoal && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
+                                    {!isOppGoal && goal.assistPlayerId && (
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Assist: {getPlayerName(goal.assistPlayerId)}</p>
                                     )}
                                   </div>
@@ -2678,18 +2730,22 @@ export default function AddEditMatchPage() {
 
                         if (event.eventType === 'card') {
                           const card = cards[event.index];
+                          const isOppCard = card.isOpponent;
+                          const cardLabel = isOppCard
+                            ? `${card.opponentName}${card.opponentJerseyNumber ? ` (#${card.opponentJerseyNumber})` : ''}`
+                            : getPlayerName(card.playerId);
                           return (
                             <TimelineItem key={event.id} className="relative pb-2">
                               {hasConnector && (
                                 <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
                               )}
-                              <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2.5 pl-3 pr-3 shadow-sm">
-                                <TimelineIcon className="p-0 bg-gray-100 dark:bg-gray-700">
+                              <TimelineHeader className={`relative rounded-xl border py-2.5 pl-3 pr-3 shadow-sm ${isOppCard ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+                                <TimelineIcon className={`p-0 ${isOppCard ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-gray-100 dark:bg-gray-700'}`}>
                                   <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
                                 </TimelineIcon>
                                 <div className="ml-3 flex w-full items-start justify-between gap-3">
                                   <div className="min-w-0">
-                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{card.type === 'red' ? '🟥' : '🟨'} Card • {getPlayerName(card.playerId)}</p>
+                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">{card.type === 'red' ? '🟥' : '🟨'} Card • {cardLabel}{isOppCard && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
                                     {card.reason?.trim() && (
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{card.reason}</p>
                                     )}
@@ -2707,18 +2763,22 @@ export default function AddEditMatchPage() {
 
                         if (event.eventType === 'injury') {
                           const injury = injuries[event.index];
+                          const isOppInjury = injury.isOpponent;
+                          const injuryLabel = isOppInjury
+                            ? `${injury.opponentName}${injury.opponentJerseyNumber ? ` (#${injury.opponentJerseyNumber})` : ''}`
+                            : getPlayerName(injury.playerId);
                           return (
                             <TimelineItem key={event.id} className="relative pb-2">
                               {hasConnector && (
                                 <span className="pointer-events-none absolute left-[2.125rem] top-[3.5rem] h-[calc(100%-2.5rem)] w-px bg-gray-300 dark:bg-gray-700" />
                               )}
-                              <TimelineHeader className="relative rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 py-2.5 pl-3 pr-3 shadow-sm">
-                                <TimelineIcon className="p-0 bg-gray-100 dark:bg-gray-700">
+                              <TimelineHeader className={`relative rounded-xl border py-2.5 pl-3 pr-3 shadow-sm ${isOppInjury ? 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-900/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+                                <TimelineIcon className={`p-0 ${isOppInjury ? 'bg-orange-100 dark:bg-orange-900/40' : 'bg-gray-100 dark:bg-gray-700'}`}>
                                   <span className="flex h-11 w-11 items-center justify-center rounded-full text-[10px] font-semibold text-gray-700 dark:text-gray-200 leading-tight text-center px-1">{timelineMinute}</span>
                                 </TimelineIcon>
                                 <div className="ml-3 flex w-full items-start justify-between gap-3">
                                   <div className="min-w-0">
-                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">🏥 Injury • {getPlayerName(injury.playerId)}</p>
+                                    <p className="text-lg font-semibold text-gray-900 dark:text-white">🏥 Injury • {injuryLabel}{isOppInjury && <span className="ml-1.5 text-xs font-medium text-orange-600 dark:text-orange-400 uppercase tracking-wide">OPP</span>}</p>
                                     {injury.description.trim() && (
                                       <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">{injury.description}</p>
                                     )}
@@ -2782,10 +2842,26 @@ export default function AddEditMatchPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {eventDraft.eventType === 'goal' && (
                     <>
-                      <select value={eventDraft.playerId} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
-                        <option value="">Goal scorer</option>
-                        {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
-                      </select>
+                      <label className="md:col-span-2 flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={eventDraft.isOpponent ?? false}
+                          onChange={(e) => setEventDraft({ ...eventDraft, isOpponent: e.target.checked, playerId: undefined, opponentName: '', opponentJerseyNumber: undefined, assistPlayerId: undefined })}
+                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Opponent event</span>
+                      </label>
+                      {eventDraft.isOpponent ? (
+                        <>
+                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name *" />
+                          <input type="number" min="1" value={eventDraft.opponentJerseyNumber ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentJerseyNumber: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Jersey number (optional)" />
+                        </>
+                      ) : (
+                        <select value={eventDraft.playerId || ''} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                          <option value="">Goal scorer *</option>
+                          {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
+                        </select>
+                      )}
                       <select
                         value={eventDraft.period}
                         onChange={(e) => {
@@ -2797,25 +2873,43 @@ export default function AddEditMatchPage() {
                             isPenalty: period === 'penalties',
                           });
                         }}
-                        className="px-2 py-2 border rounded bg-white dark:bg-gray-700"
+                        className={`px-2 py-2 border rounded bg-white dark:bg-gray-700 ${eventDraft.isOpponent ? '' : ''}`}
                       >
                         {timelineSections.map(periodOption => <option key={periodOption.period} value={periodOption.period}>{periodOption.label}</option>)}
                       </select>
                       <input type="number" min="1" value={eventDraft.minute ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, minute: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Minute" />
                       <input type="number" min="1" value={eventDraft.addedTimeMinutes ?? ''} onChange={(e) => { const value = e.target.value ? parseInt(e.target.value, 10) : undefined; setEventDraft({ ...eventDraft, addedTimeMinutes: value && value > 0 ? value : undefined }); }} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Injury time (+)" />
-                      <select value={eventDraft.assistPlayerId || ''} onChange={(e) => setEventDraft({ ...eventDraft, assistPlayerId: e.target.value || undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700 md:col-span-2">
-                        <option value="">Assist (optional)</option>
-                        {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
-                      </select>
+                      {!eventDraft.isOpponent && (
+                        <select value={eventDraft.assistPlayerId || ''} onChange={(e) => setEventDraft({ ...eventDraft, assistPlayerId: e.target.value || undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700 md:col-span-2">
+                          <option value="">Assist (optional)</option>
+                          {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
+                        </select>
+                      )}
                     </>
                   )}
 
                   {eventDraft.eventType === 'card' && (
                     <>
-                      <select value={eventDraft.playerId} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
-                        <option value="">Player</option>
-                        {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
-                      </select>
+                      <label className="md:col-span-2 flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={eventDraft.isOpponent ?? false}
+                          onChange={(e) => setEventDraft({ ...eventDraft, isOpponent: e.target.checked, playerId: undefined, opponentName: '', opponentJerseyNumber: undefined })}
+                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Opponent event</span>
+                      </label>
+                      {eventDraft.isOpponent ? (
+                        <>
+                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name *" />
+                          <input type="number" min="1" value={eventDraft.opponentJerseyNumber ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentJerseyNumber: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Jersey number (optional)" />
+                        </>
+                      ) : (
+                        <select value={eventDraft.playerId || ''} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                          <option value="">Player *</option>
+                          {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
+                        </select>
+                      )}
                       <select value={eventDraft.period || ''} onChange={(e) => setEventDraft({ ...eventDraft, period: e.target.value ? e.target.value as TimelinePeriod : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
                         <option value="">Period (optional)</option>
                         {timelineSections.map(periodOption => <option key={periodOption.period} value={periodOption.period}>{periodOption.label}</option>)}
@@ -2831,10 +2925,26 @@ export default function AddEditMatchPage() {
 
                   {eventDraft.eventType === 'injury' && (
                     <>
-                      <select value={eventDraft.playerId} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
-                        <option value="">Player</option>
-                        {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
-                      </select>
+                      <label className="md:col-span-2 flex items-center gap-2 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={eventDraft.isOpponent ?? false}
+                          onChange={(e) => setEventDraft({ ...eventDraft, isOpponent: e.target.checked, playerId: undefined, opponentName: '', opponentJerseyNumber: undefined })}
+                          className="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Opponent event</span>
+                      </label>
+                      {eventDraft.isOpponent ? (
+                        <>
+                          <input type="text" value={eventDraft.opponentName || ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentName: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Opponent player name *" />
+                          <input type="number" min="1" value={eventDraft.opponentJerseyNumber ?? ''} onChange={(e) => setEventDraft({ ...eventDraft, opponentJerseyNumber: e.target.value ? parseInt(e.target.value, 10) : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700" placeholder="Jersey number (optional)" />
+                        </>
+                      ) : (
+                        <select value={eventDraft.playerId || ''} onChange={(e) => setEventDraft({ ...eventDraft, playerId: e.target.value })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
+                          <option value="">Player *</option>
+                          {playersForEvents.map(playerId => <option key={playerId} value={playerId}>{getPlayerName(playerId)}</option>)}
+                        </select>
+                      )}
                       <select value={eventDraft.period || ''} onChange={(e) => setEventDraft({ ...eventDraft, period: e.target.value ? e.target.value as TimelinePeriod : undefined })} className="px-2 py-2 border rounded bg-white dark:bg-gray-700">
                         <option value="">Period (optional)</option>
                         {timelineSections.map(periodOption => <option key={periodOption.period} value={periodOption.period}>{periodOption.label}</option>)}

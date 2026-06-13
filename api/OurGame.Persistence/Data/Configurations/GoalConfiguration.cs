@@ -18,9 +18,12 @@ public class GoalConfiguration : IEntityTypeConfiguration<Goal>
             .HasForeignKey(e => e.MatchReportId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.Property(e => e.OpponentName).HasMaxLength(200);
+
         builder.HasOne(e => e.Player)
             .WithMany()
             .HasForeignKey(e => e.PlayerId)
+            .IsRequired(false)
             .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(e => e.AssistPlayer)

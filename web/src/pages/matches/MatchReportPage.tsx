@@ -137,9 +137,10 @@ export default function MatchReportPage() {
   const isUpcoming = new Date(asUtc(match.matchDate)) > new Date();
   const homeTeam = match.isHome ? match.teamName : match.opposition;
   const awayTeam = match.isHome ? match.opposition : match.teamName;
-  // Group cards by player
+  // Group cards by player (exclude opponent events)
   const playerCards = match.report?.cards?.reduce((acc, card) => {
     const playerId = card.playerId;
+    if (!playerId || card.isOpponent) return acc;
     if (!acc[playerId]) {
       acc[playerId] = [];
     }
@@ -147,9 +148,10 @@ export default function MatchReportPage() {
     return acc;
   }, {} as Record<string, string[]>) || {};
 
-  // Group goals by player
+  // Group goals by player (exclude opponent events)
   const playerGoals = match.report?.goals?.reduce((acc, goal) => {
     const playerId = goal.playerId;
+    if (!playerId || goal.isOpponent) return acc;
     if (!acc[playerId]) {
       acc[playerId] = 0;
     }
@@ -157,9 +159,10 @@ export default function MatchReportPage() {
     return acc;
   }, {} as Record<string, number>) || {};
 
-  // Group injuries by player
+  // Group injuries by player (exclude opponent events)
   const playerInjuries = match.report?.injuries?.reduce((acc, injury) => {
     const playerId = injury.playerId;
+    if (!playerId || injury.isOpponent) return acc;
     if (!acc[playerId]) {
       acc[playerId] = [];
     }
@@ -556,6 +559,75 @@ export default function MatchReportPage() {
                 </div>
               </div>
             )}
+
+            {/* Opponent Events */}
+            {(() => {
+              const oppGoals = match.report.goals?.filter(g => g.isOpponent) ?? [];
+              const oppCards = match.report.cards?.filter(c => c.isOpponent) ?? [];
+              const oppInjuries = match.report.injuries?.filter(i => i.isOpponent) ?? [];
+              if (!oppGoals.length && !oppCards.length && !oppInjuries.length) return null;
+              return (
+                <div className="card mb-4">
+                  <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Opponent Events</h2>
+                  <div className="space-y-2">
+                    {oppGoals.map((goal, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <span className="text-base">⚽</span>
+                        <div className="flex-1">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {goal.opponentName}
+                            {goal.opponentJerseyNumber != null && (
+                              <span className="ml-1 text-gray-500 dark:text-gray-400 text-sm">(#{goal.opponentJerseyNumber})</span>
+                            )}
+                          </span>
+                          {goal.minute != null && (
+                            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">{goal.minute}'</span>
+                          )}
+                          {goal.isPenalty && <span className="ml-1 text-xs text-orange-600 dark:text-orange-400">(pen)</span>}
+                        </div>
+                        <span className="text-xs font-semibold text-orange-700 dark:text-orange-300 uppercase tracking-wider">OPP</span>
+                      </div>
+                    ))}
+                    {oppCards.map((card, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <span className="text-base">{card.type === 'yellow' ? '🟨' : '🟥'}</span>
+                        <div className="flex-1">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {card.opponentName}
+                            {card.opponentJerseyNumber != null && (
+                              <span className="ml-1 text-gray-500 dark:text-gray-400 text-sm">(#{card.opponentJerseyNumber})</span>
+                            )}
+                          </span>
+                          {card.minute != null && (
+                            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">{card.minute}'</span>
+                          )}
+                          {card.reason && <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">— {card.reason}</span>}
+                        </div>
+                        <span className="text-xs font-semibold text-orange-700 dark:text-orange-300 uppercase tracking-wider">OPP</span>
+                      </div>
+                    ))}
+                    {oppInjuries.map((injury, i) => (
+                      <div key={i} className="flex items-center gap-3 p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                        <span className="text-base">🏥</span>
+                        <div className="flex-1">
+                          <span className="font-medium text-gray-900 dark:text-white">
+                            {injury.opponentName}
+                            {injury.opponentJerseyNumber != null && (
+                              <span className="ml-1 text-gray-500 dark:text-gray-400 text-sm">(#{injury.opponentJerseyNumber})</span>
+                            )}
+                          </span>
+                          {injury.minute != null && (
+                            <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">{injury.minute}'</span>
+                          )}
+                          {injury.description && <span className="ml-1 text-xs text-gray-500 dark:text-gray-400">— {injury.description}</span>}
+                        </div>
+                        <span className="text-xs font-semibold text-orange-700 dark:text-orange-300 uppercase tracking-wider">OPP</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </>
         )}
 

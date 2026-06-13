@@ -2415,8 +2415,11 @@ export interface MatchReportDetailDto {
 
 export interface GoalDetailDto {
   id: string;
-  playerId: string;
+  playerId?: string;
   scorerName: string;
+  isOpponent: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   minute: number;
   period: string;
   addedTimeMinutes?: number;
@@ -2428,8 +2431,11 @@ export interface GoalDetailDto {
 
 export interface CardDetailDto {
   id: string;
-  playerId: string;
+  playerId?: string;
   playerName: string;
+  isOpponent: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   type: string;
   minute?: number;
   period?: string;
@@ -2439,8 +2445,11 @@ export interface CardDetailDto {
 
 export interface InjuryDetailDto {
   id: string;
-  playerId: string;
+  playerId?: string;
   playerName: string;
+  isOpponent: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   minute?: number;
   period?: string;
   addedTimeMinutes?: number;
@@ -2546,7 +2555,10 @@ export interface CreateMatchReportRequest {
 }
 
 export interface CreateGoalRequest {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   minute: number;
   period: string;
   addedTimeMinutes?: number;
@@ -2556,7 +2568,10 @@ export interface CreateGoalRequest {
 }
 
 export interface CreateCardRequest {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   type: string;
   minute?: number;
   period?: string;
@@ -2565,7 +2580,10 @@ export interface CreateCardRequest {
 }
 
 export interface CreateInjuryRequest {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   minute?: number;
   period?: string;
   addedTimeMinutes?: number;
@@ -2646,7 +2664,10 @@ export interface UpdateMatchReportRequest {
 }
 
 export interface UpdateGoalRequest {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   minute?: number;
   period: string;
   addedTimeMinutes?: number;
@@ -2656,7 +2677,10 @@ export interface UpdateGoalRequest {
 }
 
 export interface UpdateCardRequest {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   type: string;
   minute?: number;
   period?: string;
@@ -2665,7 +2689,10 @@ export interface UpdateCardRequest {
 }
 
 export interface UpdateInjuryRequest {
-  playerId: string;
+  playerId?: string;
+  isOpponent?: boolean;
+  opponentName?: string;
+  opponentJerseyNumber?: number;
   minute?: number;
   period?: string;
   addedTimeMinutes?: number;

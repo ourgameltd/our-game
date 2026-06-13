@@ -118,6 +118,99 @@ public class MatchSaveAttendanceValidationTests
         Assert.Null(createdMatch.Report.Cards[0].Minute);
     }
 
+    [Fact]
+    public async Task CreateMatch_WithOpponentGoal_SavesOpponentFields()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var data = await database.SeedBaseDataAsync();
+
+        var handler = new CreateMatchHandler(database.Context);
+        var request = BuildCreateRequest(
+            data.TeamId,
+            data.FormationId,
+            data.TacticId,
+            invitedPlayerIds: [data.PlayerOneId],
+            attendancePlayerIds: [data.PlayerOneId],
+            goals: [new CreateGoalRequest
+            {
+                IsOpponent = true,
+                OpponentName = "Johnson",
+                OpponentJerseyNumber = 9,
+                Minute = 37,
+                Period = "first",
+                IsExtraTime = false,
+                IsPenalty = false,
+            }]);
+
+        var createdMatch = await handler.Handle(new CreateMatchCommand(request), CancellationToken.None);
+
+        Assert.NotNull(createdMatch.Report);
+        Assert.Single(createdMatch.Report!.Goals);
+        var goal = createdMatch.Report.Goals[0];
+        Assert.True(goal.IsOpponent);
+        Assert.Equal("Johnson", goal.OpponentName);
+        Assert.Equal(9, goal.OpponentJerseyNumber);
+        Assert.Null(goal.PlayerId);
+    }
+
+    [Fact]
+    public async Task CreateMatch_WithOpponentGoalMissingOpponentName_ThrowsValidationException()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var data = await database.SeedBaseDataAsync();
+
+        var handler = new CreateMatchHandler(database.Context);
+        var request = BuildCreateRequest(
+            data.TeamId,
+            data.FormationId,
+            data.TacticId,
+            invitedPlayerIds: [data.PlayerOneId],
+            attendancePlayerIds: [data.PlayerOneId],
+            goals: [new CreateGoalRequest
+            {
+                IsOpponent = true,
+                OpponentName = string.Empty,
+                Minute = 15,
+                Period = "first",
+                IsExtraTime = false,
+                IsPenalty = false,
+            }]);
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(async () =>
+            await handler.Handle(new CreateMatchCommand(request), CancellationToken.None));
+
+        Assert.True(exception.Errors.ContainsKey("Report.Goals"));
+    }
+
+    [Fact]
+    public async Task CreateMatch_NonOpponentGoalMissingPlayerId_ThrowsValidationException()
+    {
+        await using var database = await TestDatabase.CreateAsync();
+        var data = await database.SeedBaseDataAsync();
+
+        var handler = new CreateMatchHandler(database.Context);
+        var request = BuildCreateRequest(
+            data.TeamId,
+            data.FormationId,
+            data.TacticId,
+            invitedPlayerIds: [data.PlayerOneId],
+            attendancePlayerIds: [data.PlayerOneId],
+            goals: [new CreateGoalRequest
+            {
+                IsOpponent = false,
+                PlayerId = null,
+                Minute = 20,
+                Period = "first",
+                IsExtraTime = false,
+                IsPenalty = false,
+            }]);
+
+        var exception = await Assert.ThrowsAsync<ValidationException>(async () =>
+            await handler.Handle(new CreateMatchCommand(request), CancellationToken.None));
+
+        Assert.True(exception.Errors.ContainsKey("Report.Goals"));
+    }
+
     private static CreateMatchRequest BuildCreateRequest(
         Guid teamId,
         Guid formationId,

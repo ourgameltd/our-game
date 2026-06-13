@@ -12,7 +12,13 @@ public partial class Card
 
     public Guid MatchReportId { get; set; }
 
-    public Guid PlayerId { get; set; }
+    public Guid? PlayerId { get; set; }
+
+    public bool IsOpponent { get; set; }
+
+    public string OpponentName { get; set; }
+
+    public int? OpponentJerseyNumber { get; set; }
 
     public CardType Type { get; set; }
 

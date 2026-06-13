@@ -55,7 +55,7 @@ public class GetMatchByIdHandlerTests
 
         var goalId = Guid.NewGuid();
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO Goals (Id, MatchReportId, PlayerId, Minute, Period, AddedTimeMinutes, IsExtraTime, IsPenalty) VALUES ({goalId}, {reportId}, {playerId}, 45, 'first-half', NULL, 0, 0)");
+            $"INSERT INTO Goals (Id, MatchReportId, PlayerId, IsOpponent, Minute, Period, AddedTimeMinutes, IsExtraTime, IsPenalty) VALUES ({goalId}, {reportId}, {playerId}, 0, 45, 'first-half', NULL, 0, 0)");
 
         var handler = new GetMatchByIdHandler(db.Context);
 

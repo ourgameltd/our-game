@@ -147,8 +147,14 @@ public record UpdateMatchReportRequest
 /// </summary>
 public record UpdateGoalRequest
 {
-    [Required]
-    public Guid PlayerId { get; init; }
+    public Guid? PlayerId { get; init; }
+
+    public bool IsOpponent { get; init; }
+
+    [StringLength(200)]
+    public string? OpponentName { get; init; }
+
+    public int? OpponentJerseyNumber { get; init; }
 
     public int? Minute { get; init; }
 
@@ -170,8 +176,14 @@ public record UpdateGoalRequest
 /// </summary>
 public record UpdateCardRequest
 {
-    [Required]
-    public Guid PlayerId { get; init; }
+    public Guid? PlayerId { get; init; }
+
+    public bool IsOpponent { get; init; }
+
+    [StringLength(200)]
+    public string? OpponentName { get; init; }
+
+    public int? OpponentJerseyNumber { get; init; }
 
     /// <summary>
     /// Card type: yellow, red
@@ -196,8 +208,14 @@ public record UpdateCardRequest
 /// </summary>
 public record UpdateInjuryRequest
 {
-    [Required]
-    public Guid PlayerId { get; init; }
+    public Guid? PlayerId { get; init; }
+
+    public bool IsOpponent { get; init; }
+
+    [StringLength(200)]
+    public string? OpponentName { get; init; }
+
+    public int? OpponentJerseyNumber { get; init; }
 
     public int? Minute { get; init; }
 

@@ -102,8 +102,11 @@ public record MatchReportDetailDto
 public record GoalDetailDto
 {
     public Guid Id { get; init; }
-    public Guid PlayerId { get; init; }
+    public Guid? PlayerId { get; init; }
     public string ScorerName { get; init; } = string.Empty;
+    public bool IsOpponent { get; init; }
+    public string? OpponentName { get; init; }
+    public int? OpponentJerseyNumber { get; init; }
     public int? Minute { get; init; }
     public string Period { get; init; } = string.Empty;
     public int? AddedTimeMinutes { get; init; }
@@ -119,8 +122,11 @@ public record GoalDetailDto
 public record CardDetailDto
 {
     public Guid Id { get; init; }
-    public Guid PlayerId { get; init; }
+    public Guid? PlayerId { get; init; }
     public string PlayerName { get; init; } = string.Empty;
+    public bool IsOpponent { get; init; }
+    public string? OpponentName { get; init; }
+    public int? OpponentJerseyNumber { get; init; }
     public string Type { get; init; } = string.Empty;
     public int? Minute { get; init; }
     public string? Period { get; init; }
@@ -134,8 +140,11 @@ public record CardDetailDto
 public record InjuryDetailDto
 {
     public Guid Id { get; init; }
-    public Guid PlayerId { get; init; }
+    public Guid? PlayerId { get; init; }
     public string PlayerName { get; init; } = string.Empty;
+    public bool IsOpponent { get; init; }
+    public string? OpponentName { get; init; }
+    public int? OpponentJerseyNumber { get; init; }
     public int? Minute { get; init; }
     public string? Period { get; init; }
     public int? AddedTimeMinutes { get; init; }

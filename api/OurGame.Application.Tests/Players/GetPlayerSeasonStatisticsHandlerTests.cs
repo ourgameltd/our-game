@@ -60,9 +60,9 @@ public class GetPlayerSeasonStatisticsHandlerTests
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt) VALUES ({report1}, {match1}, N'Good', NULL, NULL, {false}, GETUTCDATE())");
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO Goals (Id, MatchReportId, PlayerId, IsPenalty, IsExtraTime) VALUES ({Guid.NewGuid()}, {report1}, {playerId}, 0, 0)");
+            $"INSERT INTO Goals (Id, MatchReportId, PlayerId, IsOpponent, IsPenalty, IsExtraTime) VALUES ({Guid.NewGuid()}, {report1}, {playerId}, 0, 0, 0)");
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO Goals (Id, MatchReportId, PlayerId, IsPenalty, IsExtraTime) VALUES ({Guid.NewGuid()}, {report1}, {playerId}, 0, 0)");
+            $"INSERT INTO Goals (Id, MatchReportId, PlayerId, IsOpponent, IsPenalty, IsExtraTime) VALUES ({Guid.NewGuid()}, {report1}, {playerId}, 0, 0, 0)");
 
         var scorerId = await db.SeedPlayerAsync(clubId, "Goal", "Scorer");
         var match2 = await db.SeedMatchAsync(teamId, "Team B", MatchStatus.Completed, DateTime.UtcNow.AddDays(-7));
@@ -73,7 +73,7 @@ public class GetPlayerSeasonStatisticsHandlerTests
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
             $"INSERT INTO MatchReports (Id, MatchId, Summary, CaptainId, PlayerOfMatchId, IsPublished, CreatedAt) VALUES ({report2}, {match2}, N'Win', NULL, NULL, {false}, GETUTCDATE())");
         await db.Context.Database.ExecuteSqlInterpolatedAsync(
-            $"INSERT INTO Goals (Id, MatchReportId, PlayerId, AssistPlayerId, IsPenalty, IsExtraTime) VALUES ({Guid.NewGuid()}, {report2}, {scorerId}, {playerId}, 0, 0)");
+            $"INSERT INTO Goals (Id, MatchReportId, PlayerId, AssistPlayerId, IsOpponent, IsPenalty, IsExtraTime) VALUES ({Guid.NewGuid()}, {report2}, {scorerId}, {playerId}, 0, 0, 0)");
 
         var handler = new GetPlayerSeasonStatisticsHandler(db.Context);
 
