@@ -54,6 +54,8 @@ export interface InviteDetailsDto {
   type: InviteType;
   entityId: string;
   clubName: string;
+  clubLogoUrl?: string;
+  ageGroupName?: string;
   status: InviteStatus;
   expiresAt: string;
   isOpenInvite?: boolean;
