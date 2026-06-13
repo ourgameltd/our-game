@@ -610,9 +610,10 @@ export default function AddEditTrainingSessionPage() {
           {/* Session Details Tab */}
           {activeTab === 'details' && (
             <div className="mt-4 space-y-2">
+              <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="min-w-0">
-                  <div className="flex items-center mb-2">
+                  <div className="flex items-center justify-between mb-2 min-h-[2.25rem]">
                     <label className="label mb-0">
                       <Calendar className="w-4 h-4 inline mr-1" />
                       Session Date & Time *
@@ -627,8 +628,8 @@ export default function AddEditTrainingSessionPage() {
                 </div>
 
                 <div className="min-w-0">
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="label">
+                  <div className="flex items-center justify-between mb-2 min-h-[2.25rem]">
+                    <label className="label mb-0">
                       <Clock className="w-4 h-4 inline mr-1" />
                       Meet Time
                     </label>
@@ -681,22 +682,9 @@ export default function AddEditTrainingSessionPage() {
                     Optional: When players should arrive before the session
                   </p>
                 </div>
+              </div>
 
-                <div>
-                  <label className="label">
-                    Duration (minutes)
-                  </label>
-                  <select
-                    value={duration}
-                    onChange={(e) => setDuration(e.target.value)}
-                    className="input"
-                  >
-                    {sessionDurations.map(d => (
-                      <option key={d.value} value={d.value.toString()}>{d.label}</option>
-                    ))}
-                  </select>
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="label">
                     <MapPin className="w-4 h-4 inline mr-1" />
@@ -740,6 +728,24 @@ export default function AddEditTrainingSessionPage() {
                     ))}
                   </select>
                 </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="label">
+                    Duration (minutes)
+                  </label>
+                  <select
+                    value={duration}
+                    onChange={(e) => setDuration(e.target.value)}
+                    className="input"
+                  >
+                    {sessionDurations.map(d => (
+                      <option key={d.value} value={d.value.toString()}>{d.label}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
               </div>
 
               {/* Focus Areas */}
