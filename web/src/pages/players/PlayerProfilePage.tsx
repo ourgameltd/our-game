@@ -1,12 +1,11 @@
 import { useParams } from 'react-router-dom';
 import { useEffect } from 'react';
-import { usePlayer, usePlayerRecentPerformances, usePlayerUpcomingMatches } from '@api/hooks';
+import { usePlayer, usePlayerRecentPerformances } from '@api/hooks';
 import { Routes } from '@utils/routes';
 import { useNavigation } from '@/contexts/NavigationContext';
 import PlayerSubNav from '@components/player/PlayerSubNav';
 import PageTitle from '@components/common/PageTitle';
 import RecentPerformanceCard from '@components/player/RecentPerformanceCard';
-import MatchesCard from '@components/matches/MatchesCard';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 export default function PlayerProfilePage() {
@@ -15,7 +14,6 @@ export default function PlayerProfilePage() {
   
   const { data: player, isLoading: playerLoading, error: playerError } = usePlayer(playerId);
   const { data: recentPerformances, isLoading: performancesLoading } = usePlayerRecentPerformances(playerId, 5);
-  const { data: upcomingMatches, isLoading: matchesLoading } = usePlayerUpcomingMatches(playerId, 3);
 
   usePageTitle(
     [
@@ -125,33 +123,6 @@ export default function PlayerProfilePage() {
         {/* Player Sub Navigation */}
         {!playerLoading && player && <PlayerSubNav />}
 
-        {/* Player Stats */}
-        {playerLoading ? (
-          <div className="grid grid-cols-3 gap-3 mb-4 animate-pulse">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded-lg" />
-            ))}
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="card">
-              <div className="text-sm text-gray-600 mb-1">Appearances</div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-white">12</div>
-              <div className="text-sm text-gray-500 mt-1">This season</div>
-            </div>
-            <div className="card">
-              <div className="text-sm text-gray-600 mb-1">Goals</div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-white">5</div>
-              <div className="text-sm text-gray-500 mt-1">This season</div>
-            </div>
-            <div className="card">
-              <div className="text-sm text-gray-600 mb-1">Assists</div>
-              <div className="text-4xl font-bold text-gray-900 dark:text-white">3</div>
-              <div className="text-sm text-gray-500 mt-1">This season</div>
-            </div>
-          </div>
-        )}
-
         <div className="grid md:grid-cols-2 gap-4">
           {/* Player Details */}
           {playerLoading ? (
@@ -219,59 +190,6 @@ export default function PlayerProfilePage() {
               performances={recentPerformances || []}
               clubId={clubId!}
             />
-          )}
-        </div>
-
-        {/* Upcoming Matches */}
-        <div className="mt-4">
-          {matchesLoading ? (
-            <div className="card animate-pulse">
-              <div className="h-6 w-48 bg-gray-200 dark:bg-gray-700 rounded mb-4" />
-              <div className="space-y-3">
-                {Array.from({ length: 3 }).map((_, index) => (
-                  <div key={index} className="h-24 bg-gray-200 dark:bg-gray-700 rounded" />
-                ))}
-              </div>
-            </div>
-          ) : upcomingMatches && upcomingMatches.length > 0 ? (
-            <MatchesCard 
-              type="upcoming"
-              matches={upcomingMatches.map(match => ({
-                id: match.matchId,
-                teamId: match.teamId,
-                opposition: match.opponent,
-                date: new Date(match.matchDate),
-                kickOffTime: match.kickoffTime ? new Date(match.kickoffTime) : new Date(match.matchDate),
-                location: match.venue || '',
-                isHome: (match.homeAway ?? '').toLowerCase() === 'home',
-                competition: match.competition || '',
-                status: 'scheduled' as const
-              }))}
-              limit={3}
-              showTeamInfo={player ? player.ageGroupIds.length > 1 : false}
-              getTeamInfo={(match) => {
-                const matchData = upcomingMatches.find(m => m.matchId === match.id);
-                if (matchData) {
-                  return {
-                    teamName: matchData.teamName,
-                    ageGroupName: matchData.ageGroupName
-                  };
-                }
-                return null;
-              }}
-              getMatchLink={(matchId) => {
-                const match = upcomingMatches.find(m => m.matchId === matchId);
-                if (match) {
-                  return Routes.matchReport(clubId!, match.ageGroupId, match.teamId, matchId);
-                }
-                return '#';
-              }}
-            />
-          ) : (
-            <div className="card">
-              <h3 className="text-xl font-semibold mb-4">Upcoming Matches</h3>
-              <p className="text-gray-600 dark:text-gray-400">No upcoming matches scheduled</p>
-            </div>
           )}
         </div>
       </main>
