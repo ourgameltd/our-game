@@ -347,9 +347,6 @@ export default function SocialMatchReportPage() {
         {(() => {
           const grouped = buildEvents(data);
           if (grouped.size === 0) return null;
-          // When our team is home: home col = us, away col = opposition. Flip when away.
-          const homeLabel = data.isHome ? data.teamName : data.opposition;
-          const awayLabel = data.isHome ? data.opposition : data.teamName;
           return (
             <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-gray-800">
               <h2 className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">
