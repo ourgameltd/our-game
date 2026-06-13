@@ -123,10 +123,13 @@ export default function PlayerCompetencyModal({ playerId, playerName, onClose, o
                   {items.map((c) => {
                     const current = selectedBands[c.competencyId];
                     const isExpanded = expandedRubrics[c.competencyId] ?? false;
+                    const isGk = data.isGoalkeeper;
+                    const competencyLabel = isGk ? (c.competencyGoalkeeperName ?? c.competencyName) : c.competencyName;
+                    const rubric = isGk ? c.goalkeeperDescriptions : c.descriptions;
                     return (
                       <div key={c.competencyId} className="border border-gray-200 dark:border-gray-700 rounded-lg p-3">
                         <div className="flex items-center justify-between gap-2">
-                          <div className="font-medium text-gray-900 dark:text-white text-sm">{c.competencyName}</div>
+                          <div className="font-medium text-gray-900 dark:text-white text-sm">{competencyLabel}</div>
                           <button
                             type="button"
                             onClick={() => setExpandedRubrics((s) => ({ ...s, [c.competencyId]: !isExpanded }))}
@@ -160,7 +163,7 @@ export default function PlayerCompetencyModal({ playerId, playerName, onClose, o
                             {COMPETENCY_BANDS.map((band) => (
                               <div key={band} className="bg-gray-50 dark:bg-gray-700 rounded p-2">
                                 <dt className="font-semibold text-gray-800 dark:text-gray-200">{band}</dt>
-                                <dd>{c.descriptions[band] || <em className="text-gray-400 dark:text-gray-500">No description</em>}</dd>
+                                <dd>{(rubric?.[band]) || <em className="text-gray-400 dark:text-gray-500">No description</em>}</dd>
                               </div>
                             ))}
                           </dl>

@@ -5,8 +5,9 @@ using OurGame.Persistence.Enums;
 namespace OurGame.Persistence.Models;
 
 /// <summary>
-/// Per-format weight for one attribute in a framework. 35 attributes x 4 formats = 140 rows per framework.
-/// Weights are integer percent (0-100); each format's grand total must equal 100.
+/// Per-format weight for one attribute in a framework. 35 attributes x 4 formats = 140 rows per framework
+/// per position set (outfield and goalkeeper rows are independent sets discriminated by IsGoalkeeper).
+/// Weights are integer percent (0-100); each format's grand total must equal 100 within a position set.
 /// </summary>
 public partial class CompetencyFrameworkAttributeWeight
 {
@@ -19,6 +20,8 @@ public partial class CompetencyFrameworkAttributeWeight
     public GameFormat Format { get; set; }
 
     public int WeightPercent { get; set; }
+
+    public bool IsGoalkeeper { get; set; }
 
     public virtual CompetencyFramework Framework { get; set; }
 

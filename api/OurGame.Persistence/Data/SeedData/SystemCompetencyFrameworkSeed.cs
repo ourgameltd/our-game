@@ -27,12 +27,16 @@ public static class SystemCompetencyFrameworkSeed
     /// (out of 100) for: ControlReceiving, PassingDistribution, DribblingManipulation,
     /// StrikingFinishing, DefendingTackling, GameIntelligence, SpeedAcceleration,
     /// PhysicalLiteracy, MentalPsychoSocial — in that order. Each row sums to 100.
+    /// GoalkeeperAllocations use the same competency order under the GK 1-to-1 mapping:
+    /// Handling, Distribution, ShotStopping, Aerial, 1v1s, Positioning, Agility,
+    /// PhysicalPower, Communication.
     /// </summary>
     private sealed record FrameworkDefinition(
         Guid Id,
         string Name,
         string Description,
-        Dictionary<GameFormat, int[]> Allocations);
+        Dictionary<GameFormat, int[]> Allocations,
+        Dictionary<GameFormat, int[]> GoalkeeperAllocations);
 
     private static readonly Guid[] CompetencyOrder = new[]
     {
@@ -59,6 +63,15 @@ public static class SystemCompetencyFrameworkSeed
                 { GameFormat.SevenASide,  new[] { 14, 9,  18, 8,  8,  10, 9,  12, 12 } },
                 { GameFormat.NineASide,   new[] { 11, 10, 14, 7,  9,  15, 8,  11, 15 } },
                 { GameFormat.ElevenASide, new[] { 9,  10, 11, 6,  10, 20, 7,  12, 15 } },
+            },
+            // GK: shot stopping and handling lead at smaller formats; aerial dominance
+            // and positioning grow heavily in the 11-a-side game.
+            new Dictionary<GameFormat, int[]>
+            {
+                { GameFormat.FiveASide,   new[] { 18, 8,  22, 6,  10, 6,  12, 10, 8  } },
+                { GameFormat.SevenASide,  new[] { 16, 10, 18, 8,  10, 8,  10, 10, 10 } },
+                { GameFormat.NineASide,   new[] { 14, 12, 16, 10, 10, 12, 8,  10, 8  } },
+                { GameFormat.ElevenASide, new[] { 12, 12, 14, 12, 10, 14, 8,  10, 8  } },
             }),
 
         // Tikitaka: passing held at 22 across all formats; control tapers as
@@ -71,6 +84,15 @@ public static class SystemCompetencyFrameworkSeed
                 { GameFormat.SevenASide,  new[] { 20, 22, 14, 6,  4,  18, 4,  6,  6 } },
                 { GameFormat.NineASide,   new[] { 17, 22, 12, 6,  4,  21, 4,  6,  8 } },
                 { GameFormat.ElevenASide, new[] { 14, 22, 10, 6,  4,  26, 4,  6,  8 } },
+            },
+            // GK (sweeper keeper): distribution held at 22; sweeping 1v1s and tactical
+            // positioning rewarded over raw athleticism.
+            new Dictionary<GameFormat, int[]>
+            {
+                { GameFormat.FiveASide,   new[] { 14, 22, 16, 4,  14, 14, 6,  4,  6 } },
+                { GameFormat.SevenASide,  new[] { 12, 22, 14, 6,  14, 16, 6,  4,  6 } },
+                { GameFormat.NineASide,   new[] { 10, 22, 12, 8,  14, 18, 6,  4,  6 } },
+                { GameFormat.ElevenASide, new[] { 8,  22, 12, 6,  14, 20, 6,  4,  8 } },
             }),
 
         // Gegenpress: defending and pressing intelligence climb with format size;
@@ -83,6 +105,15 @@ public static class SystemCompetencyFrameworkSeed
                 { GameFormat.SevenASide,  new[] { 8,  8,  10, 6,  20, 10, 14, 16, 8  } },
                 { GameFormat.NineASide,   new[] { 8,  8,  8,  6,  20, 13, 13, 16, 8  } },
                 { GameFormat.ElevenASide, new[] { 6,  8,  6,  6,  22, 16, 12, 16, 8  } },
+            },
+            // GK (aggressive): sweeping 1v1s, agility and aggressive starting positions
+            // to clean up long balls over the top of a pressing team.
+            new Dictionary<GameFormat, int[]>
+            {
+                { GameFormat.FiveASide,   new[] { 10, 10, 12, 6,  18, 10, 14, 10, 10 } },
+                { GameFormat.SevenASide,  new[] { 10, 10, 10, 6,  18, 12, 14, 10, 10 } },
+                { GameFormat.NineASide,   new[] { 8,  10, 10, 8,  20, 14, 12, 10, 8  } },
+                { GameFormat.ElevenASide, new[] { 8,  10, 8,  10, 20, 16, 12, 10, 6  } },
             }),
 
         // Long ball: striking and physical (aerial) emphasis stay high at large
@@ -95,6 +126,15 @@ public static class SystemCompetencyFrameworkSeed
                 { GameFormat.SevenASide,  new[] { 6,  16, 6,  20, 10, 8,  12, 16, 6  } },
                 { GameFormat.NineASide,   new[] { 6,  18, 6,  18, 10, 10, 11, 15, 6  } },
                 { GameFormat.ElevenASide, new[] { 6,  20, 6,  18, 10, 10, 9,  15, 6  } },
+            },
+            // GK (traditional): massive distribution to bypass the midfield, aerial
+            // dominance to relieve pressure from crosses, and pure physical power.
+            new Dictionary<GameFormat, int[]>
+            {
+                { GameFormat.FiveASide,   new[] { 10, 16, 14, 10, 6,  8,  10, 16, 10 } },
+                { GameFormat.SevenASide,  new[] { 10, 18, 12, 12, 6,  8,  8,  16, 10 } },
+                { GameFormat.NineASide,   new[] { 8,  20, 10, 16, 6,  8,  8,  14, 10 } },
+                { GameFormat.ElevenASide, new[] { 8,  22, 10, 18, 6,  8,  8,  14, 6  } },
             }),
 
         // Physical: speed + physical literacy + mental resilience ≈ 52-56% across
@@ -107,6 +147,15 @@ public static class SystemCompetencyFrameworkSeed
                 { GameFormat.SevenASide,  new[] { 6,  6,  8,  6,  12, 8,  18, 24, 12 } },
                 { GameFormat.NineASide,   new[] { 6,  6,  6,  6,  12, 10, 18, 24, 12 } },
                 { GameFormat.ElevenASide, new[] { 6,  6,  6,  6,  12, 12, 16, 24, 12 } },
+            },
+            // GK (athletic): vertical leaps, fast-twitch reflexes and physical box
+            // domination over pure technique.
+            new Dictionary<GameFormat, int[]>
+            {
+                { GameFormat.FiveASide,   new[] { 8,  6,  12, 8,  10, 6,  18, 20, 12 } },
+                { GameFormat.SevenASide,  new[] { 8,  6,  12, 10, 10, 6,  18, 18, 12 } },
+                { GameFormat.NineASide,   new[] { 8,  6,  10, 12, 10, 8,  16, 18, 12 } },
+                { GameFormat.ElevenASide, new[] { 8,  6,  10, 14, 10, 10, 14, 18, 10 } },
             }),
 
         // Skill-based: the four technical competencies carry ~68% at 5-a-side,
@@ -119,6 +168,15 @@ public static class SystemCompetencyFrameworkSeed
                 { GameFormat.SevenASide,  new[] { 18, 14, 18, 14, 4,  12, 4,  8,  8  } },
                 { GameFormat.NineASide,   new[] { 15, 14, 15, 14, 5,  15, 4,  8,  10 } },
                 { GameFormat.ElevenASide, new[] { 13, 14, 13, 13, 5,  18, 4,  10, 10 } },
+            },
+            // GK (technical): textbook handling (W-catches), clean footwork and perfect
+            // diving technique rather than relying on athleticism.
+            new Dictionary<GameFormat, int[]>
+            {
+                { GameFormat.FiveASide,   new[] { 20, 14, 20, 10, 8,  8,  6,  6,  8  } },
+                { GameFormat.SevenASide,  new[] { 18, 14, 18, 10, 8,  10, 6,  6,  10 } },
+                { GameFormat.NineASide,   new[] { 16, 14, 16, 12, 8,  12, 6,  6,  10 } },
+                { GameFormat.ElevenASide, new[] { 14, 14, 14, 14, 8,  14, 6,  6,  10 } },
             }),
     };
 
@@ -160,14 +218,26 @@ public static class SystemCompetencyFrameworkSeed
     public static List<CompetencyFrameworkCompetencyDescription> GetCompetencyDescriptions()
     {
         var defaults = CompetencyTaxonomySeedData.GetDefaultDescriptions();
-        return Definitions.SelectMany(d => defaults.Select(kv => new CompetencyFrameworkCompetencyDescription
-        {
-            Id = UserSeedData.CreateDeterministicGuid($"system|description|{d.Id}|{kv.Key.CompetencyId}|{kv.Key.Band}"),
-            FrameworkId = d.Id,
-            CompetencyId = kv.Key.CompetencyId,
-            Band = kv.Key.Band,
-            Description = kv.Value,
-        })).ToList();
+        var goalkeeper = CompetencyTaxonomySeedData.GetGoalkeeperDescriptions();
+        return Definitions.SelectMany(d =>
+            defaults.Select(kv => new CompetencyFrameworkCompetencyDescription
+            {
+                Id = UserSeedData.CreateDeterministicGuid($"system|description|{d.Id}|{kv.Key.CompetencyId}|{kv.Key.Band}"),
+                FrameworkId = d.Id,
+                CompetencyId = kv.Key.CompetencyId,
+                Band = kv.Key.Band,
+                Description = kv.Value,
+                IsGoalkeeper = false,
+            })
+            .Concat(goalkeeper.Select(kv => new CompetencyFrameworkCompetencyDescription
+            {
+                Id = UserSeedData.CreateDeterministicGuid($"system|description|gk|{d.Id}|{kv.Key.CompetencyId}|{kv.Key.Band}"),
+                FrameworkId = d.Id,
+                CompetencyId = kv.Key.CompetencyId,
+                Band = kv.Key.Band,
+                Description = kv.Value,
+                IsGoalkeeper = true,
+            }))).ToList();
     }
 
     public static List<CompetencyFrameworkAttributeWeight> GetAttributeWeights()
@@ -178,38 +248,52 @@ public static class SystemCompetencyFrameworkSeed
         var rows = new List<CompetencyFrameworkAttributeWeight>();
         foreach (var def in Definitions)
         {
-            foreach (var (format, allocation) in def.Allocations)
+            AddWeightRows(rows, def.Id, def.Name, def.Allocations, attrsByCompetency, isGoalkeeper: false);
+            AddWeightRows(rows, def.Id, def.Name, def.GoalkeeperAllocations, attrsByCompetency, isGoalkeeper: true);
+        }
+        return rows;
+    }
+
+    private static void AddWeightRows(
+        List<CompetencyFrameworkAttributeWeight> rows,
+        Guid frameworkId,
+        string frameworkName,
+        Dictionary<GameFormat, int[]> allocations,
+        Dictionary<Guid, List<CompetencyAttribute>> attrsByCompetency,
+        bool isGoalkeeper)
+    {
+        var tokenPrefix = isGoalkeeper ? "system|weight|gk" : "system|weight";
+        foreach (var (format, allocation) in allocations)
+        {
+            AssertSumIs100(frameworkName, format, allocation);
+
+            for (int i = 0; i < CompetencyOrder.Length; i++)
             {
-                AssertSumIs100(def.Name, format, allocation);
+                var competencyId = CompetencyOrder[i];
+                var competencyTotal = allocation[i];
+                var attrs = attrsByCompetency[competencyId];
+                var n = attrs.Count;
+                if (n == 0) continue;
 
-                for (int i = 0; i < CompetencyOrder.Length; i++)
+                // Distribute competencyTotal across n attributes (integer split).
+                var basePer = competencyTotal / n;
+                var residue = competencyTotal - (basePer * n);
+
+                for (int j = 0; j < n; j++)
                 {
-                    var competencyId = CompetencyOrder[i];
-                    var competencyTotal = allocation[i];
-                    var attrs = attrsByCompetency[competencyId];
-                    var n = attrs.Count;
-                    if (n == 0) continue;
-
-                    // Distribute competencyTotal across n attributes (integer split).
-                    var basePer = competencyTotal / n;
-                    var residue = competencyTotal - (basePer * n);
-
-                    for (int j = 0; j < n; j++)
+                    var w = basePer + (j < residue ? 1 : 0);
+                    rows.Add(new CompetencyFrameworkAttributeWeight
                     {
-                        var w = basePer + (j < residue ? 1 : 0);
-                        rows.Add(new CompetencyFrameworkAttributeWeight
-                        {
-                            Id = UserSeedData.CreateDeterministicGuid($"system|weight|{def.Id}|{format}|{attrs[j].Id}"),
-                            FrameworkId = def.Id,
-                            AttributeId = attrs[j].Id,
-                            Format = format,
-                            WeightPercent = w,
-                        });
-                    }
+                        Id = UserSeedData.CreateDeterministicGuid($"{tokenPrefix}|{frameworkId}|{format}|{attrs[j].Id}"),
+                        FrameworkId = frameworkId,
+                        AttributeId = attrs[j].Id,
+                        Format = format,
+                        WeightPercent = w,
+                        IsGoalkeeper = isGoalkeeper,
+                    });
                 }
             }
         }
-        return rows;
     }
 
     private static void AssertSumIs100(string frameworkName, GameFormat format, int[] allocation)

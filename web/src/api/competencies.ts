@@ -62,6 +62,7 @@ export interface PlayerCompetenciesDto {
   playerName: string;
   overallRating?: number;
   overallBand?: CompetencyBand;
+  isGoalkeeper: boolean;
   competencies: PlayerCompetencyBandDto[];
   teamScores: PlayerTeamScoreDto[];
 }
@@ -69,10 +70,12 @@ export interface PlayerCompetenciesDto {
 export interface PlayerCompetencyBandDto {
   competencyId: string;
   competencyName: string;
+  competencyGoalkeeperName?: string;
   displayOrder: number;
   categoryName: string;
   band?: CompetencyBand;
   descriptions: Record<CompetencyBand, string>;
+  goalkeeperDescriptions: Record<CompetencyBand, string>;
 }
 
 export interface PlayerTeamScoreDto {
@@ -133,17 +136,22 @@ export interface CategoryWeightDto {
 export interface AttributeWeightDto {
   attributeId: string;
   attributeName: string;
+  attributeGoalkeeperName?: string;
   competencyId: string;
   competencyName: string;
+  competencyGoalkeeperName?: string;
   displayOrder: number;
   weightsByFormat: Record<GameFormat, number>;
+  goalkeeperWeightsByFormat: Record<GameFormat, number>;
 }
 
 export interface CompetencyDescriptionDto {
   competencyId: string;
   competencyName: string;
+  competencyGoalkeeperName?: string;
   displayOrder: number;
   descriptions: Record<CompetencyBand, string>;
+  goalkeeperDescriptions: Record<CompetencyBand, string>;
 }
 
 export interface UpdateCompetencyFrameworkRequest {
@@ -153,6 +161,8 @@ export interface UpdateCompetencyFrameworkRequest {
   bandThresholds: Record<CompetencyBand, number>;
   weights: { attributeId: string; format: GameFormat; weightPercent: number }[];
   competencyDescriptions: { competencyId: string; band: CompetencyBand; description: string }[];
+  goalkeeperWeights?: { attributeId: string; format: GameFormat; weightPercent: number }[];
+  goalkeeperCompetencyDescriptions?: { competencyId: string; band: CompetencyBand; description: string }[];
 }
 
 export interface CreateCompetencyFrameworkRequest {
@@ -175,6 +185,7 @@ export interface SetCompetencyAssignmentRequest {
 export interface EvaluationBandDto {
   competencyId: string;
   competencyName: string;
+  competencyGoalkeeperName?: string;
   displayOrder: number;
   band: CompetencyBand;
 }

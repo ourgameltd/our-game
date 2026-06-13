@@ -18,6 +18,9 @@ public partial class CompetencyAttribute
 
     public string Name { get; set; }
 
+    /// <summary>Goalkeeper-equivalent display name for the same attribute (1-to-1 mapping).</summary>
+    public string GoalkeeperName { get; set; }
+
     public int DisplayOrder { get; set; }
 
     public virtual CompetencyCategory Category { get; set; }

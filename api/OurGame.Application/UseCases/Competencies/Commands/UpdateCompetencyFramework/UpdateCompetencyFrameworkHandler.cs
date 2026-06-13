@@ -15,6 +15,18 @@ public class UpdateCompetencyFrameworkRequestDto
     public Dictionary<CompetencyBand, decimal> BandThresholds { get; set; } = new();
     public List<AttributeWeightInputDto> Weights { get; set; } = new();
     public List<CompetencyDescriptionInputDto> CompetencyDescriptions { get; set; } = new();
+
+    /// <summary>
+    /// Goalkeeper weight set. When empty/omitted the framework's existing goalkeeper
+    /// rows are left untouched (older clients can save without wiping GK data).
+    /// </summary>
+    public List<AttributeWeightInputDto> GoalkeeperWeights { get; set; } = new();
+
+    /// <summary>
+    /// Goalkeeper rubric descriptions. Same omitted-means-untouched semantics as
+    /// <see cref="GoalkeeperWeights"/>.
+    /// </summary>
+    public List<CompetencyDescriptionInputDto> GoalkeeperCompetencyDescriptions { get; set; } = new();
 }
 
 public class AttributeWeightInputDto
@@ -57,6 +69,11 @@ public class UpdateCompetencyFrameworkHandler : IRequestHandler<UpdateCompetency
         CompetencyFrameworkInvariants.EnsureThresholdsAscending(request.Dto.BandThresholds);
         CompetencyFrameworkInvariants.EnsureFormatTotalsAre100(
             request.Dto.Weights.Select(w => (w.Format, w.WeightPercent)));
+        if (request.Dto.GoalkeeperWeights.Count > 0)
+        {
+            CompetencyFrameworkInvariants.EnsureFormatTotalsAre100(
+                request.Dto.GoalkeeperWeights.Select(w => (w.Format, w.WeightPercent)));
+        }
 
         framework.Name = request.Dto.Name.Trim();
         framework.Description = request.Dto.Description;
@@ -77,8 +94,10 @@ public class UpdateCompetencyFrameworkHandler : IRequestHandler<UpdateCompetency
             });
         }
 
-        // Replace weights.
-        var existingWeights = await _db.CompetencyFrameworkAttributeWeights.Where(w => w.FrameworkId == framework.Id).ToListAsync(cancellationToken);
+        // Replace outfield weights (goalkeeper rows are replaced separately below).
+        var existingWeights = await _db.CompetencyFrameworkAttributeWeights
+            .Where(w => w.FrameworkId == framework.Id && !w.IsGoalkeeper)
+            .ToListAsync(cancellationToken);
         _db.CompetencyFrameworkAttributeWeights.RemoveRange(existingWeights);
         foreach (var w in request.Dto.Weights)
         {
@@ -89,11 +108,34 @@ public class UpdateCompetencyFrameworkHandler : IRequestHandler<UpdateCompetency
                 AttributeId = w.AttributeId,
                 Format = w.Format,
                 WeightPercent = w.WeightPercent,
+                IsGoalkeeper = false,
             });
         }
 
-        // Replace descriptions.
-        var existingDescriptions = await _db.CompetencyFrameworkCompetencyDescriptions.Where(d => d.FrameworkId == framework.Id).ToListAsync(cancellationToken);
+        if (request.Dto.GoalkeeperWeights.Count > 0)
+        {
+            var existingGoalkeeperWeights = await _db.CompetencyFrameworkAttributeWeights
+                .Where(w => w.FrameworkId == framework.Id && w.IsGoalkeeper)
+                .ToListAsync(cancellationToken);
+            _db.CompetencyFrameworkAttributeWeights.RemoveRange(existingGoalkeeperWeights);
+            foreach (var w in request.Dto.GoalkeeperWeights)
+            {
+                _db.CompetencyFrameworkAttributeWeights.Add(new CompetencyFrameworkAttributeWeight
+                {
+                    Id = Guid.NewGuid(),
+                    FrameworkId = framework.Id,
+                    AttributeId = w.AttributeId,
+                    Format = w.Format,
+                    WeightPercent = w.WeightPercent,
+                    IsGoalkeeper = true,
+                });
+            }
+        }
+
+        // Replace outfield descriptions (goalkeeper rows are replaced separately below).
+        var existingDescriptions = await _db.CompetencyFrameworkCompetencyDescriptions
+            .Where(d => d.FrameworkId == framework.Id && !d.IsGoalkeeper)
+            .ToListAsync(cancellationToken);
         _db.CompetencyFrameworkCompetencyDescriptions.RemoveRange(existingDescriptions);
         foreach (var d in request.Dto.CompetencyDescriptions)
         {
@@ -104,7 +146,28 @@ public class UpdateCompetencyFrameworkHandler : IRequestHandler<UpdateCompetency
                 CompetencyId = d.CompetencyId,
                 Band = d.Band,
                 Description = string.IsNullOrWhiteSpace(d.Description) ? string.Empty : d.Description,
+                IsGoalkeeper = false,
             });
+        }
+
+        if (request.Dto.GoalkeeperCompetencyDescriptions.Count > 0)
+        {
+            var existingGoalkeeperDescriptions = await _db.CompetencyFrameworkCompetencyDescriptions
+                .Where(d => d.FrameworkId == framework.Id && d.IsGoalkeeper)
+                .ToListAsync(cancellationToken);
+            _db.CompetencyFrameworkCompetencyDescriptions.RemoveRange(existingGoalkeeperDescriptions);
+            foreach (var d in request.Dto.GoalkeeperCompetencyDescriptions)
+            {
+                _db.CompetencyFrameworkCompetencyDescriptions.Add(new CompetencyFrameworkCompetencyDescription
+                {
+                    Id = Guid.NewGuid(),
+                    FrameworkId = framework.Id,
+                    CompetencyId = d.CompetencyId,
+                    Band = d.Band,
+                    Description = string.IsNullOrWhiteSpace(d.Description) ? string.Empty : d.Description,
+                    IsGoalkeeper = true,
+                });
+            }
         }
 
         await _db.SaveChangesAsync(cancellationToken);

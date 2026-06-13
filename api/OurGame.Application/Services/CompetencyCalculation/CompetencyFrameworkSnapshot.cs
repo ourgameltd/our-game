@@ -13,6 +13,12 @@ public sealed class CompetencyFrameworkSnapshot
     public decimal UpliftPercent { get; init; }
     public IReadOnlyDictionary<CompetencyBand, decimal> BandThresholds { get; init; } = new Dictionary<CompetencyBand, decimal>();
     public IReadOnlyDictionary<(Guid AttributeId, GameFormat Format), int> AttributeWeights { get; init; } = new Dictionary<(Guid, GameFormat), int>();
+
+    /// <summary>
+    /// Goalkeeper weight set for the same attributes/formats. Empty for frameworks created
+    /// before goalkeeper support; the calculator then falls back to the outfield weights.
+    /// </summary>
+    public IReadOnlyDictionary<(Guid AttributeId, GameFormat Format), int> GoalkeeperAttributeWeights { get; init; } = new Dictionary<(Guid, GameFormat), int>();
 }
 
 /// <summary>

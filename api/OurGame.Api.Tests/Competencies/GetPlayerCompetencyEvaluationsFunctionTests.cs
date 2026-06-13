@@ -86,6 +86,47 @@ public class GetPlayerCompetencyEvaluationsFunctionTests
         Assert.Equal(newerEvalId, payload.Data[0].Id);
     }
 
+    [Fact]
+    public async Task GetPlayerCompetencyEvaluations_SerializesGoalkeeperCompetencyName()
+    {
+        var playerId = Guid.NewGuid();
+        var competencyId = Guid.NewGuid();
+        var evaluations = new List<PlayerCompetencyEvaluationSummaryDto>
+        {
+            new()
+            {
+                Id = Guid.NewGuid(),
+                CoachName = "Jane Smith",
+                EvaluatedAt = DateTime.UtcNow,
+                IsArchived = false,
+                Levels =
+                [
+                    new EvaluationBandDto
+                    {
+                        CompetencyId = competencyId,
+                        CompetencyName = "Control & Receiving",
+                        CompetencyGoalkeeperName = "Handling & Catching",
+                        DisplayOrder = 1,
+                        Band = OurGame.Persistence.Enums.CompetencyBand.Advanced,
+                    }
+                ],
+            },
+        };
+
+        var mediator = new TestMediator();
+        mediator.Register<GetPlayerCompetencyEvaluationsQuery, List<PlayerCompetencyEvaluationSummaryDto>>(
+            (_, _) => Task.FromResult(evaluations));
+
+        var sut = BuildSut(mediator);
+        var req = CreateAuthedRequest("GET", $"https://localhost/v1/players/{playerId}/competency-evaluations");
+
+        var response = await sut.GetPlayerCompetencyEvaluations(req, playerId.ToString());
+
+        var payload = await HttpResponseAssertions.ReadApiResponseAsync<List<PlayerCompetencyEvaluationSummaryDto>>(response);
+        Assert.True(payload.Success);
+        Assert.Equal("Handling & Catching", payload.Data![0].Levels[0].CompetencyGoalkeeperName);
+    }
+
     // ── Helpers ──────────────────────────────────────────────────────
 
     private static PlayerCompetencyFunctions BuildSut(TestMediator mediator)

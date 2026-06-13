@@ -35,6 +35,7 @@ public class GetPlayerCompetencyEvaluationsHandler : IRequestHandler<GetPlayerCo
                 {
                     l.CompetencyId,
                     CompetencyName = l.Competency.Name,
+                    CompetencyGoalkeeperName = l.Competency.GoalkeeperName,
                     l.Competency.DisplayOrder,
                     l.Band,
                 }).ToList(),
@@ -55,6 +56,7 @@ public class GetPlayerCompetencyEvaluationsHandler : IRequestHandler<GetPlayerCo
                 {
                     CompetencyId = l.CompetencyId,
                     CompetencyName = l.CompetencyName,
+                    CompetencyGoalkeeperName = l.CompetencyGoalkeeperName,
                     DisplayOrder = l.DisplayOrder,
                     Band = l.Band,
                 }).ToList(),

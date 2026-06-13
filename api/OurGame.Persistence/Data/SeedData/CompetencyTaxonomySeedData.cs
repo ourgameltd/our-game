@@ -39,15 +39,15 @@ public static class CompetencyTaxonomySeedData
 
     public static List<Competency> GetCompetencies() => new()
     {
-        new Competency { Id = CompControlReceiving_Id,     Name = "Control & Receiving",     DisplayOrder = 1 },
-        new Competency { Id = CompPassingDistribution_Id,  Name = "Passing & Distribution",  DisplayOrder = 2 },
-        new Competency { Id = CompDribblingManipulation_Id,Name = "Dribbling & Manipulation",DisplayOrder = 3 },
-        new Competency { Id = CompStrikingFinishing_Id,    Name = "Striking & Finishing",    DisplayOrder = 4 },
-        new Competency { Id = CompDefendingTackling_Id,    Name = "Defending & Tackling",    DisplayOrder = 5 },
-        new Competency { Id = CompGameIntelligence_Id,     Name = "Game Intelligence",       DisplayOrder = 6 },
-        new Competency { Id = CompSpeedAcceleration_Id,    Name = "Speed & Acceleration",    DisplayOrder = 7 },
-        new Competency { Id = CompPhysicalLiteracy_Id,     Name = "Physical Literacy",       DisplayOrder = 8 },
-        new Competency { Id = CompMentalPsychoSocial_Id,   Name = "Mental & Psycho-Social",  DisplayOrder = 9 },
+        new Competency { Id = CompControlReceiving_Id,     Name = "Control & Receiving",     GoalkeeperName = "Handling & Catching",        DisplayOrder = 1 },
+        new Competency { Id = CompPassingDistribution_Id,  Name = "Passing & Distribution",  GoalkeeperName = "Distribution & Kicking",     DisplayOrder = 2 },
+        new Competency { Id = CompDribblingManipulation_Id,Name = "Dribbling & Manipulation",GoalkeeperName = "Shot Stopping & Reflexes",   DisplayOrder = 3 },
+        new Competency { Id = CompStrikingFinishing_Id,    Name = "Striking & Finishing",    GoalkeeperName = "Aerial Dominance & Crosses", DisplayOrder = 4 },
+        new Competency { Id = CompDefendingTackling_Id,    Name = "Defending & Tackling",    GoalkeeperName = "1v1s & Sweeping",            DisplayOrder = 5 },
+        new Competency { Id = CompGameIntelligence_Id,     Name = "Game Intelligence",       GoalkeeperName = "Positioning & Reading",      DisplayOrder = 6 },
+        new Competency { Id = CompSpeedAcceleration_Id,    Name = "Speed & Acceleration",    GoalkeeperName = "Agility & Recovery Speed",   DisplayOrder = 7 },
+        new Competency { Id = CompPhysicalLiteracy_Id,     Name = "Physical Literacy",       GoalkeeperName = "Physical Power & Spring",    DisplayOrder = 8 },
+        new Competency { Id = CompMentalPsychoSocial_Id,   Name = "Mental & Psycho-Social",  GoalkeeperName = "Communication & Presence",   DisplayOrder = 9 },
     };
 
     /// <summary>
@@ -55,52 +55,53 @@ public static class CompetencyTaxonomySeedData
     /// </summary>
     public static List<CompetencyAttribute> GetAttributes()
     {
-        var rows = new (string Name, Guid Category, Guid Competency)[]
+        var rows = new (string Name, string GoalkeeperName, Guid Category, Guid Competency)[]
         {
             // Skills (15)
-            ("Ball Control",     CategorySkills_Id,   CompControlReceiving_Id),
-            ("Crossing",         CategorySkills_Id,   CompPassingDistribution_Id),
-            ("Weak Foot",        CategorySkills_Id,   CompControlReceiving_Id),
-            ("Dribbling",        CategorySkills_Id,   CompDribblingManipulation_Id),
-            ("Finishing",        CategorySkills_Id,   CompStrikingFinishing_Id),
-            ("Free Kick",        CategorySkills_Id,   CompStrikingFinishing_Id),
-            ("Heading",          CategorySkills_Id,   CompPhysicalLiteracy_Id),
-            ("Long Passing",     CategorySkills_Id,   CompPassingDistribution_Id),
-            ("Long Shot",        CategorySkills_Id,   CompStrikingFinishing_Id),
-            ("Penalties",        CategorySkills_Id,   CompStrikingFinishing_Id),
-            ("Short Passing",    CategorySkills_Id,   CompPassingDistribution_Id),
-            ("Shot Power",       CategorySkills_Id,   CompStrikingFinishing_Id),
-            ("Sliding Tackle",   CategorySkills_Id,   CompDefendingTackling_Id),
-            ("Standing Tackle",  CategorySkills_Id,   CompDefendingTackling_Id),
-            ("Volleys",          CategorySkills_Id,   CompControlReceiving_Id),
+            ("Ball Control",     "Clean Catching",          CategorySkills_Id,   CompControlReceiving_Id),
+            ("Crossing",         "Throwing Distribution",   CategorySkills_Id,   CompPassingDistribution_Id),
+            ("Weak Foot",        "Weak-Side Handling",      CategorySkills_Id,   CompControlReceiving_Id),
+            ("Dribbling",        "Shot Stopping",           CategorySkills_Id,   CompDribblingManipulation_Id),
+            ("Finishing",        "Cross Claiming",          CategorySkills_Id,   CompStrikingFinishing_Id),
+            ("Free Kick",        "Wall Organisation",       CategorySkills_Id,   CompStrikingFinishing_Id),
+            ("Heading",          "Aerial Reach",            CategorySkills_Id,   CompPhysicalLiteracy_Id),
+            ("Long Passing",     "Long Kicking",            CategorySkills_Id,   CompPassingDistribution_Id),
+            ("Long Shot",        "Long-Range Saves",        CategorySkills_Id,   CompStrikingFinishing_Id),
+            ("Penalties",        "Penalty Saving",          CategorySkills_Id,   CompStrikingFinishing_Id),
+            ("Short Passing",    "Short Distribution",      CategorySkills_Id,   CompPassingDistribution_Id),
+            ("Shot Power",       "Clearance Power",         CategorySkills_Id,   CompStrikingFinishing_Id),
+            ("Sliding Tackle",   "Spread / K-Block Saves",  CategorySkills_Id,   CompDefendingTackling_Id),
+            ("Standing Tackle",  "1v1 Blocking",            CategorySkills_Id,   CompDefendingTackling_Id),
+            ("Volleys",          "High-Ball Security",      CategorySkills_Id,   CompControlReceiving_Id),
             // Physical (9)
-            ("Acceleration",     CategoryPhysical_Id, CompSpeedAcceleration_Id),
-            ("Agility",          CategoryPhysical_Id, CompDribblingManipulation_Id),
-            ("Balance",          CategoryPhysical_Id, CompDribblingManipulation_Id),
-            ("Jumping",          CategoryPhysical_Id, CompPhysicalLiteracy_Id),
-            ("Pace",             CategoryPhysical_Id, CompDribblingManipulation_Id),
-            ("Reactions",        CategoryPhysical_Id, CompControlReceiving_Id),
-            ("Sprint Speed",     CategoryPhysical_Id, CompSpeedAcceleration_Id),
-            ("Stamina",          CategoryPhysical_Id, CompPhysicalLiteracy_Id),
-            ("Strength",         CategoryPhysical_Id, CompPhysicalLiteracy_Id),
+            ("Acceleration",     "Explosive Push-Off",      CategoryPhysical_Id, CompSpeedAcceleration_Id),
+            ("Agility",          "Diving Agility",          CategoryPhysical_Id, CompDribblingManipulation_Id),
+            ("Balance",          "Recovery Balance",        CategoryPhysical_Id, CompDribblingManipulation_Id),
+            ("Jumping",          "Vertical Spring",         CategoryPhysical_Id, CompPhysicalLiteracy_Id),
+            ("Pace",             "Across-Goal Speed",       CategoryPhysical_Id, CompDribblingManipulation_Id),
+            ("Reactions",        "Reflex Handling",         CategoryPhysical_Id, CompControlReceiving_Id),
+            ("Sprint Speed",     "Recovery Speed",          CategoryPhysical_Id, CompSpeedAcceleration_Id),
+            ("Stamina",          "Repeat-Effort Endurance", CategoryPhysical_Id, CompPhysicalLiteracy_Id),
+            ("Strength",         "Core & Upper-Body Power", CategoryPhysical_Id, CompPhysicalLiteracy_Id),
             // Mental (11)
-            ("Aggression",          CategoryMental_Id, CompDefendingTackling_Id),
-            ("Attacking Position",  CategoryMental_Id, CompGameIntelligence_Id),
-            ("Awareness",           CategoryMental_Id, CompGameIntelligence_Id),
-            ("Communication",       CategoryMental_Id, CompMentalPsychoSocial_Id),
-            ("Composure",           CategoryMental_Id, CompMentalPsychoSocial_Id),
-            ("Defensive Positioning",CategoryMental_Id,CompGameIntelligence_Id),
-            ("Interceptions",       CategoryMental_Id, CompGameIntelligence_Id),
-            ("Marking",             CategoryMental_Id, CompDefendingTackling_Id),
-            ("Positivity",          CategoryMental_Id, CompMentalPsychoSocial_Id),
-            ("Positioning",         CategoryMental_Id, CompGameIntelligence_Id),
-            ("Vision",              CategoryMental_Id, CompGameIntelligence_Id),
+            ("Aggression",          "Bravery",                  CategoryMental_Id, CompDefendingTackling_Id),
+            ("Attacking Position",  "Starting Depth",           CategoryMental_Id, CompGameIntelligence_Id),
+            ("Awareness",           "Game Reading",             CategoryMental_Id, CompGameIntelligence_Id),
+            ("Communication",       "Organising the Defence",   CategoryMental_Id, CompMentalPsychoSocial_Id),
+            ("Composure",           "Composure Under Pressure", CategoryMental_Id, CompMentalPsychoSocial_Id),
+            ("Defensive Positioning","Angle Play",              CategoryMental_Id, CompGameIntelligence_Id),
+            ("Interceptions",       "Through-Ball Anticipation",CategoryMental_Id, CompGameIntelligence_Id),
+            ("Marking",             "Sweeping",                 CategoryMental_Id, CompDefendingTackling_Id),
+            ("Positivity",          "Presence & Confidence",    CategoryMental_Id, CompMentalPsychoSocial_Id),
+            ("Positioning",         "Goal Positioning",         CategoryMental_Id, CompGameIntelligence_Id),
+            ("Vision",              "Distribution Vision",      CategoryMental_Id, CompGameIntelligence_Id),
         };
 
         return rows.Select((r, i) => new CompetencyAttribute
         {
             Id = AttributeId(r.Name),
             Name = r.Name,
+            GoalkeeperName = r.GoalkeeperName,
             CategoryId = r.Category,
             CompetencyId = r.Competency,
             DisplayOrder = i + 1,
@@ -158,5 +159,67 @@ public static class CompetencyTaxonomySeedData
             { (CompMentalPsychoSocial_Id, CompetencyBand.Intermediate), "Bounces back from mistakes and starts to talk with teammates during play." },
             { (CompMentalPsychoSocial_Id, CompetencyBand.Advanced),     "Communicates tactical information clearly and stays composed under match pressure." },
             { (CompMentalPsychoSocial_Id, CompetencyBand.Elite),        "Sets and drives team standards with complete composure and psychological resilience." },
+        };
+
+    /// <summary>
+    /// Goalkeeper rubric descriptions for the same 9 competency IDs (1-to-1 GK mapping per issue #94).
+    /// Reused by every system framework unless overridden during framework editing.
+    /// </summary>
+    public static IReadOnlyDictionary<(Guid CompetencyId, CompetencyBand Band), string> GetGoalkeeperDescriptions() =>
+        new Dictionary<(Guid, CompetencyBand), string>
+        {
+            // Handling & Catching
+            { (CompControlReceiving_Id, CompetencyBand.Development),  "Successfully gets the body behind low and driven shots to secure the ball." },
+            { (CompControlReceiving_Id, CompetencyBand.Intermediate), "Consistently uses the 'W' technique to catch driven balls cleanly without spilling." },
+            { (CompControlReceiving_Id, CompetencyBand.Advanced),     "Cushions high-velocity shots safely, rarely giving away rebounds in central areas." },
+            { (CompControlReceiving_Id, CompetencyBand.Elite),        "Flawless handling in wet/dry conditions; safely parries uncatchable balls wide of the danger zone." },
+
+            // Distribution & Kicking
+            { (CompPassingDistribution_Id, CompetencyBand.Development),  "Throws securely to fullbacks and kicks from the ground with the dominant foot." },
+            { (CompPassingDistribution_Id, CompetencyBand.Intermediate), "Can play short passes under pressure and deliver accurate side-volleys or drop-kicks." },
+            { (CompPassingDistribution_Id, CompetencyBand.Advanced),     "Breaks the first line of press with driven passes and targets wide players accurately over distance." },
+            { (CompPassingDistribution_Id, CompetencyBand.Elite),        "Acts as a deep playmaker; plays perfectly weighted long balls to launch rapid counter-attacks." },
+
+            // Shot Stopping & Reflexes
+            { (CompDribblingManipulation_Id, CompetencyBand.Development),  "Reacts to shots from a distance and executes basic lateral dives." },
+            { (CompDribblingManipulation_Id, CompetencyBand.Intermediate), "Shows good explosive reactions to close-range efforts and deflections." },
+            { (CompDribblingManipulation_Id, CompetencyBand.Advanced),     "Combines footwork and explosive diving to reach the top and bottom corners consistently." },
+            { (CompDribblingManipulation_Id, CompetencyBand.Elite),        "Generates highlight-reel reaction saves; manipulates the body mid-air to adjust to deflections." },
+
+            // Aerial Dominance & Crosses
+            { (CompStrikingFinishing_Id, CompetencyBand.Development),  "Can catch uncontested high balls dropping in the 6-yard box." },
+            { (CompStrikingFinishing_Id, CompetencyBand.Intermediate), "Judges the flight of crosses well and knows when to punch vs catch." },
+            { (CompStrikingFinishing_Id, CompetencyBand.Advanced),     "Commands the penalty spot; aggressively fights through traffic to claim high balls." },
+            { (CompStrikingFinishing_Id, CompetencyBand.Elite),        "Completely neutralizes wide threats; perfectly times jumps to claim balls above attackers' heads." },
+
+            // 1v1s & Sweeping
+            { (CompDefendingTackling_Id, CompetencyBand.Development),  "Stays big when an attacker approaches and doesn't dive in too early." },
+            { (CompDefendingTackling_Id, CompetencyBand.Intermediate), "Actively closes the angle on 1v1s and uses the spread/K-block technique to save." },
+            { (CompDefendingTackling_Id, CompetencyBand.Advanced),     "Anticipates through-balls well and leaves the area to clear danger as a sweeper." },
+            { (CompDefendingTackling_Id, CompetencyBand.Elite),        "Dominates 1v1s through intimidation and perfect timing; flawlessly sweeps behind a high defensive line." },
+
+            // Positioning & Reading
+            { (CompGameIntelligence_Id, CompetencyBand.Development),  "Maintains a central position relative to the goalposts." },
+            { (CompGameIntelligence_Id, CompetencyBand.Intermediate), "Adjusts starting depth based on where the ball is on the pitch." },
+            { (CompGameIntelligence_Id, CompetencyBand.Advanced),     "Makes constant micro-adjustments to footwork to perfectly bisect the angle of the shot." },
+            { (CompGameIntelligence_Id, CompetencyBand.Elite),        "Reads the attacker's body language to pre-emptively shift weight before the shot is struck." },
+
+            // Agility & Recovery Speed
+            { (CompSpeedAcceleration_Id, CompetencyBand.Development),  "Can recover to a standing position after a dive." },
+            { (CompSpeedAcceleration_Id, CompetencyBand.Intermediate), "Shows quick footwork across the goal line to adjust to passes across the box." },
+            { (CompSpeedAcceleration_Id, CompetencyBand.Advanced),     "Explodes off the floor instantly after a save to block secondary rebound attempts." },
+            { (CompSpeedAcceleration_Id, CompetencyBand.Elite),        "Elite fast-twitch muscle reactions; effortlessly chains multiple dives/blocks together in seconds." },
+
+            // Physical Power & Spring
+            { (CompPhysicalLiteracy_Id, CompetencyBand.Development),  "Shows basic coordination, balance, and core strength." },
+            { (CompPhysicalLiteracy_Id, CompetencyBand.Intermediate), "Has the leg power to generate decent height and distance on dives and jumps." },
+            { (CompPhysicalLiteracy_Id, CompetencyBand.Advanced),     "Uses upper body strength to protect themselves and hold off target men on corners." },
+            { (CompPhysicalLiteracy_Id, CompetencyBand.Elite),        "Tremendous vertical leap and explosive horizontal power; heavily dominant in physical box collisions." },
+
+            // Communication & Presence
+            { (CompMentalPsychoSocial_Id, CompetencyBand.Development),  "Calls loudly for the ball (\"Keeper's!\") to avoid collisions with defenders." },
+            { (CompMentalPsychoSocial_Id, CompetencyBand.Intermediate), "Starts to organize the defensive wall on free kicks and calls out unmarked players." },
+            { (CompMentalPsychoSocial_Id, CompetencyBand.Advanced),     "Dictates the height of the defensive line and gives calm, concise instructions during open play." },
+            { (CompMentalPsychoSocial_Id, CompetencyBand.Elite),        "An absolute defensive leader; radiates calm and confidence that spreads through the entire backline." },
         };
 }

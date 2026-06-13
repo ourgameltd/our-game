@@ -11,6 +11,7 @@ public class CompetencyAttributeConfiguration : IEntityTypeConfiguration<Compete
         builder.ToTable("CompetencyAttributes");
         builder.HasKey(a => a.Id);
         builder.Property(a => a.Name).HasMaxLength(128).IsRequired();
+        builder.Property(a => a.GoalkeeperName).HasMaxLength(128);
         builder.HasIndex(a => a.Name).IsUnique();
 
         builder.HasOne(a => a.Category)

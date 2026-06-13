@@ -90,6 +90,7 @@ public class CreateCompetencyFrameworkHandler : IRequestHandler<CreateCompetency
                     AttributeId = w.AttributeId,
                     Format = w.Format,
                     WeightPercent = w.WeightPercent,
+                    IsGoalkeeper = w.IsGoalkeeper,
                 });
             }
 
@@ -103,6 +104,7 @@ public class CreateCompetencyFrameworkHandler : IRequestHandler<CreateCompetency
                     CompetencyId = x.CompetencyId,
                     Band = x.Band,
                     Description = x.Description,
+                    IsGoalkeeper = x.IsGoalkeeper,
                 });
             }
         }

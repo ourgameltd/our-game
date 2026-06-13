@@ -10,6 +10,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAccessProfile } from '@/hooks/useAccessProfile';
 import { canViewPlayerAbilities } from '@/utils/accessControl';
+import { isGoalkeeper } from '@/utils/positionHelpers';
 import PlayerSubNav from '@components/player/PlayerSubNav';
 import PageTitle from '@components/common/PageTitle';
 import AccessDeniedPage from '@components/common/AccessDeniedPage';
@@ -32,10 +33,11 @@ function BandBadge({ band }: { band?: CompetencyBand }) {
   );
 }
 
-function EvaluationRow({ evaluation, onToggleArchive, isBusy }: {
+function EvaluationRow({ evaluation, onToggleArchive, isBusy, isGoalkeeper }: {
   evaluation: PlayerCompetencyEvaluationSummaryDto;
   onToggleArchive: (id: string, isArchived: boolean) => void;
   isBusy: boolean;
+  isGoalkeeper: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -138,7 +140,9 @@ function EvaluationRow({ evaluation, onToggleArchive, isBusy }: {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
             {evaluation.levels.map((level) => (
               <div key={level.competencyId} className="flex items-center justify-between gap-2 text-xs">
-                <span className="text-gray-600 dark:text-gray-400 truncate">{level.competencyName}</span>
+                <span className="text-gray-600 dark:text-gray-400 truncate">
+                  {isGoalkeeper ? (level.competencyGoalkeeperName ?? level.competencyName) : level.competencyName}
+                </span>
                 <BandBadge band={level.band} />
               </div>
             ))}
@@ -414,6 +418,7 @@ export default function PlayerReviewsPage() {
                 evaluation={evaluation}
                 onToggleArchive={handleToggleArchive}
                 isBusy={isArchiving && busyId === evaluation.id}
+                isGoalkeeper={isGoalkeeper(player?.preferredPositions)}
               />
             ))}
           </div>

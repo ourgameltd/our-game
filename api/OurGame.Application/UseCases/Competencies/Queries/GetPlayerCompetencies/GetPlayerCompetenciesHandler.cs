@@ -21,10 +21,12 @@ public class GetPlayerCompetenciesHandler : IRequestHandler<GetPlayerCompetencie
     {
         var player = await _db.Players
             .Where(p => p.Id == request.PlayerId)
-            .Select(p => new { p.Id, p.FirstName, p.LastName, p.OverallRating, p.OverallBand, p.ClubId })
+            .Select(p => new { p.Id, p.FirstName, p.LastName, p.OverallRating, p.OverallBand, p.ClubId, p.PreferredPositions })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (player is null) return null;
+
+        var isGoalkeeper = Services.CompetencyCalculation.GoalkeeperDetection.IsGoalkeeper(player.PreferredPositions);
 
         // Each competency is listed once. Category is determined by where most of the
         // competency's attributes live (the spec models competencies as primary-category-ish,
@@ -44,12 +46,13 @@ public class GetPlayerCompetenciesHandler : IRequestHandler<GetPlayerCompetencie
 
         var competencies = (await _db.Competencies
             .OrderBy(c => c.DisplayOrder)
-            .Select(c => new { c.Id, c.Name, c.DisplayOrder })
+            .Select(c => new { c.Id, c.Name, c.GoalkeeperName, c.DisplayOrder })
             .ToListAsync(cancellationToken))
             .Select(c => new
             {
                 c.Id,
                 c.Name,
+                c.GoalkeeperName,
                 c.DisplayOrder,
                 CategoryName = primaryCategoryByCompetency.TryGetValue(c.Id, out var cn) ? cn : "Skills",
             })
@@ -67,6 +70,7 @@ public class GetPlayerCompetenciesHandler : IRequestHandler<GetPlayerCompetencie
             .FirstOrDefaultAsync(cancellationToken);
 
         Dictionary<(Guid CompetencyId, CompetencyBand Band), string> descriptions = new();
+        Dictionary<(Guid CompetencyId, CompetencyBand Band), string> goalkeeperDescriptions = new();
         if (primaryTeamId is not null)
         {
             var team = await _db.Teams
@@ -85,9 +89,15 @@ public class GetPlayerCompetenciesHandler : IRequestHandler<GetPlayerCompetencie
 
             if (frameworkId is not null)
             {
-                descriptions = await _db.CompetencyFrameworkCompetencyDescriptions
+                var descriptionRows = await _db.CompetencyFrameworkCompetencyDescriptions
                     .Where(d => d.FrameworkId == frameworkId.Value)
-                    .ToDictionaryAsync(d => (d.CompetencyId, d.Band), d => d.Description, cancellationToken);
+                    .ToListAsync(cancellationToken);
+                descriptions = descriptionRows
+                    .Where(d => !d.IsGoalkeeper)
+                    .ToDictionary(d => (d.CompetencyId, d.Band), d => d.Description);
+                goalkeeperDescriptions = descriptionRows
+                    .Where(d => d.IsGoalkeeper)
+                    .ToDictionary(d => (d.CompetencyId, d.Band), d => d.Description);
             }
         }
 
@@ -95,11 +105,14 @@ public class GetPlayerCompetenciesHandler : IRequestHandler<GetPlayerCompetencie
         {
             CompetencyId = c.Id,
             CompetencyName = c.Name,
+            CompetencyGoalkeeperName = c.GoalkeeperName,
             DisplayOrder = c.DisplayOrder,
             CategoryName = c.CategoryName,
             Band = bands.TryGetValue(c.Id, out var b) ? b : null,
             Descriptions = Enum.GetValues<CompetencyBand>()
                 .ToDictionary(band => band, band => descriptions.TryGetValue((c.Id, band), out var d) ? d : string.Empty),
+            GoalkeeperDescriptions = Enum.GetValues<CompetencyBand>()
+                .ToDictionary(band => band, band => goalkeeperDescriptions.TryGetValue((c.Id, band), out var d) ? d : string.Empty),
         }).ToList();
 
         var scores = await _db.PlayerTeamScores
@@ -124,6 +137,7 @@ public class GetPlayerCompetenciesHandler : IRequestHandler<GetPlayerCompetencie
             PlayerName = $"{player.FirstName} {player.LastName}".Trim(),
             OverallRating = player.OverallRating,
             OverallBand = player.OverallBand,
+            IsGoalkeeper = isGoalkeeper,
             Competencies = competencyDtos,
             TeamScores = scores,
         };

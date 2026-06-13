@@ -17,6 +17,7 @@ public class EvaluationBandDto
 {
     public Guid CompetencyId { get; set; }
     public string CompetencyName { get; set; } = string.Empty;
+    public string? CompetencyGoalkeeperName { get; set; }
     public int DisplayOrder { get; set; }
     public CompetencyBand Band { get; set; }
 }

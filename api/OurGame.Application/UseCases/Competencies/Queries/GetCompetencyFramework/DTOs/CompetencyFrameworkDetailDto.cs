@@ -38,16 +38,21 @@ public class AttributeWeightDto
 {
     public Guid AttributeId { get; set; }
     public string AttributeName { get; set; } = string.Empty;
+    public string? AttributeGoalkeeperName { get; set; }
     public Guid CompetencyId { get; set; }
     public string CompetencyName { get; set; } = string.Empty;
+    public string? CompetencyGoalkeeperName { get; set; }
     public int DisplayOrder { get; set; }
     public Dictionary<GameFormat, int> WeightsByFormat { get; set; } = new();
+    public Dictionary<GameFormat, int> GoalkeeperWeightsByFormat { get; set; } = new();
 }
 
 public class CompetencyDescriptionDto
 {
     public Guid CompetencyId { get; set; }
     public string CompetencyName { get; set; } = string.Empty;
+    public string? CompetencyGoalkeeperName { get; set; }
     public int DisplayOrder { get; set; }
     public Dictionary<CompetencyBand, string> Descriptions { get; set; } = new();
+    public Dictionary<CompetencyBand, string> GoalkeeperDescriptions { get; set; } = new();
 }

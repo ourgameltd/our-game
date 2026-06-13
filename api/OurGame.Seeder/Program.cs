@@ -256,6 +256,56 @@ try
         await context.CompetencyAttributes.AddRangeAsync(OurGame.Persistence.Data.SeedData.CompetencyTaxonomySeedData.GetAttributes());
         await context.SaveChangesAsync();
     }
+    else
+    {
+        // Upsert: existing databases need goalkeeper display names back-filled onto the
+        // fixed taxonomy rows (deterministic IDs make this idempotent).
+        var taxonomyChanges = 0;
+
+        var seededCompetencies = OurGame.Persistence.Data.SeedData.CompetencyTaxonomySeedData.GetCompetencies();
+        var existingCompetencies = await context.Competencies.ToDictionaryAsync(c => c.Id);
+        foreach (var seeded in seededCompetencies)
+        {
+            if (existingCompetencies.TryGetValue(seeded.Id, out var existing))
+            {
+                if (existing.GoalkeeperName != seeded.GoalkeeperName)
+                {
+                    existing.GoalkeeperName = seeded.GoalkeeperName;
+                    taxonomyChanges++;
+                }
+            }
+            else
+            {
+                await context.Competencies.AddAsync(seeded);
+                taxonomyChanges++;
+            }
+        }
+
+        var seededAttributes = OurGame.Persistence.Data.SeedData.CompetencyTaxonomySeedData.GetAttributes();
+        var existingAttributes = await context.CompetencyAttributes.ToDictionaryAsync(a => a.Id);
+        foreach (var seeded in seededAttributes)
+        {
+            if (existingAttributes.TryGetValue(seeded.Id, out var existing))
+            {
+                if (existing.GoalkeeperName != seeded.GoalkeeperName)
+                {
+                    existing.GoalkeeperName = seeded.GoalkeeperName;
+                    taxonomyChanges++;
+                }
+            }
+            else
+            {
+                await context.CompetencyAttributes.AddAsync(seeded);
+                taxonomyChanges++;
+            }
+        }
+
+        if (taxonomyChanges > 0)
+        {
+            Console.WriteLine($"  📐 Updating competency taxonomy ({taxonomyChanges} rows upserted)...");
+            await context.SaveChangesAsync();
+        }
+    }
 
     if (!await context.CompetencyFrameworks.AnyAsync(f => f.IsSystemDefault))
     {
@@ -266,6 +316,37 @@ try
         await context.CompetencyFrameworkCompetencyDescriptions.AddRangeAsync(OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetCompetencyDescriptions());
         await context.CompetencyFrameworkAttributeWeights.AddRangeAsync(OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetAttributeWeights());
         await context.SaveChangesAsync();
+    }
+    else
+    {
+        // Insert-missing-only: delivers the goalkeeper weight/description rows to existing
+        // databases without touching anything already present (system frameworks are
+        // read-only, so rows never need updating once inserted).
+        var systemFrameworkIds = OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetFrameworks()
+            .Select(f => f.Id)
+            .ToList();
+
+        var seededDescriptions = OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetCompetencyDescriptions();
+        var existingDescriptionIds = (await context.CompetencyFrameworkCompetencyDescriptions
+            .Where(d => systemFrameworkIds.Contains(d.FrameworkId))
+            .Select(d => d.Id)
+            .ToListAsync()).ToHashSet();
+        var missingDescriptions = seededDescriptions.Where(d => !existingDescriptionIds.Contains(d.Id)).ToList();
+
+        var seededWeights = OurGame.Persistence.Data.SeedData.SystemCompetencyFrameworkSeed.GetAttributeWeights();
+        var existingWeightIds = (await context.CompetencyFrameworkAttributeWeights
+            .Where(w => systemFrameworkIds.Contains(w.FrameworkId))
+            .Select(w => w.Id)
+            .ToListAsync()).ToHashSet();
+        var missingWeights = seededWeights.Where(w => !existingWeightIds.Contains(w.Id)).ToList();
+
+        if (missingDescriptions.Count > 0 || missingWeights.Count > 0)
+        {
+            Console.WriteLine($"  🎯 Updating system competency frameworks ({missingDescriptions.Count} descriptions, {missingWeights.Count} weights inserted)...");
+            await context.CompetencyFrameworkCompetencyDescriptions.AddRangeAsync(missingDescriptions);
+            await context.CompetencyFrameworkAttributeWeights.AddRangeAsync(missingWeights);
+            await context.SaveChangesAsync();
+        }
     }
 
     if (!await context.PlayerAttributes.AnyAsync())

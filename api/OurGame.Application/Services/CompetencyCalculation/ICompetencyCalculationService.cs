@@ -52,5 +52,6 @@ public interface ICompetencyCalculationService
     CompetencyScoreResult Preview(
         IReadOnlyDictionary<Guid, CompetencyBand> competencyLevels,
         CompetencyFrameworkSnapshot framework,
-        GameFormat format);
+        GameFormat format,
+        bool isGoalkeeper = false);
 }

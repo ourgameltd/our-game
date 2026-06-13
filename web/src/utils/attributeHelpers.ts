@@ -97,6 +97,56 @@ export function calculatePositionRating(
 }
 
 /**
+ * Goalkeeper display names for the 35 attributes, keyed by their outfield label.
+ * Mirrors CompetencyTaxonomySeedData.GetAttributes() GoalkeeperName values on the backend.
+ */
+const GOALKEEPER_ATTRIBUTE_LABELS: Record<string, string> = {
+  'Ball Control': 'Clean Catching',
+  'Crossing': 'Throwing Distribution',
+  'Weak Foot': 'Weak-Side Handling',
+  'Dribbling': 'Shot Stopping',
+  'Finishing': 'Cross Claiming',
+  'Free Kick': 'Wall Organisation',
+  'Heading': 'Aerial Reach',
+  'Long Passing': 'Long Kicking',
+  'Long Shot': 'Long-Range Saves',
+  'Penalties': 'Penalty Saving',
+  'Short Passing': 'Short Distribution',
+  'Shot Power': 'Clearance Power',
+  'Sliding Tackle': 'Spread / K-Block Saves',
+  'Standing Tackle': '1v1 Blocking',
+  'Volleys': 'High-Ball Security',
+  'Acceleration': 'Explosive Push-Off',
+  'Agility': 'Diving Agility',
+  'Balance': 'Recovery Balance',
+  'Jumping': 'Vertical Spring',
+  'Pace': 'Across-Goal Speed',
+  'Reactions': 'Reflex Handling',
+  'Sprint Speed': 'Recovery Speed',
+  'Stamina': 'Repeat-Effort Endurance',
+  'Strength': 'Core & Upper-Body Power',
+  'Aggression': 'Bravery',
+  'Attacking Position': 'Starting Depth',
+  'Awareness': 'Game Reading',
+  'Communication': 'Organising the Defence',
+  'Composure': 'Composure Under Pressure',
+  'Defensive Positioning': 'Angle Play',
+  'Interceptions': 'Through-Ball Anticipation',
+  'Marking': 'Sweeping',
+  'Positivity': 'Presence & Confidence',
+  'Positioning': 'Goal Positioning',
+  'Vision': 'Distribution Vision',
+};
+
+/**
+ * Return the display label for an attribute, swapping to the goalkeeper name when the
+ * player is a goalkeeper.
+ */
+export function getAttributeLabel(outfieldName: string, isGoalkeeper: boolean): string {
+  return isGoalkeeper ? (GOALKEEPER_ATTRIBUTE_LABELS[outfieldName] ?? outfieldName) : outfieldName;
+}
+
+/**
  * Group attributes by category for display
  */
 export function groupAttributes(attributes: PlayerAttributes): GroupedAttributes {

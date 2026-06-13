@@ -1,5 +1,6 @@
 import { Player } from '@/types';
-import { groupAttributes, getQualityColor, calculateAttributeChange } from '@/utils/attributeHelpers';
+import { groupAttributes, getQualityColor, calculateAttributeChange, getAttributeLabel } from '@/utils/attributeHelpers';
+import { isGoalkeeper } from '@/utils/positionHelpers';
 
 interface AttributeProgressDisplayProps {
   player: Player;
@@ -7,6 +8,7 @@ interface AttributeProgressDisplayProps {
 
 export default function AttributeProgressDisplay({ player }: AttributeProgressDisplayProps) {
   const grouped = groupAttributes(player.attributes);
+  const playerIsGoalkeeper = isGoalkeeper(player.preferredPositions);
   const evaluations = player.evaluations.sort((a, b) => 
     b.evaluatedAt.getTime() - a.evaluatedAt.getTime()
   );
@@ -45,7 +47,7 @@ export default function AttributeProgressDisplay({ player }: AttributeProgressDi
             <div key={attr.name} className="relative">
               <div className="flex justify-between items-center mb-1">
                 <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                  {attr.name}
+                  {getAttributeLabel(attr.name, playerIsGoalkeeper)}
                 </span>
                 <div className="flex items-center gap-2">
                   <span className={`text-sm font-bold ${getQualityColor(attr.quality)}`}>
