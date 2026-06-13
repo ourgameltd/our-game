@@ -42,12 +42,14 @@ internal static class SocialMatchReportHtml
                   .muted { color: #6b7280; }
                   .txt { color: #111827; }
                   .sep { border-color: #f3f4f6; }
+                  .vsep { background: #e5e7eb; }
                   @media (prefers-color-scheme: dark) {
                     body { background: #111827; color: #f9fafb; }
                     .card { background: #1f2937; }
                     .muted { color: #9ca3af; }
                     .txt { color: #f9fafb; }
                     .sep { border-color: #374151; }
+                    .vsep { background: #4b5563; }
                   }
                   """;
 
@@ -83,7 +85,7 @@ internal static class SocialMatchReportHtml
               </header>
               <main style="max-width:48rem;margin:0 auto;padding:1.5rem 1rem;display:flex;flex-direction:column;gap:1rem;">
                 {PotmHtml(match.Report!.PlayerOfMatchName, match.Report.PlayerOfMatchPhoto)}
-                {EventsHtml(match.Report.Goals, match.Report.Cards)}
+                {EventsHtml(match)}
                 {SummaryHtml(match.Report.Summary)}
                 <p style="text-align:center;font-size:0.75rem;padding-bottom:0.5rem;" class="muted">
                   Shared via <a href="/" style="color:inherit;text-decoration:underline;">OurGame</a>
@@ -145,57 +147,107 @@ internal static class SocialMatchReportHtml
             """;
     }
 
-    private static string EventsHtml(List<GoalDetailDto> goals, List<CardDetailDto> cards)
+    private sealed record SocialEvent(string Period, int? Minute, bool IsHome, string Icon, string Label);
+
+    private static string EventsHtml(MatchDetailDto match)
     {
+        var goals = match.Report!.Goals;
+        var cards = match.Report.Cards;
         if (goals.Count == 0 && cards.Count == 0) return string.Empty;
 
-        var events = goals.Select(g => (
-            period: g.Period ?? "first",
-            minute: g.Minute,
-            html: GoalRowHtml(g)
-        )).Concat(cards.Select(c => (
-            period: c.Period ?? "first",
-            minute: c.Minute,
-            html: CardRowHtml(c)
-        )))
-        .OrderBy(e => PeriodIndexOf(e.period))
-        .ThenBy(e => e.minute ?? 999)
-        .ToList();
+        var homeTeam = match.IsHome ? match.TeamName : match.Opposition;
+        var awayTeam = match.IsHome ? match.Opposition : match.TeamName;
+
+        var events = goals.Select(g => new SocialEvent(
+                g.Period ?? "first",
+                g.Minute,
+                IsHomeColumn(match, g.IsOpponent),
+                """<span style="font-size:1rem;line-height:1;">⚽</span>""",
+                GoalLabel(g, match.Opposition)
+            )).Concat(cards.Select(c => new SocialEvent(
+                c.Period ?? "first",
+                c.Minute,
+                IsHomeColumn(match, c.IsOpponent),
+                CardIcon(c),
+                H(ResolveName(c.PlayerName, c.IsOpponent, c.OpponentName, match.Opposition))
+            )))
+            .OrderBy(e => PeriodIndexOf(e.Period))
+            .ThenBy(e => e.Minute ?? 999)
+            .ToList();
 
         var grouped = events
-            .GroupBy(e => e.period)
+            .GroupBy(e => e.Period)
             .OrderBy(g => PeriodIndexOf(g.Key));
 
         var sb = new StringBuilder();
         sb.Append("""<div class="card" style="border-radius:0.5rem;padding:1rem;box-shadow:0 1px 3px rgba(0,0,0,0.08);">""");
         sb.Append("""<h2 style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;margin:0 0 0.75rem;" class="muted">Events</h2>""");
+
+        // Column headers: home team · away team
+        sb.Append($"""
+            <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:0.5rem;margin-bottom:0.5rem;">
+              <span style="font-size:0.75rem;font-weight:600;" class="txt">{H(homeTeam)}</span>
+              <span style="width:1px;height:1rem;" class="vsep"></span>
+              <span style="font-size:0.75rem;font-weight:600;text-align:right;" class="txt">{H(awayTeam)}</span>
+            </div>
+            """);
+
         foreach (var group in grouped)
         {
             var label = PeriodLabels.TryGetValue(group.Key, out var l) ? l : group.Key;
+            var home = group.Where(e => e.IsHome).ToList();
+            var away = group.Where(e => !e.IsHome).ToList();
+            var rowCount = Math.Max(home.Count, away.Count);
+
             sb.Append($"""<div style="margin-top:0.75rem;"><p style="font-size:0.7rem;font-weight:500;margin:0 0 0.25rem;" class="muted">{H(label)}</p>""");
-            foreach (var e in group) sb.Append(e.html);
+            for (var i = 0; i < rowCount; i++)
+            {
+                var left = i < home.Count ? RowSide(home[i], right: false) : string.Empty;
+                var rightSide = i < away.Count ? RowSide(away[i], right: true) : string.Empty;
+                sb.Append($"""
+                    <div style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;column-gap:0.5rem;padding:0.375rem 0;border-bottom:1px solid;" class="sep">
+                      <div>{left}</div>
+                      <span style="width:1px;align-self:stretch;min-height:1.25rem;" class="vsep"></span>
+                      <div>{rightSide}</div>
+                    </div>
+                    """);
+            }
             sb.Append("</div>");
         }
         sb.Append("</div>");
         return sb.ToString();
     }
 
-    private static string GoalRowHtml(GoalDetailDto g)
+    private static bool IsHomeColumn(MatchDetailDto match, bool isOpponent)
+        => match.IsHome ? !isOpponent : isOpponent;
+
+    private static string ResolveName(string? clubName, bool isOpponent, string? opponentName, string opposition)
     {
-        var pen = g.IsPenalty ? """<span style="margin-left:0.25rem;font-size:0.7rem;" class="muted">(pen)</span>""" : "";
-        var min = g.Minute.HasValue
-            ? $"""<span style="margin-left:auto;font-size:0.7rem;font-variant-numeric:tabular-nums;" class="muted">{g.Minute}'</span>"""
-            : "";
-        return $"""<div style="display:flex;align-items:center;gap:0.75rem;padding:0.375rem 0;border-bottom:1px solid;" class="sep"><span style="font-size:1rem;line-height:1;">⚽</span><span style="font-size:0.875rem;" class="txt">{H(g.ScorerName)}{pen}</span>{min}</div>""";
+        if (!isOpponent) return clubName ?? string.Empty;
+        return string.IsNullOrWhiteSpace(opponentName) ? opposition : opponentName;
     }
 
-    private static string CardRowHtml(CardDetailDto c)
+    private static string GoalLabel(GoalDetailDto g, string opposition)
+    {
+        var name = H(ResolveName(g.ScorerName, g.IsOpponent, g.OpponentName, opposition));
+        var pen = g.IsPenalty ? """<span style="margin-left:0.25rem;font-size:0.7rem;" class="muted">(pen)</span>""" : "";
+        return $"{name}{pen}";
+    }
+
+    private static string CardIcon(CardDetailDto c)
     {
         var color = string.Equals(c.Type, "red", StringComparison.OrdinalIgnoreCase) ? "#ef4444" : "#facc15";
-        var min = c.Minute.HasValue
-            ? $"""<span style="margin-left:auto;font-size:0.7rem;font-variant-numeric:tabular-nums;" class="muted">{c.Minute}'</span>"""
-            : "";
-        return $"""<div style="display:flex;align-items:center;gap:0.75rem;padding:0.375rem 0;border-bottom:1px solid;" class="sep"><div style="width:0.75rem;height:1rem;border-radius:2px;background:{color};flex-shrink:0;"></div><span style="font-size:0.875rem;" class="txt">{H(c.PlayerName)}</span>{min}</div>""";
+        return $"""<div style="width:0.75rem;height:1rem;border-radius:2px;background:{color};flex-shrink:0;"></div>""";
+    }
+
+    private static string RowSide(SocialEvent e, bool right)
+    {
+        var min = e.Minute.HasValue
+            ? $"""<span style="font-size:0.7rem;font-variant-numeric:tabular-nums;" class="muted">{e.Minute}'</span>"""
+            : string.Empty;
+        var dir = right ? "flex-direction:row-reverse;" : string.Empty;
+        var ta = right ? "text-align:right;" : string.Empty;
+        return $"""<div style="display:flex;align-items:center;gap:0.5rem;{dir}">{e.Icon}<span style="flex:1;font-size:0.875rem;{ta}" class="txt">{e.Label}</span>{min}</div>""";
     }
 
     private static string SummaryHtml(string? summary)
